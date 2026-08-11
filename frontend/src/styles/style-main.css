@@ -671,6 +671,9 @@ img {
     align-items: center;
     gap: 0.4rem;
     font-weight: 600;
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    overflow: hidden;
+    max-height: 30px;
 }
 
 /* Active Flip State on Hover */
@@ -690,6 +693,13 @@ img {
     transform: translateY(0);
     max-height: 250px;
     margin-top: 0.75rem;
+}
+
+.advantage-card:hover .adv-card-hint {
+    opacity: 0;
+    height: 0;
+    margin: 0;
+    overflow: hidden;
 }
 /* === ACHIEVEMENTS SECTION (Tabuik Fringe Background Pattern) === */
 .achievements {
