@@ -65,6 +65,15 @@ export function DataTable<T>({
     }
   };
 
+  // Generate page numbers array (e.g. 1, 2, 3...)
+  const pageNumbers = useMemo(() => {
+    const pages = [];
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }, [totalPages]);
+
   return (
     <div className="space-y-4">
       {searchFilter && (
@@ -77,35 +86,43 @@ export function DataTable<T>({
               setCurrentPage(1);
             }}
             placeholder={searchPlaceholder}
-            className="bg-slate-950 border border-slate-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 rounded-xl px-4 py-2 text-xs text-white max-w-xs w-full transition-colors"
+            className="bg-white border border-[#CCCCCC] focus:border-[#E67E22] focus:ring-2 focus:ring-[#E67E22] focus:outline-none rounded-lg px-4 py-2.5 text-xs text-[#333333] max-w-xs w-full transition-all"
+            aria-label="Cari data"
           />
         </div>
       )}
 
-      <div className="bg-slate-800 border border-slate-700/60 rounded-2xl overflow-hidden shadow-lg">
-        <table className="w-full text-left border-collapse">
+      <div className="bg-white border border-[#CCCCCC] rounded-lg overflow-hidden shadow-sm">
+        <table className="w-full text-left border-collapse" aria-label="Tabel Data">
           <thead>
-            <tr className="border-b border-slate-700 bg-slate-900/40 text-xs text-slate-450 uppercase font-bold">
+            <tr className="border-b border-[#CCCCCC] bg-white text-xs text-[#E67E22] uppercase font-bold">
               {columns.map((col, idx) => (
                 <th
                   key={idx}
                   onClick={() => handleSort(col.sortKey)}
-                  className={`p-4 ${col.sortKey ? 'cursor-pointer select-none hover:text-white' : ''}`}
+                  className={`p-4 ${col.sortKey ? 'cursor-pointer select-none hover:text-[#D35400]' : ''}`}
                 >
                   <div className="flex items-center gap-1.5">
                     {col.header}
-                    {col.sortKey && sortKey === col.sortKey && (
-                      <span>{sortOrder === 'asc' ? '▲' : '▼'}</span>
+                    {col.sortKey && (
+                      <span className="text-[10px]" aria-hidden="true">
+                        {sortKey === col.sortKey ? (sortOrder === 'asc' ? '▲' : '▼') : '⇅'}
+                      </span>
                     )}
                   </div>
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-700/50 text-xs">
+          <tbody className="divide-y divide-[#CCCCCC] text-xs text-[#333333]">
             {paginatedData.length > 0 ? (
               paginatedData.map((row, rowIdx) => (
-                <tr key={rowIdx} className="hover:bg-slate-755/30">
+                <tr
+                  key={rowIdx}
+                  className={`transition-all duration-200 hover:scale-102 hover:shadow-md cursor-default ${
+                    rowIdx % 2 === 0 ? 'bg-white' : 'bg-[#F9F9F9]'
+                  }`}
+                >
                   {columns.map((col, colIdx) => (
                     <td key={colIdx} className="p-4">
                       {col.accessor(row)}
@@ -115,7 +132,7 @@ export function DataTable<T>({
               ))
             ) : (
               <tr>
-                <td colSpan={columns.length} className="p-8 text-center text-slate-500 font-bold">
+                <td colSpan={columns.length} className="p-8 text-center text-slate-400 font-bold">
                   Data tidak ditemukan.
                 </td>
               </tr>
@@ -126,27 +143,44 @@ export function DataTable<T>({
 
       {/* Pagination controls */}
       {totalPages > 1 && (
-        <div className="flex justify-between items-center text-xs text-slate-400 font-bold">
+        <nav className="flex justify-between items-center text-xs text-slate-500 font-bold" aria-label="Navigasi Paginasi">
           <div>
             Menampilkan {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, sortedData.length)} dari {sortedData.length} baris
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-1.5 items-center">
             <button
               onClick={() => setCurrentPage(currentPage - 1)}
               disabled={currentPage === 1}
-              className="px-3 py-1.5 bg-slate-800 border border-slate-700 hover:bg-slate-700 disabled:opacity-50 text-white rounded-lg transition-colors font-bold"
+              className="px-3 py-2 bg-white border border-[#CCCCCC] hover:bg-[#F5F5F5] disabled:opacity-50 disabled:hover:bg-white text-[#333333] rounded-lg transition-colors font-bold flex items-center justify-center focus:ring-2 focus:ring-[#E67E22] focus:outline-none"
+              aria-label="Halaman sebelumnya"
             >
-              Sebelumnya
+              &larr;
             </button>
+            {pageNumbers.map((num) => (
+              <button
+                key={num}
+                onClick={() => setCurrentPage(num)}
+                className={`w-8 h-8 rounded-lg border font-bold transition-all flex items-center justify-center focus:ring-2 focus:ring-[#E67E22] focus:outline-none ${
+                  currentPage === num
+                    ? 'bg-[#E67E22] border-[#E67E22] text-white'
+                    : 'bg-white border-[#CCCCCC] text-[#333333] hover:bg-[#F5F5F5]'
+                }`}
+                aria-label={`Halaman ${num}`}
+                aria-current={currentPage === num ? 'page' : undefined}
+              >
+                {num}
+              </button>
+            ))}
             <button
               onClick={() => setCurrentPage(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="px-3 py-1.5 bg-slate-800 border border-slate-700 hover:bg-slate-700 disabled:opacity-50 text-white rounded-lg transition-colors font-bold"
+              className="px-3 py-2 bg-white border border-[#CCCCCC] hover:bg-[#F5F5F5] disabled:opacity-50 disabled:hover:bg-white text-[#333333] rounded-lg transition-colors font-bold flex items-center justify-center focus:ring-2 focus:ring-[#E67E22] focus:outline-none"
+              aria-label="Halaman berikutnya"
             >
-              Selanjutnya
+              &rarr;
             </button>
           </div>
-        </div>
+        </nav>
       )}
     </div>
   );

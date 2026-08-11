@@ -1,13 +1,72 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import ProgramCard from '../../components/ProgramCard';
+import ImageGallery from '../../components/ImageGallery';
 
 export const HomePage: React.FC = () => {
+  const programs = [
+    {
+      title: "Sempoa SIP",
+      desc: "Pelatihan aritmatika sempoa berstandar internasional untuk optimalisasi konsentrasi dan pemecahan matematika cepat.",
+      color: "border-[#E67E22] bg-[#E67E22]/10 text-[#E67E22]",
+      age: "6 - 12 Tahun",
+    },
+    {
+      title: "English Course",
+      desc: "Kursus bahasa Inggris interaktif berorientasi percakapan aktif dan pemahaman kosakata komprehensif.",
+      color: "border-[#922B3E] bg-[#922B3E]/10 text-[#922B3E]",
+      age: "All Ages",
+    },
+    {
+      title: "Fonem (Membaca Cepat)",
+      desc: "Metode membaca fonik cepat dan menyenangkan untuk anak usia dini guna menumbuhkan kegemaran membaca buku.",
+      color: "border-[#16A085] bg-[#16A085]/10 text-[#16A085]",
+      age: "4 - 6 Tahun",
+    },
+    {
+      title: "Tahfidz Anak",
+      desc: "Kelas bimbingan hafalan Al-Qur'an terpadu dengan tajwid dan makhorijul huruf yang benar.",
+      color: "border-[#186A3B] bg-[#186A3B]/10 text-[#186A3B]",
+      age: "5 - 15 Tahun",
+    },
+    {
+      title: "Bimbel TK / SD",
+      desc: "Bimbingan belajar calistung, persiapan masuk SD, dan pendampingan materi tugas sekolah harian.",
+      color: "border-[#F39C12] bg-[#F39C12]/10 text-[#F39C12]",
+      age: "4 - 8 Tahun",
+    }
+  ];
+
+  const galleryItems = [
+    {
+      title: "Lomba Aritmatika Nasional",
+      desc: "Delegasi siswa Sempoa SIP TC Pariaman meraih juara harapan 1 nasional di Jakarta.",
+      date: "12 Januari 2026",
+      category: "Prestasi",
+      emoji: "🏆"
+    },
+    {
+      title: "Ujian Kenaikan Level",
+      desc: "Pelaksanaan evaluasi kenaikan tingkatan siswa level Junior 1 sampai Senior 3.",
+      date: "08 Februari 2026",
+      category: "Akademik",
+      emoji: "📝"
+    },
+    {
+      title: "Kegiatan Outbound Bersama",
+      desc: "Membangun rasa kebersamaan dan kerja sama antar siswa melalui permainan alam terbuka.",
+      date: "15 Juni 2025",
+      category: "Kesiswaan",
+      emoji: "🏞️"
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#475569] font-sans">
+    <div className="min-h-screen bg-[#F5F5F5] text-[#333333] font-sans">
       {/* NAVIGATION BAR */}
-      <nav className="fixed top-0 left-0 w-full bg-white/95 backdrop-blur-md z-50 border-b border-[#E2E8F0] shadow-sm">
+      <nav className="fixed top-0 left-0 w-full bg-white/95 backdrop-blur-md z-50 border-b border-[#CCCCCC] shadow-sm">
         <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
-          <Link to="/" className="flex items-center">
+          <Link to="/" className="flex items-center" aria-label="Beranda Sempoa SIP">
             <img
               src="/assets/logo/logo-sempoa-sip.png"
               alt="Logo Sempoa SIP TC Pariaman"
@@ -15,20 +74,16 @@ export const HomePage: React.FC = () => {
             />
           </Link>
 
-          <ul className="hidden md:flex items-center gap-8 text-sm font-semibold text-[#1E293B]">
-            <li><a href="#home" className="hover:text-[#FF7043] transition-colors">Beranda</a></li>
-            <li><a href="#programs" className="hover:text-[#FF7043] transition-colors">Program</a></li>
-            <li><a href="#advantages" className="hover:text-[#FF7043] transition-colors">Keunggulan</a></li>
-            <li><a href="#achievements" className="hover:text-[#FF7043] transition-colors">Prestasi</a></li>
-            <li><a href="#lokasi-peta" className="hover:text-[#FF7043] transition-colors">Lokasi</a></li>
+          <ul className="hidden md:flex items-center gap-8 text-sm font-semibold text-[#333333]">
+            <li><a href="#home" className="hover:text-[#E67E22] transition-colors focus:ring-2 focus:ring-[#E67E22] focus:outline-none rounded">Beranda</a></li>
+            <li><a href="#features" className="hover:text-[#E67E22] transition-colors focus:ring-2 focus:ring-[#E67E22] focus:outline-none rounded">Keunggulan</a></li>
+            <li><a href="#programs" className="hover:text-[#E67E22] transition-colors focus:ring-2 focus:ring-[#E67E22] focus:outline-none rounded">Program</a></li>
+            <li><a href="#gallery" className="hover:text-[#E67E22] transition-colors focus:ring-2 focus:ring-[#E67E22] focus:outline-none rounded">Galeri</a></li>
             <li>
               <Link
                 to="/login"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#FF7043] hover:bg-[#F4511E] text-white rounded-full font-bold shadow-md shadow-[#FF7043]/20 transition-all hover:-translate-y-0.5"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#E67E22] hover:bg-[#D35400] text-white rounded-full font-bold shadow-md shadow-[#E67E22]/20 transition-all hover:-translate-y-0.5 active:scale-98 focus:ring-2 focus:ring-[#E67E22] focus:outline-none"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 24 24">
-                  <path fill="currentColor" d="M12 21v-2h7V5h-7V3h7q.825 0 1.413.588T21 5v14q0 .825-.587 1.413T19 21zm-2-4l-1.375-1.45l2.55-2.55H3v-2h8.175l-2.55-2.55L10 7l5 5z"/>
-                </svg>
                 Login/Masuk
               </Link>
             </li>
@@ -37,94 +92,101 @@ export const HomePage: React.FC = () => {
       </nav>
 
       {/* HERO SECTION */}
-      <section
+      <header
         id="home"
-        className="relative pt-36 pb-24 bg-gradient-to-br from-[#880E4F] via-[#FF7043] to-[#FFA726] text-white overflow-hidden"
+        className="pt-36 pb-24 bg-gradient-to-br from-[#880E4F] via-[#E67E22] to-[#F39C12] text-white text-center relative overflow-hidden"
       >
-        <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-12 gap-12 items-center relative z-10">
-          <div className="md:col-span-7 text-left space-y-6">
-            <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight leading-tight">
-              Basic For All Learning
-            </h1>
-            <p className="text-lg text-white/90 leading-relaxed max-w-xl">
-              Dipercaya sejak 1998 mendampingi anak-anak usia 4-12 tahun di Kota Pariaman menjadi lebih cerdas, kreatif, fokus, dan percaya diri melatih keseimbangan otak kanan-kiri.
-            </p>
-            <div className="flex flex-wrap gap-4 pt-2">
-              <a
-                href="#lokasi-peta"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-[#FFD54F] hover:bg-[#FBC02D] text-[#1E293B] font-bold rounded-full shadow-lg shadow-[#FFD54F]/20 transition-all hover:-translate-y-0.5"
-              >
-                📖 Kunjungi Tempat Les Kami
-              </a>
-              <a
-                href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak."
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-[#FF7043] hover:bg-[#F4511E] text-white font-bold rounded-full shadow-lg shadow-[#FF7043]/20 transition-all hover:-translate-y-0.5"
-              >
-                💬 Chat WhatsApp (Konsultasi)
-              </a>
-            </div>
-          </div>
-          <div className="md:col-span-5 flex justify-center">
-            <img
-              src="/assets/image/maskot_logo-removebg-preview.png"
-              alt="Maskot Sempoa SIP"
-              className="max-h-[380px] w-auto drop-shadow-[0_15px_30px_rgba(0,0,0,0.35)] animate-bounce"
-              style={{ animationDuration: '4s' }}
-            />
+        <div className="max-w-4xl mx-auto px-6 space-y-6 relative z-10 flex flex-col items-center">
+          <span className="px-3 py-1 bg-white/10 border border-white/20 text-white font-semibold text-xs rounded-full">
+            ✨ Pelatihan Sempoa Terbaik di Kota Pariaman
+          </span>
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight leading-tight max-w-2xl">
+            Optimalkan Kecerdasan Otak Kanan & Kiri Anak Sejak Dini
+          </h1>
+          <p className="text-white/90 text-base md:text-lg leading-relaxed max-w-xl">
+            Metode bimbingan belajar aritmatika cepat terpercaya sejak 1998 untuk melatih fokus, kreativitas, memori, dan daya pikir rasional buah hati Anda.
+          </p>
+          <div className="pt-4 flex gap-4">
+            <Link
+              to="/login"
+              className="px-6 py-3 bg-[#E67E22] hover:bg-[#D35400] text-white text-sm font-bold rounded-full shadow-lg shadow-[#E67E22]/20 transition-all hover:scale-102 active:scale-98 focus:ring-2 focus:ring-[#E67E22] focus:outline-none"
+            >
+              Masuk ke Portal 🚀
+            </Link>
+            <Link
+              to="/register"
+              className="px-6 py-3 bg-white hover:bg-slate-50 text-[#333333] text-sm font-bold rounded-full shadow-lg transition-all hover:scale-102 active:scale-98 focus:ring-2 focus:ring-[#E67E22] focus:outline-none border border-[#CCCCCC]"
+            >
+              Daftar Siswa Baru
+            </Link>
           </div>
         </div>
+      </header>
 
-        {/* Decorative Wave Divider */}
-        <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-[0]">
-          <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="relative block w-full h-[50px]">
-            <path
-              d="M985.66,92.83C906.67,72,823.78,31,743.84,14.19c-82.26-17.34-168.06-16.33-250.45.39-57.84,11.73-114,31.07-172,41.86A600.21,600.21,0,0,1,0,27.35V120H1200V95.8C1132.19,118.92,1055.71,111.31,985.66,92.83Z"
-              fill="#F8FAFC"
-            />
-          </svg>
-        </div>
-      </section>
-
-      {/* TRUST & ABOUT SECTION */}
-      <section id="about" className="py-20 bg-[#F8FAFC]">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="bg-white border-l-8 border-[#FFB300] rounded-3xl p-8 md:p-12 shadow-md grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
-            <div className="md:col-span-4 flex justify-center">
-              <div className="bg-[#FFF9C4] border-2 border-dashed border-[#FFB300] p-6 rounded-2xl text-center min-w-[200px]">
-                <h3 className="text-5xl font-extrabold text-[#880E4F]">28+</h3>
-                <p className="font-bold text-[#1E293B] text-sm mt-2">Tahun Pengalaman<br />di Kota Pariaman</p>
-              </div>
+      <main className="max-w-6xl mx-auto px-6 py-16 space-y-24">
+        {/* FEATURE CARDS */}
+        <section id="features" className="space-y-12">
+          <div className="text-center max-w-xl mx-auto space-y-3">
+            <h2 className="text-3xl font-extrabold text-[#333333]">Mengapa Memilih Kami?</h2>
+            <p className="text-slate-500 text-sm">Keunggulan metode belajar terstruktur kami dibanding bimbingan belajar lainnya</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-white border border-[#CCCCCC] p-6 rounded-lg text-center space-y-4 shadow-sm hover:scale-102 transition-transform">
+              <div className="w-12 h-12 bg-[#E67E22]/10 text-[#E67E22] rounded-full flex items-center justify-center text-2xl mx-auto">🧠</div>
+              <h3 className="font-bold text-[#333333] text-lg">Melatih Konsentrasi</h3>
+              <p className="text-slate-500 text-xs leading-relaxed">Melatih fokus dan daya dengar anak secara visual dan analitis melalui ritme latihan sempoa cepat.</p>
             </div>
-            <div className="md:col-span-8 space-y-4">
-              <h2 className="text-3xl font-extrabold text-[#1E293B] text-left">
-                Membentuk Generasi Cerdas Sejak Tahun 1998
-              </h2>
-              <p className="text-slate-600 text-sm leading-relaxed">
-                Sempoa SIP TC Pariaman adalah lembaga bimbingan belajar khusus pelatihan otak anak yang telah mendampingi ribuan buah hati di Pariaman tumbuh optimal.
-              </p>
-              <p className="text-slate-600 text-sm leading-relaxed">
-                Kami menyelaraskan perkembangan otak kanan yang melatih kreativitas, visualisasi, dan intuisi, dengan otak kiri yang melatih kemampuan berhitung logis, rasional, dan konsentrasi tinggi.
-              </p>
-              <div className="flex items-center gap-4 pt-4">
-                <img
-                  src="/assets/image/maskot_logo-removebg-preview.png"
-                  alt="Mascot Mini"
-                  className="h-16 w-auto drop-shadow-md"
-                />
-                <p className="italic font-bold text-[#880E4F] text-xs">
-                  "Yuk gabung bersama kami dan kembangkan potensi terbaik belajarmu, teman-teman!"
-                </p>
-              </div>
+            <div className="bg-white border border-[#CCCCCC] p-6 rounded-lg text-center space-y-4 shadow-sm hover:scale-102 transition-transform">
+              <div className="w-12 h-12 bg-[#E67E22]/10 text-[#E67E22] rounded-full flex items-center justify-center text-2xl mx-auto">⚡</div>
+              <h3 className="font-bold text-[#333333] text-lg">Aritmatika Cepat</h3>
+              <p className="text-slate-500 text-xs leading-relaxed">Anak mampu melakukan penjumlahan, perkalian, dan pembagian aritmatika mental cepat tanpa alat bantu.</p>
+            </div>
+            <div className="bg-white border border-[#CCCCCC] p-6 rounded-lg text-center space-y-4 shadow-sm hover:scale-102 transition-transform">
+              <div className="w-12 h-12 bg-[#E67E22]/10 text-[#E67E22] rounded-full flex items-center justify-center text-2xl mx-auto">🔓</div>
+              <h3 className="font-bold text-[#333333] text-lg">Kepercayaan Diri</h3>
+              <p className="text-slate-500 text-xs leading-relaxed">Membangun ketangkasan belajar dan mental yang siap bersaing dalam pemecahan matematika di sekolah.</p>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+
+        {/* PROGRAMS SECTION */}
+        <section id="programs" className="space-y-12">
+          <div className="text-center max-w-xl mx-auto space-y-3">
+            <h2 className="text-3xl font-extrabold text-[#333333]">Program Bimbingan Belajar</h2>
+            <p className="text-slate-500 text-sm">Pilihan program terpadu dengan warna khusus sesuai dengan mata pelajaran</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            {programs.map((prog) => (
+              <ProgramCard
+                key={prog.title}
+                title={prog.title}
+                desc={prog.desc}
+                color={prog.color}
+                age={prog.age}
+              />
+            ))}
+          </div>
+        </section>
+
+        {/* GALLERY SECTION */}
+        <section id="gallery" className="space-y-12">
+          <div className="text-center max-w-xl mx-auto space-y-3">
+            <h2 className="text-3xl font-extrabold text-[#333333]">Galeri Dokumentasi</h2>
+            <p className="text-slate-500 text-sm">Momen keseruan belajar dan prestasi siswa TC Pariaman</p>
+          </div>
+          <ImageGallery items={galleryItems} />
+        </section>
+      </main>
 
       {/* FOOTER */}
-      <footer className="border-t border-[#E2E8F0] py-6 text-center text-xs text-slate-500 bg-white">
-        © 2026 Sempoa SIP TC Pariaman. Hak Cipta Dilindungi. Built with React & FastAPI.
+      <footer className="border-t border-[#CCCCCC] py-8 text-center text-xs text-slate-500 bg-white">
+        <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p>© 2026 Sempoa SIP TC Pariaman. Hak Cipta Dilindungi.</p>
+          <div className="flex gap-4">
+            <a href="https://instagram.com" target="_blank" rel="noreferrer" className="hover:text-[#E67E22]">Instagram</a>
+            <a href="https://facebook.com" target="_blank" rel="noreferrer" className="hover:text-[#E67E22]">Facebook</a>
+          </div>
+        </div>
       </footer>
     </div>
   );

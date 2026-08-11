@@ -11,13 +11,21 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-6">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 max-w-md w-full shadow-2xl space-y-6">
-        <div className="flex justify-between items-center border-b border-slate-850 pb-4">
-          <h3 className="text-xl font-bold text-white">{title}</h3>
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 transition-all duration-300"
+    >
+      <div className="bg-white border border-[#CCCCCC] rounded-xl p-8 max-w-md w-full shadow-2xl space-y-6 relative animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex justify-between items-center border-b border-[#CCCCCC] pb-4">
+          <h3 id="modal-title" className="text-xl font-bold text-[#333333] font-heading">
+            {title}
+          </h3>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white transition-colors font-bold text-base"
+            className="text-slate-400 hover:text-[#333333] transition-colors font-bold text-base p-1 focus:ring-2 focus:ring-[#E67E22] focus:outline-none rounded"
+            aria-label="Tutup dialog"
           >
             ✕
           </button>
