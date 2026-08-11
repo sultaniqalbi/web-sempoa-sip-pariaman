@@ -49,6 +49,8 @@ services:
     container_name: sempoa-frontend
     volumes:
       - ./frontend/src:/app/src
+      - ./frontend/postcss.config.js:/app/postcss.config.js
+      - ./frontend/tailwind.config.js:/app/tailwind.config.js
     ports:
       - "5173:5173"
     depends_on:
