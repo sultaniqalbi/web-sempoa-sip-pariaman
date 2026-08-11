@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sempoa SIP TC Pariaman — Pelatihan Otak Kanan & Kiri Anak</title>
+    <!-- CSS -->
+    <link rel="stylesheet" href="src/css/style-main.css">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+    <!-- NAVIGATION BAR -->
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <a href="beranda.html" class="nav-brand-logo">
+                <img src="public/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa SIP TC Pariaman">
+            </a>
+
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#home">Beranda</a></li>
+                <li><a href="#programs">Program</a></li>
+                <li><a href="#advantages">Keunggulan</a></li>
+                <li><a href="#achievements">Prestasi</a></li>
+                <li><a href="galeri.html">Galeri</a></li>
+                <li><a href="#lokasi-peta">Lokasi</a></li>
+                <li><a href="portal-login.html" class="btn btn-primary" id="loginNavBtn"
+                        style="padding: 0.5rem 1.25rem; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.5rem;"><svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 24 24" style="vertical-align: -0.15em;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="34" d="M13 4l7 0c0.55 0 1 0.45 1 1v14c0 0.55 -0.45 1 -1 1h-7"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.4s" values="34;0"/></path><path stroke-dasharray="14" stroke-dashoffset="14" d="M3 12h11.5"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.5s" dur="0.2s" to="0"/></path><path stroke-dasharray="8" stroke-dashoffset="8" d="M14.5 12l-3.5 -3.5M14.5 12l-3.5 3.5"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.7s" dur="0.2s" to="0"/></path></g></svg> Login/Masuk</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <section class="hero-centered" id="home">
+        <div class="hero-overlay"
+            style="position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0, 0, 0, 0.45); z-index: 1;">
+        </div>
+        <div class="container" style="position: relative; z-index: 2;">
+            <div class="hero-grid-wrap">
+                <div class="hero-text-wrap" style="text-align: left;">
+                    <h1 class="hero-title">Basic For All Learning</h1>
+                    <p class="hero-subtitle">
+                        Dipercaya sejak 1998 mendampingi anak-anak usia 4-12 tahun di Kota Pariaman menjadi lebih
+                        cerdas, kreatif, fokus, dan percaya diri melatih keseimbangan otak kanan-kiri.
+                    </p>
+                    <div class="hero-cta">
+                        <a href="#programs" class="btn btn-yellow"><svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 24 24" style="vertical-align: -0.15em;"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zm0 10a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zm10 0a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1zm0-8h6m-3-3v6"/></svg> Lihat Program
+                            Kami</a>
+                        <a href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak."
+                            target="_blank" class="btn btn-primary"><svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 24 24" style="vertical-align: -0.15em;"><path fill="currentColor" d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21c5.46 0 9.91-4.45 9.91-9.91c0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.23 8.23 0 0 1 2.41 5.83c0 4.54-3.7 8.23-8.24 8.23c-1.48 0-2.93-.39-4.19-1.15l-.3-.17l-3.12.82l.83-3.04l-.2-.32a8.2 8.2 0 0 1-1.26-4.38c.01-4.54 3.7-8.24 8.25-8.24M8.53 7.33c-.16 0-.43.06-.66.31c-.22.25-.87.86-.87 2.07c0 1.22.89 2.39 1 2.56c.14.17 1.76 2.67 4.25 3.73c.59.27 1.05.42 1.41.53c.59.19 1.13.16 1.56.1c.48-.07 1.46-.6 1.67-1.18s.21-1.07.15-1.18c-.07-.1-.23-.16-.48-.27c-.25-.14-1.47-.74-1.69-.82c-.23-.08-.37-.12-.56.12c-.16.25-.64.81-.78.97c-.15.17-.29.19-.53.07c-.26-.13-1.06-.39-2-1.23c-.74-.66-1.23-1.47-1.38-1.72c-.12-.24-.01-.39.11-.5c.11-.11.27-.29.37-.44c.13-.14.17-.25.25-.41c.08-.17.04-.31-.02-.43c-.06-.11-.56-1.35-.77-1.84c-.2-.48-.4-.42-.56-.43c-.14 0-.3-.01-.47-.01"/></svg> Chat WhatsApp
+                            (Konsultasi)</a>
+                    </div>
+                </div>
+                <div class="hero-mascot-wrap" style="display: flex; justify-content: center; align-items: center;">
+                    <img src="public/assets/image/maskot-hero.webp" alt="Maskot Resmi Sempoa SIP TC Pariaman" style="width: 100%; max-width: 420px; height: auto; object-fit: contain; filter: drop-shadow(0 15px 30px rgba(0,0,0,0.25)); animation: float 3s ease-in-out infinite;">
+                </div>
+            </div>
+        </div>
+        <!-- Decorative SVG wave layout transition -->
+        <div class="wave-divider">
+            <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120"
+                preserveAspectRatio="none">
+                <path
+                    d="M985.66,92.83C906.67,72,823.78,31,743.84,14.19c-82.26-17.34-168.06-16.33-250.45.39-57.84,11.73-114,31.07-172,41.86A600.21,600.21,0,0,1,0,27.35V120H1200V95.8C1132.19,118.92,1055.71,111.31,985.66,92.83Z"
+                    class="shape-fill"></path>
+            </svg>
+        </div>
+    </section>
+
+    <!-- TRUST & ABOUT SECTION -->
+    <section class="trust section-padding" id="about">
+        <div class="container">
+            <div class="trust-card">
+                <div class="trust-badge">
+                    <h3>28+</h3>
+                    <p>Tahun Pengalaman<br>di Kota Pariaman</p>
+                </div>
+                <div class="trust-content">
+                    <h2>Membentuk Generasi Cerdas Sejak Tahun 1998</h2>
+                    <p>Sempoa SIP TC Pariaman adalah lembaga bimbingan belajar khusus pelatihan otak anak yang telah
+                        mendampingi ribuan buah hati di Pariaman tumbuh optimal.</p>
+                    <p>Kami menyelaraskan perkembangan otak kanan yang melatih kreativitas, visualisasi, dan intuisi,
+                        dengan otak kiri yang melatih kemampuan berhitung logis, rasional, dan konsentrasi tinggi.</p>
+                    <div style="display: flex; gap: 1rem; align-items: center; margin-top: 1.5rem;">
+                        <img src="public/assets/logo/logo-sempoa-sip.png" alt="logo-sempoa-sip.png"
+                            style="height: 55px; width: auto; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));">
+                        <p
+                            style="font-style: italic; font-size: 0.95rem; margin: 0; font-weight: 600; color: var(--color-accent-maroon);">
+                            "Yuk gabung bersama kami dan kembangkan potensi terbaik belajarmu, teman-teman!"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION DIVIDER -->
+    <div class="section-divider"></div>
+
+    <!-- PROGRAMS GRID SECTION -->
+    <section class="programs section-padding" id="programs"
+        style="background-color: var(--color-bg-light); border-top: 1px solid var(--color-border);">
+        <div class="container">
+            <div class="section-header">
+                <h2>Program Bimbingan Pilihan</h2>
+                <p>Pilih program terbaik yang dirancang khusus untuk melatih tumbuh kembang belajar anak Anda</p>
+            </div>
+
+            <div class="programs-grid">
+                <!-- Program 1: Sempoa SIP -->
+                <div class="program-card" style="border-top: 6px solid var(--color-accent-gold);">
+                    <div class="program-card-body"
+                        style="padding: 1.75rem 0.85rem; text-align: left; flex-grow: 1; display: flex; flex-direction: column;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.75rem;">
+                            <h3 style="margin: 0; font-weight: 700; font-size: 1.25rem; color: var(--color-text-dark);">
+                                Sempoa SIP</h3>
+                            <span
+                                style="background: #fff8e1; color: #e65100; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 20px; border: 1px solid #ffe0b2; white-space: nowrap; flex-shrink: 0;">Usia
+                                4 - 12 Thn</span>
+                        </div>
+                        <p
+                            style="font-size: 0.9rem; margin-bottom: 1.25rem; color: var(--color-text-body); flex-grow: 1; line-height: 1.6;">
+                            Pelatihan mental aritmatika guna menyeimbangkan koordinasi sel otak kanan-kiri anak secara
+                            optimal.</p>
+
+                        <!-- Badge Sesi & Jadwal Kelas (Persis Foto User - 1 Baris Murni) -->
+                        <div class="program-schedule-box" style="padding: 0.65rem 0.6rem;">
+                            <div class="sched-header" style="margin-bottom: 0.35rem;">
+                                <span class="sched-title" style="color: #e65100; font-size: 0.8rem;"><i
+                                        class="far fa-clock"></i> Sesi & Jadwal Kelas</span>
+                            </div>
+                            <div class="sched-pills-wrap">
+                                <div class="sched-row"
+                                    style="display: flex; justify-content: space-between; align-items: center; white-space: nowrap;">
+                                    <span class="sched-pill-day"
+                                        style="font-size: 0.76rem; font-weight: 600; color: #334155; white-space: nowrap;"><i
+                                            class="far fa-calendar-alt"
+                                            style="color: #f57c00; margin-right: 0.2rem;"></i> Senin - Sabtu</span>
+                                    <span class="sched-pill-time"
+                                        style="background: #fff3e0; color: #e65100; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 6px; font-size: 0.72rem; white-space: nowrap; flex-shrink: 0;">12.00
+                                        - 17.00 WIB</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <a href="program-sempoa.html" class="btn btn-outline"
+                            style="padding: 0.6rem 1rem; font-size: 0.9rem; width: 100%; margin-top: auto; justify-content: center;"><i
+                                class="fas fa-search"></i> Lihat Detail Program</a>
+                    </div>
+                </div>
+
+                <!-- Program 2: Fonem -->
+                <div class="program-card" style="border-top: 6px solid var(--color-accent-teal);">
+                    <div class="program-card-body"
+                        style="padding: 1.75rem 0.85rem; text-align: left; flex-grow: 1; display: flex; flex-direction: column;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.75rem;">
+                            <h3
+                                style="margin: 0; font-weight: 700; font-size: 1.2rem; color: var(--color-text-dark); line-height: 1.3;">
+                                Fonem <span
+                                    style="font-size: 0.9rem; font-weight: 600; color: #666; display: block;">(Baca
+                                    Tulis)</span></h3>
+                            <span
+                                style="background: #e0f7fa; color: #00838f; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 20px; border: 1px solid #b2ebf2; white-space: nowrap; flex-shrink: 0;">Usia
+                                4 - 12 Thn</span>
+                        </div>
+                        <p
+                            style="font-size: 0.9rem; margin-bottom: 1.25rem; color: var(--color-text-body); flex-grow: 1; line-height: 1.6;">
+                            Metode PeSO (Pembelajaran Seluruh Otak) membaca & menulis cepat tanpa mengeja dan tanpa
+                            stres.</p>
+
+                        <!-- Badge Sesi & Jadwal Kelas (Persis Foto User - 1 Baris Murni) -->
+                        <div class="program-schedule-box" style="padding: 0.65rem 0.6rem;">
+                            <div class="sched-header" style="margin-bottom: 0.35rem;">
+                                <span class="sched-title" style="color: #00838f; font-size: 0.8rem;"><i
+                                        class="far fa-clock"></i> Sesi & Jadwal Kelas</span>
+                            </div>
+                            <div class="sched-pills-wrap">
+                                <div class="sched-row"
+                                    style="display: flex; justify-content: space-between; align-items: center; white-space: nowrap;">
+                                    <span class="sched-pill-day"
+                                        style="font-size: 0.76rem; font-weight: 600; color: #334155; white-space: nowrap;"><i
+                                            class="far fa-calendar-alt"
+                                            style="color: #00acc1; margin-right: 0.2rem;"></i> Senin - Sabtu</span>
+                                    <span class="sched-pill-time"
+                                        style="background: #e0f7fa; color: #00838f; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 6px; font-size: 0.72rem; white-space: nowrap; flex-shrink: 0;">12.00
+                                        - 17.00 WIB</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <a href="program-fonem.html" class="btn btn-outline"
+                            style="padding: 0.6rem 1rem; font-size: 0.9rem; width: 100%; margin-top: auto; justify-content: center;"><i
+                                class="fas fa-search"></i> Lihat Detail Program</a>
+                    </div>
+                </div>
+
+                <!-- Program 3: Tahfidz -->
+                <div class="program-card" style="border-top: 6px solid #2E7D32;">
+                    <div class="program-card-body"
+                        style="padding: 1.75rem 0.85rem; text-align: left; flex-grow: 1; display: flex; flex-direction: column;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.75rem;">
+                            <h3 style="margin: 0; font-weight: 700; font-size: 1.25rem; color: var(--color-text-dark);">
+                                Tahfidz</h3>
+                            <span
+                                style="background: #e8f5e9; color: #1b5e20; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 20px; border: 1px solid #c8e6c9; white-space: nowrap; flex-shrink: 0;">Usia
+                                4 - 12 Thn</span>
+                        </div>
+                        <p
+                            style="font-size: 0.9rem; margin-bottom: 1.25rem; color: var(--color-text-body); flex-grow: 1; line-height: 1.6;">
+                            Bimbingan baca tulis Al-Qur'an, hafalan surat-surat pendek (Juz 30), serta praktik ibadah
+                            harian.</p>
+
+                        <!-- Badge Sesi & Jadwal Kelas (Persis Foto User - 1 Baris Murni) -->
+                        <div class="program-schedule-box" style="padding: 0.65rem 0.6rem;">
+                            <div class="sched-header" style="margin-bottom: 0.35rem;">
+                                <span class="sched-title" style="color: #1b5e20; font-size: 0.8rem;"><i
+                                        class="far fa-clock"></i> Sesi & Jadwal Kelas</span>
+                            </div>
+                            <div class="sched-pills-wrap">
+                                <div class="sched-row"
+                                    style="display: flex; justify-content: space-between; align-items: center; white-space: nowrap;">
+                                    <span class="sched-pill-day"
+                                        style="font-size: 0.76rem; font-weight: 600; color: #334155; white-space: nowrap;"><i
+                                            class="far fa-calendar-alt"
+                                            style="color: #2e7d32; margin-right: 0.2rem;"></i> Senin - Sabtu</span>
+                                    <span class="sched-pill-time"
+                                        style="background: #e8f5e9; color: #1b5e20; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 6px; font-size: 0.72rem; white-space: nowrap; flex-shrink: 0;">12.00
+                                        - 17.00 WIB</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <a href="program-tahfidz.html" class="btn btn-outline"
+                            style="padding: 0.6rem 1rem; font-size: 0.9rem; width: 100%; margin-top: auto; justify-content: center;"><i
+                                class="fas fa-search"></i> Lihat Detail Program</a>
+                    </div>
+                </div>
+
+                <!-- Program 4: Bahasa Inggris -->
+                <div class="program-card" style="border-top: 6px solid #E53935;">
+                    <div class="program-card-body"
+                        style="padding: 1.75rem 0.85rem; text-align: left; flex-grow: 1; display: flex; flex-direction: column;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.75rem;">
+                            <h3
+                                style="margin: 0; font-weight: 700; font-size: 1.2rem; color: var(--color-text-dark); line-height: 1.3;">
+                                Bahasa <span style="display: block;">Inggris</span></h3>
+                            <span
+                                style="background: #ffebee; color: #c62828; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 20px; border: 1px solid #ffcdd2; white-space: nowrap; flex-shrink: 0;">Usia
+                                4 - 12 Thn</span>
+                        </div>
+                        <p
+                            style="font-size: 0.9rem; margin-bottom: 1.25rem; color: var(--color-text-body); flex-grow: 1; line-height: 1.6;">
+                            Pengenalan kosakata, pelafalan, dan percakapan interaktif guna membangun percaya diri
+                            berbahasa asing.</p>
+
+                        <!-- Badge Sesi & Jadwal Kelas (Persis Foto User - 2 Baris) -->
+                        <div class="program-schedule-box" style="padding: 0.65rem 0.6rem;">
+                            <div class="sched-header" style="margin-bottom: 0.35rem;">
+                                <span class="sched-title" style="color: #c62828; font-size: 0.8rem;"><i
+                                        class="far fa-clock"></i> Sesi & Jadwal Kelas</span>
+                            </div>
+                            <div class="sched-pills-wrap" style="display: flex; flex-direction: column; gap: 0.35rem;">
+                                <div class="sched-row"
+                                    style="display: flex; justify-content: space-between; align-items: center; white-space: nowrap;">
+                                    <span class="sched-pill-day"
+                                        style="font-size: 0.76rem; font-weight: 600; color: #334155; white-space: nowrap;"><i
+                                            class="far fa-calendar-alt"
+                                            style="color: #e53935; margin-right: 0.2rem;"></i> Jumat</span>
+                                    <span class="sched-pill-time"
+                                        style="background: #ffebee; color: #c62828; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 6px; font-size: 0.72rem; white-space: nowrap; flex-shrink: 0;">11.00
+                                        - 17.00 WIB</span>
+                                </div>
+                                <div class="sched-row"
+                                    style="display: flex; justify-content: space-between; align-items: center; white-space: nowrap;">
+                                    <span class="sched-pill-day"
+                                        style="font-size: 0.76rem; font-weight: 600; color: #334155; white-space: nowrap;"><i
+                                            class="far fa-calendar-alt"
+                                            style="color: #e53935; margin-right: 0.2rem;"></i> Sabtu</span>
+                                    <span class="sched-pill-time"
+                                        style="background: #ffebee; color: #c62828; font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 6px; font-size: 0.72rem; white-space: nowrap; flex-shrink: 0;">08.30
+                                        - 15.30 WIB</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <a href="program-inggris.html" class="btn btn-outline"
+                            style="padding: 0.6rem 1rem; font-size: 0.9rem; width: 100%; margin-top: auto; justify-content: center;"><i
+                                class="fas fa-search"></i> Lihat Detail Program</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION DIVIDER -->
+    <div class="section-divider"></div>
+
+    <!-- ADVANTAGES / KEUNGGULAN SECTION -->
+    <section class="advantages section-padding" id="advantages">
+        <div class="container">
+            <div class="section-header">
+                <h2>Keunggulan Sempoa SIP TC Pariaman</h2>
+                <p>Alasan mengapa ribuan orang tua mempercayakan putra-putrinya bimbingan belajar bersama kami</p>
+            </div>
+
+            <div class="advantages-grid">
+                <!-- Card 1 -->
+                <div class="advantage-card" id="advCard1">
+                    <div class="adv-card-image-wrap"
+                        style="background-color: var(--color-primary-light); display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-brain" style="font-size: 5rem; color: var(--color-accent-maroon);"></i>
+                    </div>
+                    <div class="adv-card-body">
+                        <h3>Metode Senam Otak (Brain Gym)</h3>
+                        <div class="adv-card-desc">
+                            <p>Sebelum memulai sesi belajar, siswa akan dipandu melakukan senam otak singkat. Hal ini
+                                merangsang kesiapan koordinasi motorik, ketenangan mental, dan memicu fokus anak saat
+                                menyerap materi.</p>
+                        </div>
+                        <span class="adv-card-hint"><i class="fas fa-info-circle"></i> Klik untuk selengkapnya</span>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="advantage-card" id="advCard2">
+                    <div class="adv-card-image-wrap"
+                        style="background-color: #e0f7fa; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-gamepad" style="font-size: 5rem; color: var(--color-accent-teal);"></i>
+                    </div>
+                    <div class="adv-card-body">
+                        <h3>Belajar Menyenangkan (Playful Learning)</h3>
+                        <div class="adv-card-desc">
+                            <p>Setiap konsep bimbingan dibawakan secara interaktif menggunakan media bermain, gambar,
+                                flashcard, dan visualisasi manik sempoa fisik agar anak tidak merasa tertekan atau
+                                bosan.</p>
+                        </div>
+                        <span class="adv-card-hint"><i class="fas fa-info-circle"></i> Klik untuk selengkapnya</span>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="advantage-card" id="advCard3">
+                    <div class="adv-card-image-wrap"
+                        style="background-color: #ffebee; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-users-cog" style="font-size: 5rem; color: #E53935;"></i>
+                    </div>
+                    <div class="adv-card-body">
+                        <h3>Pengajar Terlatih & Ramah Anak</h3>
+                        <div class="adv-card-desc">
+                            <p>Guru-guru kami lolos pelatihan standarisasi metode pengajaran khusus anak usia dini,
+                                mengedepankan pendekatan verbal yang memotivasi dan membangun kepercayaan diri anak.</p>
+                        </div>
+                        <span class="adv-card-hint"><i class="fas fa-info-circle"></i> Klik untuk selengkapnya</span>
+                    </div>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="advantage-card" id="advCard4">
+                    <div class="adv-card-image-wrap"
+                        style="background-color: #e8f5e9; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-smile-beam" style="font-size: 5rem; color: #2E7D32;"></i>
+                    </div>
+                    <div class="adv-card-body">
+                        <h3>Tempat Ramah Anak & Penuh Keceriaan</h3>
+                        <div class="adv-card-desc">
+                            <p>Lingkungan bimbingan yang dirancang khusus dengan area bermain edukatif, suasana hangat,
+                                dan fasilitas aman yang membuat anak senantiasa ceria, betah, serta gembira dalam
+                                belajar.</p>
+                        </div>
+                        <span class="adv-card-hint"><i class="fas fa-info-circle"></i> Klik untuk selengkapnya</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION DIVIDER -->
+    <div class="section-divider"></div>
+
+    <!-- ACHIEVEMENTS SECTION -->
+    <section class="achievements section-padding" id="achievements">
+        <div class="container">
+            <div class="section-header">
+                <h2>Prestasi & Kebanggaan Kami</h2>
+                <p>Hasil nyata komitmen kami dalam melatih anak-anak berprestasi di Pariaman</p>
+            </div>
+            <div class="achievements-grid">
+                <div class="achieve-card">
+                    <div class="achieve-number" data-target="150" data-suffix="+">0+</div>
+                    <p>Piala Kejuaraan Nasional</p>
+                </div>
+                <div class="achieve-card">
+                    <div class="achieve-number" data-target="500" data-suffix="+">0+</div>
+                    <p>Lulusan Bimbingan Cerdas</p>
+                </div>
+                <div class="achieve-card">
+                    <div class="achieve-number" data-target="45" data-suffix="">0</div>
+                    <p>Medali Kejuaraan Internal</p>
+                </div>
+                <div class="achieve-card">
+                    <div class="achieve-number" data-target="100" data-suffix="%">0%</div>
+                    <p>Komitmen Pendampingan Anak</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TESTIMONIALS SECTION -->
+    <section class="testimonials section-padding" id="testimonials">
+        <div class="container">
+            <div class="section-header">
+                <h2>Testimoni Wali Murid</h2>
+                <p>Pengakuan nyata para orang tua yang melihat langsung perubahan positif buah hati mereka</p>
+            </div>
+            <div class="testi-grid" style="grid-template-columns: repeat(4, 1fr); gap: 0.75rem;">
+                <!-- Testimoni 1: Hafla -->
+                <div class="testi-card"
+                    style="padding: 1.1rem; display: flex; flex-direction: column; justify-content: space-between; border-radius: 12px; background: #fff8e1; border: 1px solid #ffecb3;">
+                    <div style="position: relative;">
+                        <div
+                            style="position: absolute; top: -0.5rem; right: -0.5rem; width: 42px; height: 42px; border-radius: 50%; background: #f57c00; display: flex; align-items: center; justify-content: center; opacity: 0.15; z-index: 0;">
+                            <i class="fas fa-quote-right" style="color: white; font-size: 1.1rem;"></i></div>
+                        <p class="testi-text"
+                            style="font-size: 0.82rem; line-height: 1.5; color: #424242; margin-bottom: 1rem; position: relative; z-index: 1;">
+                            "Sebelum belajar sempoa, Hafla memang anak yang cenderung pemalu dan kurang percaya diri
+                            jika harus tampil di depan banyak orang. Kami sebagai orang tua sering khawatir karena dia
+                            lebih suka menghindari situasi yang mengharuskannya berbicara di depan umum. Alhamdulillah,
+                            sejak mengikuti kelas sempoa, kami melihat perubahan yang sangat positif. Hafla menjadi
+                            lebih berani dan percaya diri. Bahkan saat ustazah di sekolah memintanya tampil di depan
+                            kelas, ataupun depan umum dia mau melakukannya tanpa menolak seperti sebelumnya. Bagi kami,
+                            manfaat sempoa bukan hanya melatih kemampuan berhitung, tetapi juga membantu membangun
+                            keberanian, kepercayaan diri, serta kesiapan anak untuk tampil di depan orang lain. Semoga
+                            Hafla terus berkembang menjadi anak yang percaya diri dan berprestasi.."</p>
+                    </div>
+                    <div class="testi-author"
+                        style="border-top: 1px solid #ffe082; padding-top: 0.6rem; margin-top: auto; gap: 0.6rem;">
+                        <div class="author-img-wrap">
+                            <div class="author-img"
+                                style="background: #f57c00; color: white; width: 34px; height: 34px; font-size: 0.8rem;">
+                                OH</div>
+                        </div>
+                        <div>
+                            <h4 style="font-size: 0.88rem; margin:0;">Orang Tua Hafla</h4>
+                            <p style="font-size: 0.75rem; color: var(--color-text-light); margin:0;">Wali Murid Sempoa
+                                SIP</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimoni 2: Queenza -->
+                <div class="testi-card"
+                    style="padding: 1.1rem; display: flex; flex-direction: column; justify-content: space-between; border-radius: 12px; background: #e0f7fa; border: 1px solid #b2ebf2;">
+                    <div style="position: relative;">
+                        <div
+                            style="position: absolute; top: -0.5rem; right: -0.5rem; width: 42px; height: 42px; border-radius: 50%; background: #00acc1; display: flex; align-items: center; justify-content: center; opacity: 0.15; z-index: 0;">
+                            <i class="fas fa-quote-right" style="color: white; font-size: 1.1rem;"></i></div>
+                        <p class="testi-text"
+                            style="font-size: 0.82rem; line-height: 1.5; color: #424242; margin-bottom: 1rem; position: relative; z-index: 1;">
+                            "Testimoni queenza selama belajar sempoa sangat lah bagus buk .. Alhamdulillah queenza
+                            sangat menyukai pelajaran matematika .. Sangat aktif dalam semua perlombaan baik itu
+                            matematika atau pun akademik lainnya .. Selain itu alhamdulillah nya, dari kelas 1 sampai
+                            sekarang kelas 6 queenza selalu juara 1 di sekolah .. Dan selain itu queenza dapat
+                            menghitung cepat, dan bayangan saja .. Sempoa sangat sangat bagus 👍🏻 Terimakasih buat
+                            guru2 yang sudah mengajarkan dan mendidikan queenza,sehingga alhamdulillah queenza menjadi
+                            anak yg berprestasi dari dl sampai sekarang, mudah2an kedepannya akan lebih sukses lagi
+                            aamiin 🙏🏻"</p>
+                    </div>
+                    <div class="testi-author"
+                        style="border-top: 1px solid #80deea; padding-top: 0.6rem; margin-top: auto; gap: 0.6rem;">
+                        <div class="author-img-wrap">
+                            <div class="author-img"
+                                style="background: #00acc1; color: white; width: 34px; height: 34px; font-size: 0.8rem;">
+                                OQ</div>
+                        </div>
+                        <div>
+                            <h4 style="font-size: 0.88rem; margin:0;">Orang Tua Queenza</h4>
+                            <p style="font-size: 0.75rem; color: var(--color-text-light); margin:0;">Wali Murid Sempoa
+                                SIP</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimoni 3: Fatihah -->
+                <div class="testi-card"
+                    style="padding: 1.1rem; display: flex; flex-direction: column; justify-content: space-between; border-radius: 12px; background: #e8f5e9; border: 1px solid #c8e6c9;">
+                    <div style="position: relative;">
+                        <div
+                            style="position: absolute; top: -0.5rem; right: -0.5rem; width: 42px; height: 42px; border-radius: 50%; background: #2E7D32; display: flex; align-items: center; justify-content: center; opacity: 0.15; z-index: 0;">
+                            <i class="fas fa-quote-right" style="color: white; font-size: 1.1rem;"></i></div>
+                        <p class="testi-text"
+                            style="font-size: 0.82rem; line-height: 1.5; color: #424242; margin-bottom: 1rem; position: relative; z-index: 1;">
+                            "sejak pertama masuk sempoa fatihah sangat bersemangat b emi, sampai masuk foundation A,
+                            difoundation B sampai sekarang semangatnya agak kurang b emi, dirumah mami tanya apakah
+                            fatihah capek belajar? Fatihah bilang capek dikit mi, mungkin karna kegiatan sekolahnya
+                            fullday jd kurang fokus, mudah2an kedepannya fatihah lebih semangat lagi b emi."</p>
+                    </div>
+                    <div class="testi-author"
+                        style="border-top: 1px solid #a5d6a7; padding-top: 0.6rem; margin-top: auto; gap: 0.6rem;">
+                        <div class="author-img-wrap">
+                            <div class="author-img"
+                                style="background: #2E7D32; color: white; width: 34px; height: 34px; font-size: 0.8rem;">
+                                OF</div>
+                        </div>
+                        <div>
+                            <h4 style="font-size: 0.88rem; margin:0;">Orang Tua Fatihah</h4>
+                            <p style="font-size: 0.75rem; color: var(--color-text-light); margin:0;">Wali Murid Sempoa
+                                SIP</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimoni 4: Agis -->
+                <div class="testi-card"
+                    style="padding: 1.1rem; display: flex; flex-direction: column; justify-content: space-between; border-radius: 12px; background: #ffebee; border: 1px solid #ffcdd2;">
+                    <div style="position: relative;">
+                        <div
+                            style="position: absolute; top: -0.5rem; right: -0.5rem; width: 42px; height: 42px; border-radius: 50%; background: #c62828; display: flex; align-items: center; justify-content: center; opacity: 0.15; z-index: 0;">
+                            <i class="fas fa-quote-right" style="color: white; font-size: 1.1rem;"></i></div>
+                        <p class="testi-text"
+                            style="font-size: 0.82rem; line-height: 1.5; color: #424242; margin-bottom: 1rem; position: relative; z-index: 1;">
+                            "Allahamdulillah sejak agis mengenal sempoa dari sejak TK B, jauh sangat manfaat yang di
+                            rasakan sejak belajar, mulai dari anak yang biasa tidak fokus, atau kurang fokus,
+                            allhamdulillah sekarng dalam belajar suah terlihat fokus, dan uang paling syanag rasakan
+                            kali dampaknya, dari segi Daya Ingat Kuat terkihat sepintas dalam proses belajar apapun
+                            mendengar sekilas kata2, tidak disadari dia ingat sekali, dan sangat menyukai hitungan math,
+                            dan juga sangat Percaya Diri: Menyelesaikan soal matematika menumbuhkan keberanian
+                            menghadapi tantangan. Disekolah sekarng guru2 sekolah pun menyampai kalo agis ini sangat
+                            aktif dan percaya diri tampil jika dia mengetahui suatu hal, Terima kasih untuk sempoa
+                            👏🏻👍🏻👍🏻"</p>
+                    </div>
+                    <div class="testi-author"
+                        style="border-top: 1px solid #ef9a9a; padding-top: 0.6rem; margin-top: auto; gap: 0.6rem;">
+                        <div class="author-img-wrap">
+                            <div class="author-img"
+                                style="background: #E53935; color: white; width: 34px; height: 34px; font-size: 0.8rem;">
+                                OA</div>
+                        </div>
+                        <div>
+                            <h4 style="font-size: 0.88rem; margin:0;">Orang Tua Agis</h4>
+                            <p style="font-size: 0.75rem; color: var(--color-text-light); margin:0;">Wali Murid Sempoa
+                                SIP</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- GALLERY SECTION -->
+    <section class="gallery section-padding"
+        style="background-color: var(--color-bg-light); border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border);">
+        <div class="container">
+            <div class="section-header">
+                <h2>Galeri Kegiatan Pembelajaran dan Prestasi</h2>
+                <p>Mengintip keceriaan anak-anak didik kami saat belajar, berlatih, dan berprestasi bersama</p>
+            </div>
+            <div class="gallery-grid">
+                <!-- Kegiatan -->
+                <div class="gallery-card" style="border-color: #f57c00; box-shadow: 0 6px 18px rgba(245, 124, 0, 0.15);">
+                    <div class="gallery-img-wrap">
+                        <img src="public/assets/image/kegiatan-1.webp" alt="Siswa Praktek Sholat Berjamaah" loading="lazy">
+                    </div>
+                    <div class="gallery-caption" style="color: #e65100; border-top-color: #fff3e0;">
+                        Siswa Praktek Sholat Berjamaah
+                    </div>
+                </div>
+                <div class="gallery-card" style="border-color: #00acc1; box-shadow: 0 6px 18px rgba(0, 172, 193, 0.15);">
+                    <div class="gallery-img-wrap">
+                        <img src="public/assets/image/kegiatan-2.webp" alt="Siswa Sedang Belajar Sempoa" loading="lazy">
+                    </div>
+                    <div class="gallery-caption" style="color: #00838f; border-top-color: #e0f7fa;">
+                        Siswa Sedang Belajar Sempoa
+                    </div>
+                </div>
+                <div class="gallery-card" style="border-color: #2E7D32; box-shadow: 0 6px 18px rgba(46, 125, 50, 0.15);">
+                    <div class="gallery-img-wrap">
+                        <img src="public/assets/image/kegiatan-3.webp" alt="Suasana Belajar Fonem" loading="lazy">
+                    </div>
+                    <div class="gallery-caption" style="color: #1b5e20; border-top-color: #e8f5e9;">
+                        Suasana Belajar Fonem
+                    </div>
+                </div>
+                <div class="gallery-card" style="border-color: #E53935; box-shadow: 0 6px 18px rgba(229, 57, 53, 0.15);">
+                    <div class="gallery-img-wrap">
+                        <img src="public/assets/image/kegiatan-4.webp" alt="Suasana Belajar Sempoa" loading="lazy">
+                    </div>
+                    <div class="gallery-caption" style="color: #c62828; border-top-color: #ffebee;">
+                        Suasana Belajar Sempoa
+                    </div>
+                </div>
+                <!-- Prestasi -->
+                <div class="gallery-card" style="border-color: #fbc02d; box-shadow: 0 6px 18px rgba(251, 192, 45, 0.15);">
+                    <div class="gallery-img-wrap">
+                        <img src="public/assets/image/prestasi-1.webp" alt="Kegiatan Lomba Sempoa" loading="lazy">
+                    </div>
+                    <div class="gallery-caption" style="color: #f57f17; border-top-color: #fff9c4;">
+                        Kegiatan Lomba Sempoa
+                    </div>
+                </div>
+                <div class="gallery-card" style="border-color: #fbc02d; box-shadow: 0 6px 18px rgba(251, 192, 45, 0.15);">
+                    <div class="gallery-img-wrap">
+                        <img src="public/assets/image/prestasi-2.webp" alt="Kegiatan Lomba Sempoa" loading="lazy">
+                    </div>
+                    <div class="gallery-caption" style="color: #f57f17; border-top-color: #fff9c4;">
+                        Kegiatan Lomba Sempoa
+                    </div>
+                </div>
+                <div class="gallery-card" style="border-color: #fbc02d; box-shadow: 0 6px 18px rgba(251, 192, 45, 0.15);">
+                    <div class="gallery-img-wrap">
+                        <img src="public/assets/image/prestasi-3.webp" alt="Kegiatan Lomba Sempoa" loading="lazy">
+                    </div>
+                    <div class="gallery-caption" style="color: #f57f17; border-top-color: #fff9c4;">
+                        Kegiatan Lomba Sempoa
+                    </div>
+                </div>
+                <div class="gallery-card" style="border-color: #fbc02d; box-shadow: 0 6px 18px rgba(251, 192, 45, 0.15);">
+                    <div class="gallery-img-wrap">
+                        <img src="public/assets/image/prestasi-4.webp" alt="Kegiatan Lomba Sempoa" loading="lazy">
+                    </div>
+                    <div class="gallery-caption" style="color: #f57f17; border-top-color: #fff9c4;">
+                        Kegiatan Lomba Sempoa
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MAPS & LOCATION DETAILS -->
+    <section class="cta-banner" id="lokasi-peta">
+        <div class="container">
+            <h2>Kunjungi Tempat Kami secara Langsung</h2>
+            <p>Diskusikan kebutuhan program belajar anak Anda, lakukan uji coba gratis (trial class), dan lihat
+                fasilitas belajar yang nyaman di Kota Pariaman.</p>
+
+            <div class="banner-map-large">
+                <iframe
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3989.5786439279404!2d100.13242647472359!3d-0.6280234993658309!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2fd4e384623a1503%3A0xb1ee577507310c2e!2sSempoa%20Sip%20Pariaman!5e0!3m2!1sid!2sid!4v1783618251561!5m2!1sid!2sid"
+                    allowfullscreen="" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer" id="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <!-- Brand Info Column -->
+                <div>
+                    <img src="public/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa SIP"
+                        style="height: 120px; width: auto; margin-bottom: 1.5rem;">
+                    <div class="footer-brand">Sempoa SIP TC Pariaman</div>
+                    <p
+                        style="font-size: 0.95rem; line-height: 1.6; color: rgba(255, 255, 255, 0.7); margin-top: 0.5rem;">
+                        Pusat pelatihan keseimbangan otak anak berbasis mental aritmatika dan bimbingan belajar
+                        terpercaya sejak 1998.
+                    </p>
+                    <div class="footer-social-links">
+                        <a href="https://www.instagram.com/sempoasippariaman1?igsh=MXgyeHgyeWk0czUyeA==" target="_blank"
+                            title="Instagram Resmi"><svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 24 24" style="vertical-align: -0.15em;"><path fill="currentColor" d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8C4 18.39 5.61 20 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6C20 5.61 18.39 4 16.4 4zm9.65 1.5a1.25 1.25 0 0 1 1.25 1.25A1.25 1.25 0 0 1 17.25 8A1.25 1.25 0 0 1 16 6.75a1.25 1.25 0 0 1 1.25-1.25M12 7a5 5 0 0 1 5 5a5 5 0 0 1-5 5a5 5 0 0 1-5-5a5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3a3 3 0 0 0 3 3a3 3 0 0 0 3-3a3 3 0 0 0-3-3"/></svg></a>
+                        <a href="https://www.facebook.com/share/14kTZEcbvgw/" target="_blank" title="Facebook Resmi"><i
+                                class="fab fa-facebook-f"></i></a>
+                    </div>
+                </div>
+
+                <!-- Contact Info Column -->
+                <div>
+                    <h3>Kontak Resmi</h3>
+                    <ul class="footer-contact">
+                        <li><svg xmlns="http://www.w3.org/2000/svg" width="1.5em" height="1.5em" viewBox="0 0 24 24" style="vertical-align: -0.2em; flex-shrink: 0;"><path fill="currentColor" d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21c5.46 0 9.91-4.45 9.91-9.91c0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.23 8.23 0 0 1 2.41 5.83c0 4.54-3.7 8.23-8.24 8.23c-1.48 0-2.93-.39-4.19-1.15l-.3-.17l-3.12.82l.83-3.04l-.2-.32a8.2 8.2 0 0 1-1.26-4.38c.01-4.54 3.7-8.24 8.25-8.24M8.53 7.33c-.16 0-.43.06-.66.31c-.22.25-.87.86-.87 2.07c0 1.22.89 2.39 1 2.56c.14.17 1.76 2.67 4.25 3.73c.59.27 1.05.42 1.41.53c.59.19 1.13.16 1.56.1c.48-.07 1.46-.6 1.67-1.18s.21-1.07.15-1.18c-.07-.1-.23-.16-.48-.27c-.25-.14-1.47-.74-1.69-.82c-.23-.08-.37-.12-.56.12c-.16.25-.64.81-.78.97c-.15.17-.29.19-.53.07c-.26-.13-1.06-.39-2-1.23c-.74-.66-1.23-1.47-1.38-1.72c-.12-.24-.01-.39.11-.5c.11-.11.27-.29.37-.44c.13-.14.17-.25.25-.41c.08-.17.04-.31-.02-.43c-.06-.11-.56-1.35-.77-1.84c-.2-.48-.4-.42-.56-.43c-.14 0-.3-.01-.47-.01"/></svg> <span><a href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20permisi.%20Saya%20tertarik%20dengan%20program%20pelatihan%20di%20Sempoa%20SIP%20dan%20ingin%20mendapatkan%20informasi%20lebih%20lanjut.%20Terima%20kasih%21" target="_blank"
+                                    style="color: inherit;">0812-6784-986 (WhatsApp)</a></span></li>
+                        <li><svg xmlns="http://www.w3.org/2000/svg" width="1.5em" height="1.5em" viewBox="0 0 24 24" style="vertical-align: -0.2em; flex-shrink: 0;"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.6 14.522c-2.395 2.52-8.504-3.534-6.1-6.064c1.468-1.545-.19-3.31-1.108-4.609c-1.723-2.435-5.504.927-5.39 3.066c.363 6.746 7.66 14.74 14.726 14.042c2.21-.218 4.75-4.21 2.215-5.669c-1.268-.73-3.009-2.17-4.343-.767"/></svg> <span><a href="tel:+628126784986"
+                                    style="color: inherit;">0812-6784-986 (Telepon)</a></span></li>
+                        <li><svg xmlns="http://www.w3.org/2000/svg" width="1.5em" height="1.5em" viewBox="0 0 24 24" style="vertical-align: -0.2em; flex-shrink: 0;"><path fill="currentColor" d="m20 8l-8 5l-8-5V6l8 5l8-5m0-2H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2"/></svg> <span><a href="mailto:sempoasip.prmn@gmail.com" style="color: inherit;">sempoasip.prmn@gmail.com</a></span></li>
+                    </ul>
+                </div>
+
+                <!-- Address & Schedules Column -->
+                <div>
+                    <h3>Lokasi & Jam Buka</h3>
+                    <ul class="footer-contact">
+                        <li><svg xmlns="http://www.w3.org/2000/svg" width="1.5em" height="1.5em" viewBox="0 0 24 24" style="vertical-align: -0.2em; flex-shrink: 0;"><g fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"><path d="M16.272 10.272a4 4 0 1 1-8 0a4 4 0 0 1 8 0m-2 0a2 2 0 1 1-4 0a2 2 0 0 1 4 0"/><path d="M5.794 16.518a9 9 0 1 1 12.724-.312l-6.206 6.518zm11.276-1.691l-4.827 5.07l-5.07-4.827a7 7 0 1 1 9.897-.243"/></g></svg> <span>Jl. Imam Bonjol, Alai
+                                Gelombang, Kec. Pariaman Tengah, Kota Pariaman, Sumatera Barat 25517</span></li>
+                        <li><svg xmlns="http://www.w3.org/2000/svg" width="1.5em" height="1.5em" viewBox="0 0 24 24" style="vertical-align: -0.2em; flex-shrink: 0;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0"/><path d="M12 7v5l3 3"/></g></svg> <span><strong>Sempoa, Fonem,
+                                    Ngaji:</strong><br>Senin - Sabtu: 12.00 - 17.00 WIB<br><br><strong>Bahasa
+                                    Inggris:</strong><br>Jumat: 11.00 - 17.00 WIB<br>Sabtu: 08.30 - 15.30 WIB</span>
+                        </li>
+                    </ul>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2026 Sempoa SIP TC Pariaman. Hak Cipta Dilindungi.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- FLOATING WHATSAPP BUTTON -->
+    <a href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi..."
+        target="_blank" class="floating-wa" title="Konsultasi WhatsApp">
+        <svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 24 24" style="vertical-align: -0.15em;"><path fill="currentColor" d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21c5.46 0 9.91-4.45 9.91-9.91c0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.23 8.23 0 0 1 2.41 5.83c0 4.54-3.7 8.23-8.24 8.23c-1.48 0-2.93-.39-4.19-1.15l-.3-.17l-3.12.82l.83-3.04l-.2-.32a8.2 8.2 0 0 1-1.26-4.38c.01-4.54 3.7-8.24 8.25-8.24M8.53 7.33c-.16 0-.43.06-.66.31c-.22.25-.87.86-.87 2.07c0 1.22.89 2.39 1 2.56c.14.17 1.76 2.67 4.25 3.73c.59.27 1.05.42 1.41.53c.59.19 1.13.16 1.56.1c.48-.07 1.46-.6 1.67-1.18s.21-1.07.15-1.18c-.07-.1-.23-.16-.48-.27c-.25-.14-1.47-.74-1.69-.82c-.23-.08-.37-.12-.56.12c-.16.25-.64.81-.78.97c-.15.17-.29.19-.53.07c-.26-.13-1.06-.39-2-1.23c-.74-.66-1.23-1.47-1.38-1.72c-.12-.24-.01-.39.11-.5c.11-.11.27-.29.37-.44c.13-.14.17-.25.25-.41c.08-.17.04-.31-.02-.43c-.06-.11-.56-1.35-.77-1.84c-.2-.48-.4-.42-.56-.43c-.14 0-.3-.01-.47-.01"/></svg>
+    </a>
+
+    <!-- LOGIN MODAL -->
+    <div class="modal-overlay" id="loginModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeLoginModal">&times;</button>
+            <div class="modal-split">
+                <div class="modal-left">
+                    <div class="modal-left-content">
+                        <h3>Selamat Datang di Sempoa SIP</h3>
+                        <p>Mari kembangkan potensi terbaik belajarmu bersama kami!</p>
+                    </div>
+                </div>
+                <div class="modal-right">
+                    <div class="modal-form-wrap">
+
+                        <h2 class="modal-title">Masuk ke Portal</h2>
+                        <form id="loginFormPopup">
+                            <div id="loginErrorPopup"
+                                style="display: none; color: #dc2626; background: #fee2e2; padding: 0.8rem; border-radius: 4px; margin-bottom: 1rem; font-size: 0.9rem; text-align: center;">
+                                <span class="error-text"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="emailInput">Alamat Email</label>
+                                <input type="email" id="emailInput" placeholder="Masukkan email Anda" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="passwordInput">Kata Sandi</label>
+                                <div class="password-container"><input type="password" id="passwordInput"
+                                        placeholder="Masukkan kata sandi" required
+                                        style="padding-right: 40px; width: 100%; box-sizing: border-box;"><i
+                                        class="far fa-eye toggle-password"
+                                        onclick="const p=document.getElementById('passwordInput'); if(p.type==='password'){p.type='text'; this.classList.remove('fa-eye'); this.classList.add('fa-eye-slash');}else{p.type='password'; this.classList.remove('fa-eye-slash'); this.classList.add('fa-eye');}"
+                                        title="Tampilkan sandi"></i></div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block"
+                                style="width: 100%; justify-content: center; margin-top: 1rem;">Masuk</button>
+                        </form>
+                        <p class="modal-footer-text"><a href="#" id="forgotPasswordLink"
+                                style="color: var(--color-primary-orange); font-weight: 600; text-decoration: none;">Lupa
+                                kata sandi? Reset di sini</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="src/features/dashboard/data-service.js"></script>
+    <script src="src/features/auth/auth.js"></script>
+    <script src="src/main.js"></script>
+    <script>
+        // Check if there is an active session to redirect or change nav login button
+        document.addEventListener('DOMContentLoaded', () => {
+            const role = localStorage.getItem('loggedInRole');
+            const email = localStorage.getItem('loggedInEmail');
+            const loginNavBtn = document.getElementById('loginNavBtn');
+
+            if (role && email && loginNavBtn) {
+                let dashboardUrl = 'portal-login.html';
+                const roleLower = role.toLowerCase();
+                if (roleLower === 'admin') dashboardUrl = 'portal-admin.php';
+                else if (roleLower === 'guru') dashboardUrl = 'portal-guru.php';
+                else if (roleLower === 'siswa' || roleLower === 'ortu') dashboardUrl = 'portal-siswa.php';
+
+                loginNavBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 24 24"><path fill="currentColor" d="M12 21v-2h7V5h-7V3h7q.825 0 1.413.588T21 5v14q0 .825-.587 1.413T19 21zm-2-4l-1.375-1.45l2.55-2.55H3v-2h8.175l-2.55-2.55L10 7l5 5z"/></svg> Dashboard';
+                loginNavBtn.href = dashboardUrl;
+                loginNavBtn.className = 'btn btn-yellow';
+            }
+
+            // Advantages hover
+            const advantageCards = document.querySelectorAll('.advantage-card');
+            advantageCards.forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    advantageCards.forEach(c => c.classList.remove('active'));
+                    card.classList.add('active');
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.classList.remove('active');
+                });
+            });
+
+            // Achievements animation counters
+            const achieveNumbers = document.querySelectorAll('.achieve-number');
+            if (achieveNumbers.length > 0) {
+                const animateCounter = (el) => {
+                    const target = parseInt(el.getAttribute('data-target'), 10);
+                    const suffix = el.getAttribute('data-suffix') || '';
+                    const duration = 2000;
+                    let startTimestamp = null;
+
+                    const step = (timestamp) => {
+                        if (!startTimestamp) startTimestamp = timestamp;
+                        const elapsed = timestamp - startTimestamp;
+                        const progress = Math.min(elapsed / duration, 1);
+                        const easeOutCubic = 1 - Math.pow(1 - progress, 3);
+                        const currentVal = Math.round(easeOutCubic * target);
+
+                        el.innerText = currentVal + suffix;
+
+                        if (progress < 1) {
+                            window.requestAnimationFrame(step);
+                        } else {
+                            el.innerText = target + suffix;
+                        }
+                    };
+                    window.requestAnimationFrame(step);
+                };
+
+                const observer = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            achieveNumbers.forEach(el => animateCounter(el));
+                            observer.disconnect();
+                        }
+                    });
+                }, { threshold: 0.1 });
+
+                const achievementsSection = document.getElementById('achievements');
+                if (achievementsSection) {
+                    observer.observe(achievementsSection);
+                }
+            }
+        });
+    </script>
+
+    <!-- LIGHTBOX MODAL -->
+    <div id="lightboxModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); z-index: 10000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease;">
+        <div id="lightboxCard" class="gallery-card" style="background: white; max-width: 90%; max-height: 90%; border-radius: 14px; overflow: hidden; border: 4px solid #f57c00; box-shadow: 0 15px 40px rgba(0,0,0,0.3); display: flex; flex-direction: column; transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); cursor: default; position: relative; margin: auto;">
+            <button onclick="closeLightbox()" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10002; transition: background 0.2s;">&times;</button>
+            <div style="width: 100%; height: auto; max-height: 70vh; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #fafafa;">
+                <img id="lightboxImg" src="" style="width: auto; height: auto; max-width: 100%; max-height: 70vh; object-fit: contain;">
+            </div>
+            <div id="lightboxCaption" class="gallery-caption" style="padding: 1.2rem; text-align: center; font-size: 1.1rem; font-weight: 700; background: white; border-top: 2px solid #fff3e0; margin: 0; width: 100%;">
+                Caption text
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Lightbox JS
+        const lightboxModal = document.getElementById('lightboxModal');
+        const lightboxCard = document.getElementById('lightboxCard');
+        const lightboxImg = document.getElementById('lightboxImg');
+        const lightboxCaption = document.getElementById('lightboxCaption');
+
+        function openLightbox(imgSrc, captionText, borderColor, captionColor, captionBgBorder) {
+            lightboxImg.src = imgSrc;
+            lightboxCaption.textContent = captionText;
+            
+            // Style the lightbox card dynamically to match the clicked card
+            lightboxCard.style.borderColor = borderColor || '#f57c00';
+            lightboxCaption.style.color = captionColor || '#e65100';
+            lightboxCaption.style.borderTopColor = captionBgBorder || '#fff3e0';
+            
+            lightboxModal.style.display = 'flex';
+            setTimeout(() => {
+                lightboxModal.style.opacity = '1';
+                lightboxCard.style.transform = 'scale(1)';
+            }, 10);
+        }
+
+        function closeLightbox() {
+            lightboxModal.style.opacity = '0';
+            lightboxCard.style.transform = 'scale(0.8)';
+            setTimeout(() => {
+                lightboxModal.style.display = 'none';
+            }, 300);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const cards = document.querySelectorAll('.gallery-grid .gallery-card');
+            cards.forEach(card => {
+                card.style.cursor = 'pointer';
+                card.addEventListener('click', (e) => {
+                    if (e.target.closest('button')) return;
+                    
+                    const img = card.querySelector('img');
+                    const caption = card.querySelector('.gallery-caption');
+                    if (img && caption) {
+                        const borderColor = window.getComputedStyle(card).borderColor;
+                        const captionStyle = window.getComputedStyle(caption);
+                        const captionColor = captionStyle.color;
+                        const captionBgBorder = captionStyle.borderTopColor;
+                        
+                        openLightbox(img.src, caption.textContent.trim(), borderColor, captionColor, captionBgBorder);
+                    }
+                });
+            });
+            
+            lightboxModal.addEventListener('click', (e) => {
+                if (e.target === lightboxModal) {
+                    closeLightbox();
+                }
+            });
+        });
+    </script>
+    <script src="src/js/custom-cursor.js"></script>
+</body>
+
+</html>

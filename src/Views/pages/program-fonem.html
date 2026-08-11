@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Program Fonem (Baca Tulis) - Sempoa SIP TC Pariaman</title>
+    <link rel="stylesheet" href="src/css/style-main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <a href="beranda.html" class="nav-brand-logo">
+                <img src="public/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa SIP TC Pariaman">
+            </a>
+
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <ul class="nav-links" id="navLinks">
+                <li><a href="beranda.html">Beranda</a></li>
+                <li><a href="beranda.html#programs">Program</a></li>
+                <li><a href="beranda.html#advantages">Keunggulan</a></li>
+                <li><a href="beranda.html#achievements">Prestasi</a></li>
+                <li><a href="galeri.html">Galeri</a></li>
+                <li><a href="beranda.html#lokasi-peta">Lokasi</a></li>
+                <li><a href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20mendaftarkan%20anak%20saya%20di%20Program%20Fonem%20(Baca%20Tulis)..." target="_blank" class="btn btn-primary" style="padding: 0.5rem 1.1rem; font-size: 0.9rem; background: #00838f; border: none;"><svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 24 24" style="vertical-align: -0.15em;"><path fill="currentColor" d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21c5.46 0 9.91-4.45 9.91-9.91c0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.23 8.23 0 0 1 2.41 5.83c0 4.54-3.7 8.23-8.24 8.23c-1.48 0-2.93-.39-4.19-1.15l-.3-.17l-3.12.82l.83-3.04l-.2-.32a8.2 8.2 0 0 1-1.26-4.38c.01-4.54 3.7-8.24 8.25-8.24M8.53 7.33c-.16 0-.43.06-.66.31c-.22.25-.87.86-.87 2.07c0 1.22.89 2.39 1 2.56c.14.17 1.76 2.67 4.25 3.73c.59.27 1.05.42 1.41.53c.59.19 1.13.16 1.56.1c.48-.07 1.46-.6 1.67-1.18s.21-1.07.15-1.18c-.07-.1-.23-.16-.48-.27c-.25-.14-1.47-.74-1.69-.82c-.23-.08-.37-.12-.56.12c-.16.25-.64.81-.78.97c-.15.17-.29.19-.53.07c-.26-.13-1.06-.39-2-1.23c-.74-.66-1.23-1.47-1.38-1.72c-.12-.24-.01-.39.11-.5c.11-.11.27-.29.37-.44c.13-.14.17-.25.25-.41c.08-.17.04-.31-.02-.43c-.06-.11-.56-1.35-.77-1.84c-.2-.48-.4-.42-.56-.43c-.14 0-.3-.01-.47-.01"/></svg> Daftar Sekarang</a></li>
+                <li><a href="portal-login.html" class="btn btn-primary" id="loginNavBtn" style="padding: 0.5rem 1.1rem; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.4rem;"><svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 24 24" style="vertical-align: -0.15em;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="34" d="M13 4l7 0c0.55 0 1 0.45 1 1v14c0 0.55 -0.45 1 -1 1h-7"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.4s" values="34;0"/></path><path stroke-dasharray="14" stroke-dashoffset="14" d="M3 12h11.5"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.5s" dur="0.2s" to="0"/></path><path stroke-dasharray="8" stroke-dashoffset="8" d="M14.5 12l-3.5 -3.5M14.5 12l-3.5 3.5"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.7s" dur="0.2s" to="0"/></path></g></svg> Login/Masuk</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <header class="program-hero-container" style="background: linear-gradient(135deg, #00acc1 0%, #00838f 100%);">
+        <span style="background: rgba(255,255,255,0.25); color: #fff; padding: 0.35rem 1rem; border-radius: 20px; font-weight: 700; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.75rem; display: inline-block;">Kelompok Usia: 4 - 12 Tahun</span>
+        <h1>Program Fonem (Baca Tulis)</h1>
+        <p>Belajar membaca & menulis cepat tanpa mengeja dan tanpa stres menggunakan metode fonetis PeSO.</p>
+    </header>
+
+    <!-- CONTENT -->
+    <main class="content-section-prog">
+        <!-- PENJELASAN PROGRAM -->
+        <h2 style="color: #00838f;"><i class="fas fa-book-reader"></i> Penjelasan Program & Metode PeSO</h2>
+        <p><strong>Fonem (Baca Tulis)</strong> adalah kursus baca tulis tanpa mengeja dan tanpa stres yang menggunakan metode fonetis dikembangkan menjadi metode <strong>PeSO (Pembelajaran Seluruh Otak)</strong>. Dengan metode PeSO, kinerja otak kanan dan otak kiri anak dioptimalkan secara bersamaan untuk mengenalkan bentuk simbol huruf, bunyi fonem, dan susunan kata tanpa perlu menghafal secara paksa.</p>
+        <p style="background: #e0f7fa; border-left: 4px solid #00acc1; padding: 1rem; border-radius: 8px; color: #006064; font-weight: 600;">
+            ✨ <strong style="color: #00838f;">Garansi Hasil:</strong> Dengan bimbingan intensif metode PeSO, dalam <strong>8 kali pertemuan</strong> anak dijamin sudah bisa membaca!
+        </p>
+
+        <!-- CTA REGISTRATION BANNER PROFESSIONAL -->
+        <div style="background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%); border: 2px solid #b2ebf2; border-radius: 16px; padding: 1.5rem 1.75rem; margin: 2rem 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; box-shadow: 0 10px 25px rgba(0,172,193,0.08);">
+            <div>
+                <h3 style="color: #00838f; margin: 0 0 0.4rem 0; font-size: 1.3rem; font-weight: 700;"><i class="fas fa-user-plus"></i> Pendaftaran Siswa Baru (Usia 4 - 12 Tahun)</h3>
+                <p style="margin: 0; color: #004d40; font-size: 0.95rem; line-height: 1.5;">Kembangkan potensi terbaik kecerdasan anak Anda bersama kami.</p>
+            </div>
+            <a href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20mendaftarkan%20anak%20saya%20di%20Program%20Fonem%20(Baca%20Tulis)..." target="_blank" class="btn btn-primary" style="background: #00838f; border: none; padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: 700; white-space: nowrap;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 24 24" style="vertical-align: -0.15em;"><path fill="currentColor" d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21c5.46 0 9.91-4.45 9.91-9.91c0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.23 8.23 0 0 1 2.41 5.83c0 4.54-3.7 8.23-8.24 8.23c-1.48 0-2.93-.39-4.19-1.15l-.3-.17l-3.12.82l.83-3.04l-.2-.32a8.2 8.2 0 0 1-1.26-4.38c.01-4.54 3.7-8.24 8.25-8.24M8.53 7.33c-.16 0-.43.06-.66.31c-.22.25-.87.86-.87 2.07c0 1.22.89 2.39 1 2.56c.14.17 1.76 2.67 4.25 3.73c.59.27 1.05.42 1.41.53c.59.19 1.13.16 1.56.1c.48-.07 1.46-.6 1.67-1.18s.21-1.07.15-1.18c-.07-.1-.23-.16-.48-.27c-.25-.14-1.47-.74-1.69-.82c-.23-.08-.37-.12-.56.12c-.16.25-.64.81-.78.97c-.15.17-.29.19-.53.07c-.26-.13-1.06-.39-2-1.23c-.74-.66-1.23-1.47-1.38-1.72c-.12-.24-.01-.39.11-.5c.11-.11.27-.29.37-.44c.13-.14.17-.25.25-.41c.08-.17.04-.31-.02-.43c-.06-.11-.56-1.35-.77-1.84c-.2-.48-.4-.42-.56-.43c-.14 0-.3-.01-.47-.01"/></svg> Daftar Sekarang
+            </a>
+        </div>
+
+        <!-- KEUNGGULAN UTAMA (6 GRID CARDS) -->
+        <h2 style="color: #00838f; margin-top: 2.5rem;"><i class="fas fa-star"></i> Keunggulan Utama Fonem</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-top: 1rem;">
+            <div style="background: #fff; border: 1px solid #b2ebf2; padding: 1.25rem; border-radius: 12px; border-left: 5px solid #00acc1;">
+                <h4 style="margin: 0 0 0.5rem 0; color: #00838f;"><i class="fas fa-magic"></i> Tanpa Mengeja & Tanpa Stres</h4>
+                <p style="margin: 0; font-size: 0.9rem; color: #555;">Anak langsung mengenali bunyi huruf dan kata tanpa proses mengeja yang membingungkan.</p>
+            </div>
+            <div style="background: #fff; border: 1px solid #b2ebf2; padding: 1.25rem; border-radius: 12px; border-left: 5px solid #00acc1;">
+                <h4 style="margin: 0 0 0.5rem 0; color: #00838f;"><i class="fas fa-brain"></i> Metode PeSO (Pembelajaran Seluruh Otak)</h4>
+                <p style="margin: 0; font-size: 0.9rem; color: #555;">Memaksimalkan fungsi otak kanan & kiri secara simultan untuk memahami bunyi dan visual huruf.</p>
+            </div>
+            <div style="background: #fff; border: 1px solid #b2ebf2; padding: 1.25rem; border-radius: 12px; border-left: 5px solid #00acc1;">
+                <h4 style="margin: 0 0 0.5rem 0; color: #00838f;"><i class="fas fa-smile"></i> Pendekatan Ramah & Bersahabat</h4>
+                <p style="margin: 0; font-size: 0.9rem; color: #555;">Suasana belajar yang menyenangkan sehingga membuat anak selalu bersemangat datang belajar.</p>
+            </div>
+            <div style="background: #fff; border: 1px solid #b2ebf2; padding: 1.25rem; border-radius: 12px; border-left: 5px solid #00acc1;">
+                <h4 style="margin: 0 0 0.5rem 0; color: #00838f;"><i class="fas fa-user-check"></i> Membangun Percaya Diri</h4>
+                <p style="margin: 0; font-size: 0.9rem; color: #555;">Membantu anak yang masih kurang percaya diri agar lancar dan mahir membaca serta menulis.</p>
+            </div>
+            <div style="background: #fff; border: 1px solid #b2ebf2; padding: 1.25rem; border-radius: 12px; border-left: 5px solid #00acc1;">
+                <h4 style="margin: 0 0 0.5rem 0; color: #00838f;"><i class="fas fa-pencil-alt"></i> Motorik Halus & Menulis Rapi</h4>
+                <p style="margin: 0; font-size: 0.9rem; color: #555;">Melatih koordinasi tangan dan mata anak agar mampu menulis susunan huruf dengan rapi dan benar.</p>
+            </div>
+            <div style="background: #fff; border: 1px solid #b2ebf2; padding: 1.25rem; border-radius: 12px; border-left: 5px solid #00acc1;">
+                <h4 style="margin: 0 0 0.5rem 0; color: #00838f;"><i class="fas fa-book-open"></i> Gemar Membaca & Mandiri</h4>
+                <p style="margin: 0; font-size: 0.9rem; color: #555;">Menumbuhkan kecintaan membaca buku cerita dan kebiasaan belajar mandiri sejak usia dini.</p>
+            </div>
+        </div>
+
+        <!-- FASILITAS & PERLENGKAPAN SISWA (STACKED VERTICAL LIST) -->
+        <h2 style="color: #00838f; margin-top: 2.5rem;"><i class="fas fa-boxes"></i> Fasilitas & Perlengkapan Siswa</h2>
+        <div style="display: flex; flex-direction: column; gap: 1.25rem; margin-top: 1rem;">
+            <!-- Box 1: Fasilitas Tempat Belajar -->
+            <div style="background: #ffffff; border: 1px solid #e0e0e0; border-left: 6px solid #00acc1; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                <h3 style="color: #00838f; margin: 0 0 1rem 0; font-size: 1.15rem; display: flex; align-items: center; gap: 0.6rem;">
+                    <i class="fas fa-building" style="color: #00acc1; font-size: 1.2rem;"></i> Fasilitas Tempat Belajar
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0.75rem;">
+                    <div style="display: flex; align-items: center; gap: 0.6rem; background: #fafafa; padding: 0.6rem 0.9rem; border-radius: 8px; border: 1px solid #eee;">
+                        <i class="fas fa-check-circle" style="color: #00acc1;"></i>
+                        <span style="font-size: 0.95rem; color: #333;">Ruangan kelas bersih dan ber-AC</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.6rem; background: #fafafa; padding: 0.6rem 0.9rem; border-radius: 8px; border: 1px solid #eee;">
+                        <i class="fas fa-check-circle" style="color: #00acc1;"></i>
+                        <span style="font-size: 0.95rem; color: #333;">Fasilitas WiFi gratis untuk penunjang</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.6rem; background: #fafafa; padding: 0.6rem 0.9rem; border-radius: 8px; border: 1px solid #eee;">
+                        <i class="fas fa-check-circle" style="color: #00acc1;"></i>
+                        <span style="font-size: 0.95rem; color: #333;">Sesi <strong>Brain Gym</strong> (senam otak anak)</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.6rem; background: #fafafa; padding: 0.6rem 0.9rem; border-radius: 8px; border: 1px solid #eee;">
+                        <i class="fas fa-check-circle" style="color: #00acc1;"></i>
+                        <span style="font-size: 0.95rem; color: #333;">Pembelajaran media multimedia interaktif</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Box 2: Perlengkapan Siswa (Disediakan) -->
+            <div style="background: #e0f7fa; border: 1px solid #b2ebf2; border-left: 6px solid #00838f; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0,172,193,0.05);">
+                <h3 style="color: #00838f; margin: 0 0 1rem 0; font-size: 1.15rem; display: flex; align-items: center; gap: 0.6rem;">
+                    <i class="fas fa-shopping-bag" style="color: #00838f; font-size: 1.2rem;"></i> Perlengkapan Siswa (Sudah Disediakan)
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0.75rem;">
+                    <div style="display: flex; align-items: center; gap: 0.6rem; background: #ffffff; padding: 0.6rem 0.9rem; border-radius: 8px; border: 1px solid #b2ebf2;">
+                        <i class="fas fa-gift" style="color: #00838f;"></i>
+                        <span style="font-size: 0.95rem; color: #333; font-weight: 600;">Tas Khusus Fonem</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.6rem; background: #ffffff; padding: 0.6rem 0.9rem; border-radius: 8px; border: 1px solid #b2ebf2;">
+                        <i class="fas fa-gift" style="color: #00838f;"></i>
+                        <span style="font-size: 0.95rem; color: #333; font-weight: 600;">Buku Paket Latihan Fonem Lengkap</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- JADWAL KELAS BANNER -->
+        <div style="background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%); border-left: 6px solid #00acc1; border-radius: 12px; padding: 1.25rem 1.5rem; margin: 2.5rem 0; box-shadow: 0 4px 15px rgba(0, 172, 193, 0.12);">
+            <h3 style="color: #00838f; font-weight: 700; font-size: 1.15rem; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 24 24" style="vertical-align: -0.15em;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0-18 0"/><path d="M12 7v5l3 3"/></g></svg> Sesi & Jadwal Belajar Fonem
+            </h3>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.95rem; color: #424242;">
+                <div style="display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid #b2ebf2;">
+                    <span><i class="far fa-calendar-alt" style="color: #00acc1; margin-right: 0.35rem;"></i> <strong>Senin - Sabtu:</strong></span>
+                    <span style="background: #e0f7fa; color: #00838f; font-weight: 700; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.9rem;">12.00 - 17.00 WIB</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- TESTIMONI ORANG TUA -->
+        <h2 style="color: #00838f; margin-top: 2.5rem;"><i class="fas fa-quote-left"></i> Testimoni Wali Murid</h2>
+        <div style="background: #ffffff; border: 1px solid #b2ebf2; border-left: 6px solid #00acc1; border-radius: 16px; padding: 1.75rem; margin-top: 1rem; box-shadow: 0 4px 20px rgba(0,0,0,0.04);">
+            <p style="font-size: 0.95rem; color: #424242; line-height: 1.7; margin-bottom: 1rem;">"Testimoni queenza selama belajar sempoa sangat lah bagus buk .. Alhamdulillah queenza sangat menyukai pelajaran matematika .. Sangat aktif dalam semua perlombaan baik itu matematika atau pun akademik lainnya .."</p>
+            <p style="font-size: 0.95rem; color: #424242; line-height: 1.7; margin-bottom: 1rem;">"Selain itu alhamdulillah nya, dari kelas 1 sampai sekarang kelas 6 queenza selalu juara 1 di sekolah .. Dan selain itu queenza dapat menghitung cepat, dan bayangan saja .. Sempoa sangat sangat bagus 👍🏻"</p>
+            <p style="font-size: 0.95rem; color: #424242; line-height: 1.7; margin-bottom: 1.5rem;">"Terimakasih buat guru2 yang sudah mengajarkan dan mendidikan queenza,sehingga alhamdulillah queenza menjadi anak yg berprestasi dari dl sampai sekarang, mudah2an kedepannya akan lebih sukses lagi aamiin 🙏🏻"</p>
+            <div style="display: flex; align-items: center; gap: 1rem; border-top: 1px solid #b2ebf2; padding-top: 1rem;">
+                <div style="width: 45px; height: 45px; border-radius: 50%; background: #00acc1; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem;">OQ</div>
+                <div>
+                    <h4 style="margin: 0; color: var(--color-text-dark); font-size: 1rem;">Orang Tua Queenza</h4>
+                    <span style="font-size: 0.85rem; color: #757575;">Wali Murid Sempoa SIP</span>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- PROGRAM NAVIGATION -->
+        <div class="program-bottom-nav" style="margin-top: 3rem;">
+            <a href="program-sempoa.html" class="nav-prog-btn prev-btn" style="background-color: var(--color-primary);">
+                <i class="fas fa-arrow-left"></i> Sempoa SIP
+            </a>
+            <a href="beranda.html" class="nav-home-btn" style="color: #00838f;" title="Kembali ke Beranda">
+                <i class="fas fa-home"></i>
+            </a>
+            <a href="program-tahfidz.html" class="nav-prog-btn next-btn" style="background-color: #2E7D32;">
+                Program Tahfidz <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer style="background-color: var(--color-text-dark); color: white; padding: 3rem 2rem 2rem; margin-top: 4rem;">
+        <div class="container" style="text-align: center;">
+            <p>&copy; 2026 Sempoa SIP TC Pariaman. Hak Cipta Dilindungi.</p>
+        </div>
+    </footer>
+
+    <script src="src/js/custom-cursor.js"></script>
+</body>
+</html>

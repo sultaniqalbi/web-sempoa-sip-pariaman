@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Masuk ke Portal - Sempoa SIP TC Pariaman</title>
+    <link rel="stylesheet" href="src/css/style-main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: rgba(15, 23, 42, 0.6);
+            margin: 0;
+            font-family: var(--font-body);
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+
+        .portal-modal-wrap {
+            background: white;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 850px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            display: flex;
+            position: relative;
+        }
+
+        .modal-split {
+            display: flex;
+            width: 100%;
+        }
+
+        .modal-left {
+            flex: 1;
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.85), rgba(14, 165, 233, 0.85)), url('public/assets/images/hero-bg.jpg');
+            background-size: cover;
+            background-position: center;
+            padding: 3rem 2rem;
+            display: flex;
+            align-items: flex-end;
+            color: white;
+            position: relative;
+        }
+
+        .modal-left-content h3 {
+            font-family: var(--font-heading);
+            font-size: 2.2rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .modal-left-content p {
+            font-size: 1.05rem;
+            opacity: 0.95;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .modal-right {
+            flex: 1;
+            padding: 3rem 2.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            background: white;
+        }
+
+        .btn-close-standalone {
+            position: absolute;
+            top: 1.2rem;
+            right: 1.5rem;
+            background: transparent;
+            border: none;
+            font-size: 1.5rem;
+            color: #64748b;
+            cursor: pointer;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .btn-close-standalone:hover {
+            color: #0f172a;
+        }
+
+        .modal-title {
+            font-family: var(--font-heading);
+            font-size: 2rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 1.8rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #475569;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #ff6b35;
+            box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.15);
+        }
+
+        .password-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            cursor: pointer;
+            color: #94a3b8;
+            transition: color 0.2s;
+        }
+
+        .toggle-password:hover {
+            color: #ff6b35;
+        }
+
+        .btn-submit-orange {
+            width: 100%;
+            padding: 0.9rem;
+            background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.05rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 20px -5px rgba(255, 107, 53, 0.4);
+            margin-top: 0.8rem;
+        }
+
+        .btn-submit-orange:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 24px -5px rgba(255, 107, 53, 0.5);
+        }
+
+        .modal-footer-text {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .modal-footer-text a {
+            color: #ff6b35;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .modal-footer-text a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .modal-split {
+                flex-direction: column;
+            }
+            .modal-left {
+                min-height: 180px;
+                padding: 1.8rem 1.5rem;
+            }
+            .modal-left-content h3 {
+                font-size: 1.5rem;
+            }
+            .modal-right {
+                padding: 2rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="portal-modal-wrap">
+        <a href="beranda.html" class="btn-close-standalone" title="Kembali ke Beranda">&times;</a>
+        
+        <div class="modal-split">
+            <!-- Left Banner Image -->
+            <div class="modal-left">
+                <div class="modal-left-content">
+                    <h3>Selamat Datang di Sempoa SIP</h3>
+                    <p>Mari kembangkan potensi terbaik belajarmu bersama kami!</p>
+                </div>
+            </div>
+            
+            <!-- Right Form Section -->
+            <div class="modal-right">
+                <div class="modal-form-wrap">
+                    <h2 class="modal-title">Masuk ke Portal</h2>
+                    
+                    <form id="loginFormPopup">
+                        <div id="loginErrorPopup" style="display: none; color: #dc2626; background: #fee2e2; padding: 0.8rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.9rem; text-align: center;">
+                            <span class="error-text"></span>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="emailInput">Alamat Email</label>
+                            <input type="email" id="emailInput" class="form-control" placeholder="Masukkan email Anda" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="passwordInput">Kata Sandi</label>
+                            <div class="password-container">
+                                <input type="password" id="passwordInput" class="form-control" placeholder="Masukkan kata sandi" required style="padding-right: 40px;">
+                                <i class="far fa-eye toggle-password" id="togglePasswordBtn" onclick="const p=document.getElementById('passwordInput'); if(p.type==='password'){p.type='text'; this.classList.remove('fa-eye'); this.classList.add('fa-eye-slash');}else{p.type='password'; this.classList.remove('fa-eye-slash'); this.classList.add('fa-eye');}" title="Tampilkan sandi"></i>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn-submit-orange">Masuk</button>
+                    </form>
+                    
+                    <p class="modal-footer-text">
+                        <a href="beranda.html" id="forgotPasswordLink">Lupa kata sandi? Reset di sini</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="src/features/dashboard/data-service.js"></script>
+    <script src="src/features/auth/auth.js"></script>
+    <script src="src/main.js"></script>
+</body>
+</html>

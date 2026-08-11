@@ -1,0 +1,38 @@
+from pydantic import BaseModel, ConfigDict
+from typing import Optional
+from datetime import datetime
+from app.models.siswa import StatusSPP
+
+class SiswaBase(BaseModel):
+    uid: str
+    nama: str
+    kategori_program: str
+    hari_masuk: str
+    id_guru: Optional[int] = None
+    target_pertemuan: int = 8
+    sisa_pertemuan: int = 0
+    status_spp: StatusSPP = StatusSPP.AKTIF
+    bio: Optional[str] = None
+    foto_profil: Optional[str] = None
+
+class SiswaCreate(SiswaBase):
+    pass
+
+class SiswaUpdate(BaseModel):
+    uid: Optional[str] = None
+    nama: Optional[str] = None
+    kategori_program: Optional[str] = None
+    hari_masuk: Optional[str] = None
+    id_guru: Optional[int] = None
+    target_pertemuan: Optional[int] = None
+    sisa_pertemuan: Optional[int] = None
+    status_spp: Optional[StatusSPP] = None
+    bio: Optional[str] = None
+    foto_profil: Optional[str] = None
+
+class SiswaResponse(SiswaBase):
+    id: int
+    created_at: datetime
+    is_deleted: bool
+    
+    model_config = ConfigDict(from_attributes=True)

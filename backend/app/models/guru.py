@@ -1,0 +1,16 @@
+from sqlalchemy import Column, Integer, String, Text, DateTime
+from sqlalchemy.sql import func
+from app.core.database import Base
+
+class Guru(Base):
+    __tablename__ = "guru"
+
+    id = Column(Integer, primary_key=True, index=True)
+    uid = Column(String(50), unique=True, nullable=False, index=True)
+    nama = Column(String(100), nullable=False)
+    kategori_program = Column(String(50), nullable=False, default="Sempoa SIP")
+    hari_wajib = Column(String(100), nullable=False)
+    target_kehadiran = Column(Integer, nullable=False, default=12)
+    bio = Column(Text, nullable=True)
+    foto_profil = Column(String(255), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())

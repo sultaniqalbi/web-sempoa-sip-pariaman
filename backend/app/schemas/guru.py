@@ -1,0 +1,30 @@
+from pydantic import BaseModel, ConfigDict
+from typing import Optional
+from datetime import datetime
+
+class GuruBase(BaseModel):
+    uid: str
+    nama: str
+    kategori_program: str = "Sempoa SIP"
+    hari_wajib: str
+    target_kehadiran: int = 12
+    bio: Optional[str] = None
+    foto_profil: Optional[str] = None
+
+class GuruCreate(GuruBase):
+    pass
+
+class GuruUpdate(BaseModel):
+    uid: Optional[str] = None
+    nama: Optional[str] = None
+    kategori_program: Optional[str] = None
+    hari_wajib: Optional[str] = None
+    target_kehadiran: Optional[int] = None
+    bio: Optional[str] = None
+    foto_profil: Optional[str] = None
+
+class GuruResponse(GuruBase):
+    id: int
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)

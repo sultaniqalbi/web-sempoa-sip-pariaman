@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galeri Kegiatan - Sempoa SIP TC Pariaman</title>
+    <link rel="stylesheet" href="src/css/style-main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .gallery-item {
+            content-visibility: auto;
+            contain-intrinsic-size: 300px 400px;
+            background: white;
+            border-radius: 14px;
+            overflow: hidden;
+            border: 3px solid #f57c00;
+            box-shadow: 0 4px 12px rgba(245, 124, 0, 0.1);
+            transition: transform 0.25s ease, border-color 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            will-change: transform;
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-5px);
+            border-color: #e65100;
+        }
+
+        .gallery-img-wrap {
+            width: 100%;
+            aspect-ratio: 3 / 4;
+            overflow: hidden;
+            background: #f8f9fa;
+        }
+
+        .gallery-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .gallery-item:hover .gallery-img-wrap img {
+            transform: scale(1.04);
+        }
+
+        .gallery-caption {
+            padding: 1rem 0.85rem;
+            text-align: center;
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 700;
+            color: #e65100;
+            font-size: 0.92rem;
+            flex-grow: 1;
+            background: #ffffff;
+            border-top: 2px solid #fff3e0;
+            line-height: 1.4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-state, .error-state, .empty-state {
+            text-align: center;
+            grid-column: 1 / -1;
+            padding: 3rem;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: #ddd;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 992px) {
+            .gallery-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (max-width: 768px) {
+            .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+        }
+        @media (max-width: 480px) {
+            .gallery-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <a href="beranda.html" class="nav-brand-logo">
+                <img src="public/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa SIP TC Pariaman">
+            </a>
+
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <ul class="nav-links" id="navLinks">
+                <li><a href="beranda.html">Beranda</a></li>
+                <li><a href="beranda.html#programs">Program</a></li>
+                <li><a href="beranda.html#advantages">Keunggulan</a></li>
+                <li><a href="beranda.html#achievements">Prestasi</a></li>
+                <li><a href="galeri.html">Galeri</a></li>
+                <li><a href="beranda.html#lokasi-peta">Lokasi</a></li>
+                <li><a href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20permisi.%20Saya%20tertarik%20dengan%20program%20pelatihan%20di%20Sempoa%20SIP%20dan%20ingin%20mendapatkan%20informasi%20lebih%20lanjut.%20Terima%20kasih%21" target="_blank" class="btn btn-primary" style="padding: 0.5rem 1.1rem; font-size: 0.9rem; background: #e65100; border: none;"><svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 24 24" style="vertical-align: -0.15em;"><path fill="currentColor" d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21c5.46 0 9.91-4.45 9.91-9.91c0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.23 8.23 0 0 1 2.41 5.83c0 4.54-3.7 8.23-8.24 8.23c-1.48 0-2.93-.39-4.19-1.15l-.3-.17l-3.12.82l.83-3.04l-.2-.32a8.2 8.2 0 0 1-1.26-4.38c.01-4.54 3.7-8.24 8.25-8.24M8.53 7.33c-.16 0-.43.06-.66.31c-.22.25-.87.86-.87 2.07c0 1.22.89 2.39 1 2.56c.14.17 1.76 2.67 4.25 3.73c.59.27 1.05.42 1.41.53c.59.19 1.13.16 1.56.1c.48-.07 1.46-.6 1.67-1.18s.21-1.07.15-1.18c-.07-.1-.23-.16-.48-.27c-.25-.14-1.47-.74-1.69-.82c-.23-.08-.37-.12-.56.12c-.16.25-.64.81-.78.97c-.15.17-.29.19-.53.07c-.26-.13-1.06-.39-2-1.23c-.74-.66-1.23-1.47-1.38-1.72c-.12-.24-.01-.39.11-.5c.11-.11.27-.29.37-.44c.13-.14.17-.25.25-.41c.08-.17.04-.31-.02-.43c-.06-.11-.56-1.35-.77-1.84c-.2-.48-.4-.42-.56-.43c-.14 0-.3-.01-.47-.01"/></svg> Daftar Sekarang</a></li>
+                <li><a href="portal-login.html" class="btn btn-primary" id="loginNavBtn" style="padding: 0.5rem 1.1rem; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.4rem;"><svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 24 24" style="vertical-align: -0.15em;"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="34" d="M13 4l7 0c0.55 0 1 0.45 1 1v14c0 0.55 -0.45 1 -1 1h-7"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.4s" values="34;0"/></path><path stroke-dasharray="14" stroke-dashoffset="14" d="M3 12h11.5"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.5s" dur="0.2s" to="0"/></path><path stroke-dasharray="8" stroke-dashoffset="8" d="M14.5 12l-3.5 -3.5M14.5 12l-3.5 3.5"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.7s" dur="0.2s" to="0"/></path></g></svg> Login/Masuk</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <header class="program-hero-container" style="background: linear-gradient(135deg, #f57c00 0%, #e65100 100%);">
+        <span style="background: rgba(255,255,255,0.25); color: #fff; padding: 0.35rem 1rem; border-radius: 20px; font-weight: 700; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.75rem; display: inline-block;">Koleksi Foto</span>
+        <h1><i class="fas fa-images" style="margin-right: 0.5rem;"></i> Galeri Kegiatan & Prestasi</h1>
+        <p>Momen-momen berharga, kegiatan belajar mengajar, serta prestasi membanggakan murid Sempoa SIP TC Pariaman.</p>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="content-section-prog">
+        <div class="gallery-grid" id="publicGalleryGrid">
+            <div class="loading-state">
+                <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--color-primary-orange); margin-bottom: 1rem;"></i>
+                <br>Memuat galeri...
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom" style="text-align: center; margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2rem;">
+                <p>&copy; 2026 Sempoa SIP TC Pariaman. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JS -->
+    <script>
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const navLinks = document.getElementById('navLinks');
+        mobileMenuBtn.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+
+        // Load Gallery
+        async function loadPublicGallery() {
+            const grid = document.getElementById('publicGalleryGrid');
+            try {
+                const res = await fetch('api/galeri.php');
+                const result = await res.json();
+                
+                if (result.success) {
+                    const items = result.data;
+                    grid.innerHTML = '';
+                    
+                    if (items.length === 0) {
+                        grid.innerHTML = `
+                            <div class="empty-state">
+                                <i class="fas fa-folder-open"></i><br>
+                                Belum ada foto galeri yang ditambahkan.
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    items.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'gallery-item';
+                        div.innerHTML = `
+                            <div class="gallery-img-wrap">
+                                <img src="${item.image_path}" alt="${item.judul}" loading="lazy" decoding="async">
+                            </div>
+                            <div class="gallery-caption">
+                                ${item.judul}
+                            </div>
+                        `;
+                        grid.appendChild(div);
+                    });
+                } else {
+                    grid.innerHTML = '<div class="error-state">Gagal memuat galeri dari server.</div>';
+                }
+            } catch (err) {
+                console.error(err);
+                grid.innerHTML = '<div class="error-state">Terjadi kesalahan jaringan saat memuat galeri.</div>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPublicGallery();
+            
+            // Event delegation to support dynamically loaded gallery-item cards
+            const grid = document.getElementById('publicGalleryGrid');
+            grid.addEventListener('click', (e) => {
+                const card = e.target.closest('.gallery-item');
+                if (card) {
+                    const img = card.querySelector('img');
+                    const caption = card.querySelector('.gallery-caption');
+                    if (img && caption) {
+                        const borderColor = window.getComputedStyle(card).borderColor;
+                        const captionStyle = window.getComputedStyle(caption);
+                        const captionColor = captionStyle.color;
+                        const captionBgBorder = captionStyle.borderTopColor;
+                        
+                        openLightbox(img.src, caption.textContent.trim(), borderColor, captionColor, captionBgBorder);
+                    }
+                }
+            });
+
+            lightboxModal.addEventListener('click', (e) => {
+                if (e.target === lightboxModal) {
+                    closeLightbox();
+                }
+            });
+        });
+    </script>
+
+    <!-- LIGHTBOX MODAL -->
+    <div id="lightboxModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); z-index: 10000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease;">
+        <div id="lightboxCard" class="gallery-item" style="background: white; max-width: 90%; max-height: 90%; border-radius: 14px; overflow: hidden; border: 4px solid #f57c00; box-shadow: 0 15px 40px rgba(0,0,0,0.3); display: flex; flex-direction: column; transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); cursor: default; position: relative; margin: auto;">
+            <button onclick="closeLightbox()" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10002; transition: background 0.2s;">&times;</button>
+            <div style="width: 100%; height: auto; max-height: 70vh; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #fafafa;">
+                <img id="lightboxImg" src="" style="width: auto; height: auto; max-width: 100%; max-height: 70vh; object-fit: contain;">
+            </div>
+            <div id="lightboxCaption" class="gallery-caption" style="padding: 1.2rem; text-align: center; font-size: 1.1rem; font-weight: 700; background: white; border-top: 2px solid #fff3e0; margin: 0; width: 100%;">
+                Caption text
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Lightbox JS
+        const lightboxModal = document.getElementById('lightboxModal');
+        const lightboxCard = document.getElementById('lightboxCard');
+        const lightboxImg = document.getElementById('lightboxImg');
+        const lightboxCaption = document.getElementById('lightboxCaption');
+
+        function openLightbox(imgSrc, captionText, borderColor, captionColor, captionBgBorder) {
+            lightboxImg.src = imgSrc;
+            lightboxCaption.textContent = captionText;
+            
+            // Style the lightbox card dynamically to match the clicked card
+            lightboxCard.style.borderColor = borderColor || '#f57c00';
+            lightboxCaption.style.color = captionColor || '#e65100';
+            lightboxCaption.style.borderTopColor = captionBgBorder || '#fff3e0';
+            
+            lightboxModal.style.display = 'flex';
+            setTimeout(() => {
+                lightboxModal.style.opacity = '1';
+                lightboxCard.style.transform = 'scale(1)';
+            }, 10);
+        }
+
+        function closeLightbox() {
+            lightboxModal.style.opacity = '0';
+            lightboxCard.style.transform = 'scale(0.8)';
+            setTimeout(() => {
+                lightboxModal.style.display = 'none';
+            }, 300);
+        }
+    </script>
+    <script src="src/js/custom-cursor.js"></script>
+</body>
+</html>
