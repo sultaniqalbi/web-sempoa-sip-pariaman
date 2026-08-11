@@ -149,14 +149,27 @@ export const HomePage: React.FC = () => {
                 Dipercaya sejak 1998 mendampingi anak-anak usia 4-12 tahun di Kota Pariaman menjadi lebih cerdas, kreatif, fokus, dan percaya diri melatih keseimbangan otak kanan-kiri.
               </p>
               <div className="hero-cta">
-                <a href="#lokasi-peta" className="btn btn-yellow"><i className="far fa-map"></i> Kunjungi Tempat Les Kami</a>
+                <a
+                  href="#programs"
+                  className="btn btn-yellow"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.6rem', padding: '0.8rem 1.6rem', fontWeight: 700 }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById('programs')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                >
+                  <img src="/assets/icons/program.svg" alt="Program Kami" style={{ width: '20px', height: '20px' }} />
+                  Program Kami
+                </a>
                 <a
                   href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak."
                   target="_blank"
                   rel="noreferrer"
                   className="btn btn-primary"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.6rem', padding: '0.8rem 1.6rem', fontWeight: 700 }}
                 >
-                  <i className="fab fa-whatsapp"></i> Chat WhatsApp (Konsultasi)
+                  <img src="/assets/icons/whatsapp.svg" alt="WhatsApp" style={{ width: '20px', height: '20px', filter: 'brightness(0) invert(1)' }} />
+                  Chat WhatsApp (Konsultasi)
                 </a>
               </div>
             </div>
@@ -329,75 +342,97 @@ export const HomePage: React.FC = () => {
           </div>
           
           <div className="advantages-grid">
-            {/* Card 1 */}
+            {/* Card 1: Senam Otak */}
             <div
               className={`advantage-card ${activeAdvCard === 1 ? 'active' : ''}`}
               id="advCard1"
               onClick={() => handleAdvCardClick(1)}
             >
               <div className="adv-card-image-wrap" style={{ backgroundColor: 'var(--color-primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <i className="fas fa-brain" style={{ fontSize: '5rem', color: 'var(--color-accent-maroon)' }}></i>
+                <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-maroon)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.04Z"/>
+                  <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.04Z"/>
+                </svg>
               </div>
               <div className="adv-card-body">
                 <h3>Metode Senam Otak (Brain Gym)</h3>
                 <div className="adv-card-desc">
                   <p>Sebelum memulai sesi belajar, siswa akan dipandu melakukan senam otak singkat. Hal ini merangsang kesiapan koordinasi motorik, ketenangan mental, dan memicu fokus anak saat menyerap materi.</p>
                 </div>
-                <span className="adv-card-hint"><i className="fas fa-info-circle"></i> Klik untuk selengkapnya</span>
+                <span className="adv-card-hint" style={{ color: 'var(--color-primary-orange)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.5rem', fontSize: '0.85rem' }}>
+                  <i className="fas fa-info-circle"></i> Klik untuk selengkapnya
+                </span>
               </div>
             </div>
 
-            {/* Card 2 */}
+            {/* Card 2: Belajar Menyenangkan */}
             <div
               className={`advantage-card ${activeAdvCard === 2 ? 'active' : ''}`}
               id="advCard2"
               onClick={() => handleAdvCardClick(2)}
             >
               <div className="adv-card-image-wrap" style={{ backgroundColor: '#e0f7fa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <i className="fas fa-gamepad" style={{ fontSize: '5rem', color: 'var(--color-accent-teal)' }}></i>
+                <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-teal)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
               </div>
               <div className="adv-card-body">
                 <h3>Belajar Menyenangkan (Playful Learning)</h3>
                 <div className="adv-card-desc">
                   <p>Setiap konsep bimbingan dibawakan secara interaktif menggunakan media bermain, gambar, flashcard, dan visualisasi manik sempoa fisik agar anak tidak merasa tertekan atau bosan.</p>
                 </div>
-                <span className="adv-card-hint"><i className="fas fa-info-circle"></i> Klik untuk selengkapnya</span>
+                <span className="adv-card-hint" style={{ color: 'var(--color-accent-teal)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.5rem', fontSize: '0.85rem' }}>
+                  <i className="fas fa-info-circle"></i> Klik untuk selengkapnya
+                </span>
               </div>
             </div>
 
-            {/* Card 3 */}
+            {/* Card 3: Pengajar Terlatih */}
             <div
               className={`advantage-card ${activeAdvCard === 3 ? 'active' : ''}`}
               id="advCard3"
               onClick={() => handleAdvCardClick(3)}
             >
               <div className="adv-card-image-wrap" style={{ backgroundColor: '#ffebee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <i className="fas fa-users-cog" style={{ fontSize: '5rem', color: '#E53935' }}></i>
+                <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="#E53935" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
               </div>
               <div className="adv-card-body">
                 <h3>Pengajar Terlatih & Ramah Anak</h3>
                 <div className="adv-card-desc">
                   <p>Guru-guru kami lolos pelatihan standarisasi metode pengajaran khusus anak usia dini, mengedepankan pendekatan verbal yang memotivasi dan membangun kepercayaan diri anak.</p>
                 </div>
-                <span className="adv-card-hint"><i className="fas fa-info-circle"></i> Klik untuk selengkapnya</span>
+                <span className="adv-card-hint" style={{ color: '#E53935', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.5rem', fontSize: '0.85rem' }}>
+                  <i className="fas fa-info-circle"></i> Klik untuk selengkapnya
+                </span>
               </div>
             </div>
 
-            {/* Card 4 */}
+            {/* Card 4: RFID IoT Absensi */}
             <div
               className={`advantage-card ${activeAdvCard === 4 ? 'active' : ''}`}
               id="advCard4"
               onClick={() => handleAdvCardClick(4)}
             >
               <div className="adv-card-image-wrap" style={{ backgroundColor: '#e8f5e9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <i className="fas fa-id-card-alt" style={{ fontSize: '5rem', color: '#2E7D32' }}></i>
+                <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                  <line x1="2" y1="10" x2="22" y2="10"></line>
+                  <circle cx="7" cy="15" r="1"></circle>
+                </svg>
               </div>
               <div className="adv-card-body">
                 <h3>Sistem Absensi RFID Digital Terintegrasi</h3>
                 <div className="adv-card-desc">
                   <p>Sistem bimbingan terintegrasi dengan alat sensor RFID berbasis IoT (ESP32). Anak cukup melakukan tapping kartu saat tiba dan pulang, lalu data kehadiran otomatis ter-update secara real-time ke portal orang tua.</p>
                 </div>
-                <span className="adv-card-hint"><i className="fas fa-info-circle"></i> Klik untuk selengkapnya</span>
+                <span className="adv-card-hint" style={{ color: '#2E7D32', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.5rem', fontSize: '0.85rem' }}>
+                  <i className="fas fa-info-circle"></i> Klik untuk selengkapnya
+                </span>
               </div>
             </div>
           </div>
@@ -606,33 +641,52 @@ export const HomePage: React.FC = () => {
               <p style={{ fontSize: '0.95rem', lineHeight: 1.6, color: 'rgba(255, 255, 255, 0.7)', marginTop: '0.5rem' }}>
                 Pusat pelatihan keseimbangan otak anak berbasis mental aritmatika dan bimbingan belajar terpercaya sejak 1998.
               </p>
-              <div className="footer-social-links">
-                <a href="https://www.instagram.com/sempoasippariaman1?igsh=MXgyeHgyeWk0czUyeA==" target="_blank" rel="noreferrer" title="Instagram Resmi"><i className="fab fa-instagram"></i></a>
-                <a href="https://www.facebook.com/share/14kTZEcbvgw/" target="_blank" rel="noreferrer" title="Facebook Resmi"><i className="fab fa-facebook-f"></i></a>
+              <div className="footer-social-links" style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem' }}>
+                <a href="https://www.instagram.com/sempoasippariaman1?igsh=MXgyeHgyeWk0czUyeA==" target="_blank" rel="noreferrer" title="Instagram Resmi" style={{ background: '#fff', padding: '0.5rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '38px', height: '38px' }}>
+                  <img src="/assets/icons/instagram.svg" alt="Instagram" style={{ width: '22px', height: '22px' }} />
+                </a>
+                <a href="https://www.facebook.com/share/14kTZEcbvgw/" target="_blank" rel="noreferrer" title="Facebook Resmi" style={{ background: '#fff', padding: '0.5rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '38px', height: '38px' }}>
+                  <img src="/assets/icons/facebook.svg" alt="Facebook" style={{ width: '22px', height: '22px' }} />
+                </a>
               </div>
             </div>
 
             {/* Contact Info Column */}
             <div>
               <h3>Kontak Resmi</h3>
-              <ul className="footer-contact">
-                <li><i className="fab fa-whatsapp"></i> <span><a href="https://wa.me/628126784986" target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>0812-6784-986 (WhatsApp)</a></span></li>
-                <li><i className="fas fa-phone-alt"></i> <span><a href="tel:+628126784986" style={{ color: 'inherit' }}>0812-6784-986 (Telepon)</a></span></li>
-                <li><i className="far fa-envelope"></i> <span>info@sempoasip-pariaman.id</span></li>
+              <ul className="footer-contact" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.75rem' }}>
+                  <img src="/assets/icons/whatsapp.svg" alt="WhatsApp" style={{ width: '20px', height: '20px', filter: 'brightness(0) invert(1)' }} />
+                  <span><a href="https://wa.me/628126784986" target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>0812-6784-986 (WhatsApp)</a></span>
+                </li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.75rem' }}>
+                  <img src="/assets/icons/telephone.svg" alt="Telepon" style={{ width: '20px', height: '20px', filter: 'brightness(0) invert(1)' }} />
+                  <span><a href="tel:+628126784986" style={{ color: 'inherit', textDecoration: 'none' }}>0812-6784-986 (Telepon)</a></span>
+                </li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.75rem' }}>
+                  <img src="/assets/icons/email.svg" alt="Email" style={{ width: '20px', height: '20px', filter: 'brightness(0) invert(1)' }} />
+                  <span>info@sempoasip-pariaman.id</span>
+                </li>
               </ul>
             </div>
 
             {/* Address & Schedules Column */}
             <div>
               <h3>Lokasi & Jam Buka</h3>
-              <ul className="footer-contact">
-                <li><i className="fas fa-map-pin" style={{ marginTop: '4px' }}></i> <span>Jl. Imam Bonjol, Alai Gelombang, Kec. Pariaman Tengah, Kota Pariaman, Sumatera Barat 25517</span></li>
-                <li><i className="far fa-clock" style={{ marginTop: '4px' }}></i> <span>Senin - Jumat: 14.00 - 18.00<br />Sabtu: 08.00 - 12.00<br />Minggu: Libur</span></li>
+              <ul className="footer-contact" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                <li style={{ display: 'flex', alignItems: 'flex-start', gap: '0.6rem', marginBottom: '0.75rem' }}>
+                  <img src="/assets/icons/peta.svg" alt="Lokasi" style={{ width: '20px', height: '20px', marginTop: '3px', filter: 'brightness(0) invert(1)' }} />
+                  <span>Jl. Imam Bonjol, Alai Gelombang, Kec. Pariaman Tengah, Kota Pariaman, Sumatera Barat 25517</span>
+                </li>
+                <li style={{ display: 'flex', alignItems: 'flex-start', gap: '0.6rem', marginBottom: '0.75rem' }}>
+                  <img src="/assets/icons/jam.svg" alt="Jam Buka" style={{ width: '20px', height: '20px', marginTop: '3px', filter: 'brightness(0) invert(1)' }} />
+                  <span>Senin - Jumat: 14.00 - 18.00<br />Sabtu: 08.00 - 12.00<br />Minggu: Libur</span>
+                </li>
               </ul>
             </div>
           </div>
 
-          <div className="footer-bottom">
+          <div className="footer-bottom" style={{ textAlign: 'center', paddingTop: '2rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
             <p>&copy; 2026 Sempoa SIP TC Pariaman. Hak Cipta Dilindungi.</p>
           </div>
         </div>
@@ -645,8 +699,24 @@ export const HomePage: React.FC = () => {
         rel="noreferrer"
         className="floating-wa"
         title="Konsultasi WhatsApp"
+        style={{
+          position: 'fixed',
+          bottom: '30px',
+          right: '30px',
+          width: '60px',
+          height: '60px',
+          background: '#25D366',
+          color: '#fff',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 6px 20px rgba(37, 211, 102, 0.4)',
+          zIndex: 9999,
+          transition: 'transform 0.3s ease',
+        }}
       >
-        <i className="fab fa-whatsapp"></i>
+        <img src="/assets/icons/whatsapp.svg" alt="WhatsApp" style={{ width: '32px', height: '32px', filter: 'brightness(0) invert(1)' }} />
       </a>
 
       {/* LIGHTBOX MODAL */}
