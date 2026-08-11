@@ -156,7 +156,7 @@ export const ProgramDetailPage: React.FC = () => {
   const { programId } = useParams<{ programId: string }>();
   const { user } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [hoveredBtn, setHoveredBtn] = useState<'prev' | 'next' | null>(null);
+  const [hoveredBtn, setHoveredBtn] = useState<'prev' | 'home' | 'next' | null>(null);
 
   const key = programId?.toLowerCase() || 'sempoa';
   const data = programDataMap[key] || programDataMap['sempoa'];
@@ -381,8 +381,8 @@ export const ProgramDetailPage: React.FC = () => {
             borderTop: '2px dashed #cbd5e1',
             marginTop: '3.5rem',
             paddingTop: '3rem',
-            display: 'flex',
-            justifyContent: 'space-between',
+            display: 'grid',
+            gridTemplateColumns: '1fr auto 1fr',
             alignItems: 'center',
             gap: '1rem',
           }}
@@ -393,6 +393,7 @@ export const ProgramDetailPage: React.FC = () => {
             onMouseEnter={() => setHoveredBtn('prev')}
             onMouseLeave={() => setHoveredBtn(null)}
             style={{
+              justifySelf: 'start',
               background: hoveredBtn === 'prev' ? data.prevColor : '#fff',
               border: `2px solid ${hoveredBtn === 'prev' ? data.prevColor : '#cbd5e1'}`,
               padding: '0.8rem 1.6rem',
@@ -406,20 +407,23 @@ export const ProgramDetailPage: React.FC = () => {
               gap: '0.6rem',
               boxShadow: hoveredBtn === 'prev' ? `0 8px 20px ${data.prevColor}45` : '0 4px 12px rgba(0,0,0,0.04)',
               transform: hoveredBtn === 'prev' ? 'translateY(-3px)' : 'none',
-              transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+              transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
             }}
           >
-            <i className="fas fa-arrow-left" style={{ color: hoveredBtn === 'prev' ? '#fff' : data.prevColor }}></i> {data.prevName}
+            <i className="fas fa-arrow-left" style={{ color: hoveredBtn === 'prev' ? '#fff' : data.prevColor, transition: 'all 0.3s' }}></i> {data.prevName}
           </Link>
 
           {/* HOME ICON ONLY BUTTON */}
           <Link
             to="/"
+            onMouseEnter={() => setHoveredBtn('home')}
+            onMouseLeave={() => setHoveredBtn(null)}
             style={{
+              justifySelf: 'center',
               background: data.color,
               color: '#fff',
-              width: '54px',
-              height: '54px',
+              width: '56px',
+              height: '56px',
               borderRadius: '50%',
               fontWeight: 700,
               fontSize: '1.25rem',
@@ -427,12 +431,13 @@ export const ProgramDetailPage: React.FC = () => {
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: `0 6px 18px ${data.color}50`,
-              transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+              boxShadow: hoveredBtn === 'home' ? `0 10px 25px ${data.color}70` : `0 6px 15px ${data.color}40`,
+              transform: hoveredBtn === 'home' ? 'scale(1.08) translateY(-2px)' : 'scale(1)',
+              transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
             }}
             title="Kembali ke Beranda"
           >
-            <img src="/assets/icons/home.svg" alt="Beranda" style={{ width: '28px', height: '28px', display: 'block' }} />
+            <img src="/assets/icons/home.svg" alt="Beranda" style={{ width: '26px', height: '26px', display: 'block', transition: 'all 0.3s' }} />
           </Link>
 
           {/* NEXT PROGRAM BUTTON */}
@@ -441,6 +446,7 @@ export const ProgramDetailPage: React.FC = () => {
             onMouseEnter={() => setHoveredBtn('next')}
             onMouseLeave={() => setHoveredBtn(null)}
             style={{
+              justifySelf: 'end',
               background: hoveredBtn === 'next' ? data.nextColor : '#fff',
               border: `2px solid ${hoveredBtn === 'next' ? data.nextColor : '#cbd5e1'}`,
               padding: '0.8rem 1.6rem',
@@ -454,10 +460,10 @@ export const ProgramDetailPage: React.FC = () => {
               gap: '0.6rem',
               boxShadow: hoveredBtn === 'next' ? `0 8px 20px ${data.nextColor}45` : '0 4px 12px rgba(0,0,0,0.04)',
               transform: hoveredBtn === 'next' ? 'translateY(-3px)' : 'none',
-              transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+              transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
             }}
           >
-            {data.nextName} <i className="fas fa-arrow-right" style={{ color: hoveredBtn === 'next' ? '#fff' : data.nextColor }}></i>
+            {data.nextName} <i className="fas fa-arrow-right" style={{ color: hoveredBtn === 'next' ? '#fff' : data.nextColor, transition: 'all 0.3s' }}></i>
           </Link>
         </nav>
       </main>
