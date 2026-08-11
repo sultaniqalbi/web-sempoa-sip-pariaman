@@ -54,9 +54,9 @@ const programDataMap: Record<string, ProgramDetail> = {
     ],
     testimonial: {
       quote:
-        'Semenjak belajar sempoa di sini, kemampuan menghitung anak saya berkembang luar biasa. Bahkan ia menjadi jauh lebih fokus dan teliti mengerjakan PR sekolahnya sendiri.',
-      author: 'Ibu Budi',
-      role: 'Wali Murid Sempoa (Level 2)',
+        'Sebelum belajar sempoa, Hafla memang anak yang cenderung pemalu dan kurang percaya diri jika harus tampil di depan banyak orang. Alhamdulillah, sejak mengikuti kelas sempoa, kami melihat perubahan yang sangat positif. Hafla menjadi lebih berani dan percaya diri. Manfaat sempoa bukan hanya melatih kemampuan berhitung, tetapi juga membantu membangun keberanian dan kesiapan anak untuk tampil di depan orang lain.',
+      author: 'Orang Tua Hafla',
+      role: 'Wali Murid Sempoa SIP',
     },
     prevId: 'inggris',
     prevName: 'Bahasa Inggris',
@@ -67,7 +67,7 @@ const programDataMap: Record<string, ProgramDetail> = {
     id: 'fonem',
     title: 'Program Fonem (Baca Tulis)',
     subTitle: 'Metode Pembelajaran Seluruh Otak Membaca & Menulis Cepat',
-    age: '4 - 6 TAHUN',
+    age: '4 - 12 TAHUN',
     gradient: 'linear-gradient(135deg, #00acc1 0%, #00838f 100%)',
     color: '#00838f',
     badgeBg: '#e0f7fa',
@@ -89,9 +89,9 @@ const programDataMap: Record<string, ProgramDetail> = {
     ],
     testimonial: {
       quote:
-        'Anak saya masuk kelas Fonem di usia 4.5 tahun. Pendekatan gurunya ramah dan interaktif banget. Dalam 3 bulan, anak saya sudah lancar mengeja dan mulai bisa membaca sendiri.',
-      author: 'Bapak Putra',
-      role: 'Wali Murid Fonem',
+        'Testimoni queenza selama belajar sempoa sangat lah bagus buk .. Alhamdulillah queenza sangat menyukai pelajaran matematika .. Sangat aktif dalam semua perlombaan baik itu matematika atau pun akademik lainnya .. Dari kelas 1 sampai sekarang kelas 6 queenza selalu juara 1 di sekolah!',
+      author: 'Orang Tua Queenza',
+      role: 'Wali Murid Sempoa SIP',
     },
     prevId: 'sempoa',
     prevName: 'Sempoa SIP',
@@ -102,7 +102,7 @@ const programDataMap: Record<string, ProgramDetail> = {
     id: 'tahfidz',
     title: 'Program Ngaji & Tahfidz',
     subTitle: 'Bimbingan Hafalan Al-Qur’an & Tajwid Praktik Ibadah Harian',
-    age: '5 - 15 TAHUN',
+    age: '4 - 12 TAHUN',
     gradient: 'linear-gradient(135deg, #2E7D32 0%, #1b5e20 100%)',
     color: '#1b5e20',
     badgeBg: '#e8f5e9',
@@ -124,9 +124,9 @@ const programDataMap: Record<string, ProgramDetail> = {
     ],
     testimonial: {
       quote:
-        'Kelas ngaji anak saya jadi asyik sekali. Menghafal Juz 30 tidak lagi menjadi momok menakutkan karena gurunya sabar membimbing lewat nada yang ceria.',
-      author: 'Ibu Sari',
-      role: 'Wali Murid Ngaji/Tahfidz',
+        'sejak pertama masuk sempoa fatihah sangat bersemangat b emi, sampai masuk foundation A, difoundation B sampai sekarang... dirumah mami tanya apakah fatihah capek belajar? Fatihah bilang capek dikit mi, mudah2an kedepannya fatihah lebih semangat lagi b emi.',
+      author: 'Orang Tua Fatihah',
+      role: 'Wali Murid Sempoa SIP',
     },
     prevId: 'fonem',
     prevName: 'Fonem (Baca Tulis)',
@@ -137,7 +137,7 @@ const programDataMap: Record<string, ProgramDetail> = {
     id: 'inggris',
     title: 'Program Bahasa Inggris',
     subTitle: 'Percakapan Interaktif & Kosakata Aktif untuk Percaya Diri',
-    age: 'ALL AGES',
+    age: '4 - 12 TAHUN',
     gradient: 'linear-gradient(135deg, #E53935 0%, #c62828 100%)',
     color: '#c62828',
     badgeBg: '#ffebee',
@@ -159,9 +159,9 @@ const programDataMap: Record<string, ProgramDetail> = {
     ],
     testimonial: {
       quote:
-        'Anak saya tadinya sangat pemalu saat diajak bicara bahasa Inggris. Setelah ikut bimbingan 2 bulan, dia sudah berani menyapa dan bercerita singkat.',
-      author: 'Ibu Ratna',
-      role: 'Wali Murid Bahasa Inggris',
+        'Allahamdulillah sejak agis mengenal sempoa dari sejak TK B, jauh sangat manfaat yang di rasakan sejak belajar... dari segi Daya Ingat Kuat terlihat sepintas dalam proses belajar apapun... sangat menyukai hitungan math, dan juga sangat Percaya Diri!',
+      author: 'Orang Tua Agis',
+      role: 'Wali Murid Sempoa SIP',
     },
     prevId: 'tahfidz',
     prevName: 'Ngaji / Tahfidz',

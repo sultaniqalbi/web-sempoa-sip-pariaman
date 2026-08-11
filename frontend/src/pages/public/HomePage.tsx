@@ -109,6 +109,7 @@ export const HomePage: React.FC = () => {
             <li><a href="#programs" onClick={() => setIsMobileMenuOpen(false)}>Program</a></li>
             <li><a href="#advantages" onClick={() => setIsMobileMenuOpen(false)}>Keunggulan</a></li>
             <li><a href="#achievements" onClick={() => setIsMobileMenuOpen(false)}>Prestasi</a></li>
+            <li><Link to="/galeri" onClick={() => setIsMobileMenuOpen(false)}>Galeri</Link></li>
             <li><a href="#lokasi-peta" onClick={() => setIsMobileMenuOpen(false)}>Lokasi</a></li>
             <li>
               {user ? (
@@ -206,70 +207,111 @@ export const HomePage: React.FC = () => {
             <p>Pilih program terbaik yang dirancang khusus untuk melatih tumbuh kembang belajar anak Anda</p>
           </div>
           
-          <div className="programs-grid">
-            {/* Program 1: Sempoa */}
-            <div className="program-card" style={{ borderTop: '6px solid var(--color-primary)' }}>
-              <div className="program-card-image-wrap" style={{ background: 'linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary) 100%)' }}>
-                <img src="/assets/image/sempa-belajar-sempoa.png" alt="Maskot Sempoa" className="program-mascot" />
-                <div className="program-badge-icon" style={{ borderColor: 'var(--color-primary-orange)' }}><i className="fas fa-calculator"></i></div>
+          <div className="programs-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
+            {/* Program 1: Sempoa SIP */}
+            <div className="program-card" style={{ background: '#fff', borderRadius: '16px', borderTop: '6px solid var(--color-primary-orange)', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', padding: '1.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                  <h3 style={{ margin: 0, fontWeight: 700, fontSize: '1.3rem', color: 'var(--color-text-dark)' }}>Sempoa SIP</h3>
+                  <span style={{ background: '#fff8e1', color: '#e65100', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '20px', border: '1px solid #ffe0b2' }}>Usia 4 - 12 Thn</span>
+                </div>
+                <p style={{ fontSize: '0.92rem', marginBottom: '1.25rem', color: 'var(--color-text-body)', textAlign: 'left', lineHeight: 1.6 }}>
+                  Pelatihan mental aritmatika guna menyeimbangkan koordinasi sel otak kanan-kiri anak secara optimal.
+                </p>
+                <div className="program-schedule-box" style={{ padding: '0.8rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: '0.82rem', color: '#e65100', fontWeight: 700, marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <i className="far fa-clock"></i> Sesi & Jadwal Kelas
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem', fontWeight: 600, color: '#334155' }}>
+                    <span><i className="far fa-calendar-alt" style={{ color: '#f57c00', marginRight: '0.3rem' }}></i> Senin - Sabtu</span>
+                    <span style={{ background: '#fff3e0', color: '#e65100', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>12.00 - 17.00 WIB</span>
+                  </div>
+                </div>
               </div>
-              <div className="program-card-body" style={{ padding: '1.5rem', textAlign: 'center', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                <h3 style={{ marginBottom: '0.5rem', fontWeight: 700, fontSize: '1.25rem' }}>Sempoa</h3>
-                <p style={{ fontSize: '0.9rem', marginBottom: '1.5rem', color: 'var(--color-text-body)', flexGrow: 1 }}>Sistem pelatihan mental aritmatika guna menyeimbangkan koordinasi sel otak kanan-kiri anak secara optimal.</p>
-                <Link to="/program/sempoa" className="btn btn-outline" style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem', width: '100%', marginTop: 'auto' }}><i className="fas fa-search"></i> Lihat Detail Program</Link>
-              </div>
+              <Link to="/program/sempoa" className="btn btn-outline" style={{ padding: '0.6rem 1.25rem', fontSize: '0.9rem', width: '100%', marginTop: 'auto', justifyContent: 'center' }}>
+                Lihat Detail Program <i className="fas fa-arrow-right" style={{ marginLeft: '0.3rem' }}></i>
+              </Link>
             </div>
 
-            {/* Program 2: Fonem */}
-            <div className="program-card" style={{ borderTop: '6px solid var(--color-accent-teal)' }}>
-              <div className="program-card-image-wrap" style={{ background: 'linear-gradient(135deg, #e0f7fa 0%, var(--color-accent-teal) 100%)' }}>
-                <img src="/assets/image/sempi-belajar-fonem.png" alt="Maskot Fonem" className="program-mascot" />
-                <div className="program-badge-icon" style={{ borderColor: 'var(--color-accent-teal)' }}><i className="fas fa-book-open"></i></div>
+            {/* Program 2: Fonem (Baca Tulis) */}
+            <div className="program-card" style={{ background: '#fff', borderRadius: '16px', borderTop: '6px solid var(--color-accent-teal)', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', padding: '1.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                  <h3 style={{ margin: 0, fontWeight: 700, fontSize: '1.25rem', color: 'var(--color-text-dark)' }}>Fonem (Baca Tulis)</h3>
+                  <span style={{ background: '#e0f7fa', color: '#00838f', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '20px', border: '1px solid #b2ebf2' }}>Usia 4 - 12 Thn</span>
+                </div>
+                <p style={{ fontSize: '0.92rem', marginBottom: '1.25rem', color: 'var(--color-text-body)', textAlign: 'left', lineHeight: 1.6 }}>
+                  Metode PeSO (Pembelajaran Seluruh Otak) membaca & menulis cepat tanpa mengeja dan tanpa stres.
+                </p>
+                <div className="program-schedule-box" style={{ padding: '0.8rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: '0.82rem', color: '#00838f', fontWeight: 700, marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <i className="far fa-clock"></i> Sesi & Jadwal Kelas
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem', fontWeight: 600, color: '#334155' }}>
+                    <span><i className="far fa-calendar-alt" style={{ color: '#00acc1', marginRight: '0.3rem' }}></i> Senin - Sabtu</span>
+                    <span style={{ background: '#e0f7fa', color: '#00838f', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>12.00 - 17.00 WIB</span>
+                  </div>
+                </div>
               </div>
-              <div className="program-card-body" style={{ padding: '1.5rem', textAlign: 'center', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                <h3 style={{ marginBottom: '0.5rem', fontWeight: 700, fontSize: '1.25rem' }}>Fonem (Baca Tulis)</h3>
-                <p style={{ fontSize: '0.9rem', marginBottom: '1.5rem', color: 'var(--color-text-body)', flexGrow: 1 }}>Metode menyenangkan belajar membaca dan menulis cepat menggunakan pengenalan bunyi fonetik sejak usia dini.</p>
-                <Link to="/program/fonem" className="btn btn-outline" style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem', width: '100%', marginTop: 'auto' }}><i className="fas fa-search"></i> Lihat Detail Program</Link>
-              </div>
+              <Link to="/program/fonem" className="btn btn-outline" style={{ padding: '0.6rem 1.25rem', fontSize: '0.9rem', width: '100%', marginTop: 'auto', justifyContent: 'center' }}>
+                Lihat Detail Program <i className="fas fa-arrow-right" style={{ marginLeft: '0.3rem' }}></i>
+              </Link>
             </div>
 
-            {/* Program 3: Tahfidz */}
-            <div className="program-card" style={{ borderTop: '6px solid #2E7D32' }}>
-              <div className="program-card-image-wrap" style={{ background: 'linear-gradient(135deg, #e8f5e9 0%, #2E7D32 100%)' }}>
-                <img src="/assets/image/sempa-belajar-tahfidz.png" alt="Maskot Tahfidz" className="program-mascot" style={{ filter: 'drop-shadow(0 8px 12px rgba(0,0,0,0.15))' }} />
-                <div className="program-badge-icon" style={{ borderColor: '#2E7D32' }}><i className="fas fa-quran"></i></div>
+            {/* Program 3: Ngaji / Tahfidz */}
+            <div className="program-card" style={{ background: '#fff', borderRadius: '16px', borderTop: '6px solid #2E7D32', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', padding: '1.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                  <h3 style={{ margin: 0, fontWeight: 700, fontSize: '1.25rem', color: 'var(--color-text-dark)' }}>Ngaji / Tahfidz</h3>
+                  <span style={{ background: '#e8f5e9', color: '#1b5e20', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '20px', border: '1px solid #c8e6c9' }}>Usia 4 - 12 Thn</span>
+                </div>
+                <p style={{ fontSize: '0.92rem', marginBottom: '1.25rem', color: 'var(--color-text-body)', textAlign: 'left', lineHeight: 1.6 }}>
+                  Bimbingan hafalan surat-surat pendek Al-Qur'an (Juz 30) serta praktik ibadah harian.
+                </p>
+                <div className="program-schedule-box" style={{ padding: '0.8rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: '0.82rem', color: '#1b5e20', fontWeight: 700, marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <i className="far fa-clock"></i> Sesi & Jadwal Kelas
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem', fontWeight: 600, color: '#334155' }}>
+                    <span><i className="far fa-calendar-alt" style={{ color: '#2e7d32', marginRight: '0.3rem' }}></i> Senin - Sabtu</span>
+                    <span style={{ background: '#e8f5e9', color: '#1b5e20', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>12.00 - 17.00 WIB</span>
+                  </div>
+                </div>
               </div>
-              <div className="program-card-body" style={{ padding: '1.5rem', textAlign: 'center', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                <h3 style={{ marginBottom: '0.5rem', fontWeight: 700, fontSize: '1.25rem' }}>Ngaji / Tahfidz</h3>
-                <p style={{ fontSize: '0.9rem', marginBottom: '1.5rem', color: 'var(--color-text-body)', flexGrow: 1 }}>Bimbingan hafalan surat-surat pendek Al-Qur'an (Juz 30) lewat pendekatan yang ramah anak dan islami.</p>
-                <Link to="/program/tahfidz" className="btn btn-outline" style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem', width: '100%', marginTop: 'auto' }}><i className="fas fa-search"></i> Lihat Detail Program</Link>
-              </div>
+              <Link to="/program/tahfidz" className="btn btn-outline" style={{ padding: '0.6rem 1.25rem', fontSize: '0.9rem', width: '100%', marginTop: 'auto', justifyContent: 'center' }}>
+                Lihat Detail Program <i className="fas fa-arrow-right" style={{ marginLeft: '0.3rem' }}></i>
+              </Link>
             </div>
 
             {/* Program 4: Bahasa Inggris */}
-            <div className="program-card" style={{ borderTop: '6px solid #E53935' }}>
-              <div className="program-card-image-wrap" style={{ background: 'linear-gradient(135deg, #ffebee 0%, #E53935 100%)' }}>
-                <img src="/assets/image/sempa-sempi-bing.jpg" alt="Maskot Inggris" className="program-mascot" />
-                <div className="program-badge-icon" style={{ borderColor: '#E53935' }}><i className="fas fa-globe"></i></div>
+            <div className="program-card" style={{ background: '#fff', borderRadius: '16px', borderTop: '6px solid #E53935', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', padding: '1.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                  <h3 style={{ margin: 0, fontWeight: 700, fontSize: '1.25rem', color: 'var(--color-text-dark)' }}>Bahasa Inggris</h3>
+                  <span style={{ background: '#ffebee', color: '#c62828', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '20px', border: '1px solid #ffcdd2' }}>Usia 4 - 12 Thn</span>
+                </div>
+                <p style={{ fontSize: '0.92rem', marginBottom: '1.25rem', color: 'var(--color-text-body)', textAlign: 'left', lineHeight: 1.6 }}>
+                  Pengenalan kosakata, pelafalan, dan percakapan interaktif guna membangun percaya diri berbahasa asing.
+                </p>
+                <div className="program-schedule-box" style={{ padding: '0.8rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: '0.82rem', color: '#c62828', fontWeight: 700, marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <i className="far fa-clock"></i> Sesi & Jadwal Kelas
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem', fontWeight: 600, color: '#334155' }}>
+                      <span><i className="far fa-calendar-alt" style={{ color: '#e53935', marginRight: '0.3rem' }}></i> Jumat</span>
+                      <span style={{ background: '#ffebee', color: '#c62828', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>11.00 - 17.00 WIB</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem', fontWeight: 600, color: '#334155' }}>
+                      <span><i className="far fa-calendar-alt" style={{ color: '#e53935', marginRight: '0.3rem' }}></i> Sabtu</span>
+                      <span style={{ background: '#ffebee', color: '#c62828', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>08.30 - 15.30 WIB</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="program-card-body" style={{ padding: '1.5rem', textAlign: 'center', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                <h3 style={{ marginBottom: '0.5rem', fontWeight: 700, fontSize: '1.25rem' }}>Bahasa Inggris</h3>
-                <p style={{ fontSize: '0.9rem', marginBottom: '1.5rem', color: 'var(--color-text-body)', flexGrow: 1 }}>Pengenalan kosakata dasar, pelafalan, percakapan ringan interaktif guna membangun percaya diri berbahasa asing.</p>
-                <Link to="/program/inggris" className="btn btn-outline" style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem', width: '100%', marginTop: 'auto' }}><i className="fas fa-search"></i> Lihat Detail Program</Link>
-              </div>
-            </div>
-
-            {/* Program 5: TK */}
-            <div className="program-card" style={{ borderTop: '6px solid #BA68C8' }}>
-              <div className="program-card-image-wrap" style={{ background: 'linear-gradient(135deg, #f3e5f5 0%, #BA68C8 100%)' }}>
-                <img src="/assets/image/sempa-sempi-tk.png" alt="Maskot TK" className="program-mascot" />
-                <div className="program-badge-icon" style={{ borderColor: '#BA68C8' }}><i className="fas fa-child"></i></div>
-              </div>
-              <div className="program-card-body" style={{ padding: '1.5rem', textAlign: 'center', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                <h3 style={{ marginBottom: '0.5rem', fontWeight: 700, fontSize: '1.25rem' }}>TK Kembang Harapan</h3>
-                <p style={{ fontSize: '0.9rem', marginBottom: '1.5rem', color: 'var(--color-text-body)', flexGrow: 1 }}>Pendidikan anak usia dini berbasis pembentukan karakter ceria, mandiri, kreatif, dan kognitif motorik dasar.</p>
-                <Link to="/program/tk" className="btn btn-outline" style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem', width: '100%', marginTop: 'auto' }}><i className="fas fa-search"></i> Lihat Detail Program</Link>
-              </div>
+              <Link to="/program/inggris" className="btn btn-outline" style={{ padding: '0.6rem 1.25rem', fontSize: '0.9rem', width: '100%', marginTop: 'auto', justifyContent: 'center' }}>
+                Lihat Detail Program <i className="fas fa-arrow-right" style={{ marginLeft: '0.3rem' }}></i>
+              </Link>
             </div>
           </div>
         </div>
@@ -397,46 +439,87 @@ export const HomePage: React.FC = () => {
             <h2>Testimoni Wali Murid</h2>
             <p>Pengakuan nyata para orang tua yang melihat langsung perubahan positif buah hati mereka</p>
           </div>
-          <div className="testi-grid">
-            <div className="testi-card">
-              <i className="fas fa-quote-right quote-icon"></i>
-              <p className="testi-text">"Semenjak belajar sempoa di sini, kemampuan menghitung anak saya berkembang luar biasa. Bahkan ia menjadi jauh lebih fokus dan teliti mengerjakan PR sekolahnya sendiri."</p>
-              <div className="testi-author">
-                <div className="author-img-wrap">
-                  <div className="author-img">IB</div>
-                  <div className="author-quote-accent"><i className="fas fa-quote-left"></i></div>
+          <div className="testi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem' }}>
+            {/* Testimoni 1: Hafla */}
+            <div className="testi-card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderRadius: '12px', background: '#fff8e1', border: '1px solid #ffecb3' }}>
+              <div style={{ position: 'relative' }}>
+                <div style={{ position: 'absolute', top: '-0.5rem', right: '-0.5rem', width: '42px', height: '42px', borderRadius: '50%', background: '#f57c00', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.15, zIndex: 0 }}>
+                  <i className="fas fa-quote-right" style={{ color: 'white', fontSize: '1.1rem' }}></i>
+                </div>
+                <p className="testi-text" style={{ fontSize: '0.84rem', lineHeight: 1.6, color: '#424242', marginBottom: '1rem', position: 'relative', zIndex: 1 }}>
+                  "Sebelum belajar sempoa, Hafla memang anak yang cenderung pemalu dan kurang percaya diri jika harus tampil di depan banyak orang. Kami sebagai orang tua sering khawatir karena dia lebih suka menghindari situasi yang mengharuskannya berbicara di depan umum. Alhamdulillah, sejak mengikuti kelas sempoa, kami melihat perubahan yang sangat positif. Hafla menjadi lebih berani dan percaya diri. Bahkan saat ustazah di sekolah memintanya tampil di depan kelas, ataupun depan umum dia mau melakukannya tanpa menolak seperti sebelumnya. Bagi kami, manfaat sempoa bukan hanya melatih kemampuan berhitung, tetapi juga membantu membangun keberanian, kepercayaan diri, serta kesiapan anak untuk tampil di depan orang lain. Semoga Hafla terus berkembang menjadi anak yang percaya diri dan berprestasi.."
+                </p>
+              </div>
+              <div className="testi-author" style={{ borderTop: '1px solid #ffe082', paddingTop: '0.75rem', marginTop: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div className="author-img" style={{ background: '#f57c00', color: 'white', width: '38px', height: '38px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
+                  OH
                 </div>
                 <div>
-                  <h4>Ibu Budi</h4>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--color-text-light)', margin: 0 }}>Wali Murid Sempoa (Level 2)</p>
+                  <h4 style={{ fontSize: '0.92rem', margin: 0, fontWeight: 700, color: 'var(--color-text-dark)' }}>Orang Tua Hafla</h4>
+                  <p style={{ fontSize: '0.78rem', color: 'var(--color-text-light)', margin: 0 }}>Wali Murid Sempoa SIP</p>
                 </div>
               </div>
             </div>
-            <div className="testi-card">
-              <i className="fas fa-quote-right quote-icon"></i>
-              <p className="testi-text">"Anak saya masuk kelas Fonem di usia 4.5 tahun. Pendekatan gurunya ramah dan interaktif banget. Dalam 3 bulan, anak saya sudah lancar mengeja dan mulai bisa membaca sendiri."</p>
-              <div className="testi-author">
-                <div className="author-img-wrap">
-                  <div className="author-img">BP</div>
-                  <div className="author-quote-accent"><i className="fas fa-quote-left"></i></div>
+
+            {/* Testimoni 2: Queenza */}
+            <div className="testi-card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderRadius: '12px', background: '#e0f7fa', border: '1px solid #b2ebf2' }}>
+              <div style={{ position: 'relative' }}>
+                <div style={{ position: 'absolute', top: '-0.5rem', right: '-0.5rem', width: '42px', height: '42px', borderRadius: '50%', background: '#00acc1', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.15, zIndex: 0 }}>
+                  <i className="fas fa-quote-right" style={{ color: 'white', fontSize: '1.1rem' }}></i>
+                </div>
+                <p className="testi-text" style={{ fontSize: '0.84rem', lineHeight: 1.6, color: '#424242', marginBottom: '1rem', position: 'relative', zIndex: 1 }}>
+                  "Testimoni queenza selama belajar sempoa sangat lah bagus buk .. Alhamdulillah queenza sangat menyukai pelajaran matematika .. Sangat aktif dalam semua perlombaan baik itu matematika atau pun akademik lainnya .. Selain itu alhamdulillah nya, dari kelas 1 sampai sekarang kelas 6 queenza selalu juara 1 di sekolah .. Dan selain itu queenza dapat menghitung cepat, dan bayangan saja .. Sempoa sangat sangat bagus 👍🏻 Terimakasih buat guru2 yang sudah mengajarkan dan mendidikan queenza,sehingga alhamdulillah queenza menjadi anak yg berprestasi dari dl sampai sekarang, mudah2an kedepannya akan lebih sukses lagi aamiin 🙏🏻"
+                </p>
+              </div>
+              <div className="testi-author" style={{ borderTop: '1px solid #80deea', paddingTop: '0.75rem', marginTop: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div className="author-img" style={{ background: '#00acc1', color: 'white', width: '38px', height: '38px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
+                  OQ
                 </div>
                 <div>
-                  <h4>Bapak Putra</h4>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--color-text-light)', margin: 0 }}>Wali Murid Fonem</p>
+                  <h4 style={{ fontSize: '0.92rem', margin: 0, fontWeight: 700, color: 'var(--color-text-dark)' }}>Orang Tua Queenza</h4>
+                  <p style={{ fontSize: '0.78rem', color: 'var(--color-text-light)', margin: 0 }}>Wali Murid Sempoa SIP</p>
                 </div>
               </div>
             </div>
-            <div className="testi-card">
-              <i className="fas fa-quote-right quote-icon"></i>
-              <p className="testi-text">"Kelas ngaji anak saya jadi asyik sekali. Menghafal Juz 30 tidak lagi menjadi momok menakutkan karena gurunya sabar membimbing lewat nada yang ceria. Sangat direkomendasikan!"</p>
-              <div className="testi-author">
-                <div className="author-img-wrap">
-                  <div className="author-img">IS</div>
-                  <div className="author-quote-accent"><i className="fas fa-quote-left"></i></div>
+
+            {/* Testimoni 3: Fatihah */}
+            <div className="testi-card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderRadius: '12px', background: '#e8f5e9', border: '1px solid #c8e6c9' }}>
+              <div style={{ position: 'relative' }}>
+                <div style={{ position: 'absolute', top: '-0.5rem', right: '-0.5rem', width: '42px', height: '42px', borderRadius: '50%', background: '#2E7D32', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.15, zIndex: 0 }}>
+                  <i className="fas fa-quote-right" style={{ color: 'white', fontSize: '1.1rem' }}></i>
+                </div>
+                <p className="testi-text" style={{ fontSize: '0.84rem', lineHeight: 1.6, color: '#424242', marginBottom: '1rem', position: 'relative', zIndex: 1 }}>
+                  "sejak pertama masuk sempoa fatihah sangat bersemangat b emi, sampai masuk foundation A, difoundation B sampai sekarang semangatnya agak kurang b emi, dirumah mami tanya apakah fatihah capek belajar? Fatihah bilang capek dikit mi, mungkin karna kegiatan sekolahnya fullday jd kurang fokus, mudah2an kedepannya fatihah lebih semangat lagi b emi."
+                </p>
+              </div>
+              <div className="testi-author" style={{ borderTop: '1px solid #a5d6a7', paddingTop: '0.75rem', marginTop: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div className="author-img" style={{ background: '#2E7D32', color: 'white', width: '38px', height: '38px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
+                  OF
                 </div>
                 <div>
-                  <h4>Ibu Sari</h4>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--color-text-light)', margin: 0 }}>Wali Murid Ngaji/Tahfidz</p>
+                  <h4 style={{ fontSize: '0.92rem', margin: 0, fontWeight: 700, color: 'var(--color-text-dark)' }}>Orang Tua Fatihah</h4>
+                  <p style={{ fontSize: '0.78rem', color: 'var(--color-text-light)', margin: 0 }}>Wali Murid Sempoa SIP</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Testimoni 4: Agis */}
+            <div className="testi-card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderRadius: '12px', background: '#ffebee', border: '1px solid #ffcdd2' }}>
+              <div style={{ position: 'relative' }}>
+                <div style={{ position: 'absolute', top: '-0.5rem', right: '-0.5rem', width: '42px', height: '42px', borderRadius: '50%', background: '#c62828', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.15, zIndex: 0 }}>
+                  <i className="fas fa-quote-right" style={{ color: 'white', fontSize: '1.1rem' }}></i>
+                </div>
+                <p className="testi-text" style={{ fontSize: '0.84rem', lineHeight: 1.6, color: '#424242', marginBottom: '1rem', position: 'relative', zIndex: 1 }}>
+                  "Allahamdulillah sejak agis mengenal sempoa dari sejak TK B, jauh sangat manfaat yang di rasakan sejak belajar, mulai dari anak yang biasa tidak fokus, atau kurang fokus, allhamdulillah sekarng dalam belajar suah terlihat fokus, dan uang paling syanag rasakan kali dampaknya, dari segi Daya Ingat Kuat terkihat sepintas dalam proses belajar apapun mendengar sekilas kata2, tidak disadari dia ingat sekali, dan sangat menyukai hitungan math, dan juga sangat Percaya Diri: Menyelesaikan soal matematika menumbuhkan keberanian menghadapi tantangan. Disekolah sekarng guru2 sekolah pun menyampai kalo agis ini sangat aktif dan percaya diri tampil jika dia mengetahui suatu hal, Terima kasih untuk sempoa 👏🏻👍🏻👍🏻"
+                </p>
+              </div>
+              <div className="testi-author" style={{ borderTop: '1px solid #ef9a9a', paddingTop: '0.75rem', marginTop: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div className="author-img" style={{ background: '#E53935', color: 'white', width: '38px', height: '38px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
+                  OA
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '0.92rem', margin: 0, fontWeight: 700, color: 'var(--color-text-dark)' }}>Orang Tua Agis</h4>
+                  <p style={{ fontSize: '0.78rem', color: 'var(--color-text-light)', margin: 0 }}>Wali Murid Sempoa SIP</p>
                 </div>
               </div>
             </div>
@@ -445,25 +528,51 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* GALLERY SECTION */}
-      <section className="gallery section-padding" style={{ backgroundColor: 'var(--color-bg-light)', borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
-        <div className="container">
+      <section className="gallery section-padding" id="galeri" style={{ backgroundColor: 'var(--color-bg-light)', borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
+        <div className="container" style={{ textAlign: 'center' }}>
           <div className="section-header">
-            <h2>Galeri Kegiatan Bimbingan Belajar</h2>
+            <h2>Galeri Kegiatan Pembelajaran dan Prestasi</h2>
             <p>Mengintip keceriaan anak-anak didik kami saat belajar, berlatih, dan berprestasi bersama</p>
           </div>
-          <div className="gallery-grid">
-            <div className="gallery-item" onClick={() => setLightboxImg({ src: '/assets/image/siswa-belajar-sempoa.jpg', title: 'Siswa belajar sempoa' })}>
-              <img src="/assets/image/siswa-belajar-sempoa.jpg" alt="Siswa belajar sempoa" />
+          <div className="gallery-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1.25rem', textAlign: 'center' }}>
+            <div className="gallery-card" onClick={() => setLightboxImg({ src: '/assets/image/kegiatan-1.webp', title: 'Siswa Praktek Sholat Berjamaah' })} style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', border: '3px solid #f57c00', boxShadow: '0 6px 18px rgba(245, 124, 0, 0.15)', cursor: 'pointer' }}>
+              <div className="gallery-img-wrap" style={{ width: '100%', aspectRatio: '3 / 4', overflow: 'hidden' }}>
+                <img src="/assets/image/kegiatan-1.webp" alt="Siswa Praktek Sholat Berjamaah" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+              <div className="gallery-caption" style={{ padding: '0.85rem', fontWeight: 700, color: '#e65100', fontSize: '0.9rem', borderTop: '1px solid #fff3e0' }}>
+                Siswa Praktek Sholat Berjamaah
+              </div>
             </div>
-            <div className="gallery-item" onClick={() => setLightboxImg({ src: '/assets/image/guru-membimbing.jpg', title: 'Guru membimbing fonem' })}>
-              <img src="/assets/image/guru-membimbing.jpg" alt="Guru membimbing fonem" />
+            <div className="gallery-card" onClick={() => setLightboxImg({ src: '/assets/image/kegiatan-2.webp', title: 'Siswa Sedang Belajar Sempoa' })} style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', border: '3px solid #00acc1', boxShadow: '0 6px 18px rgba(0, 172, 193, 0.15)', cursor: 'pointer' }}>
+              <div className="gallery-img-wrap" style={{ width: '100%', aspectRatio: '3 / 4', overflow: 'hidden' }}>
+                <img src="/assets/image/kegiatan-2.webp" alt="Siswa Sedang Belajar Sempoa" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+              <div className="gallery-caption" style={{ padding: '0.85rem', fontWeight: 700, color: '#00838f', fontSize: '0.9rem', borderTop: '1px solid #e0f7fa' }}>
+                Siswa Sedang Belajar Sempoa
+              </div>
             </div>
-            <div className="gallery-item" onClick={() => setLightboxImg({ src: '/assets/image/siswa-menyusun-balok.jpg', title: 'Siswa menyusun balok huruf' })}>
-              <img src="/assets/image/siswa-menyusun-balok.jpg" alt="Siswa menyusun balok huruf" />
+            <div className="gallery-card" onClick={() => setLightboxImg({ src: '/assets/image/kegiatan-3.webp', title: 'Suasana Belajar Fonem' })} style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', border: '3px solid #2E7D32', boxShadow: '0 6px 18px rgba(46, 125, 50, 0.15)', cursor: 'pointer' }}>
+              <div className="gallery-img-wrap" style={{ width: '100%', aspectRatio: '3 / 4', overflow: 'hidden' }}>
+                <img src="/assets/image/kegiatan-3.webp" alt="Suasana Belajar Fonem" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+              <div className="gallery-caption" style={{ padding: '0.85rem', fontWeight: 700, color: '#1b5e20', fontSize: '0.9rem', borderTop: '1px solid #e8f5e9' }}>
+                Suasana Belajar Fonem
+              </div>
             </div>
-            <div className="gallery-item" onClick={() => setLightboxImg({ src: '/assets/image/anak-tk-bermain.jpg', title: 'Keceriaan anak TK bermain' })}>
-              <img src="/assets/image/anak-tk-bermain.jpg" alt="Keceriaan anak TK bermain" />
+            <div className="gallery-card" onClick={() => setLightboxImg({ src: '/assets/image/kegiatan-4.webp', title: 'Suasana Belajar Sempoa' })} style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', border: '3px solid #E53935', boxShadow: '0 6px 18px rgba(229, 57, 53, 0.15)', cursor: 'pointer' }}>
+              <div className="gallery-img-wrap" style={{ width: '100%', aspectRatio: '3 / 4', overflow: 'hidden' }}>
+                <img src="/assets/image/kegiatan-4.webp" alt="Suasana Belajar Sempoa" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+              <div className="gallery-caption" style={{ padding: '0.85rem', fontWeight: 700, color: '#c62828', fontSize: '0.9rem', borderTop: '1px solid #ffebee' }}>
+                Suasana Belajar Sempoa
+              </div>
             </div>
+          </div>
+
+          <div style={{ marginTop: '2rem' }}>
+            <Link to="/galeri" className="btn btn-primary" style={{ padding: '0.75rem 1.75rem', fontSize: '0.95rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+              <i className="fas fa-images"></i> Lihat Seluruh Galeri Foto
+            </Link>
           </div>
         </div>
       </section>
