@@ -220,18 +220,20 @@ export const HomePage: React.FC = () => {
             <p>Pilih program terbaik yang dirancang khusus untuk melatih tumbuh kembang belajar anak Anda</p>
           </div>
           
-          <div className="programs-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
+          <div className="programs-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem', alignItems: 'stretch' }}>
             {/* Program 1: Sempoa */}
-            <div className="program-card" style={{ background: '#fff', borderRadius: '16px', borderTop: '6px solid var(--color-primary-orange)', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', padding: '1.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                  <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.35rem', color: 'var(--color-text-dark)' }}>Sempoa</h3>
-                  <span style={{ background: '#fff8e1', color: '#e65100', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '20px', border: '1px solid #ffe0b2' }}>Usia 4 - 12 Thn</span>
+            <div className="program-card" style={{ background: '#fff', borderRadius: '16px', borderTop: '6px solid var(--color-primary-orange)', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', padding: '1.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', minHeight: '3.2rem' }}>
+                    <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.35rem', color: 'var(--color-text-dark)' }}>Sempoa</h3>
+                    <span style={{ background: '#fff8e1', color: '#e65100', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '20px', border: '1px solid #ffe0b2' }}>Usia 4 - 12 Thn</span>
+                  </div>
+                  <p style={{ fontSize: '0.92rem', marginBottom: '1.25rem', color: 'var(--color-text-body)', textAlign: 'left', lineHeight: 1.6, minHeight: '4.8rem' }}>
+                    Pelatihan mental aritmatika guna menyeimbangkan koordinasi sel otak kanan-kiri anak secara optimal.
+                  </p>
                 </div>
-                <p style={{ fontSize: '0.92rem', marginBottom: '1.25rem', color: 'var(--color-text-body)', textAlign: 'left', lineHeight: 1.6 }}>
-                  Pelatihan mental aritmatika guna menyeimbangkan koordinasi sel otak kanan-kiri anak secara optimal.
-                </p>
-                <div className="program-schedule-box" style={{ padding: '0.75rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                <div className="program-schedule-box" style={{ padding: '0.75rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', minHeight: '85px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                   <div style={{ fontSize: '0.8rem', color: '#e65100', fontWeight: 700, marginBottom: '0.35rem' }}>Sesi & Jadwal Kelas</div>
                   <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <span>Senin - Sabtu</span>
@@ -245,16 +247,18 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* Program 2: Fonem */}
-            <div className="program-card" style={{ background: '#fff', borderRadius: '16px', borderTop: '6px solid var(--color-accent-teal)', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', padding: '1.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                  <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.35rem', color: 'var(--color-text-dark)' }}>Fonem</h3>
-                  <span style={{ background: '#e0f7fa', color: '#00838f', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '20px', border: '1px solid #b2ebf2' }}>Usia 4 - 12 Thn</span>
+            <div className="program-card" style={{ background: '#fff', borderRadius: '16px', borderTop: '6px solid var(--color-accent-teal)', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', padding: '1.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', minHeight: '3.2rem' }}>
+                    <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.35rem', color: 'var(--color-text-dark)' }}>Fonem</h3>
+                    <span style={{ background: '#e0f7fa', color: '#00838f', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '20px', border: '1px solid #b2ebf2' }}>Usia 4 - 12 Thn</span>
+                  </div>
+                  <p style={{ fontSize: '0.92rem', marginBottom: '1.25rem', color: 'var(--color-text-body)', textAlign: 'left', lineHeight: 1.6, minHeight: '4.8rem' }}>
+                    Metode PeSO (Pembelajaran Seluruh Otak) membaca & menulis cepat tanpa mengeja dan tanpa stres.
+                  </p>
                 </div>
-                <p style={{ fontSize: '0.92rem', marginBottom: '1.25rem', color: 'var(--color-text-body)', textAlign: 'left', lineHeight: 1.6 }}>
-                  Metode PeSO (Pembelajaran Seluruh Otak) membaca & menulis cepat tanpa mengeja dan tanpa stres.
-                </p>
-                <div className="program-schedule-box" style={{ padding: '0.75rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                <div className="program-schedule-box" style={{ padding: '0.75rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', minHeight: '85px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                   <div style={{ fontSize: '0.8rem', color: '#00838f', fontWeight: 700, marginBottom: '0.35rem' }}>Sesi & Jadwal Kelas</div>
                   <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <span>Senin - Sabtu</span>
@@ -268,16 +272,18 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* Program 3: Tahfidz */}
-            <div className="program-card" style={{ background: '#fff', borderRadius: '16px', borderTop: '6px solid #2E7D32', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', padding: '1.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                  <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.35rem', color: 'var(--color-text-dark)' }}>Tahfidz</h3>
-                  <span style={{ background: '#e8f5e9', color: '#1b5e20', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '20px', border: '1px solid #c8e6c9' }}>Usia 4 - 12 Thn</span>
+            <div className="program-card" style={{ background: '#fff', borderRadius: '16px', borderTop: '6px solid #2E7D32', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', padding: '1.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', minHeight: '3.2rem' }}>
+                    <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.35rem', color: 'var(--color-text-dark)' }}>Tahfidz</h3>
+                    <span style={{ background: '#e8f5e9', color: '#1b5e20', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '20px', border: '1px solid #c8e6c9' }}>Usia 4 - 12 Thn</span>
+                  </div>
+                  <p style={{ fontSize: '0.92rem', marginBottom: '1.25rem', color: 'var(--color-text-body)', textAlign: 'left', lineHeight: 1.6, minHeight: '4.8rem' }}>
+                    Bimbingan hafalan surat-surat pendek Al-Qur'an (Juz 30) serta praktik ibadah harian.
+                  </p>
                 </div>
-                <p style={{ fontSize: '0.92rem', marginBottom: '1.25rem', color: 'var(--color-text-body)', textAlign: 'left', lineHeight: 1.6 }}>
-                  Bimbingan hafalan surat-surat pendek Al-Qur'an (Juz 30) serta praktik ibadah harian.
-                </p>
-                <div className="program-schedule-box" style={{ padding: '0.75rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                <div className="program-schedule-box" style={{ padding: '0.75rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', minHeight: '85px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                   <div style={{ fontSize: '0.8rem', color: '#1b5e20', fontWeight: 700, marginBottom: '0.35rem' }}>Sesi & Jadwal Kelas</div>
                   <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <span>Senin - Sabtu</span>
@@ -291,16 +297,18 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* Program 4: Bahasa Inggris */}
-            <div className="program-card" style={{ background: '#fff', borderRadius: '16px', borderTop: '6px solid #E53935', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', padding: '1.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                  <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.35rem', color: 'var(--color-text-dark)' }}>Bahasa Inggris</h3>
-                  <span style={{ background: '#ffebee', color: '#c62828', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '20px', border: '1px solid #ffcdd2' }}>Usia 4 - 12 Thn</span>
+            <div className="program-card" style={{ background: '#fff', borderRadius: '16px', borderTop: '6px solid #E53935', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', padding: '1.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', minHeight: '3.2rem' }}>
+                    <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.35rem', color: 'var(--color-text-dark)' }}>Bahasa Inggris</h3>
+                    <span style={{ background: '#ffebee', color: '#c62828', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '20px', border: '1px solid #ffcdd2' }}>Usia 4 - 12 Thn</span>
+                  </div>
+                  <p style={{ fontSize: '0.92rem', marginBottom: '1.25rem', color: 'var(--color-text-body)', textAlign: 'left', lineHeight: 1.6, minHeight: '4.8rem' }}>
+                    Pengenalan kosakata, pelafalan, dan percakapan interaktif guna membangun percaya diri berbahasa asing.
+                  </p>
                 </div>
-                <p style={{ fontSize: '0.92rem', marginBottom: '1.25rem', color: 'var(--color-text-body)', textAlign: 'left', lineHeight: 1.6 }}>
-                  Pengenalan kosakata, pelafalan, dan percakapan interaktif guna membangun percaya diri berbahasa asing.
-                </p>
-                <div className="program-schedule-box" style={{ padding: '0.75rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                <div className="program-schedule-box" style={{ padding: '0.75rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', minHeight: '85px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                   <div style={{ fontSize: '0.8rem', color: '#c62828', fontWeight: 700, marginBottom: '0.35rem' }}>Sesi & Jadwal Kelas</div>
                   <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <span>Jumat - Sabtu</span>
