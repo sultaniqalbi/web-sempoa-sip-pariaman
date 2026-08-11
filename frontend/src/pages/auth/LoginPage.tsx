@@ -1,48 +1,42 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import useAuth from '../../features/auth/useAuth';
-import Toast from '../../components/Toast';
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [toastType, setToastType] = useState<'success' | 'error'>('success');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setToastMessage(null);
+    setError(null);
     setIsLoading(true);
 
     try {
       const user = await login(email, password);
-      setToastType('success');
-      setToastMessage('Login berhasil! Mengalihkan...');
-      
-      setTimeout(() => {
-        if (user.role === 'admin' || user.role === 'owner') {
-          navigate('/admin');
-        } else if (user.role === 'guru') {
-          navigate('/guru');
-        } else if (user.role === 'ortu') {
-          navigate('/ortu');
-        } else {
-          navigate('/');
-        }
-      }, 1000);
+
+      if (user.role === 'admin' || user.role === 'owner') {
+        navigate('/admin');
+      } else if (user.role === 'guru') {
+        navigate('/guru');
+      } else if (user.role === 'ortu') {
+        navigate('/ortu');
+      } else {
+        navigate('/');
+      }
     } catch (err: any) {
       console.error('Login failed:', err);
-      setToastType('error');
       if (err.response?.status === 429) {
-        setToastMessage('Terlalu banyak percobaan masuk salah. Akun Anda diblokir selama 15 menit.');
+        setError('Terlalu banyak percobaan masuk salah. Akun Anda diblokir selama 15 menit.');
       } else if (err.response?.status === 401) {
-        setToastMessage('Email atau kata sandi Anda salah.');
+        setError('Alamat Email atau Kata Sandi salah!');
       } else {
-        setToastMessage('Koneksi server gagal. Silakan coba sesaat lagi.');
+        setError('Koneksi server gagal. Silakan coba sesaat lagi.');
       }
     } finally {
       setIsLoading(false);
@@ -50,91 +44,166 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <main className="min-h-screen bg-[#F5F5F5] flex items-center justify-center p-4 sm:p-6" aria-label="Portal Login">
-      {toastMessage && (
-        <Toast
-          message={toastMessage}
-          type={toastType}
-          onClose={() => setToastMessage(null)}
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #FFF3E0 0%, #FFCC80 100%)',
+        margin: 0,
+        fontFamily: 'var(--font-body)',
+        padding: '1rem',
+        boxSizing: 'border-box',
+      }}
+    >
+      <div
+        className="login-card"
+        style={{
+          background: 'white',
+          padding: '3rem 2.5rem',
+          borderRadius: '20px',
+          boxShadow: '0 15px 35px rgba(255, 152, 0, 0.2)',
+          width: '100%',
+          maxWidth: '400px',
+          textAlign: 'center',
+        }}
+      >
+        <img
+          src="/assets/logo/logo-sempoa-sip.png"
+          alt="Logo Sempoa SIP"
+          style={{ height: '60px', marginBottom: '1.5rem', marginInline: 'auto' }}
         />
-      )}
+        <h1 style={{ color: 'var(--color-primary-orange)', fontFamily: 'var(--font-heading)', fontSize: '1.8rem', marginBottom: '0.5rem', fontWeight: 700 }}>
+          Portal Akses
+        </h1>
+        <p style={{ color: 'var(--color-text-light)', marginBottom: '2rem', fontSize: '0.95rem' }}>
+          Silakan masuk menggunakan akun Anda
+        </p>
 
-      <div className="w-full max-w-[400px] bg-white border border-[#CCCCCC] rounded-lg p-8 shadow-sm space-y-6">
-        <div className="text-center space-y-2">
-          <Link
-            to="/"
-            className="inline-flex w-12 h-12 bg-[#E67E22] rounded-full items-center justify-center text-2xl font-bold shadow-lg shadow-[#E67E22]/20 mb-2 focus:ring-2 focus:ring-[#E67E22] focus:outline-none"
-            aria-label="Kembali ke Beranda"
+        {error && (
+          <div
+            style={{
+              color: '#dc2626',
+              background: '#fee2e2',
+              padding: '0.8rem',
+              borderRadius: '8px',
+              marginBottom: '1.5rem',
+              fontSize: '0.9rem',
+              textAlign: 'center',
+              fontWeight: 600,
+            }}
           >
-            🧮
-          </Link>
-          <h1 className="text-2xl font-extrabold tracking-tight text-[#333333]">Portal Masuk</h1>
-          <p className="text-xs text-slate-500">Silakan masukkan akun Anda untuk mengakses sistem</p>
-        </div>
+            {error}
+          </div>
+        )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1">
-            <label htmlFor="email-input" className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+        <form onSubmit={handleSubmit}>
+          <div className="form-group" style={{ marginBottom: '1.5rem', textAlign: 'left' }}>
+            <label htmlFor="email" style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--color-text-dark)', fontWeight: 600, fontSize: '0.9rem' }}>
               Alamat Email
             </label>
             <input
-              id="email-input"
               type="email"
+              id="email"
+              name="email"
+              className="form-control"
+              placeholder="nama@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-white border border-[#CCCCCC] focus:border-[#E67E22] focus:ring-2 focus:ring-[#E67E22] focus:outline-none rounded-lg px-4 py-2.5 text-sm text-[#333333] placeholder-slate-400 transition-all"
-              placeholder="nama@email.com"
               required
+              style={{
+                width: '100%',
+                padding: '0.8rem 1rem',
+                border: '1.5px solid #e2e8f0',
+                borderRadius: '8px',
+                fontFamily: 'var(--font-body)',
+                fontSize: '1rem',
+                boxSizing: 'border-box',
+              }}
             />
           </div>
 
-          <div className="space-y-1">
-            <div className="flex justify-between items-center">
-              <label htmlFor="password-input" className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
-                Kata Sandi
-              </label>
-              <a
-                href="#forgot"
-                className="text-xs text-[#E67E22] hover:text-[#D35400] transition-colors focus:ring-2 focus:ring-[#E67E22] focus:outline-none rounded"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setToastType('error');
-                  setToastMessage('Layanan reset password otomatis belum tersedia. Hubungi admin.');
+          <div className="form-group" style={{ marginBottom: '1.5rem', textAlign: 'left' }}>
+            <label htmlFor="password" style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--color-text-dark)', fontWeight: 600, fontSize: '0.9rem' }}>
+              Kata Sandi
+            </label>
+            <div className="password-container" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                id="password"
+                name="password"
+                className="form-control password-input"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                style={{
+                  width: '100%',
+                  padding: '0.8rem 1rem',
+                  paddingRight: '40px',
+                  border: '1.5px solid #e2e8f0',
+                  borderRadius: '8px',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '1rem',
+                  boxSizing: 'border-box',
                 }}
-              >
-                Lupa Password?
-              </a>
+              />
+              <i
+                className={`far ${showPassword ? 'fa-eye-slash' : 'fa-eye'} toggle-password`}
+                onClick={() => setShowPassword(!showPassword)}
+                title="Tampilkan sandi"
+                style={{
+                  position: 'absolute',
+                  right: '15px',
+                  cursor: 'pointer',
+                  color: 'var(--color-text-light)',
+                }}
+              ></i>
             </div>
-            <input
-              id="password-input"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-white border border-[#CCCCCC] focus:border-[#E67E22] focus:ring-2 focus:ring-[#E67E22] focus:outline-none rounded-lg px-4 py-2.5 text-sm text-[#333333] placeholder-slate-400 transition-all"
-              placeholder="••••••••"
-              required
-            />
           </div>
 
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 bg-[#E67E22] hover:bg-[#D35400] text-white text-sm font-bold rounded-lg transition-all shadow-lg hover:scale-102 active:scale-98 disabled:opacity-50 disabled:hover:scale-100 focus:ring-2 focus:ring-[#E67E22] focus:outline-none"
+            className="btn-login"
+            style={{
+              width: '100%',
+              padding: '0.8rem',
+              backgroundColor: 'var(--color-primary-orange)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontWeight: 'bold',
+              fontSize: '1rem',
+              cursor: 'pointer',
+              fontFamily: 'var(--font-heading)',
+              marginTop: '1rem',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+            }}
           >
-            {isLoading ? 'Sedang Masuk...' : 'Masuk Portal 🚀'}
+            {isLoading ? 'Sedang Masuk...' : <>Masuk <i className="fas fa-sign-in-alt"></i></>}
           </button>
         </form>
 
-        <div className="text-center pt-2">
-          <Link
-            to="/"
-            className="text-xs text-slate-500 hover:text-[#333333] transition-colors focus:ring-2 focus:ring-[#E67E22] focus:outline-none rounded"
-          >
-            ← Kembali ke Beranda
-          </Link>
-        </div>
+        <Link
+          to="/"
+          className="back-link"
+          style={{
+            display: 'inline-block',
+            marginTop: '1.5rem',
+            color: 'var(--color-text-light)',
+            textDecoration: 'none',
+            fontSize: '0.9rem',
+          }}
+        >
+          <i className="fas fa-arrow-left"></i> Kembali ke Beranda
+        </Link>
       </div>
-    </main>
+    </div>
   );
 };
 

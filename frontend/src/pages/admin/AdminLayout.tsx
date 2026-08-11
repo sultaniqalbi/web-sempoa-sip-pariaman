@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import AdminSidebar from '../../components/AdminSidebar';
 import AdminHeader from '../../components/AdminHeader';
+import '../../styles/style-admin.css';
 
 export const AdminLayout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
-    <div className="flex h-screen bg-[#F5F5F5] text-[#333333] overflow-hidden relative">
+    <div className="admin-portal-wrapper flex h-screen bg-[#f8fafc] overflow-hidden relative">
       {/* Sidebar Drawer on Mobile / Collapsible on Desktop */}
       <div
         className={`fixed inset-y-0 left-0 z-40 transform ${
@@ -25,7 +26,7 @@ export const AdminLayout: React.FC = () => {
       {isSidebarOpen && (
         <div
           onClick={() => setIsSidebarOpen(false)}
-          className="fixed inset-0 z-30 bg-black/60 md:hidden animate-fade-in"
+          className="fixed inset-0 z-30 bg-black/60 md:hidden"
           aria-hidden="true"
         />
       )}
@@ -36,7 +37,7 @@ export const AdminLayout: React.FC = () => {
           onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
           isCollapsed={isCollapsed}
         />
-        <main className="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-8 bg-[#F5F5F5]">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-8 bg-[#f8fafc] dashboard-content">
           <div className="max-w-7xl mx-auto space-y-6">
             <Outlet />
           </div>

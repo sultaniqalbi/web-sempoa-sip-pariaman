@@ -9,6 +9,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 // Public Pages
 import HomePage from './pages/public/HomePage';
 import ProgramsPage from './pages/public/ProgramsPage';
+import ProgramDetailPage from './pages/public/ProgramDetailPage';
 import GaleriPage from './pages/public/GaleriPage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
@@ -54,6 +55,7 @@ export function App() {
               {/* Public Routes */}
               <Route path="/" element={<HomePage />} />
               <Route path="/programs" element={<ProgramsPage />} />
+              <Route path="/program/:programId" element={<ProgramDetailPage />} />
               <Route path="/galeri" element={<GaleriPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
