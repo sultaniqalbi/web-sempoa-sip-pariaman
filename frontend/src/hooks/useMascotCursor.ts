@@ -21,11 +21,16 @@ export function useMascotCursor() {
       z-index: 9999999;
       will-change: transform;
       transform: translate3d(-100px, -100px, 0);
+      opacity: 0;
+      transition: opacity 0.2s ease;
     `;
 
     const img = document.createElement('img');
     img.src = '/assets/image/custom-cursor.png';
-    img.alt = 'Cursor Mascot';
+    img.alt = '';
+    img.onerror = () => {
+      img.src = '/assets/image/custom-cursor.webp';
+    };
     img.style.cssText = `
       width: 100%;
       height: 100%;
@@ -33,6 +38,7 @@ export function useMascotCursor() {
       filter: drop-shadow(0 3px 6px rgba(0,0,0,0.15));
       transform-origin: center center;
       will-change: transform;
+      display: block;
     `;
     cursor.appendChild(img);
 
@@ -57,8 +63,9 @@ export function useMascotCursor() {
     window.addEventListener('resize', resizeCanvas, { passive: true });
     resizeCanvas();
 
-    document.documentElement.appendChild(canvas);
-    document.documentElement.appendChild(cursor);
+    const targetContainer = document.body || document.documentElement;
+    targetContainer.appendChild(canvas);
+    targetContainer.appendChild(cursor);
 
     // CSS animation override
     const style = document.createElement('style');
@@ -105,6 +112,7 @@ export function useMascotCursor() {
 
     if (savedX !== null && savedY !== null) {
       cursor.style.transform = `translate3d(${mouseX - 12}px, ${mouseY - 8}px, 0)`;
+      cursor.style.opacity = '1';
     }
 
     const softColors = ['#FFEB3B', '#FFB74D', '#FFFFFF', '#FFE082'];
@@ -114,6 +122,7 @@ export function useMascotCursor() {
     const handleMouseMove = (e: MouseEvent) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
+      cursor.style.opacity = '1';
       cursor.style.transform = `translate3d(${mouseX - 12}px, ${mouseY - 8}px, 0)`;
 
       const now = Date.now();

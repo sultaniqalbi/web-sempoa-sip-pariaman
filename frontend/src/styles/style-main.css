@@ -44,6 +44,11 @@
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Zero-delay Custom Cursor Override */
+html, body, a, button, input, select, textarea, label, [role="button"] {
+    cursor: none !important;
+}
+
 /* === BASE RESET === */
 * {
     margin: 0;
@@ -170,45 +175,62 @@ img {
     color: var(--color-white);
 }
 
-/* === NAVBAR SYSTEM === */
 .navbar {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
-    background-color: rgba(255, 255, 255, 0.95);
+    background-color: rgba(255, 255, 255, 0.98);
     backdrop-filter: blur(8px);
     z-index: 1000;
     transition: var(--transition);
     border-bottom: 1px solid var(--color-border);
-}
-
-.navbar.scrolled {
-    box-shadow: var(--shadow-md);
-    background-color: var(--color-white);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
 
 .navbar .container {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    height: 80px !important;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+.nav-brand-logo {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    height: 80px;
+    text-decoration: none;
 }
 
 .nav-brand-logo img {
-    height: 60px;
-    width: auto;
+    height: 55px !important;
+    max-height: 55px !important;
+    width: auto !important;
+    max-width: 220px !important;
+    object-fit: contain !important;
 }
 
 .nav-links {
-    display: flex;
-    gap: 2rem;
-    align-items: center;
+    display: flex !important;
+    gap: 1.5rem !important;
+    align-items: center !important;
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.nav-links li {
+    list-style: none !important;
+    margin: 0 !important;
 }
 
 .nav-links a {
     font-weight: 600;
     color: var(--color-text-dark);
+    text-decoration: none;
+    transition: color 0.2s ease;
 }
 
 .nav-links a:hover {
@@ -349,25 +371,35 @@ img {
     font-size: 1rem;
 }
 
-/* === PROGRAMS GRID === */
+/* === PROGRAMS GRID (4-Kolom Modern Layout) === */
 .programs-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 1.5rem;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.75rem;
     padding: 1.5rem 0;
-}
-/* Ensure cards stretch to equal height */
-.programs-grid {
     align-items: stretch;
 }
 
+@media (max-width: 1100px) {
+    .programs-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .programs-grid {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+}
 
 .program-card {
     background: var(--color-bg-white);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--color-border);
-    transition: var(--transition);
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     position: relative;
     overflow: visible; /* Let mascot peek out */
     display: flex;
@@ -375,9 +407,95 @@ img {
 }
 
 .program-card:hover {
-    transform: translateY(-8px) scale(1.03);
-    box-shadow: var(--shadow-xl);
-    border-color: var(--color-secondary);
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom Program Schedule Card Badge */
+.program-schedule-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 0.55rem 0.45rem;
+    margin-bottom: 1.25rem;
+    text-align: left;
+    transition: all 0.25s ease;
+}
+
+.program-card:hover .program-schedule-box {
+    border-color: rgba(245, 124, 0, 0.3);
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.sched-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.35rem;
+}
+
+.sched-title {
+    font-weight: 700;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.sched-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 12px;
+    background: #ecfdf5;
+    color: #059669;
+    border: 1px solid #a7f3d0;
+}
+
+.sched-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #10b981;
+}
+
+.sched-pills-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.sched-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.1rem;
+    white-space: nowrap;
+}
+
+.sched-pill-day {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15rem;
+    font-weight: 600;
+    color: #334155;
+    white-space: nowrap;
+    font-size: 0.72rem;
+    letter-spacing: -0.3px;
+}
+
+.sched-pill-time {
+    font-weight: 700;
+    padding: 0.12rem 0.3rem;
+    border-radius: 6px;
+    font-size: 0.69rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+    letter-spacing: -0.2px;
 }
 
 .program-card-image-wrap {
@@ -598,8 +716,22 @@ img {
 /* === TESTIMONIALS === */
 .testi-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2.5rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.9rem;
+}
+
+@media (max-width: 1024px) {
+    .testi-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .testi-grid {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
 }
 
 .testi-card {
@@ -675,29 +807,54 @@ img {
     gap: 1.5rem;
 }
 
-.gallery-item {
-    aspect-ratio: 1.2;
+.gallery-item, .gallery-card {
+    background: #ffffff;
+    border-radius: 14px;
     overflow: hidden;
-    border-radius: var(--radius-md);
-    border: 4px solid var(--color-white);
-    box-shadow: var(--shadow-sm);
-    transition: var(--transition);
+    border: 3px solid #f57c00;
+    box-shadow: 0 6px 18px rgba(245, 124, 0, 0.12);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.35s ease;
 }
 
-.gallery-item img {
+.gallery-item:hover, .gallery-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 14px 28px rgba(245, 124, 0, 0.22);
+    border-color: #e65100;
+}
+
+.gallery-img-wrap {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+    background: #f8f9fa;
+    position: relative;
+}
+
+.gallery-item img, .gallery-card img, .gallery-img-wrap img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: var(--transition);
+    transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-.gallery-item:hover {
-    transform: scale(1.03) rotate(1deg);
-    box-shadow: var(--shadow-md);
+.gallery-item:hover img, .gallery-card:hover img, .gallery-item:hover .gallery-img-wrap img, .gallery-card:hover .gallery-img-wrap img {
+    transform: scale(1.08);
 }
 
-.gallery-item:hover img {
-    transform: scale(1.05);
+.gallery-caption {
+    padding: 1.1rem 1rem;
+    text-align: center;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #e65100;
+    background: #ffffff;
+    border-top: 2px solid #fff3e0;
+    line-height: 1.4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* === CTA BANNER === */
@@ -998,7 +1155,7 @@ img {
 }
 
 .modal-left {
-    background: linear-gradient(rgba(136, 14, 79, 0.8), rgba(38, 198, 218, 0.8)), url('../../public/assets/image/siswa-belajar-sempoa.jpg') center/cover no-repeat;
+    background: linear-gradient(135deg, #1565C0 0%, #00acc1 100%);
     display: flex;
     align-items: flex-end;
     padding: 3rem;
@@ -1331,4 +1488,63 @@ img {
 .toggle-password:hover { color: var(--color-primary-orange); }
 
 html, body { overflow-x: hidden; max-width: 100vw; }
+
+/* ==============================================================================
+   TITLE ACCENT DIVIDERS & SECTION BOUNDARY SEPARATORS (OPTION A)
+   ============================================================================== */
+.section-header h2,
+.trust-content h2,
+.advantages-header h2,
+.prestasi-header h2,
+.location-header h2 {
+    position: relative;
+    padding-bottom: 0.35rem;
+}
+
+.section-header h2::after,
+.advantages-header h2::after,
+.prestasi-header h2::after,
+.location-header h2::after {
+    content: '';
+    display: block;
+    width: 80px;
+    height: 4px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #f57c00, #ffb74d);
+    box-shadow: 0 2px 8px rgba(245, 124, 0, 0.35);
+    margin: 0.65rem auto 0.5rem auto;
+}
+
+.trust-content h2::after {
+    content: '';
+    display: block;
+    width: 80px;
+    height: 4px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #f57c00, #ffb74d);
+    box-shadow: 0 2px 8px rgba(245, 124, 0, 0.35);
+    margin: 0.65rem 0 0.5rem 0;
+}
+
+/* Boundary Separator Lines Between Sections */
+.section-divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(226, 232, 240, 0) 0%, rgba(203, 213, 225, 0.8) 50%, rgba(226, 232, 240, 0) 100%);
+    margin: 0;
+    position: relative;
+    z-index: 5;
+}
+
+.section-divider::after {
+    content: '◆';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #f8fafc;
+    padding: 0 0.75rem;
+    color: #f57c00;
+    font-size: 0.75rem;
+}
 
