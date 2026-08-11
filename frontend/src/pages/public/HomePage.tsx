@@ -343,7 +343,9 @@ export const HomePage: React.FC = () => {
               onClick={() => handleAdvCardClick(1)}
             >
               <div className="adv-card-image-wrap" style={{ backgroundColor: '#FFF8E1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <i className="fas fa-brain" style={{ fontSize: '4rem', color: '#880E4F' }}></i>
+                <svg width="68" height="68" viewBox="0 0 512 512" fill="#880E4F">
+                  <path d="M208 48a48 48 0 1 0-82 33.9A96 96 0 0 0 16 176c0 36.4 20.3 68 50.1 84.7A80.2 80.2 0 0 0 48 304c0 35.8 23.4 66.1 55.7 76.6A64.1 64.1 0 0 0 176 432c25.4 0 47.4-14.8 57.6-36.4.7 1.4 1.4 2.8 2.2 4.1L248 420l8 .8-8-.8 12.2-20.3 8-13.3V256h-16v-64h16V60.7l-8-13.3-12.2-20.3-8-.8 8 .8c-.8 1.3-1.5 2.7-2.2 4.1A63.9 63.9 0 0 0 208 48zM240 64v128h-32V64h32zM304 48a48 48 0 1 1 82 33.9A96 96 0 0 1 496 176c0 36.4-20.3 68-50.1 84.7A80.2 80.2 0 0 1 464 304c0 35.8-23.4 66.1-55.7 76.6A64.1 64.1 0 0 1 336 432c-25.4 0-47.4-14.8-57.6-36.4-.7 1.4-1.4 2.8-2.2 4.1L264 420l-8 .8 8-.8-12.2-20.3-8-13.3V256h16v-64h-16V60.7l8-13.3 12.2-20.3 8-.8-8 .8c.8 1.3 1.5 2.7 2.2 4.1A63.9 63.9 0 0 1 304 48z"/>
+                </svg>
               </div>
               <div className="adv-card-body">
                 <h3>Metode Senam Otak (Brain Gym)</h3>
@@ -351,7 +353,9 @@ export const HomePage: React.FC = () => {
                   <p>Sebelum memulai sesi belajar, siswa akan dipandu melakukan senam otak singkat. Hal ini merangsang kesiapan koordinasi motorik, ketenangan mental, dan memicu fokus anak saat menyerap materi.</p>
                 </div>
                 <span className="adv-card-hint" style={{ opacity: 0.65, color: '#64748b', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.5rem', fontSize: '0.8rem' }}>
-                  <i className="fas fa-exclamation-circle" style={{ fontSize: '0.75rem', opacity: 0.7 }}></i> Klik untuk selengkapnya
+                  <svg width="12" height="12" viewBox="0 0 512 512" fill="currentColor" style={{ opacity: 0.7 }}>
+                    <path d="M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S393 8 256 8zm0 392c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm35.2-132.8c-2.4 15.3-15.4 26.8-31 26.8h-8.4c-15.5 0-28.6-11.5-31-26.8l-15.5-100.8C169 122.9 196.4 96 233.5 96h45c37 0 64.5 26.9 58.2 71.2l-15.5 100.8z"/>
+                  </svg> Klik untuk selengkapnya
                 </span>
               </div>
             </div>
@@ -363,7 +367,9 @@ export const HomePage: React.FC = () => {
               onClick={() => handleAdvCardClick(2)}
             >
               <div className="adv-card-image-wrap" style={{ backgroundColor: '#E0F7FA', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <i className="fas fa-gamepad" style={{ fontSize: '4rem', color: '#00ACC1' }}></i>
+                <svg width="68" height="68" viewBox="0 0 640 512" fill="#00ACC1">
+                  <path d="M192 64C86 64 0 150 0 256S86 448 192 448H448c106 0 192-86 192-192s-86-192-192-192H192zM149.3 224h42.7v-42.7c0-11.8 9.6-21.3 21.3-21.3s21.3 9.6 21.3 21.3V224h42.7c11.8 0 21.3 9.6 21.3 21.3s-9.6 21.3-21.3 21.3H234.7v42.7c0 11.8-9.6 21.3-21.3 21.3s-21.3-9.6-21.3-21.3V266.7H149.3c-11.8 0-21.3-9.6-21.3-21.3s9.6-21.3 21.3-21.3zm234.7 0c17.7 0 32 14.3 32 32s-14.3 32-32 32s-32-14.3-32-32s14.3-32 32-32zm42.7-42.7c17.7 0 32 14.3 32 32s-14.3 32-32 32s-32-14.3-32-32s14.3-32 32-32zm42.7 42.7c17.7 0 32 14.3 32 32s-14.3 32-32 32s-32-14.3-32-32s14.3-32 32-32z"/>
+                </svg>
               </div>
               <div className="adv-card-body">
                 <h3>Belajar Menyenangkan (Playful Learning)</h3>
@@ -371,7 +377,9 @@ export const HomePage: React.FC = () => {
                   <p>Setiap konsep bimbingan dibawakan secara interaktif menggunakan media bermain, gambar, flashcard, dan visualisasi manik sempoa fisik agar anak tidak merasa tertekan atau bosan.</p>
                 </div>
                 <span className="adv-card-hint" style={{ opacity: 0.65, color: '#64748b', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.5rem', fontSize: '0.8rem' }}>
-                  <i className="fas fa-exclamation-circle" style={{ fontSize: '0.75rem', opacity: 0.7 }}></i> Klik untuk selengkapnya
+                  <svg width="12" height="12" viewBox="0 0 512 512" fill="currentColor" style={{ opacity: 0.7 }}>
+                    <path d="M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S393 8 256 8zm0 392c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm35.2-132.8c-2.4 15.3-15.4 26.8-31 26.8h-8.4c-15.5 0-28.6-11.5-31-26.8l-15.5-100.8C169 122.9 196.4 96 233.5 96h45c37 0 64.5 26.9 58.2 71.2l-15.5 100.8z"/>
+                  </svg> Klik untuk selengkapnya
                 </span>
               </div>
             </div>
@@ -383,7 +391,9 @@ export const HomePage: React.FC = () => {
               onClick={() => handleAdvCardClick(3)}
             >
               <div className="adv-card-image-wrap" style={{ backgroundColor: '#FFEBEE', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <i className="fas fa-users-cog" style={{ fontSize: '4rem', color: '#D32F2F' }}></i>
+                <svg width="68" height="68" viewBox="0 0 640 512" fill="#D32F2F">
+                  <path d="M610.5 373.3c2.6-14.1 2.6-28.5 0-42.6l25.8-14.9c3-1.7 4.3-5.2 3.3-8.5-6.7-21.6-18.2-41.2-33.2-57.4-2.3-2.5-6-3.1-9-1.4l-25.8 14.9c-10.9-9.3-23.4-16.5-36.9-21.3v-29.8c0-3.4-2.4-6.4-5.7-7.1-22.3-5-45-4.8-66.2 0-3.3.7-5.7 3.7-5.7 7.1v29.8c-13.5 4.8-26 12-36.9 21.3l-25.8-14.9c-2.9-1.7-6.7-1.1-9 1.4-15 16.2-26.5 35.8-33.2 57.4-1 3.3-.4-6.8-3.3-8.5l25.8 14.9c-2.6 14.1-2.6 28.5 0 42.6l-25.8 14.9c-3 1.7-4.3 5.2-3.3 8.5 6.7 21.6 18.2 41.2 33.2 57.4 2.3 2.5 6 3.1 9 1.4l25.8-14.9c10.9 9.3 23.4 16.5 36.9 21.3v29.8c0 3.4 2.4 6.4 5.7 7.1 22.3 5 45 4.8 66.2 0 3.3-.7 5.7-3.7 5.7-7.1v-29.8c13.5-4.8 26-12 36.9-21.3l25.8 14.9c2.9 1.7 6.7 1.1 9-1.4 15-16.2 26.5-35.8 33.2-57.4 1-3.3-.4-6.8-3.3-8.5l-25.8-14.9zM496 400.5c-26.8 0-48.5-21.8-48.5-48.5s21.8-48.5 48.5-48.5 48.5 21.8 48.5 48.5-21.7 48.5-48.5 48.5zM224 256c70.7 0 128-57.3 128-128S294.7 0 224 0 96 57.3 96 128s57.3 128 128 128zm89.6 32h-16.7c-22.2 10.2-46.9 16-72.9 16s-50.6-5.8-72.9-16h-16.7C60.2 288 0 348.2 0 422.4V464c0 26.5 21.5 48 48 48h274.9c-2.4-6.8-3.4-14-2.6-21.3l6.8-60.9 1.2-11.1 7.9-7.9 77.3-77.3c-24.5-27.7-60-45.5-99.9-45.5z"/>
+                </svg>
               </div>
               <div className="adv-card-body">
                 <h3>Pengajar Terlatih & Ramah Anak</h3>
@@ -391,7 +401,9 @@ export const HomePage: React.FC = () => {
                   <p>Guru-guru kami lolos pelatihan standarisasi metode pengajaran khusus anak usia dini, mengedepankan pendekatan verbal yang memotivasi dan membangun kepercayaan diri anak.</p>
                 </div>
                 <span className="adv-card-hint" style={{ opacity: 0.65, color: '#64748b', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.5rem', fontSize: '0.8rem' }}>
-                  <i className="fas fa-exclamation-circle" style={{ fontSize: '0.75rem', opacity: 0.7 }}></i> Klik untuk selengkapnya
+                  <svg width="12" height="12" viewBox="0 0 512 512" fill="currentColor" style={{ opacity: 0.7 }}>
+                    <path d="M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S393 8 256 8zm0 392c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm35.2-132.8c-2.4 15.3-15.4 26.8-31 26.8h-8.4c-15.5 0-28.6-11.5-31-26.8l-15.5-100.8C169 122.9 196.4 96 233.5 96h45c37 0 64.5 26.9 58.2 71.2l-15.5 100.8z"/>
+                  </svg> Klik untuk selengkapnya
                 </span>
               </div>
             </div>
@@ -403,7 +415,9 @@ export const HomePage: React.FC = () => {
               onClick={() => handleAdvCardClick(4)}
             >
               <div className="adv-card-image-wrap" style={{ backgroundColor: '#E8F5E9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <i className="fas fa-smile-beam" style={{ fontSize: '4rem', color: '#388E3C' }}></i>
+                <svg width="68" height="68" viewBox="0 0 496 512" fill="#388E3C">
+                  <path d="M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zm-80 168c24.6 0 44.5 17.5 47.7 41.2 1.3 9.7-5.9 18.4-15.7 18.4H104c-9.8 0-17-8.7-15.7-18.4 3.2-23.7 23.1-41.2 47.7-41.2zm194.8 170.2C334.3 380.4 292.5 400 248 400s-86.3-19.6-114.8-53.8c-13.6-16.3 11.2-34.7 24.6-18.5 20.4 24.9 51.5 40.3 85.2 40.3s64.8-15.4 85.2-40.3c13.4-16.1 38.2 2.2 24.6 18.5zm-34.8-129c-9.8 0-17-8.7-15.7-18.4 3.2-23.7 23.1-41.2 47.7-41.2s44.5 17.5 47.7 41.2c1.3 9.7-5.9 18.4-15.7 18.4h-64z"/>
+                </svg>
               </div>
               <div className="adv-card-body">
                 <h3>Tempat Ramah Anak & Penuh Keceriaan</h3>
@@ -411,7 +425,9 @@ export const HomePage: React.FC = () => {
                   <p>Lingkungan belajar yang hangat, bersih, aman, dan penuh suasana ceria sehingga anak-anak merasa nyaman dan bersemangat setiap kali datang belajar.</p>
                 </div>
                 <span className="adv-card-hint" style={{ opacity: 0.65, color: '#64748b', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.5rem', fontSize: '0.8rem' }}>
-                  <i className="fas fa-exclamation-circle" style={{ fontSize: '0.75rem', opacity: 0.7 }}></i> Klik untuk selengkapnya
+                  <svg width="12" height="12" viewBox="0 0 512 512" fill="currentColor" style={{ opacity: 0.7 }}>
+                    <path d="M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S393 8 256 8zm0 392c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm35.2-132.8c-2.4 15.3-15.4 26.8-31 26.8h-8.4c-15.5 0-28.6-11.5-31-26.8l-15.5-100.8C169 122.9 196.4 96 233.5 96h45c37 0 64.5 26.9 58.2 71.2l-15.5 100.8z"/>
+                  </svg> Klik untuk selengkapnya
                 </span>
               </div>
             </div>
