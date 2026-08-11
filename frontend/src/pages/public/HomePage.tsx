@@ -343,10 +343,7 @@ export const HomePage: React.FC = () => {
               onClick={() => handleAdvCardClick(1)}
             >
               <div className="adv-card-image-wrap" style={{ backgroundColor: '#FFF8E1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="68" height="68" viewBox="0 0 24 24" fill="none" stroke="#E65100" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.04Z"/>
-                  <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.04Z"/>
-                </svg>
+                <i className="fas fa-brain" style={{ fontSize: '4rem', color: '#880E4F' }}></i>
               </div>
               <div className="adv-card-body">
                 <h3>Metode Senam Otak (Brain Gym)</h3>
@@ -354,7 +351,7 @@ export const HomePage: React.FC = () => {
                   <p>Sebelum memulai sesi belajar, siswa akan dipandu melakukan senam otak singkat. Hal ini merangsang kesiapan koordinasi motorik, ketenangan mental, dan memicu fokus anak saat menyerap materi.</p>
                 </div>
                 <span className="adv-card-hint" style={{ opacity: 0.65, color: '#64748b', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.5rem', fontSize: '0.8rem' }}>
-                  <i className="fas fa-info-circle" style={{ fontSize: '0.75rem', opacity: 0.7 }}></i> Klik untuk selengkapnya
+                  <i className="fas fa-exclamation-circle" style={{ fontSize: '0.75rem', opacity: 0.7 }}></i> Klik untuk selengkapnya
                 </span>
               </div>
             </div>
@@ -366,9 +363,7 @@ export const HomePage: React.FC = () => {
               onClick={() => handleAdvCardClick(2)}
             >
               <div className="adv-card-image-wrap" style={{ backgroundColor: '#E0F7FA', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="68" height="68" viewBox="0 0 24 24" fill="none" stroke="#00838f" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                </svg>
+                <i className="fas fa-gamepad" style={{ fontSize: '4rem', color: '#00ACC1' }}></i>
               </div>
               <div className="adv-card-body">
                 <h3>Belajar Menyenangkan (Playful Learning)</h3>
@@ -376,7 +371,7 @@ export const HomePage: React.FC = () => {
                   <p>Setiap konsep bimbingan dibawakan secara interaktif menggunakan media bermain, gambar, flashcard, dan visualisasi manik sempoa fisik agar anak tidak merasa tertekan atau bosan.</p>
                 </div>
                 <span className="adv-card-hint" style={{ opacity: 0.65, color: '#64748b', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.5rem', fontSize: '0.8rem' }}>
-                  <i className="fas fa-info-circle" style={{ fontSize: '0.75rem', opacity: 0.7 }}></i> Klik untuk selengkapnya
+                  <i className="fas fa-exclamation-circle" style={{ fontSize: '0.75rem', opacity: 0.7 }}></i> Klik untuk selengkapnya
                 </span>
               </div>
             </div>
@@ -388,12 +383,7 @@ export const HomePage: React.FC = () => {
               onClick={() => handleAdvCardClick(3)}
             >
               <div className="adv-card-image-wrap" style={{ backgroundColor: '#FFEBEE', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="68" height="68" viewBox="0 0 24 24" fill="none" stroke="#C62828" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="9" cy="7" r="4"></circle>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                </svg>
+                <i className="fas fa-users-cog" style={{ fontSize: '4rem', color: '#D32F2F' }}></i>
               </div>
               <div className="adv-card-body">
                 <h3>Pengajar Terlatih & Ramah Anak</h3>
@@ -401,7 +391,7 @@ export const HomePage: React.FC = () => {
                   <p>Guru-guru kami lolos pelatihan standarisasi metode pengajaran khusus anak usia dini, mengedepankan pendekatan verbal yang memotivasi dan membangun kepercayaan diri anak.</p>
                 </div>
                 <span className="adv-card-hint" style={{ opacity: 0.65, color: '#64748b', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.5rem', fontSize: '0.8rem' }}>
-                  <i className="fas fa-info-circle" style={{ fontSize: '0.75rem', opacity: 0.7 }}></i> Klik untuk selengkapnya
+                  <i className="fas fa-exclamation-circle" style={{ fontSize: '0.75rem', opacity: 0.7 }}></i> Klik untuk selengkapnya
                 </span>
               </div>
             </div>
@@ -413,12 +403,7 @@ export const HomePage: React.FC = () => {
               onClick={() => handleAdvCardClick(4)}
             >
               <div className="adv-card-image-wrap" style={{ backgroundColor: '#E8F5E9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="68" height="68" viewBox="0 0 24 24" fill="none" stroke="#1B5E20" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <path d="M8 14s1.5 2.5 4 2.5 4-2.5 4-2.5"></path>
-                  <line x1="9" y1="9" x2="9.01" y2="9"></line>
-                  <line x1="15" y1="9" x2="15.01" y2="9"></line>
-                </svg>
+                <i className="fas fa-smile-beam" style={{ fontSize: '4rem', color: '#388E3C' }}></i>
               </div>
               <div className="adv-card-body">
                 <h3>Tempat Ramah Anak & Penuh Keceriaan</h3>
@@ -426,7 +411,7 @@ export const HomePage: React.FC = () => {
                   <p>Lingkungan belajar yang hangat, bersih, aman, dan penuh suasana ceria sehingga anak-anak merasa nyaman dan bersemangat setiap kali datang belajar.</p>
                 </div>
                 <span className="adv-card-hint" style={{ opacity: 0.65, color: '#64748b', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.5rem', fontSize: '0.8rem' }}>
-                  <i className="fas fa-info-circle" style={{ fontSize: '0.75rem', opacity: 0.7 }}></i> Klik untuk selengkapnya
+                  <i className="fas fa-exclamation-circle" style={{ fontSize: '0.75rem', opacity: 0.7 }}></i> Klik untuk selengkapnya
                 </span>
               </div>
             </div>

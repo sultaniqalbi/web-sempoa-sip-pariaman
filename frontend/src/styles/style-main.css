@@ -673,24 +673,24 @@ img {
     font-weight: 600;
 }
 
-/* Active Flip State */
-.advantage-card.active .adv-card-image-wrap {
+/* Active Flip State on Hover */
+.advantage-card:hover .adv-card-image-wrap {
     height: 0;
     opacity: 0;
+    margin: 0;
 }
 
-.advantage-card.active .adv-card-body {
+.advantage-card:hover .adv-card-body {
     justify-content: center;
-    background-color: var(--color-primary-light);
+    background-color: var(--color-bg-white);
 }
 
-.advantage-card.active .adv-card-desc {
+.advantage-card:hover .adv-card-desc {
     opacity: 1;
     transform: translateY(0);
-    max-height: 220px;
-    margin-top: 0.5rem;
+    max-height: 250px;
+    margin-top: 0.75rem;
 }
-
 /* === ACHIEVEMENTS SECTION (Tabuik Fringe Background Pattern) === */
 .achievements {
     background: linear-gradient(to bottom, rgba(136, 14, 79, 0.95), rgba(136, 14, 79, 0.97)), 
