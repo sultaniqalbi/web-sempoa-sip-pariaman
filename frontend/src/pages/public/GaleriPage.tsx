@@ -19,20 +19,68 @@ export const GaleriPage: React.FC = () => {
     caption: '',
   });
 
-  const galleryItems = [
-    { src: '/assets/image/siswa-belajar-sempoa.jpg', title: 'Siswa belajar sempoa', border: '#f57c00', color: '#e65100' },
-    { src: '/assets/image/guru-membimbing.jpg', title: 'Guru membimbing fonem', border: '#00acc1', color: '#00838f' },
-    { src: '/assets/image/siswa-menyusun-balok.jpg', title: 'Siswa menyusun balok huruf', border: '#2E7D32', color: '#1b5e20' },
-    { src: '/assets/image/anak-tk-bermain.jpg', title: 'Keceriaan anak TK bermain', border: '#E53935', color: '#c62828' },
-    { src: '/assets/image/kegiatan-1.webp', title: 'Siswa Praktek Sholat Berjamaah', border: '#f57c00', color: '#e65100' },
-    { src: '/assets/image/kegiatan-2.webp', title: 'Siswa Sedang Belajar Sempoa', border: '#00acc1', color: '#00838f' },
-    { src: '/assets/image/kegiatan-3.webp', title: 'Suasana Belajar Fonem', border: '#2E7D32', color: '#1b5e20' },
-    { src: '/assets/image/kegiatan-4.webp', title: 'Suasana Belajar Sempoa', border: '#E53935', color: '#c62828' },
-    { src: '/assets/image/prestasi-1.webp', title: 'Kegiatan Lomba Sempoa 1', border: '#fbc02d', color: '#f57f17' },
-    { src: '/assets/image/prestasi-2.webp', title: 'Kegiatan Lomba Sempoa 2', border: '#fbc02d', color: '#f57f17' },
-    { src: '/assets/image/prestasi-3.webp', title: 'Kegiatan Lomba Sempoa 3', border: '#fbc02d', color: '#f57f17' },
-    { src: '/assets/image/prestasi-4.webp', title: 'Kegiatan Lomba Sempoa 4', border: '#fbc02d', color: '#f57f17' },
+  const colors = [
+    { border: '#f57c00', color: '#e65100' },
+    { border: '#00acc1', color: '#00838f' },
+    { border: '#2E7D32', color: '#1b5e20' },
+    { border: '#E53935', color: '#c62828' },
   ];
+
+  const rawImages = [
+    { name: 'IMG-20260710-WA0049.jpg', title: 'Kegiatan Pembelajaran Kelas Sempoa' },
+    { name: 'IMG-20260710-WA0052.jpg', title: 'Siswa Berlatih Sempoa & Bayangan' },
+    { name: 'IMG-20260710-WA0053.jpg', title: 'Bimbingan Interaktif Instruktur' },
+    { name: 'IMG-20260710-WA0054.jpg', title: 'Suasana Belajar Ceria & Fokus' },
+    { name: 'IMG-20260710-WA0056.jpg', title: 'Latihan Berhitung Mental Aritmatika' },
+    { name: 'IMG-20260710-WA0057.jpg', title: 'Aktivitas Membaca & Menulis Fonem' },
+    { name: 'IMG-20260710-WA0058.jpg', title: 'Praktik Sholat & Setoran Hafalan Tahfidz' },
+    { name: 'IMG-20260710-WA0059.jpg', title: 'Interactive Storytelling Bahasa Inggris' },
+    { name: 'IMG-20260710-WA0061.jpg', title: 'Lomba & Kejuaraan Sempoa SIP' },
+    { name: 'IMG-20260710-WA0062.jpg', title: 'Penyerahan Piala & Sertifikat Murid Berprestasi' },
+    { name: 'IMG-20260710-WA0066.jpg', title: 'Sesi Foto Bersama Guru & Siswa' },
+    { name: 'IMG-20260710-WA0067.jpg', title: 'Kegiatan Brain Gym (Senam Otak)' },
+    { name: 'IMG-20260710-WA0068.jpg', title: 'Bimbingan Intensif Kelas Kecil' },
+    { name: 'IMG-20260710-WA0071.jpg', title: 'Antusiasme Siswa Saat Pembelajaran' },
+    { name: 'IMG-20260710-WA0072.jpg', title: 'Latihan Kecepatan & Ketepatan Berhitung' },
+    { name: 'IMG-20260710-WA0073.jpg', title: 'Pendekatan Playful Learning Anak Usia Dini' },
+    { name: 'IMG-20260710-WA0075.jpg', title: 'Pemberian Apresiasi & Bintang Belajar' },
+    { name: 'IMG-20260710-WA0076.jpg', title: 'Dokumentasi Suasana Kelas Nyaman & AC' },
+    { name: 'IMG-20260710-WA0077.jpg', title: 'Suasana Belajar Berkelompok' },
+    { name: 'IMG-20260710-WA0081.jpg', title: 'Penutupan Kejuaraan Sempoa SIP' },
+    { name: 'IMG-20260710-WA0083.jpg', title: 'Kegiatan Belajar Fonem PeSO' },
+    { name: 'IMG-20260710-WA0084.jpg', title: 'Praktik Makhraj & Tajwid Al-Qur’an' },
+    { name: 'IMG-20260710-WA0085.jpg', title: 'Percakapan Interaktif Bahasa Inggris' },
+    { name: 'IMG-20260710-WA0086.jpg', title: 'Bimbingan Konsentrasi & Daya Ingat' },
+    { name: 'IMG-20260710-WA0087.jpg', title: 'Latihan Tryout & Evaluasi Pembelajaran' },
+    { name: 'IMG-20260710-WA0088.jpg', title: 'Keceriaan Bersama Teman Se-Kelas' },
+    { name: 'IMG-20260710-WA0090.jpg', title: 'Momen Kebersamaan Wali Murid & Guru' },
+    { name: 'IMG-20260710-WA0091.jpg', title: 'Kejuaraan Sempoa SIP Pariaman' },
+    { name: 'IMG-20260710-WA0092.jpg', title: 'Pemberian Trophy Juara Kebanggaan' },
+    { name: 'IMG-20260710-WA0093.jpg', title: 'Foto Pemenang Kejuaraan Sempoa' },
+    { name: 'IMG-20260710-WA0094.jpg', title: 'Ujian Kenaikan Tingkat Level Sempoa' },
+    { name: 'IMG-20260710-WA0095.jpg', title: 'Pemberian Sertifikat Kelulusan' },
+    { name: 'IMG-20260710-WA0096.jpg', title: 'Semangat Pembelajaran Hari Ini' },
+    { name: 'IMG-20260710-WA0097.jpg', title: 'Pembelajaran Media Flashcard & Audio' },
+    { name: 'IMG-20260806-WA0021.jpg', title: 'Presensi Tap Card RFID Digital' },
+    { name: 'IMG-20260806-WA0022.jpg', title: 'Ketertiban Masuk Kelas Murid' },
+    { name: 'IMG-20260806-WA0025.jpg', title: 'Momen Prestasi Murid Sempoa SIP' },
+    { name: 'IMG-20260806-WA0037.jpg', title: 'Suasana Ruang Belajar TC Pariaman' },
+    { name: 'IMG-20260806-WA0038.jpg', title: 'Kegiatan Lomba Antar Sesi' },
+    { name: 'IMG-20260806-WA0039.jpg', title: 'Bimbingan Personal Guru ke Siswa' },
+    { name: 'IMG-20260806-WA0040.jpg', title: 'Pembagian Hadiah & Doorprize Motivasi' },
+    { name: 'IMG-20260806-WA0041.jpg', title: 'Siswa Berani Tampil Di Depan Kelas' },
+    { name: 'IMG-20260806-WA0042.jpg', title: 'Senyum Bahagia Murid Berprestasi' },
+    { name: 'IMG-20260806-WA0043.jpg', title: 'Dokumentasi Fasilitas TC Pariaman' },
+    { name: 'IMG-20260806-WA0044.jpg', title: 'Kebersamaan Keluarga Besar Sempoa SIP' },
+    { name: 'IMG-20260806-WA0045.jpg', title: 'Piala & Piagam Penghargaan Murid' },
+  ];
+
+  const galleryItems = rawImages.map((img, idx) => ({
+    src: `/assets/galeri/${img.name}`,
+    title: img.title,
+    border: colors[idx % colors.length].border,
+    color: colors[idx % colors.length].color,
+  }));
 
   const openLightbox = (item: typeof galleryItems[0]) => {
     setLightbox({
@@ -45,35 +93,36 @@ export const GaleriPage: React.FC = () => {
   };
 
   return (
-    <div className="galeri-page-wrapper">
+    <div className="galeri-page-wrapper" style={{ background: '#f8fafc', minHeight: '100vh' }}>
       {/* NAVBAR */}
-      <nav className="navbar" id="navbar">
-        <div className="container">
+      <nav className="navbar" id="navbar" style={{ position: 'sticky', top: 0, zIndex: 1000, background: 'rgba(255,255,255,0.98)', borderBottom: '1px solid #e2e8f0' }}>
+        <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '80px', maxWidth: '1200px', margin: '0 auto', padding: '0 1.5rem' }}>
           <Link to="/" className="nav-brand-logo">
-            <img src="/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa SIP TC Pariaman" />
+            <img src="/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa SIP TC Pariaman" style={{ height: '55px', width: 'auto' }} />
           </Link>
 
           <button
             className="mobile-menu-btn"
             id="mobileMenuBtn"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}
           >
             <i className={`fas ${isMobileMenuOpen ? 'fa-times' : 'fa-bars'}`}></i>
           </button>
 
-          <ul className={`nav-links ${isMobileMenuOpen ? 'active' : ''}`} id="navLinks">
-            <li><Link to="/">Beranda</Link></li>
-            <li><a href="/#programs">Program</a></li>
-            <li><a href="/#advantages">Keunggulan</a></li>
-            <li><a href="/#achievements">Prestasi</a></li>
-            <li><Link to="/galeri">Galeri</Link></li>
-            <li><a href="/#lokasi-peta">Lokasi</a></li>
+          <ul className={`nav-links ${isMobileMenuOpen ? 'active' : ''}`} id="navLinks" style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', listStyle: 'none', margin: 0, padding: 0 }}>
+            <li><Link to="/" style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>Beranda</Link></li>
+            <li><a href="/#programs" style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>Program</a></li>
+            <li><a href="/#advantages" style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>Keunggulan</a></li>
+            <li><a href="/#achievements" style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>Prestasi</a></li>
+            <li><Link to="/galeri" style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>Galeri</Link></li>
+            <li><a href="/#lokasi-peta" style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>Lokasi</a></li>
             <li>
               {user ? (
                 <Link
                   to={user.role === 'admin' || user.role === 'owner' ? '/admin' : user.role === 'guru' ? '/guru' : '/ortu'}
                   className="btn btn-yellow"
-                  style={{ padding: '0.5rem 1.1rem', fontSize: '0.9rem' }}
+                  style={{ padding: '0.5rem 1.1rem', fontSize: '0.9rem', background: '#ffd54f', color: '#1e293b', borderRadius: '50px', fontWeight: 600, textDecoration: 'none' }}
                 >
                   Dashboard
                 </Link>
@@ -82,9 +131,10 @@ export const GaleriPage: React.FC = () => {
                   to="/login"
                   className="btn btn-primary"
                   id="loginNavBtn"
-                  style={{ padding: '0.5rem 1.1rem', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                  style={{ padding: '0.5rem 1.1rem', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: '#ff7043', color: '#fff', borderRadius: '50px', fontWeight: 600, textDecoration: 'none' }}
                 >
-                  <i className="fas fa-sign-in-alt"></i> Login/Masuk
+                  <img src="/assets/icons/login.svg" alt="Login" style={{ width: '16px', height: '16px', filter: 'brightness(0) invert(1)' }} />
+                  Login/Masuk
                 </Link>
               )}
             </li>
@@ -93,21 +143,21 @@ export const GaleriPage: React.FC = () => {
       </nav>
 
       {/* HERO */}
-      <header className="program-hero-container" style={{ background: 'linear-gradient(135deg, #f57c00 0%, #e65100 100%)', padding: '10rem 2rem 8rem', textAlign: 'center', color: '#fff', borderBottomLeftRadius: '40px', borderBottomRightRadius: '40px' }}>
-        <span style={{ background: 'rgba(255,255,255,0.25)', color: '#fff', padding: '0.35rem 1rem', borderRadius: '20px', fontWeight: 700, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.75rem', display: 'inline-block' }}>
-          Koleksi Foto
+      <header className="program-hero-container" style={{ background: 'linear-gradient(135deg, #f57c00 0%, #e65100 100%)', padding: '7rem 2rem 5rem', textAlign: 'center', color: '#fff', borderBottomLeftRadius: '36px', borderBottomRightRadius: '36px' }}>
+        <span style={{ background: 'rgba(255,255,255,0.22)', color: '#fff', padding: '0.35rem 1.1rem', borderRadius: '50px', fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.75rem', display: 'inline-block' }}>
+          Dokumentasi Kegiatan & Prestasi
         </span>
-        <h1 style={{ fontSize: '3rem', fontWeight: 800, margin: '0.5rem 0' }}>
-          <i className="fas fa-images" style={{ marginRight: '0.5rem' }}></i> Galeri Kegiatan & Prestasi
+        <h1 style={{ fontSize: '2.8rem', fontWeight: 800, margin: '0.4rem 0' }}>
+          Galeri Kegiatan Murid
         </h1>
-        <p style={{ fontSize: '1.15rem', maxWidth: '650px', margin: '0 auto', opacity: 0.95 }}>
-          Momen-momen berharga, kegiatan belajar mengajar, serta prestasi membanggakan murid Sempoa SIP TC Pariaman.
+        <p style={{ fontSize: '1.15rem', maxWidth: '700px', margin: '0 auto', opacity: 0.95 }}>
+          Momen-momen berharga, suasana kelas interaktif, serta prestasi membanggakan murid Sempoa SIP TC Pariaman.
         </p>
       </header>
 
       {/* MAIN CONTENT */}
-      <main className="content-section-prog" style={{ maxWidth: '1200px', margin: '0 auto', padding: '4rem 1.5rem' }}>
-        <div className="gallery-grid" id="publicGalleryGrid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1.5rem' }}>
+      <main className="content-section-prog" style={{ maxWidth: '1200px', margin: '0 auto', padding: '3.5rem 1.5rem' }}>
+        <div className="gallery-grid" id="publicGalleryGrid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.5rem' }}>
           {galleryItems.map((item, idx) => (
             <div
               key={idx}
@@ -115,17 +165,17 @@ export const GaleriPage: React.FC = () => {
               onClick={() => openLightbox(item)}
               style={{
                 background: 'white',
-                borderRadius: '14px',
+                borderRadius: '16px',
                 overflow: 'hidden',
                 border: `3px solid ${item.border}`,
-                boxShadow: '0 4px 12px rgba(245, 124, 0, 0.1)',
+                boxShadow: '0 6px 18px rgba(0, 0, 0, 0.05)',
                 cursor: 'pointer',
                 display: 'flex',
                 flexDirection: 'column',
-                transition: 'transform 0.25s ease, border-color 0.25s ease',
+                transition: 'transform 0.25s ease, boxShadow 0.25s ease',
               }}
             >
-              <div className="gallery-img-wrap" style={{ width: '100%', aspectRatio: '3 / 4', overflow: 'hidden', background: '#f8f9fa' }}>
+              <div className="gallery-img-wrap" style={{ width: '100%', aspectRatio: '4 / 3', overflow: 'hidden', background: '#f8f9fa' }}>
                 <img src={item.src} alt={item.title} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
               <div
@@ -135,9 +185,9 @@ export const GaleriPage: React.FC = () => {
                   textAlign: 'center',
                   fontWeight: 700,
                   color: item.color,
-                  fontSize: '0.92rem',
+                  fontSize: '0.9rem',
                   background: '#ffffff',
-                  borderTop: '2px solid #fff3e0',
+                  borderTop: '1px solid #f1f5f9',
                   lineHeight: 1.4,
                   flexGrow: 1,
                   display: 'flex',
@@ -156,7 +206,7 @@ export const GaleriPage: React.FC = () => {
       <footer className="footer" style={{ background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)', color: '#fff', padding: '3rem 0 2rem' }}>
         <div className="container" style={{ textAlign: 'center' }}>
           <div className="footer-bottom" style={{ textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1.5rem' }}>
-            <p>&copy; 2026 Sempoa SIP TC Pariaman. All rights reserved.</p>
+            <p>&copy; 2026 Sempoa SIP TC Pariaman. Hak Cipta Dilindungi.</p>
           </div>
         </div>
       </footer>
@@ -172,7 +222,7 @@ export const GaleriPage: React.FC = () => {
             left: 0,
             width: '100%',
             height: '100%',
-            background: 'rgba(0, 0, 0, 0.75)',
+            background: 'rgba(0, 0, 0, 0.85)',
             zIndex: 10000,
             justifyContent: 'center',
             alignItems: 'center',
@@ -184,12 +234,13 @@ export const GaleriPage: React.FC = () => {
             className="gallery-item"
             style={{
               background: 'white',
-              maxWidth: '90%',
-              maxHeight: '90%',
-              borderRadius: '14px',
+              maxWidth: '850px',
+              width: '90%',
+              maxHeight: '90vh',
+              borderRadius: '20px',
               overflow: 'hidden',
               border: `4px solid ${lightbox.borderColor || '#f57c00'}`,
-              boxShadow: '0 15px 40px rgba(0,0,0,0.3)',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.4)',
               display: 'flex',
               flexDirection: 'column',
               cursor: 'default',
@@ -202,15 +253,15 @@ export const GaleriPage: React.FC = () => {
               onClick={() => setLightbox({ ...lightbox, isOpen: false })}
               style={{
                 position: 'absolute',
-                top: '12px',
-                right: '12px',
-                background: 'rgba(0,0,0,0.5)',
+                top: '14px',
+                right: '14px',
+                background: 'rgba(0,0,0,0.6)',
                 color: 'white',
                 border: 'none',
                 borderRadius: '50%',
-                width: '36px',
-                height: '36px',
-                fontSize: '1.2rem',
+                width: '38px',
+                height: '38px',
+                fontSize: '1.3rem',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -220,20 +271,20 @@ export const GaleriPage: React.FC = () => {
             >
               &times;
             </button>
-            <div style={{ width: '100%', height: 'auto', maxHeight: '70vh', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafafa' }}>
-              <img id="lightboxImg" src={lightbox.src} alt={lightbox.caption} style={{ width: 'auto', height: 'auto', maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain' }} />
+            <div style={{ width: '100%', height: 'auto', maxHeight: '72vh', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000' }}>
+              <img id="lightboxImg" src={lightbox.src} alt={lightbox.caption} style={{ width: 'auto', height: 'auto', maxWidth: '100%', maxHeight: '72vh', objectFit: 'contain' }} />
             </div>
             <div
               id="lightboxCaption"
               className="gallery-caption"
               style={{
-                padding: '1.2rem',
+                padding: '1.25rem',
                 textAlign: 'center',
-                fontSize: '1.1rem',
+                fontSize: '1.05rem',
                 fontWeight: 700,
                 color: lightbox.captionColor || '#e65100',
                 background: 'white',
-                borderTop: '2px solid #fff3e0',
+                borderTop: '2px solid #f1f5f9',
                 margin: 0,
                 width: '100%',
               }}

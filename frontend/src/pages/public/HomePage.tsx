@@ -221,22 +221,20 @@ export const HomePage: React.FC = () => {
           </div>
           
           <div className="programs-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
-            {/* Program 1: Sempoa SIP */}
+            {/* Program 1: Sempoa */}
             <div className="program-card" style={{ background: '#fff', borderRadius: '16px', borderTop: '6px solid var(--color-primary-orange)', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', padding: '1.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                  <h3 style={{ margin: 0, fontWeight: 700, fontSize: '1.3rem', color: 'var(--color-text-dark)' }}>Sempoa SIP</h3>
+                  <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.35rem', color: 'var(--color-text-dark)' }}>Sempoa</h3>
                   <span style={{ background: '#fff8e1', color: '#e65100', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '20px', border: '1px solid #ffe0b2' }}>Usia 4 - 12 Thn</span>
                 </div>
                 <p style={{ fontSize: '0.92rem', marginBottom: '1.25rem', color: 'var(--color-text-body)', textAlign: 'left', lineHeight: 1.6 }}>
                   Pelatihan mental aritmatika guna menyeimbangkan koordinasi sel otak kanan-kiri anak secara optimal.
                 </p>
-                <div className="program-schedule-box" style={{ padding: '0.8rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-                  <div style={{ fontSize: '0.82rem', color: '#e65100', fontWeight: 700, marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                    <i className="far fa-clock"></i> Sesi & Jadwal Kelas
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem', fontWeight: 600, color: '#334155' }}>
-                    <span><i className="far fa-calendar-alt" style={{ color: '#f57c00', marginRight: '0.3rem' }}></i> Senin - Sabtu</span>
+                <div className="program-schedule-box" style={{ padding: '0.75rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#e65100', fontWeight: 700, marginBottom: '0.35rem' }}>Sesi & Jadwal Kelas</div>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <span>Senin - Sabtu</span>
                     <span style={{ background: '#fff3e0', color: '#e65100', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>12.00 - 17.00 WIB</span>
                   </div>
                 </div>
@@ -246,22 +244,20 @@ export const HomePage: React.FC = () => {
               </Link>
             </div>
 
-            {/* Program 2: Fonem (Baca Tulis) */}
+            {/* Program 2: Fonem */}
             <div className="program-card" style={{ background: '#fff', borderRadius: '16px', borderTop: '6px solid var(--color-accent-teal)', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', padding: '1.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                  <h3 style={{ margin: 0, fontWeight: 700, fontSize: '1.25rem', color: 'var(--color-text-dark)' }}>Fonem (Baca Tulis)</h3>
+                  <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.35rem', color: 'var(--color-text-dark)' }}>Fonem</h3>
                   <span style={{ background: '#e0f7fa', color: '#00838f', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '20px', border: '1px solid #b2ebf2' }}>Usia 4 - 12 Thn</span>
                 </div>
                 <p style={{ fontSize: '0.92rem', marginBottom: '1.25rem', color: 'var(--color-text-body)', textAlign: 'left', lineHeight: 1.6 }}>
                   Metode PeSO (Pembelajaran Seluruh Otak) membaca & menulis cepat tanpa mengeja dan tanpa stres.
                 </p>
-                <div className="program-schedule-box" style={{ padding: '0.8rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-                  <div style={{ fontSize: '0.82rem', color: '#00838f', fontWeight: 700, marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                    <i className="far fa-clock"></i> Sesi & Jadwal Kelas
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem', fontWeight: 600, color: '#334155' }}>
-                    <span><i className="far fa-calendar-alt" style={{ color: '#00acc1', marginRight: '0.3rem' }}></i> Senin - Sabtu</span>
+                <div className="program-schedule-box" style={{ padding: '0.75rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#00838f', fontWeight: 700, marginBottom: '0.35rem' }}>Sesi & Jadwal Kelas</div>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <span>Senin - Sabtu</span>
                     <span style={{ background: '#e0f7fa', color: '#00838f', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>12.00 - 17.00 WIB</span>
                   </div>
                 </div>
@@ -271,22 +267,20 @@ export const HomePage: React.FC = () => {
               </Link>
             </div>
 
-            {/* Program 3: Ngaji / Tahfidz */}
+            {/* Program 3: Tahfidz */}
             <div className="program-card" style={{ background: '#fff', borderRadius: '16px', borderTop: '6px solid #2E7D32', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', padding: '1.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                  <h3 style={{ margin: 0, fontWeight: 700, fontSize: '1.25rem', color: 'var(--color-text-dark)' }}>Ngaji / Tahfidz</h3>
+                  <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.35rem', color: 'var(--color-text-dark)' }}>Tahfidz</h3>
                   <span style={{ background: '#e8f5e9', color: '#1b5e20', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '20px', border: '1px solid #c8e6c9' }}>Usia 4 - 12 Thn</span>
                 </div>
                 <p style={{ fontSize: '0.92rem', marginBottom: '1.25rem', color: 'var(--color-text-body)', textAlign: 'left', lineHeight: 1.6 }}>
                   Bimbingan hafalan surat-surat pendek Al-Qur'an (Juz 30) serta praktik ibadah harian.
                 </p>
-                <div className="program-schedule-box" style={{ padding: '0.8rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-                  <div style={{ fontSize: '0.82rem', color: '#1b5e20', fontWeight: 700, marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                    <i className="far fa-clock"></i> Sesi & Jadwal Kelas
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem', fontWeight: 600, color: '#334155' }}>
-                    <span><i className="far fa-calendar-alt" style={{ color: '#2e7d32', marginRight: '0.3rem' }}></i> Senin - Sabtu</span>
+                <div className="program-schedule-box" style={{ padding: '0.75rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#1b5e20', fontWeight: 700, marginBottom: '0.35rem' }}>Sesi & Jadwal Kelas</div>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <span>Senin - Sabtu</span>
                     <span style={{ background: '#e8f5e9', color: '#1b5e20', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>12.00 - 17.00 WIB</span>
                   </div>
                 </div>
@@ -300,25 +294,17 @@ export const HomePage: React.FC = () => {
             <div className="program-card" style={{ background: '#fff', borderRadius: '16px', borderTop: '6px solid #E53935', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', padding: '1.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                  <h3 style={{ margin: 0, fontWeight: 700, fontSize: '1.25rem', color: 'var(--color-text-dark)' }}>Bahasa Inggris</h3>
+                  <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.35rem', color: 'var(--color-text-dark)' }}>Bahasa Inggris</h3>
                   <span style={{ background: '#ffebee', color: '#c62828', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '20px', border: '1px solid #ffcdd2' }}>Usia 4 - 12 Thn</span>
                 </div>
                 <p style={{ fontSize: '0.92rem', marginBottom: '1.25rem', color: 'var(--color-text-body)', textAlign: 'left', lineHeight: 1.6 }}>
                   Pengenalan kosakata, pelafalan, dan percakapan interaktif guna membangun percaya diri berbahasa asing.
                 </p>
-                <div className="program-schedule-box" style={{ padding: '0.8rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-                  <div style={{ fontSize: '0.82rem', color: '#c62828', fontWeight: 700, marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                    <i className="far fa-clock"></i> Sesi & Jadwal Kelas
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem', fontWeight: 600, color: '#334155' }}>
-                      <span><i className="far fa-calendar-alt" style={{ color: '#e53935', marginRight: '0.3rem' }}></i> Jumat</span>
-                      <span style={{ background: '#ffebee', color: '#c62828', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>11.00 - 17.00 WIB</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem', fontWeight: 600, color: '#334155' }}>
-                      <span><i className="far fa-calendar-alt" style={{ color: '#e53935', marginRight: '0.3rem' }}></i> Sabtu</span>
-                      <span style={{ background: '#ffebee', color: '#c62828', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>08.30 - 15.30 WIB</span>
-                    </div>
+                <div className="program-schedule-box" style={{ padding: '0.75rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#c62828', fontWeight: 700, marginBottom: '0.35rem' }}>Sesi & Jadwal Kelas</div>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <span>Jumat - Sabtu</span>
+                    <span style={{ background: '#ffebee', color: '#c62828', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>11.00 - 17.00 WIB</span>
                   </div>
                 </div>
               </div>
@@ -348,8 +334,8 @@ export const HomePage: React.FC = () => {
               id="advCard1"
               onClick={() => handleAdvCardClick(1)}
             >
-              <div className="adv-card-image-wrap" style={{ backgroundColor: 'var(--color-primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-maroon)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <div className="adv-card-image-wrap" style={{ backgroundColor: '#FFF8E1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="68" height="68" viewBox="0 0 24 24" fill="none" stroke="#E65100" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.04Z"/>
                   <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.04Z"/>
                 </svg>
@@ -359,8 +345,8 @@ export const HomePage: React.FC = () => {
                 <div className="adv-card-desc">
                   <p>Sebelum memulai sesi belajar, siswa akan dipandu melakukan senam otak singkat. Hal ini merangsang kesiapan koordinasi motorik, ketenangan mental, dan memicu fokus anak saat menyerap materi.</p>
                 </div>
-                <span className="adv-card-hint" style={{ color: 'var(--color-primary-orange)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.5rem', fontSize: '0.85rem' }}>
-                  <i className="fas fa-info-circle"></i> Klik untuk selengkapnya
+                <span className="adv-card-hint" style={{ opacity: 0.65, color: '#64748b', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.5rem', fontSize: '0.8rem' }}>
+                  <i className="fas fa-info-circle" style={{ fontSize: '0.75rem', opacity: 0.7 }}></i> Klik untuk selengkapnya
                 </span>
               </div>
             </div>
@@ -371,8 +357,8 @@ export const HomePage: React.FC = () => {
               id="advCard2"
               onClick={() => handleAdvCardClick(2)}
             >
-              <div className="adv-card-image-wrap" style={{ backgroundColor: '#e0f7fa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-teal)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <div className="adv-card-image-wrap" style={{ backgroundColor: '#E0F7FA', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="68" height="68" viewBox="0 0 24 24" fill="none" stroke="#00838f" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                 </svg>
               </div>
@@ -381,8 +367,8 @@ export const HomePage: React.FC = () => {
                 <div className="adv-card-desc">
                   <p>Setiap konsep bimbingan dibawakan secara interaktif menggunakan media bermain, gambar, flashcard, dan visualisasi manik sempoa fisik agar anak tidak merasa tertekan atau bosan.</p>
                 </div>
-                <span className="adv-card-hint" style={{ color: 'var(--color-accent-teal)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.5rem', fontSize: '0.85rem' }}>
-                  <i className="fas fa-info-circle"></i> Klik untuk selengkapnya
+                <span className="adv-card-hint" style={{ opacity: 0.65, color: '#64748b', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.5rem', fontSize: '0.8rem' }}>
+                  <i className="fas fa-info-circle" style={{ fontSize: '0.75rem', opacity: 0.7 }}></i> Klik untuk selengkapnya
                 </span>
               </div>
             </div>
@@ -393,8 +379,8 @@ export const HomePage: React.FC = () => {
               id="advCard3"
               onClick={() => handleAdvCardClick(3)}
             >
-              <div className="adv-card-image-wrap" style={{ backgroundColor: '#ffebee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="#E53935" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <div className="adv-card-image-wrap" style={{ backgroundColor: '#FFEBEE', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="68" height="68" viewBox="0 0 24 24" fill="none" stroke="#C62828" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                   <circle cx="9" cy="7" r="4"></circle>
                   <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
@@ -406,8 +392,8 @@ export const HomePage: React.FC = () => {
                 <div className="adv-card-desc">
                   <p>Guru-guru kami lolos pelatihan standarisasi metode pengajaran khusus anak usia dini, mengedepankan pendekatan verbal yang memotivasi dan membangun kepercayaan diri anak.</p>
                 </div>
-                <span className="adv-card-hint" style={{ color: '#E53935', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.5rem', fontSize: '0.85rem' }}>
-                  <i className="fas fa-info-circle"></i> Klik untuk selengkapnya
+                <span className="adv-card-hint" style={{ opacity: 0.65, color: '#64748b', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.5rem', fontSize: '0.8rem' }}>
+                  <i className="fas fa-info-circle" style={{ fontSize: '0.75rem', opacity: 0.7 }}></i> Klik untuk selengkapnya
                 </span>
               </div>
             </div>
@@ -418,8 +404,8 @@ export const HomePage: React.FC = () => {
               id="advCard4"
               onClick={() => handleAdvCardClick(4)}
             >
-              <div className="adv-card-image-wrap" style={{ backgroundColor: '#e8f5e9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <div className="adv-card-image-wrap" style={{ backgroundColor: '#E8F5E9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="68" height="68" viewBox="0 0 24 24" fill="none" stroke="#1B5E20" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="4" width="20" height="16" rx="2"></rect>
                   <line x1="2" y1="10" x2="22" y2="10"></line>
                   <circle cx="7" cy="15" r="1"></circle>
@@ -430,8 +416,8 @@ export const HomePage: React.FC = () => {
                 <div className="adv-card-desc">
                   <p>Sistem bimbingan terintegrasi dengan alat sensor RFID berbasis IoT (ESP32). Anak cukup melakukan tapping kartu saat tiba dan pulang, lalu data kehadiran otomatis ter-update secara real-time ke portal orang tua.</p>
                 </div>
-                <span className="adv-card-hint" style={{ color: '#2E7D32', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.5rem', fontSize: '0.85rem' }}>
-                  <i className="fas fa-info-circle"></i> Klik untuk selengkapnya
+                <span className="adv-card-hint" style={{ opacity: 0.65, color: '#64748b', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.5rem', fontSize: '0.8rem' }}>
+                  <i className="fas fa-info-circle" style={{ fontSize: '0.75rem', opacity: 0.7 }}></i> Klik untuk selengkapnya
                 </span>
               </div>
             </div>
