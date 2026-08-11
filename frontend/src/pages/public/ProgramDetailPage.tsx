@@ -432,7 +432,7 @@ export const ProgramDetailPage: React.FC = () => {
             }}
             title="Kembali ke Beranda"
           >
-            <i className="fas fa-home"></i>
+            <img src="/assets/icons/home.svg" alt="Beranda" style={{ width: '28px', height: '28px', display: 'block' }} />
           </Link>
 
           {/* NEXT PROGRAM BUTTON */}
