@@ -16,14 +16,13 @@
     --shadow-lg: 0 10px 25px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.05);
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-body {
+.admin-portal-wrapper {
     font-family: 'Inter', sans-serif;
     background-color: var(--admin-bg);
     color: var(--admin-text-dark);
     display: flex;
     min-height: 100vh;
+    width: 100%;
 }
 
 h1, h2, h3, h4, h5, h6 { 

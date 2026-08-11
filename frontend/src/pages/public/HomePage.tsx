@@ -160,7 +160,7 @@ export const HomePage: React.FC = () => {
               </div>
             </div>
             <div className="hero-mascot-wrap">
-              <img src="/assets/image/maskot_logo-removebg-preview.png" alt="Maskot Sempoa SIP Laki-Laki" />
+              <img src="/assets/image/maskot-hero-test.webp" alt="Maskot Sempoa SIP TC Pariaman" style={{ maxHeight: '420px', width: 'auto', filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.25))' }} />
             </div>
           </div>
         </div>

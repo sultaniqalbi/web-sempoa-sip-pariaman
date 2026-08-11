@@ -49,6 +49,7 @@ services:
     container_name: sempoa-frontend
     volumes:
       - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
       - ./frontend/postcss.config.js:/app/postcss.config.js
       - ./frontend/tailwind.config.js:/app/tailwind.config.js
     ports:
