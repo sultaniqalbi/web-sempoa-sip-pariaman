@@ -398,23 +398,24 @@ export const HomePage: React.FC = () => {
               </div>
             </div>
 
-            {/* Card 4: RFID IoT Absensi */}
+            {/* Card 4: Tempat Ramah Anak */}
             <div
               className={`advantage-card ${activeAdvCard === 4 ? 'active' : ''}`}
               id="advCard4"
               onClick={() => handleAdvCardClick(4)}
             >
               <div className="adv-card-image-wrap" style={{ backgroundColor: '#E8F5E9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="68" height="68" viewBox="0 0 24 24" fill="none" stroke="#1B5E20" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="2" y="4" width="20" height="16" rx="2"></rect>
-                  <line x1="2" y1="10" x2="22" y2="10"></line>
-                  <circle cx="7" cy="15" r="1"></circle>
+                <svg width="68" height="68" viewBox="0 0 24 24" fill="none" stroke="#1B5E20" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M8 14s1.5 2.5 4 2.5 4-2.5 4-2.5"></path>
+                  <line x1="9" y1="9" x2="9.01" y2="9"></line>
+                  <line x1="15" y1="9" x2="15.01" y2="9"></line>
                 </svg>
               </div>
               <div className="adv-card-body">
-                <h3>Sistem Absensi RFID Digital Terintegrasi</h3>
+                <h3>Tempat Ramah Anak & Penuh Keceriaan</h3>
                 <div className="adv-card-desc">
-                  <p>Sistem bimbingan terintegrasi dengan alat sensor RFID berbasis IoT (ESP32). Anak cukup melakukan tapping kartu saat tiba dan pulang, lalu data kehadiran otomatis ter-update secara real-time ke portal orang tua.</p>
+                  <p>Lingkungan belajar yang hangat, bersih, aman, dan penuh suasana ceria sehingga anak-anak merasa nyaman dan bersemangat setiap kali datang belajar.</p>
                 </div>
                 <span className="adv-card-hint" style={{ opacity: 0.65, color: '#64748b', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.5rem', fontSize: '0.8rem' }}>
                   <i className="fas fa-info-circle" style={{ fontSize: '0.75rem', opacity: 0.7 }}></i> Klik untuk selengkapnya
