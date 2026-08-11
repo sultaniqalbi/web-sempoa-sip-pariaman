@@ -333,47 +333,42 @@ export const ProgramDetailPage: React.FC = () => {
           </div>
         </section>
 
-        {/* 3. Fasilitas & Perlengkapan Siswa (KOTAK-KOTAK MENYAMPING HORIZONAL) */}
+        {/* 3. Fasilitas & Perlengkapan Siswa (CLEAN MODERN BULLET POINTS) */}
         <section style={{ marginBottom: '4rem' }}>
           <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--color-text-dark)', marginBottom: '1.5rem' }}>
             Fasilitas & Perlengkapan Siswa
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem' }}>
+          <div
+            style={{
+              background: '#f8fafc',
+              borderRadius: '16px',
+              padding: '2rem',
+              border: '1px solid #e2e8f0',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: '1.5rem',
+            }}
+          >
             {data.facilities.map((fac, idx) => (
               <div
                 key={idx}
                 style={{
-                  background: '#fff',
-                  borderRadius: '16px',
-                  padding: '1.5rem 1.25rem',
-                  border: '1px solid #e2e8f0',
-                  boxShadow: '0 6px 18px rgba(0,0,0,0.04)',
                   display: 'flex',
-                  flexDirection: 'column',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  textAlign: 'center',
                   gap: '0.75rem',
-                  minHeight: '140px',
                 }}
               >
                 <div
                   style={{
-                    width: '42px',
-                    height: '42px',
+                    width: '10px',
+                    height: '10px',
                     borderRadius: '50%',
-                    background: '#ecfdf5',
-                    color: '#10b981',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '1.2rem',
-                    border: '1px solid #a7f3d0',
+                    background: data.color,
+                    boxShadow: `0 0 8px ${data.color}60`,
+                    flexShrink: 0,
                   }}
-                >
-                  <i className="fas fa-check"></i>
-                </div>
-                <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#334155', lineHeight: 1.4 }}>{fac}</span>
+                />
+                <span style={{ fontWeight: 600, fontSize: '0.95rem', color: '#334155', lineHeight: 1.4 }}>{fac}</span>
               </div>
             ))}
           </div>
