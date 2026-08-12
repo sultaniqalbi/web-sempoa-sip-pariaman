@@ -129,7 +129,7 @@ export const HomePage: React.FC = () => {
                   rel="noreferrer"
                   className="btn btn-primary"
                 >
-                  Konsultasi
+                  Daftar Sekarang
                 </a>
               </>
             ) : (
@@ -140,7 +140,7 @@ export const HomePage: React.FC = () => {
                   rel="noreferrer"
                   className="btn btn-yellow"
                 >
-                  Konsultasi
+                  Daftar Sekarang
                 </a>
                 <button
                   onClick={() => setIsLoginModalOpen(true)}

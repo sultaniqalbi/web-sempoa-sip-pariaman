@@ -134,7 +134,7 @@ export const GaleriPage: React.FC = () => {
                   rel="noreferrer"
                   className="btn btn-primary"
                 >
-                  Konsultasi
+                  Daftar Sekarang
                 </a>
               </>
             ) : (
@@ -145,7 +145,7 @@ export const GaleriPage: React.FC = () => {
                   rel="noreferrer"
                   className="btn btn-yellow"
                 >
-                  Konsultasi
+                  Daftar Sekarang
                 </a>
                 <Link
                   to="/login"

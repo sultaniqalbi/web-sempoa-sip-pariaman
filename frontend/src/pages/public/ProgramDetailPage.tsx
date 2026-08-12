@@ -211,7 +211,7 @@ export const ProgramDetailPage: React.FC = () => {
                   rel="noreferrer"
                   className="btn btn-primary"
                 >
-                  Konsultasi
+                  Daftar Sekarang
                 </a>
               </>
             ) : (
@@ -222,7 +222,7 @@ export const ProgramDetailPage: React.FC = () => {
                   rel="noreferrer"
                   className="btn btn-yellow"
                 >
-                  Konsultasi
+                  Daftar Sekarang
                 </a>
                 <Link
                   to="/login"
