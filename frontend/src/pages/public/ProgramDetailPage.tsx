@@ -421,21 +421,22 @@ export const ProgramDetailPage: React.FC = () => {
               justifySelf: 'start',
               background: hoveredBtn === 'prev' ? data.prevColor : '#fff',
               border: `2px solid ${hoveredBtn === 'prev' ? data.prevColor : '#cbd5e1'}`,
-              padding: '0.8rem 1.6rem',
+              width: '160px',
+              padding: '0.8rem 0',
               borderRadius: '50px',
               color: hoveredBtn === 'prev' ? '#fff' : '#334155',
-              fontWeight: 700,
+              fontWeight: 800,
               fontSize: '0.95rem',
               textDecoration: 'none',
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '0.6rem',
+              justifyContent: 'center',
               boxShadow: hoveredBtn === 'prev' ? `0 8px 20px ${data.prevColor}45` : '0 4px 12px rgba(0,0,0,0.04)',
               transform: hoveredBtn === 'prev' ? 'translateY(-3px)' : 'none',
               transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
             }}
           >
-            <i className="fas fa-arrow-left" style={{ color: hoveredBtn === 'prev' ? '#fff' : data.prevColor, transition: 'all 0.3s' }}></i> {data.prevName}
+            {data.prevName}
           </Link>
 
           {/* HOME ICON ONLY BUTTON */}
@@ -474,21 +475,22 @@ export const ProgramDetailPage: React.FC = () => {
               justifySelf: 'end',
               background: hoveredBtn === 'next' ? data.nextColor : '#fff',
               border: `2px solid ${hoveredBtn === 'next' ? data.nextColor : '#cbd5e1'}`,
-              padding: '0.8rem 1.6rem',
+              width: '160px',
+              padding: '0.8rem 0',
               borderRadius: '50px',
               color: hoveredBtn === 'next' ? '#fff' : '#334155',
-              fontWeight: 700,
+              fontWeight: 800,
               fontSize: '0.95rem',
               textDecoration: 'none',
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '0.6rem',
+              justifyContent: 'center',
               boxShadow: hoveredBtn === 'next' ? `0 8px 20px ${data.nextColor}45` : '0 4px 12px rgba(0,0,0,0.04)',
               transform: hoveredBtn === 'next' ? 'translateY(-3px)' : 'none',
               transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
             }}
           >
-            {data.nextName} <i className="fas fa-arrow-right" style={{ color: hoveredBtn === 'next' ? '#fff' : data.nextColor, transition: 'all 0.3s' }}></i>
+            {data.nextName}
           </Link>
         </nav>
       </main>
