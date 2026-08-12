@@ -263,14 +263,6 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             alt={galleryImgAlt}
             className="login-modal-image"
           />
-          <div className="login-modal-image-overlay">
-            <span 
-              className="login-modal-image-badge"
-              onClick={loadRandomGalleryImage}
-            >
-              <i className="fas fa-sync-alt"></i> Ganti Foto
-            </span>
-          </div>
         </div>
 
         {/* LANDSCAPE RIGHT SIDE - FORM */}
@@ -375,24 +367,24 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                       aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
                       title="Tampilkan/Sembunyikan kata sandi"
                     >
-                      {/* SVG Eye (shown ketika password hidden) */}
+                      {/* SVG Eye (shown ketika password visible) */}
                       <svg 
                         className="login-password-icon-eye" 
                         xmlns="http://www.w3.org/2000/svg" 
                         viewBox="0 0 24 24" 
                         width="20" height="20"
-                        style={{ display: showPassword ? 'none' : 'block' }}
+                        style={{ display: showPassword ? 'block' : 'none' }}
                       >
                         <path fill="currentColor" fillRule="evenodd" d="M1 12c2.028-4.152 6.192-7 11-7s8.972 2.848 11 7c-2.028 4.152-6.192 7-11 7s-8.972-2.848-11-7m11 3.5a3.5 3.5 0 1 0 0-7a3.5 3.5 0 0 0 0 7"/>
                       </svg>
                       
-                      {/* SVG Eye Slash (shown ketika password visible) */}
+                      {/* SVG Eye Slash (shown ketika password hidden) */}
                       <svg 
                         className="login-password-icon-eye-slash" 
                         xmlns="http://www.w3.org/2000/svg" 
                         viewBox="0 0 24 24" 
                         width="20" height="20" 
-                        style={{ display: showPassword ? 'block' : 'none' }}
+                        style={{ display: showPassword ? 'none' : 'block' }}
                       >
                         <path fill="currentColor" fillRule="evenodd" d="m18.922 16.8l3.17 3.17l-1.06 1.061L4.06 4.061L5.12 3l2.74 2.738A11.9 11.9 0 0 1 12 5c4.808 0 8.972 2.848 11 7a12.66 12.66 0 0 1-4.078 4.8m-8.098-8.097l4.473 4.473a3.5 3.5 0 0 0-4.474-4.474zm5.317 9.56A11.9 11.9 0 0 1 12 19c-4.808 0-8.972-2.848-11-7a12.66 12.66 0 0 1 4.078-4.8l3.625 3.624a3.5 3.5 0 0 0 4.474 4.474l2.964 2.964z"/>
                       </svg>

@@ -1552,12 +1552,13 @@ img {
   align-items: center;
   justify-content: center;
   min-height: 500px;
+  padding: 2rem;
 }
 
 .login-modal-image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
   display: block;
   transition: transform 0.6s ease;
@@ -1567,72 +1568,14 @@ img {
   transform: scale(1.05);
 }
 
-.login-modal-image-overlay {
-  position: absolute;
-  bottom: 1.5rem;
-  left: 1.5rem;
-  right: 1.5rem;
-}
-
-.login-modal-image-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  background: rgba(255, 255, 255, 0.95);
-  color: #0F172A;
-  padding: 0.8rem 1.2rem;
-  border-radius: 50px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-}
-
-.login-modal-image-badge:hover {
-  background: white;
-  transform: translateY(-3px);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
-}
-
-.login-modal-image-badge i {
-  font-size: 0.95rem;
-  transition: transform 0.3s ease;
-}
-
-.login-modal-image-badge:hover i {
-  transform: rotate(180deg);
-}
-
 /* Modal Right Side — Form Container */
 .login-modal-form-side {
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
-  max-height: 600px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(15, 23, 42, 0.2) transparent;
-}
-
-.login-modal-form-side::-webkit-scrollbar {
-  width: 6px;
-}
-
-.login-modal-form-side::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.login-modal-form-side::-webkit-scrollbar-thumb {
-  background: rgba(15, 23, 42, 0.2);
-  border-radius: 3px;
-}
-
-.login-modal-form-side::-webkit-scrollbar-thumb:hover {
-  background: rgba(15, 23, 42, 0.3);
 }
 
 .login-modal-header {
-  padding: 2.5rem 2.5rem 1.5rem;
+  padding: 1.5rem 2.5rem 1rem;
   text-align: center;
   border-bottom: 1px solid #e2e8f0;
   position: relative;
@@ -1640,10 +1583,10 @@ img {
 }
 
 .login-modal-logo {
-  height: 70px;
-  max-width: 140px;
+  height: 65px;
+  max-width: 130px;
   object-fit: contain;
-  margin-bottom: 1rem;
+  margin-bottom: 0.8rem;
 }
 
 .login-modal-title {
@@ -1663,12 +1606,11 @@ img {
 /* Form Styles */
 .login-form {
   flex: 1;
-  overflow-y: auto;
-  padding: 2rem 2.5rem 0;
+  padding: 1rem 2.5rem 0;
 }
 
 .login-form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.2rem;
 }
 
 .login-form-label {
