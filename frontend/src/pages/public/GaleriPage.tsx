@@ -117,27 +117,55 @@ export const GaleriPage: React.FC = () => {
             <li><a href="/#achievements" style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>Prestasi</a></li>
             <li><Link to="/galeri" style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>Galeri</Link></li>
             <li><a href="/#lokasi-peta" style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>Lokasi</a></li>
-            <li>
-              {user ? (
-                <Link
-                  to={user.role === 'admin' || user.role === 'owner' ? '/admin' : user.role === 'guru' ? '/guru' : '/ortu'}
-                  className="btn btn-yellow"
-                  style={{ padding: '0.5rem 1.1rem', fontSize: '0.9rem', background: '#ffd54f', color: '#1e293b', borderRadius: '50px', fontWeight: 600, textDecoration: 'none' }}
-                >
-                  Dashboard
-                </Link>
-              ) : (
-                <Link
-                  to="/login"
-                  className="btn btn-primary"
-                  id="loginNavBtn"
-                  style={{ padding: '0.5rem 1.1rem', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: '#ff7043', color: '#fff', borderRadius: '50px', fontWeight: 600, textDecoration: 'none' }}
-                >
-                  <img src="/assets/icons/login.svg" alt="Login" style={{ width: '16px', height: '16px', filter: 'brightness(0) invert(1)' }} />
-                  Login/Masuk
-                </Link>
-              )}
-            </li>
+            {user ? (
+              <>
+                <li>
+                  <Link
+                    to={user.role === 'admin' || user.role === 'owner' ? '/admin' : user.role === 'guru' ? '/guru' : '/ortu'}
+                    className="btn btn-yellow"
+                    style={{ padding: '0.5rem 1.1rem', fontSize: '0.9rem', background: '#ffd54f', color: '#1e293b', borderRadius: '50px', fontWeight: 600, textDecoration: 'none' }}
+                  >
+                    Dashboard
+                  </Link>
+                </li>
+                <li>
+                  <a
+                    href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20dengan%20program%20bimbingan..."
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn btn-primary"
+                    style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem', background: '#e65100', color: '#fff', borderRadius: '50px', border: 'none', fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                  >
+                    Daftar Sekarang
+                  </a>
+                </li>
+              </>
+            ) : (
+              <>
+                <li>
+                  <a
+                    href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20dengan%20program%20bimbingan..."
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn btn-primary"
+                    style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem', background: '#e65100', color: '#fff', borderRadius: '50px', border: 'none', fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                  >
+                    Daftar Sekarang
+                  </a>
+                </li>
+                <li>
+                  <Link
+                    to="/login"
+                    className="btn btn-primary"
+                    id="loginNavBtn"
+                    style={{ padding: '0.5rem 1.1rem', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: '#ff7043', color: '#fff', borderRadius: '50px', fontWeight: 600, textDecoration: 'none' }}
+                  >
+                    <img src="/assets/icons/login.svg" alt="Login" style={{ width: '16px', height: '16px', filter: 'brightness(0) invert(1)' }} />
+                    Login/Masuk
+                  </Link>
+                </li>
+              </>
+            )}
           </ul>
         </div>
       </nav>

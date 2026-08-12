@@ -29,25 +29,30 @@ const programDataMap: Record<string, ProgramDetail> = {
     id: 'sempoa',
     title: 'Sempoa',
     subTitle: 'Pelatihan Mental Aritmatika & Optimalisasi Otak Kanan-Kiri',
-    age: 'Usia 4 - 12 Thn',
+    age: 'Usia 3 - 18 Tahun',
     gradient: 'linear-gradient(135deg, #f57c00 0%, #e65100 100%)',
     color: '#e65100',
     badgeBg: '#fff8e1',
     badgeText: '#e65100',
     badgeBorder: '#ffe0b2',
     description:
-      'Sempoa menyediakan layanan pendidikan dengan belajar sempoa yang membantu meningkatkan fokus anak, daya ingat, imajinasi, dan konsentrasi melalui pelatihan otak kanan dan kiri sehingga mengeksplorasi potensi mental anak secara optimal.',
+      'Sempoa SIP menyediakan layanan pendidikan dengan belajar sempoa yang membantu meningkatkan fokus anak, daya ingat, imajinasi, dan konsentrasi melalui pelatihan otak kanan dan kiri sehingga mengeksplorasi potensi mental anak secara optimal.',
     usps: [
       'Melatih keseimbangan otak kanan dan otak kiri anak.',
       'Meningkatkan daya ingat, imajinasi, dan konsentrasi belajar.',
-      'Mencegah numeric phobia (rasa takut pada matematika).',
-      'Menumbuhkan keberanian dan kepercayaan diri anak.',
+      'Mencegah numeric phobia (rasa takut pada angka & matematika).',
+      'Menumbuhkan kemampuan psikomotorik dan percaya diri anak.',
+      'Pendekatan belajar Fun Learning & sistem Global-Holistic Learning.',
+      'Mengasah kemampuan visual, audio, dan kinestetik anak.',
+      'Pelatihan EQ (Kecerdasan Emosional) dan Self Motivation.',
+      'Mengikuti perlombaan rutin berkala (internal & eksternal) tiap beberapa pekan atau semester untuk mengasah keberanian anak.',
     ],
     facilities: [
-      'Ruangan Ber-AC & WiFi',
-      'Seragam & Tas Sempoa',
-      'Alat Sempoa Fisik',
-      'Buku Paket Bertingkat',
+      'Ruangan ber-AC & WiFi gratis',
+      'Brain Gym (senam otak)',
+      'Media pembelajaran multimedia',
+      'Tas khusus & Seragam Sempoa',
+      'Alat sempoa & Buku paket',
     ],
     prevId: 'inggris',
     prevName: 'Bahasa Inggris',
@@ -60,25 +65,26 @@ const programDataMap: Record<string, ProgramDetail> = {
     id: 'fonem',
     title: 'Fonem',
     subTitle: 'Metode PeSO (Pembelajaran Seluruh Otak) Membaca & Menulis Cepat',
-    age: 'Usia 4 - 12 Thn',
+    age: 'Usia 4 - 12 Tahun',
     gradient: 'linear-gradient(135deg, #00acc1 0%, #00838f 100%)',
     color: '#00838f',
     badgeBg: '#e0f7fa',
     badgeText: '#00838f',
     badgeBorder: '#b2ebf2',
     description:
-      'Fonem adalah kursus baca tulis tanpa mengeja dan tanpa stres untuk anak usia 4 sampai 12 tahun. Menggunakan metode PeSO (Pembelajaran Seluruh Otak) yang mengoptimalkan kinerja otak kanan dan kiri secara bersamaan untuk mengenalkan bunyi dan kata tanpa hafalan paksa.',
+      'Fonem adalah kursus baca tulis tanpa mengeja dan tanpa stres untuk anak usia 4 sampai 12 tahun. Menggunakan metode fonetis yang dikembangkan menjadi metode PeSO (Pembelajaran Seluruh Otak). Metode PeSO mengoptimalkan kinerja otak kanan dan kiri secara bersamaan untuk mengenalkan simbol huruf, bunyi, dan kata tanpa perlu menghafal secara paksa, sehingga dalam 8 kali pertemuan dijamin bisa membaca.',
     usps: [
-      'Metode Fonetis cepat membaca tanpa mengeja & tanpa stres.',
-      'Metode PeSO mengoordinasikan otak kanan & kiri secara optimal.',
-      'Pendekatan belajar yang bersahabat, sabar, & menyenangkan.',
-      'Membangun rasa percaya diri membaca dan menulis sejak dini.',
+      'Metode Fonetis terbukti membantu anak membaca dengan cepat tanpa hafalan dan tanpa stres.',
+      'Metode PeSO memaksimalkan koordinasi otak kanan & kiri untuk pemahaman bunyi dan simbol kata.',
+      'Pendekatan belajar yang bersahabat, sabar, dan menyenangkan.',
+      'Membantu anak yang masih kurang percaya diri dalam membaca dan menulis.',
     ],
     facilities: [
-      'Ruangan Ber-AC & WiFi',
-      'Tas Khusus Fonem',
-      'Buku Paket Latihan PeSO',
-      'Flashcard Interaktif',
+      'Ruangan ber-AC & WiFi gratis',
+      'Brain Gym (senam otak)',
+      'Media pembelajaran multimedia',
+      'Tas khusus Fonem',
+      'Buku paket latihan Fonem',
     ],
     prevId: 'sempoa',
     prevName: 'Sempoa',
@@ -91,25 +97,26 @@ const programDataMap: Record<string, ProgramDetail> = {
     id: 'tahfidz',
     title: 'Tahfidz',
     subTitle: 'Bimbingan Hafalan Al-Qur’an & Tajwid Praktik Ibadah Harian',
-    age: 'Usia 4 - 12 Thn',
+    age: 'Usia 4 - 12 Tahun',
     gradient: 'linear-gradient(135deg, #2E7D32 0%, #1b5e20 100%)',
     color: '#1b5e20',
     badgeBg: '#e8f5e9',
     badgeText: '#1b5e20',
     badgeBorder: '#c8e6c9',
     description:
-      'Bimbingan belajar baca tulis Al-Qur’an (Iqra & Al-Qur’an), hafalan surat-surat pendek (Juz 30), serta bimbingan praktik ibadah harian seperti sholat wajib/sunnah, azan, dan qamat dengan pendekatan ramah anak dan islami.',
+      'Bimbingan belajar baca tulis Al-Qur\'an (Iqra & Al-Qur\'an), hafalan surat-surat pendek (Juz 30), serta bimbingan praktik ibadah harian seperti sholat wajib/sunnah, azan, dan qamat dengan pendekatan ramah anak dan islami.',
     usps: [
-      'Pengajaran baca tulis Al-Qur’an berstandar tajwid & makhraj.',
-      'Bimbingan hafalan Juz 30 dengan metode mutqin & ramah anak.',
-      'Praktik langsung ibadah harian (sholat, azan, & qamat).',
-      'Pembinaan ajang lomba keagamaan berkala melatih mental.',
+      'Pengajaran baca tulis Al-Qur\'an berstandar tajwid dan makhraj yang benar.',
+      'Bimbingan hafalan Juz 30 dengan metode mutqin dan ramah anak.',
+      'Praktik langsung ibadah harian (sholat, azan, dan qamat).',
+      'Pembinaan keikutsertaan dalam lomba-lomba keagamaan (internal & eksternal) tiap beberapa pekan/semester untuk melatih mental & kebiasaan positif.',
     ],
     facilities: [
-      'Ruangan Ber-AC & WiFi',
-      'Buku Iqra Standardized',
-      'Buku Catatan Mutabaah',
-      'Perlengkapan Ibadah',
+      'Ruangan ber-AC & WiFi gratis',
+      'Brain Gym (senam otak)',
+      'Media pembelajaran multimedia',
+      'Buku Iqra',
+      'Buku tulis catatan ibadah/hafalan',
     ],
     prevId: 'fonem',
     prevName: 'Fonem',
@@ -122,25 +129,26 @@ const programDataMap: Record<string, ProgramDetail> = {
     id: 'inggris',
     title: 'Bahasa Inggris',
     subTitle: 'Percakapan Interaktif & Kosakata Aktif untuk Percaya Diri',
-    age: 'Usia 4 - 12 Thn',
+    age: 'Usia 4 - 12 Tahun',
     gradient: 'linear-gradient(135deg, #E53935 0%, #c62828 100%)',
     color: '#c62828',
     badgeBg: '#ffebee',
     badgeText: '#c62828',
     badgeBorder: '#ffcdd2',
     description:
-      'Program Bahasa Inggris dirancang untuk membantu anak usia sekolah dasar agar mampu berbicara dalam bahasa Inggris dengan pengucapan (pronunciation) dan intonasi yang benar dan tepat menggunakan metode interaktif.',
+      'English Class adalah program yang dirancang untuk membantu anak usia sekolah dasar agar mampu berbicara dalam bahasa Inggris dengan pengucapan (pronunciation) dan intonasi yang benar dan tepat menggunakan metode interaktif.',
     usps: [
-      'Kegiatan belajar interaktif melalui storytelling & singing.',
-      'Pendekatan Enjoyable Learning membangun keberanian bicara.',
-      'Pembelajaran berbasis teknologi & media multimedia.',
-      'Pengayaan kosa kata dasar & daily conversation.',
+      'Kegiatan belajar interaktif melalui cerita (storytelling) dan bernyanyi (singing).',
+      'Pendekatan Enjoyable Learning yang membangun keberanian bicara bahasa asing.',
+      'Pembelajaran berbasis teknologi dan media multimedia interaktif.',
+      'Pengayaan kosa kata dasar, pelafalan tepat, dan percakapan harian (daily conversation).',
     ],
     facilities: [
-      'Ruangan Ber-AC & WiFi',
-      'Modul Bahasa Inggris',
-      'Flashcard & Audio Visual',
-      'Perlengkapan Belajar',
+      'Ruangan ber-AC & WiFi gratis',
+      'Brain Gym (senam otak)',
+      'Media pembelajaran multimedia',
+      'Buku modul bahasa Inggris',
+      'Perlengkapan belajar',
     ],
     prevId: 'tahfidz',
     prevName: 'Tahfidz',
@@ -186,38 +194,55 @@ export const ProgramDetailPage: React.FC = () => {
             <li><a href="/#achievements" style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>Prestasi</a></li>
             <li><Link to="/galeri" style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>Galeri</Link></li>
             <li><a href="/#lokasi-peta" style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>Lokasi</a></li>
-            <li>
-              <a
-                href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20dengan%20program%20bimbingan..."
-                target="_blank"
-                rel="noreferrer"
-                className="btn btn-primary"
-                style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem', background: '#e65100', color: '#fff', borderRadius: '50px', border: 'none', fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
-              >
-                Daftar Sekarang
-              </a>
-            </li>
-            <li>
-              {user ? (
-                <Link
-                  to={user.role === 'admin' || user.role === 'owner' ? '/admin' : user.role === 'guru' ? '/guru' : '/ortu'}
-                  className="btn btn-yellow"
-                  style={{ padding: '0.5rem 1.1rem', fontSize: '0.9rem', background: '#ffd54f', color: '#1e293b', borderRadius: '50px', fontWeight: 600, textDecoration: 'none' }}
-                >
-                  Dashboard
-                </Link>
-              ) : (
-                <Link
-                  to="/login"
-                  className="btn btn-primary"
-                  id="loginNavBtn"
-                  style={{ padding: '0.5rem 1.1rem', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: '#ff7043', color: '#fff', borderRadius: '50px', fontWeight: 600, textDecoration: 'none' }}
-                >
-                  <img src="/assets/icons/login.svg" alt="Login" style={{ width: '16px', height: '16px', filter: 'brightness(0) invert(1)' }} />
-                  Login/Masuk
-                </Link>
-              )}
-            </li>
+            {user ? (
+              <>
+                <li>
+                  <Link
+                    to={user.role === 'admin' || user.role === 'owner' ? '/admin' : user.role === 'guru' ? '/guru' : '/ortu'}
+                    className="btn btn-yellow"
+                    style={{ padding: '0.5rem 1.1rem', fontSize: '0.9rem', background: '#ffd54f', color: '#1e293b', borderRadius: '50px', fontWeight: 600, textDecoration: 'none' }}
+                  >
+                    Dashboard
+                  </Link>
+                </li>
+                <li>
+                  <a
+                    href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20dengan%20program%20bimbingan..."
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn btn-primary"
+                    style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem', background: '#e65100', color: '#fff', borderRadius: '50px', border: 'none', fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                  >
+                    Daftar Sekarang
+                  </a>
+                </li>
+              </>
+            ) : (
+              <>
+                <li>
+                  <a
+                    href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20dengan%20program%20bimbingan..."
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn btn-primary"
+                    style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem', background: '#e65100', color: '#fff', borderRadius: '50px', border: 'none', fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                  >
+                    Daftar Sekarang
+                  </a>
+                </li>
+                <li>
+                  <Link
+                    to="/login"
+                    className="btn btn-primary"
+                    id="loginNavBtn"
+                    style={{ padding: '0.5rem 1.1rem', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: '#ff7043', color: '#fff', borderRadius: '50px', fontWeight: 600, textDecoration: 'none' }}
+                  >
+                    <img src="/assets/icons/login.svg" alt="Login" style={{ width: '16px', height: '16px', filter: 'brightness(0) invert(1)' }} />
+                    Login/Masuk
+                  </Link>
+                </li>
+              </>
+            )}
           </ul>
         </div>
       </nav>
