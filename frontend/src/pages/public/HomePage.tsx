@@ -636,62 +636,87 @@ export const HomePage: React.FC = () => {
 
       {/* FOOTER */}
       <footer className="footer" id="footer">
-        <div className="container">
+        <div className="footer-container">
           <div className="footer-grid">
-            {/* Brand Info Column */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-              <img src="/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa SIP" style={{ height: '100px', width: 'auto', marginBottom: '1.5rem' }} />
-              <div className="footer-brand">Sempoa SIP TC Pariaman</div>
-              <p style={{ fontSize: '0.95rem', lineHeight: 1.6, color: 'rgba(255, 255, 255, 0.7)', marginTop: '0.5rem', maxWidth: '300px' }}>
+            {/* Kolom Kiri: Brand Identity */}
+            <div className="footer-brand">
+              <img src="/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa SIP" className="footer-logo" />
+              <h3 className="footer-brand-title">Sempoa SIP TC Pariaman</h3>
+              <p className="footer-brand-desc">
                 Pusat pelatihan keseimbangan otak anak berbasis mental aritmatika dan bimbingan belajar terpercaya sejak 1998.
               </p>
-              <div className="footer-social-links" style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem', justifyContent: 'center' }}>
-                <a href="https://www.instagram.com/sempoasippariaman1?igsh=MXgyeHgyeWk0czUyeA==" target="_blank" rel="noreferrer" title="Instagram Resmi" style={{ background: '#fff', padding: '0.5rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '38px', height: '38px' }}>
-                  <img src="/assets/icons/instagram.svg" alt="Instagram" style={{ width: '22px', height: '22px' }} />
+              <div className="footer-social-links">
+                <a href="https://www.instagram.com/sempoasippariaman1?igsh=MXgyeHgyeWk0czUyeA==" target="_blank" rel="noopener noreferrer" title="Instagram Sempoa SIP">
+                  <i className="fab fa-instagram"></i>
                 </a>
-                <a href="https://www.facebook.com/share/14kTZEcbvgw/" target="_blank" rel="noreferrer" title="Facebook Resmi" style={{ background: '#fff', padding: '0.5rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '38px', height: '38px' }}>
-                  <img src="/assets/icons/facebook.svg" alt="Facebook" style={{ width: '22px', height: '22px' }} />
+                <a href="https://www.facebook.com/share/14kTZEcbvgw/" target="_blank" rel="noopener noreferrer" title="Facebook Sempoa SIP">
+                  <i className="fab fa-facebook-f"></i>
                 </a>
               </div>
             </div>
 
-            {/* Contact Info Column */}
-            <div>
-              <h3>Kontak Resmi</h3>
-              <ul className="footer-contact" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.75rem' }}>
-                  <img src="/assets/icons/whatsapp.svg" alt="WhatsApp" style={{ width: '20px', height: '20px', filter: 'brightness(0) invert(1)' }} />
-                  <span><a href="https://wa.me/628126784986" target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>0812-6784-986 (WhatsApp)</a></span>
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.75rem' }}>
-                  <img src="/assets/icons/telephone.svg" alt="Telepon" style={{ width: '20px', height: '20px', filter: 'brightness(0) invert(1)' }} />
-                  <span><a href="tel:+628126784986" style={{ color: 'inherit', textDecoration: 'none' }}>0812-6784-986 (Telepon)</a></span>
-                </li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.75rem' }}>
-                  <img src="/assets/icons/email.svg" alt="Email" style={{ width: '20px', height: '20px', filter: 'brightness(0) invert(1)' }} />
-                  <span>info@sempoasip-pariaman.id</span>
-                </li>
-              </ul>
+            {/* Kolom Tengah: Kontak Resmi */}
+            <div className="footer-section">
+              <h3 className="footer-section-title">Kontak Resmi</h3>
+              <div className="footer-contact-items">
+                <div className="contact-item">
+                  <i className="fab fa-whatsapp"></i>
+                  <div>
+                    <p className="contact-label">WhatsApp</p>
+                    <a href="https://wa.me/628126784986" target="_blank" rel="noopener noreferrer">0812-6784-986</a>
+                  </div>
+                </div>
+                <div className="contact-item">
+                  <i className="fas fa-phone"></i>
+                  <div>
+                    <p className="contact-label">Telepon</p>
+                    <a href="tel:+628126784986">(0812) 6784-986</a>
+                  </div>
+                </div>
+                <div className="contact-item">
+                  <i className="fas fa-envelope"></i>
+                  <div>
+                    <p className="contact-label">Email</p>
+                    <a href="mailto:info@sempoasip-pariaman.id">info@sempoasip-pariaman.id</a>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Address & Schedules Column */}
-            <div>
-              <h3>Lokasi & Jam Buka</h3>
-              <ul className="footer-contact" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                <li style={{ display: 'flex', alignItems: 'flex-start', gap: '0.6rem', marginBottom: '0.75rem' }}>
-                  <img src="/assets/icons/peta.svg" alt="Lokasi" style={{ width: '20px', height: '20px', marginTop: '3px', filter: 'brightness(0) invert(1)' }} />
-                  <span>Jl. Imam Bonjol, Alai Gelombang, Kec. Pariaman Tengah, Kota Pariaman, Sumatera Barat 25517</span>
-                </li>
-                <li style={{ display: 'flex', alignItems: 'flex-start', gap: '0.6rem', marginBottom: '0.75rem' }}>
-                  <img src="/assets/icons/jam.svg" alt="Jam Buka" style={{ width: '20px', height: '20px', marginTop: '3px', filter: 'brightness(0) invert(1)' }} />
-                  <span>Senin - Jumat: 14.00 - 18.00<br />Sabtu: 08.00 - 12.00<br />Minggu: Libur</span>
-                </li>
-              </ul>
+            {/* Kolom Kanan: Lokasi & Jam Buka */}
+            <div className="footer-section">
+              <h3 className="footer-section-title">Lokasi & Jam Buka</h3>
+              <div className="footer-location-items">
+                <div className="location-item">
+                  <i className="fas fa-map-marker-alt"></i>
+                  <div>
+                    <p className="location-label">Alamat</p>
+                    <p className="location-text">
+                      Jl. Imam Bonjol, Alai Gelombang, Kec. Pariaman Tengah, Kota Pariaman, Sumatera Barat 25517
+                    </p>
+                  </div>
+                </div>
+                <div className="location-item">
+                  <i className="fas fa-clock"></i>
+                  <div>
+                    <p className="location-label">Jam Operasional</p>
+                    <div className="hours-list">
+                      <p><strong>Senin - Jumat:</strong> 14.00 - 18.00 WIB</p>
+                      <p><strong>Sabtu:</strong> 08.00 - 12.00 WIB</p>
+                      <p><strong>Minggu:</strong> Libur</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="footer-bottom" style={{ textAlign: 'center', paddingTop: '2rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-            <p>&copy; 2026 Sempoa SIP TC Pariaman. Hak Cipta Dilindungi.</p>
+          {/* Footer Bottom */}
+          <div className="footer-bottom">
+            <div className="footer-divider"></div>
+            <p className="footer-copyright">
+              © 2026 Sempoa SIP TC Pariaman. Hak Cipta Dilindungi.
+            </p>
           </div>
         </div>
       </footer>

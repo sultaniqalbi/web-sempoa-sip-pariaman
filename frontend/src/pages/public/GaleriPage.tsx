@@ -221,10 +221,13 @@ export const GaleriPage: React.FC = () => {
       </main>
 
       {/* FOOTER */}
-      <footer className="footer" style={{ background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)', color: '#fff', padding: '3rem 0 2rem' }}>
-        <div className="container" style={{ textAlign: 'center' }}>
-          <div className="footer-bottom" style={{ textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1.5rem' }}>
-            <p>&copy; 2026 Sempoa SIP TC Pariaman. Hak Cipta Dilindungi.</p>
+      <footer className="footer">
+        <div className="footer-container">
+          <div className="footer-bottom">
+            <div className="footer-divider"></div>
+            <p className="footer-copyright">
+              © 2026 Sempoa SIP TC Pariaman. Hak Cipta Dilindungi.
+            </p>
           </div>
         </div>
       </footer>

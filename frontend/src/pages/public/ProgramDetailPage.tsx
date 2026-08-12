@@ -486,9 +486,14 @@ export const ProgramDetailPage: React.FC = () => {
       </main>
 
       {/* FOOTER */}
-      <footer className="footer" style={{ background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)', color: '#fff', padding: '3rem 0 2rem', marginTop: '4rem' }}>
-        <div className="container" style={{ textAlign: 'center', maxWidth: '1200px', margin: '0 auto' }}>
-          <p style={{ margin: 0, opacity: 0.8, fontSize: '0.9rem' }}>&copy; 2026 Sempoa SIP TC Pariaman. Hak Cipta Dilindungi.</p>
+      <footer className="footer">
+        <div className="footer-container">
+          <div className="footer-bottom">
+            <div className="footer-divider"></div>
+            <p className="footer-copyright">
+              © 2026 Sempoa SIP TC Pariaman. Hak Cipta Dilindungi.
+            </p>
+          </div>
         </div>
       </footer>
     </div>
