@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../../features/auth/useAuth';
 import useMascotCursor from '../../hooks/useMascotCursor';
+import LoginModal from '../../components/LoginModal';
 
 export const HomePage: React.FC = () => {
   useMascotCursor();
@@ -141,13 +142,14 @@ export const HomePage: React.FC = () => {
                 >
                   Konsultasi
                 </a>
-                <Link
-                  to="/login"
+                <button
+                  onClick={() => setIsLoginModalOpen(true)}
                   className="btn btn-primary"
                   id="loginNavBtn"
+                  style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
                 >
                   Masuk
-                </Link>
+                </button>
               </>
             )}
           </div>
@@ -771,6 +773,12 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* LOGIN MODAL */}
+      <LoginModal 
+        isOpen={isLoginModalOpen} 
+        onClose={() => setIsLoginModalOpen(false)} 
+      />
     </div>
   );
 };
