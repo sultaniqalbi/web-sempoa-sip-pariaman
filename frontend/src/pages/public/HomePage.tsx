@@ -640,7 +640,7 @@ export const HomePage: React.FC = () => {
           <div className="footer-grid">
             {/* Brand Info Column */}
             <div>
-              <img src="/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa SIP" style={{ height: '160px', width: 'auto', marginBottom: '1.5rem' }} />
+              <img src="/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa SIP" style={{ height: '100px', width: 'auto', marginBottom: '1.5rem' }} />
               <div className="footer-brand">Sempoa SIP TC Pariaman</div>
               <p style={{ fontSize: '0.95rem', lineHeight: 1.6, color: 'rgba(255, 255, 255, 0.7)', marginTop: '0.5rem' }}>
                 Pusat pelatihan keseimbangan otak anak berbasis mental aritmatika dan bimbingan belajar terpercaya sejak 1998.
