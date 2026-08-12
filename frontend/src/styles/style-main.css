@@ -44,10 +44,14 @@
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Zero-delay Custom Cursor Override */
-html, body, a, button, input, select, textarea, label, [role="button"] {
-    cursor: none !important;
+/* Standard Native Cursor Rules */
+a, button, [role="button"], select {
+    cursor: pointer;
 }
+input[type="text"], input[type="email"], input[type="password"], textarea {
+    cursor: text;
+}
+
 
 /* === BASE RESET === */
 * {
