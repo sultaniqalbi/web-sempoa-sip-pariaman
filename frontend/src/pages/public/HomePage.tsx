@@ -119,7 +119,6 @@ export const HomePage: React.FC = () => {
                 <Link
                   to={user.role === 'admin' || user.role === 'owner' ? '/admin' : user.role === 'guru' ? '/guru' : '/ortu'}
                   className="btn btn-yellow"
-                  style={{ padding: '0.5rem 1.25rem', fontSize: '0.95rem' }}
                 >
                   Dashboard
                 </Link>
@@ -128,7 +127,6 @@ export const HomePage: React.FC = () => {
                   target="_blank"
                   rel="noreferrer"
                   className="btn btn-primary"
-                  style={{ padding: '0.5rem 1.25rem', fontSize: '0.95rem' }}
                 >
                   Konsultasi
                 </a>
@@ -140,7 +138,6 @@ export const HomePage: React.FC = () => {
                   target="_blank"
                   rel="noreferrer"
                   className="btn btn-yellow"
-                  style={{ padding: '0.5rem 1.25rem', fontSize: '0.95rem' }}
                 >
                   Konsultasi
                 </a>
@@ -148,7 +145,6 @@ export const HomePage: React.FC = () => {
                   to="/login"
                   className="btn btn-primary"
                   id="loginNavBtn"
-                  style={{ padding: '0.5rem 1.25rem', fontSize: '0.95rem' }}
                 >
                   Masuk
                 </Link>

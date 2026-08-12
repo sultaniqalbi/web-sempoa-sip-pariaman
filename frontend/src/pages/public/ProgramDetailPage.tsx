@@ -202,7 +202,6 @@ export const ProgramDetailPage: React.FC = () => {
                 <Link
                   to={user.role === 'admin' || user.role === 'owner' ? '/admin' : user.role === 'guru' ? '/guru' : '/ortu'}
                   className="btn btn-yellow"
-                  style={{ padding: '0.5rem 1.1rem', fontSize: '0.9rem', background: '#ffd54f', color: '#1e293b', borderRadius: '50px', fontWeight: 600, textDecoration: 'none' }}
                 >
                   Dashboard
                 </Link>
@@ -211,7 +210,6 @@ export const ProgramDetailPage: React.FC = () => {
                   target="_blank"
                   rel="noreferrer"
                   className="btn btn-primary"
-                  style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem', background: '#e65100', color: '#fff', borderRadius: '50px', border: 'none', fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
                 >
                   Konsultasi
                 </a>
@@ -223,7 +221,6 @@ export const ProgramDetailPage: React.FC = () => {
                   target="_blank"
                   rel="noreferrer"
                   className="btn btn-yellow"
-                  style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem', background: '#ffd54f', color: '#1e293b', borderRadius: '50px', border: 'none', fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
                 >
                   Konsultasi
                 </a>
@@ -231,7 +228,6 @@ export const ProgramDetailPage: React.FC = () => {
                   to="/login"
                   className="btn btn-primary"
                   id="loginNavBtn"
-                  style={{ padding: '0.5rem 1.1rem', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: '#ff7043', color: '#fff', borderRadius: '50px', fontWeight: 600, textDecoration: 'none' }}
                 >
                   Masuk
                 </Link>

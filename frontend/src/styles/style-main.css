@@ -238,10 +238,10 @@ img {
 }
 
 .nav-brand-logo img {
-    height: 55px !important;
-    max-height: 55px !important;
+    height: 70px !important;
+    max-height: 70px !important;
     width: auto !important;
-    max-width: 220px !important;
+    max-width: 260px !important;
     object-fit: contain !important;
 }
 
@@ -249,7 +249,7 @@ img {
     flex: 1;
     display: flex !important;
     justify-content: center !important;
-    gap: 1.5rem !important;
+    gap: 2rem !important;
     align-items: center !important;
     list-style: none !important;
     margin: 0 !important;
@@ -263,13 +263,20 @@ img {
     align-items: center;
 }
 
+.nav-buttons .btn {
+    padding: 0.75rem 1.8rem !important;
+    font-size: 1.05rem !important;
+    font-weight: 800 !important;
+}
+
 .nav-links li {
     list-style: none !important;
     margin: 0 !important;
 }
 
 .nav-links a {
-    font-weight: 600;
+    font-weight: 800;
+    font-size: 1.05rem;
     color: var(--color-text-dark);
     text-decoration: none;
     transition: color 0.2s ease;
