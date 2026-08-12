@@ -209,7 +209,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                     id="login-email"
                     name="email"
                     className="login-form-control"
-                    placeholder="nama@sempoasippariaman.com"
+                    placeholder="contoh: dimas@sempoasippariaman.com"
                     aria-label="Email"
                     value={email}
                     onChange={handleEmailChange}
