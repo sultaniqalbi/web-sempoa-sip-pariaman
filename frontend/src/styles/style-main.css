@@ -1091,11 +1091,14 @@ img {
   align-items: flex-start;
 }
 
-.contact-item i {
-  font-size: 1.4rem;
-  color: var(--color-accent-gold);
-  min-width: 24px;
+.contact-item img {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
   margin-top: 0.2rem;
+  /* CSS Filter equivalent to var(--color-accent-gold) #F57C00 / #FFB703 */
+  /* We'll use a gold filter or white filter. Let's make them white to match the sleek dark mode */
+  filter: brightness(0) invert(1);
 }
 
 .contact-label {
@@ -1131,11 +1134,12 @@ img {
   align-items: flex-start;
 }
 
-.location-item i {
-  font-size: 1.4rem;
-  color: var(--color-accent-gold);
-  min-width: 24px;
+.location-item img {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
   margin-top: 0.2rem;
+  filter: brightness(0) invert(1);
 }
 
 .location-label {

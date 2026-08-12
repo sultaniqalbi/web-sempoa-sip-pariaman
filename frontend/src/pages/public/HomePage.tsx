@@ -660,21 +660,21 @@ export const HomePage: React.FC = () => {
               <h3 className="footer-section-title">Kontak Resmi</h3>
               <div className="footer-contact-items">
                 <div className="contact-item">
-                  <i className="fab fa-whatsapp"></i>
+                  <img src="/assets/icons/whatsapp.svg" alt="WhatsApp" />
                   <div>
                     <p className="contact-label">WhatsApp</p>
                     <a href="https://wa.me/628126784986" target="_blank" rel="noopener noreferrer">0812-6784-986</a>
                   </div>
                 </div>
                 <div className="contact-item">
-                  <i className="fas fa-phone"></i>
+                  <img src="/assets/icons/telephone.svg" alt="Telepon" />
                   <div>
                     <p className="contact-label">Telepon</p>
                     <a href="tel:+628126784986">(0812) 6784-986</a>
                   </div>
                 </div>
                 <div className="contact-item">
-                  <i className="fas fa-envelope"></i>
+                  <img src="/assets/icons/email.svg" alt="Email" />
                   <div>
                     <p className="contact-label">Email</p>
                     <a href="mailto:info@sempoasip-pariaman.id">info@sempoasip-pariaman.id</a>
@@ -688,7 +688,7 @@ export const HomePage: React.FC = () => {
               <h3 className="footer-section-title">Lokasi & Jam Buka</h3>
               <div className="footer-location-items">
                 <div className="location-item">
-                  <i className="fas fa-map-marker-alt"></i>
+                  <img src="/assets/icons/peta.svg" alt="Lokasi" />
                   <div>
                     <p className="location-label">Alamat</p>
                     <p className="location-text">
@@ -697,7 +697,7 @@ export const HomePage: React.FC = () => {
                   </div>
                 </div>
                 <div className="location-item">
-                  <i className="fas fa-clock"></i>
+                  <img src="/assets/icons/jam.svg" alt="Jam Buka" />
                   <div>
                     <p className="location-label">Jam Operasional</p>
                     <div className="hours-list">
