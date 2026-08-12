@@ -573,7 +573,7 @@ export const HomePage: React.FC = () => {
             <h2>Galeri Kegiatan Pembelajaran dan Prestasi</h2>
             <p>Mengintip keceriaan anak-anak didik kami saat belajar, berlatih, dan berprestasi bersama</p>
           </div>
-          <div className="gallery-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1.25rem', textAlign: 'center' }}>
+          <div className="gallery-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.25rem', textAlign: 'center' }}>
             <div className="gallery-card" onClick={() => setLightboxImg({ src: '/assets/image/kegiatan-1.webp', title: 'Siswa Praktek Sholat Berjamaah' })} style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', border: '3px solid #f57c00', boxShadow: '0 6px 18px rgba(245, 124, 0, 0.15)', cursor: 'pointer' }}>
               <div className="gallery-img-wrap" style={{ width: '100%', aspectRatio: '3 / 4', overflow: 'hidden' }}>
                 <img src="/assets/image/kegiatan-1.webp" alt="Siswa Praktek Sholat Berjamaah" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -647,10 +647,10 @@ export const HomePage: React.FC = () => {
               </p>
               <div className="footer-social-links">
                 <a href="https://www.instagram.com/sempoasippariaman1?igsh=MXgyeHgyeWk0czUyeA==" target="_blank" rel="noopener noreferrer" title="Instagram Sempoa SIP">
-                  <i className="fab fa-instagram"></i>
+                  <img src="/assets/icons/instagram.svg" alt="Instagram" className="social-icon-img" />
                 </a>
                 <a href="https://www.facebook.com/share/14kTZEcbvgw/" target="_blank" rel="noopener noreferrer" title="Facebook Sempoa SIP">
-                  <i className="fab fa-facebook-f"></i>
+                  <img src="/assets/icons/facebook.svg" alt="Facebook" className="social-icon-img" />
                 </a>
               </div>
             </div>

@@ -1041,6 +1041,17 @@ img {
   transform: translateY(-3px);
 }
 
+.social-icon-img {
+  width: 22px;
+  height: 22px;
+  filter: brightness(0) invert(1);
+  transition: filter 0.3s ease;
+}
+
+.footer-social-links a:hover .social-icon-img {
+  filter: brightness(0);
+}
+
 .footer-section {
   display: flex;
   flex-direction: column;
