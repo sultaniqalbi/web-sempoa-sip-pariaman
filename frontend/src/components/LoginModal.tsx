@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuth from '../features/auth/useAuth';
-// Import Firebase Firestore features for the gallery image (to be implemented later if fully integrated)
-// import { db } from '../config/firebase';
-// import { collection, query, getDocs } from 'firebase/firestore';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -14,17 +11,11 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  // Mode: 'login' or 'forgot'
-  const [mode, setMode] = useState<'login' | 'forgot'>('login');
-
   // Form State
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   
-  // Forgot Password State
-  const [forgotEmail, setForgotEmail] = useState('');
-
   // Submission State
   const [isLoading, setIsLoading] = useState(false);
   const [globalError, setGlobalError] = useState('');
@@ -93,38 +84,10 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  // Submit Forgot Password
-  const handleForgotSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    alert(`Link reset akan dikirim ke ${forgotEmail} jika email terdaftar.`);
-    // Implement forgot password API call here later
-    setMode('login');
-  };
-
   // Load Random Gallery Image
   const loadRandomGalleryImage = async () => {
     try {
-      // NOTE: For now using a random placeholder approach or fallback
-      // When Firebase is integrated, uncomment the logic below
-      /*
-      const q = query(collection(db, "gallery"));
-      const snapshot = await getDocs(q);
-      const docs = snapshot.docs;
-      
-      if (docs.length > 0) {
-        const randomDoc = docs[Math.floor(Math.random() * docs.length)];
-        setGalleryImgUrl(randomDoc.data().mediaUrl);
-        setGalleryImgAlt(randomDoc.data().caption || "Galeri Sempoa SIP");
-      }
-      */
-      
-      // Fallback images if Firebase is not ready yet
-      const fallbackImages = [
-        '/assets/image/maskot-hero.webp',
-        '/assets/image/kelas1.jpg', // Dummy images to simulate random load if they exist
-        '/assets/image/kelas2.jpg'
-      ];
-      // For now we just stick to maskot if others don't exist, but simulating random:
+      // Fetch image from gallery
       setGalleryImgUrl('/assets/image/maskot-hero.webp');
       setGalleryImgAlt('Galeri Sempoa SIP');
       
@@ -183,10 +146,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   // Reset state when closing
   useEffect(() => {
     if (!isOpen) {
-      setMode('login');
       setEmail('');
       setPassword('');
-      setForgotEmail('');
       setGlobalError('');
       setGlobalSuccess('');
     }
@@ -223,184 +184,151 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             &times;
           </button>
 
-          {mode === 'login' ? (
-            <div id="login-form-container" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-              <div className="login-modal-header">
-                <img src="/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa SIP" className="login-modal-logo" />
-                <h2 className="login-modal-title" id="modal-title">Masuk ke Akun Anda</h2>
-                <p className="login-modal-subtitle">Akses portal Sempoa SIP TC Pariaman</p>
+          <div id="login-form-container" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+            <div className="login-modal-header">
+              <img src="/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa SIP" className="login-modal-logo" />
+              <h2 className="login-modal-title" id="modal-title">Masuk ke Akun Anda</h2>
+              <p className="login-modal-subtitle">Akses portal Sempoa SIP TC Pariaman</p>
+            </div>
+
+            {globalSuccess && (
+              <div className="login-alert login-alert-success" style={{ margin: '1.5rem 2.5rem 0' }}>
+                <i className="fas fa-check-circle"></i>
+                <span>{globalSuccess}</span>
+              </div>
+            )}
+
+            <form id="login-form" className="login-form" onSubmit={handleSubmit}>
+              <div className="login-form-group">
+                <label htmlFor="login-email" className="login-form-label">
+                  Email <span className="login-required">*</span>
+                </label>
+                <div className="login-input-wrapper">
+                  <input
+                    type="email"
+                    id="login-email"
+                    name="email"
+                    className="login-form-control"
+                    placeholder="nama@sempoasippariaman.com"
+                    aria-label="Email"
+                    value={email}
+                    onChange={handleEmailChange}
+                    ref={emailInputRef}
+                    required
+                  />
+                  <span className="login-input-icon"><i className="fas fa-envelope"></i></span>
+                </div>
               </div>
 
-              {globalSuccess && (
-                <div className="login-alert login-alert-success" style={{ margin: '1.5rem 2.5rem 0' }}>
-                  <i className="fas fa-check-circle"></i>
-                  <span>{globalSuccess}</span>
+              <div className="login-form-group" style={{ marginBottom: globalError ? '0.5rem' : '1.2rem' }}>
+                <label htmlFor="login-password" className="login-form-label">
+                  Kata Sandi <span className="login-required">*</span>
+                </label>
+                <div className="login-input-wrapper">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    id="login-password"
+                    name="password"
+                    className="login-form-control"
+                    placeholder="••••••••••••"
+                    aria-label="Kata Sandi"
+                    value={password}
+                    onChange={handlePasswordChange}
+                    required
+                  />
+                  <span className="login-input-icon"><i className="fas fa-lock"></i></span>
+                  
+                  <button
+                    type="button"
+                    className={`login-password-toggle ${showPassword ? 'show-password' : ''}`}
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+                    title="Tampilkan/Sembunyikan kata sandi"
+                  >
+                    {/* SVG Eye (shown ketika password visible) */}
+                    <svg 
+                      className="login-password-icon-eye" 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      viewBox="0 0 24 24" 
+                      width="20" height="20"
+                      style={{ display: showPassword ? 'block' : 'none' }}
+                    >
+                      <path fill="currentColor" fillRule="evenodd" d="M1 12c2.028-4.152 6.192-7 11-7s8.972 2.848 11 7c-2.028 4.152-6.192 7-11 7s-8.972-2.848-11-7m11 3.5a3.5 3.5 0 1 0 0-7a3.5 3.5 0 0 0 0 7"/>
+                    </svg>
+                    
+                    {/* SVG Eye Slash (shown ketika password hidden) */}
+                    <svg 
+                      className="login-password-icon-eye-slash" 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      viewBox="0 0 24 24" 
+                      width="20" height="20" 
+                      style={{ display: showPassword ? 'none' : 'block' }}
+                    >
+                      <path fill="currentColor" fillRule="evenodd" d="m18.922 16.8l3.17 3.17l-1.06 1.061L4.06 4.061L5.12 3l2.74 2.738A11.9 11.9 0 0 1 12 5c4.808 0 8.972 2.848 11 7a12.66 12.66 0 0 1-4.078 4.8l3.625 3.624a3.5 3.5 0 0 0 4.474 4.474l2.964 2.964z"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {globalError && (
+                <div className="login-form-error" style={{ display: 'flex', marginBottom: '1.2rem' }}>
+                  <i className="fas fa-exclamation-circle"></i>
+                  <span>{globalError}</span>
                 </div>
               )}
 
-              <form id="login-form" className="login-form" onSubmit={handleSubmit}>
-                <div className="login-form-group">
-                  <label htmlFor="login-email" className="login-form-label">
-                    Email <span className="login-required">*</span>
-                  </label>
-                  <div className="login-input-wrapper">
-                    <input
-                      type="email"
-                      id="login-email"
-                      name="email"
-                      className="login-form-control"
-                      placeholder="nama@sempoasippariaman.com"
-                      aria-label="Email"
-                      value={email}
-                      onChange={handleEmailChange}
-                      ref={emailInputRef}
-                      required
-                    />
-                    <span className="login-input-icon"><i className="fas fa-envelope"></i></span>
-                  </div>
-                </div>
-
-                <div className="login-form-group" style={{ marginBottom: globalError ? '0.5rem' : '1.2rem' }}>
-                  <label htmlFor="login-password" className="login-form-label">
-                    Kata Sandi <span className="login-required">*</span>
-                  </label>
-                  <div className="login-input-wrapper">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      id="login-password"
-                      name="password"
-                      className="login-form-control"
-                      placeholder="••••••••••••"
-                      aria-label="Kata Sandi"
-                      value={password}
-                      onChange={handlePasswordChange}
-                      required
-                    />
-                    <span className="login-input-icon"><i className="fas fa-lock"></i></span>
-                    
-                    <button
-                      type="button"
-                      className={`login-password-toggle ${showPassword ? 'show-password' : ''}`}
-                      onClick={() => setShowPassword(!showPassword)}
-                      aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
-                      title="Tampilkan/Sembunyikan kata sandi"
-                    >
-                      {/* SVG Eye (shown ketika password visible) */}
-                      <svg 
-                        className="login-password-icon-eye" 
-                        xmlns="http://www.w3.org/2000/svg" 
-                        viewBox="0 0 24 24" 
-                        width="20" height="20"
-                        style={{ display: showPassword ? 'block' : 'none' }}
-                      >
-                        <path fill="currentColor" fillRule="evenodd" d="M1 12c2.028-4.152 6.192-7 11-7s8.972 2.848 11 7c-2.028 4.152-6.192 7-11 7s-8.972-2.848-11-7m11 3.5a3.5 3.5 0 1 0 0-7a3.5 3.5 0 0 0 0 7"/>
-                      </svg>
-                      
-                      {/* SVG Eye Slash (shown ketika password hidden) */}
-                      <svg 
-                        className="login-password-icon-eye-slash" 
-                        xmlns="http://www.w3.org/2000/svg" 
-                        viewBox="0 0 24 24" 
-                        width="20" height="20" 
-                        style={{ display: showPassword ? 'none' : 'block' }}
-                      >
-                        <path fill="currentColor" fillRule="evenodd" d="m18.922 16.8l3.17 3.17l-1.06 1.061L4.06 4.061L5.12 3l2.74 2.738A11.9 11.9 0 0 1 12 5c4.808 0 8.972 2.848 11 7a12.66 12.66 0 0 1-4.078 4.8m-8.098-8.097l4.473 4.473a3.5 3.5 0 0 0-4.474-4.474zm5.317 9.56A11.9 11.9 0 0 1 12 19c-4.808 0-8.972-2.848-11-7a12.66 12.66 0 0 1 4.078-4.8l3.625 3.624a3.5 3.5 0 0 0 4.474 4.474l2.964 2.964z"/>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-
-                {globalError && (
-                  <div className="login-form-error" style={{ display: 'flex', marginBottom: '1.2rem' }}>
-                    <i className="fas fa-exclamation-circle"></i>
-                    <span>{globalError}</span>
-                  </div>
-                )}
-
-                <div className="login-forgot-wrapper">
-                  <button 
-                    type="button" 
-                    className="login-forgot-link" 
-                    onClick={() => setMode('forgot')}
-                    style={{ background: 'none', border: 'none', fontFamily: 'inherit' }}
-                  >
-                    <i className="fas fa-question-circle"></i>
-                    Lupa Kata Sandi?
-                  </button>
-                </div>
-
-                <div className="login-button-wrapper">
-                  <button
-                    type="submit"
-                    className="login-btn-submit"
-                    id="login-btn-submit"
-                    disabled={isLoading}
-                    aria-label="Masuk ke akun"
-                  >
-                    {!isLoading ? (
-                      <span id="login-btn-text">MASUK</span>
-                    ) : (
-                      <i id="login-btn-spinner" className="fas fa-spinner fa-spin"></i>
-                    )}
-                  </button>
-                </div>
-              </form>
-
-              <div className="login-modal-footer">
-                <p className="login-info-text">
-                  <i className="fas fa-info-circle"></i>
-                  Belum punya akun? Hubungi <strong>Admin</strong> via WhatsApp <a href="https://wa.me/628126784986" target="_blank" rel="noreferrer" className="login-info-link">di sini</a>
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div id="forgot-password-modal" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-              <div className="login-modal-header">
-                <h2 className="login-modal-title">Lupa Kata Sandi?</h2>
-                <p className="login-modal-subtitle">Masukkan email untuk reset</p>
-              </div>
-              
-              <form id="forgot-password-form" className="login-form" onSubmit={handleForgotSubmit}>
-                <div className="login-form-group">
-                  <label htmlFor="forgot-email" className="login-form-label">Email</label>
-                  <div className="login-input-wrapper">
-                    <input
-                      type="email"
-                      id="forgot-email"
-                      name="email"
-                      className="login-form-control"
-                      placeholder="nama@sempoasippariaman.com"
-                      value={forgotEmail}
-                      onChange={(e) => setForgotEmail(e.target.value)}
-                      required
-                    />
-                    <span className="login-input-icon"><i className="fas fa-envelope"></i></span>
-                  </div>
-                </div>
-                
-                <div className="login-alert login-alert-info" style={{ margin: '0 0 1.5rem 0' }}>
-                  <i className="fas fa-info-circle"></i>
-                  <span>Kami akan mengirim link reset ke email Anda (jika terdaftar)</span>
-                </div>
-                
-                <div className="login-button-wrapper">
-                  <button type="submit" className="login-btn-submit">
-                    Kirim Link Reset
-                  </button>
-                </div>
-              </form>
-              
-              <div className="login-modal-footer">
-                <button 
-                  type="button" 
-                  className="login-btn-back" 
-                  onClick={() => setMode('login')}
+              <div className="login-forgot-wrapper">
+                <a 
+                  href="https://wa.me/628126784986?text=Halo%20Admin%2C%20saya%20%5Bisi%20nama%20Anda%5D%2C%20melupakan%20password%20akun%20saya.%20Mohon%20ditindaklanjuti."
+                  target="_blank"
+                  rel="noreferrer"
+                  className="login-forgot-link" 
+                  style={{ background: 'none', border: 'none', fontFamily: 'inherit' }}
                 >
-                  <i className="fas fa-arrow-left"></i> Kembali ke Login
+                  <i className="fas fa-question-circle"></i>
+                  Lupa Kata Sandi?
+                </a>
+              </div>
+
+              <div className="login-button-wrapper">
+                <button
+                  type="submit"
+                  className="login-btn-submit"
+                  id="login-btn-submit"
+                  disabled={isLoading}
+                  aria-label="Masuk ke akun"
+                >
+                  {!isLoading ? (
+                    <span id="login-btn-text">MASUK</span>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                      <svg 
+                        style={{ animation: 'spin 1s linear infinite' }} 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="18" height="18" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="2.5" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round"
+                      >
+                        <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+                      </svg>
+                      <span>Memeriksa...</span>
+                    </div>
+                  )}
                 </button>
               </div>
+            </form>
+
+            <div className="login-modal-footer">
+              <p className="login-info-text">
+                <i className="fas fa-info-circle"></i>
+                Belum punya akun? Hubungi <strong>Admin</strong> via WhatsApp <a href="https://wa.me/628126784986" target="_blank" rel="noreferrer" className="login-info-link">di sini</a>
+              </p>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>
