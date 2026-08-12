@@ -639,13 +639,13 @@ export const HomePage: React.FC = () => {
         <div className="container">
           <div className="footer-grid">
             {/* Brand Info Column */}
-            <div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
               <img src="/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa SIP" style={{ height: '100px', width: 'auto', marginBottom: '1.5rem' }} />
               <div className="footer-brand">Sempoa SIP TC Pariaman</div>
-              <p style={{ fontSize: '0.95rem', lineHeight: 1.6, color: 'rgba(255, 255, 255, 0.7)', marginTop: '0.5rem' }}>
+              <p style={{ fontSize: '0.95rem', lineHeight: 1.6, color: 'rgba(255, 255, 255, 0.7)', marginTop: '0.5rem', maxWidth: '300px' }}>
                 Pusat pelatihan keseimbangan otak anak berbasis mental aritmatika dan bimbingan belajar terpercaya sejak 1998.
               </p>
-              <div className="footer-social-links" style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem' }}>
+              <div className="footer-social-links" style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem', justifyContent: 'center' }}>
                 <a href="https://www.instagram.com/sempoasippariaman1?igsh=MXgyeHgyeWk0czUyeA==" target="_blank" rel="noreferrer" title="Instagram Resmi" style={{ background: '#fff', padding: '0.5rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '38px', height: '38px' }}>
                   <img src="/assets/icons/instagram.svg" alt="Instagram" style={{ width: '22px', height: '22px' }} />
                 </a>
