@@ -331,7 +331,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             <div className="login-modal-footer">
               <p className="login-info-text">
                 <i className="fas fa-info-circle"></i>
-                Belum punya akun? Hubungi <strong>Admin</strong> via WhatsApp <a href="https://wa.me/628126784986" target="_blank" rel="noreferrer" className="login-info-link">di sini</a>
+                Belum punya akun? Hubungi <strong>Admin</strong> via WhatsApp <a href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak." target="_blank" rel="noreferrer" className="login-info-link">di sini</a>
               </p>
             </div>
           </div>
