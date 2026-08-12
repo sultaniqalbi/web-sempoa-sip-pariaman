@@ -285,7 +285,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
 
               <div className="login-forgot-wrapper">
                 <a 
-                  href="https://wa.me/628126784986?text=Halo%20Admin%2C%20saya%20%5Bisi%20nama%20Anda%5D%2C%20melupakan%20password%20akun%20saya.%20Mohon%20ditindaklanjuti."
+                  href="https://wa.me/628126784986?text=halo%20admin%2C%20saya%20melupakan%20password%20akun%20saya%2C%20mohon%20ditindaklanjuti."
                   target="_blank"
                   rel="noreferrer"
                   className="login-forgot-link" 
