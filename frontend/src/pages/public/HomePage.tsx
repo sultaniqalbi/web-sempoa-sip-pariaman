@@ -111,58 +111,50 @@ export const HomePage: React.FC = () => {
             <li><a href="#achievements" onClick={() => setIsMobileMenuOpen(false)}>Prestasi</a></li>
             <li><Link to="/galeri" onClick={() => setIsMobileMenuOpen(false)}>Galeri</Link></li>
             <li><a href="#lokasi-peta" onClick={() => setIsMobileMenuOpen(false)}>Lokasi</a></li>
+          </ul>
+
+          <div className="nav-buttons">
             {user ? (
               <>
-                <li>
-                  <Link
-                    to={user.role === 'admin' || user.role === 'owner' ? '/admin' : user.role === 'guru' ? '/guru' : '/ortu'}
-                    className="btn btn-yellow"
-                    style={{ padding: '0.5rem 1.25rem', fontSize: '0.95rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
-                  >
-                    <i className="fas fa-[#FFD54F]"></i> Dashboard
-                  </Link>
-                </li>
-                <li>
-                  <a
-                    href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak."
-                    target="_blank"
-                    rel="noreferrer"
-                    className="btn btn-primary"
-                    style={{ padding: '0.5rem 1.25rem', fontSize: '0.95rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
-                  >
-                    Daftar Sekarang
-                  </a>
-                </li>
+                <Link
+                  to={user.role === 'admin' || user.role === 'owner' ? '/admin' : user.role === 'guru' ? '/guru' : '/ortu'}
+                  className="btn btn-yellow"
+                  style={{ padding: '0.5rem 1.25rem', fontSize: '0.95rem' }}
+                >
+                  Dashboard
+                </Link>
+                <a
+                  href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak."
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn btn-primary"
+                  style={{ padding: '0.5rem 1.25rem', fontSize: '0.95rem' }}
+                >
+                  Konsultasi
+                </a>
               </>
             ) : (
               <>
-                <li>
-                  <a
-                    href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak."
-                    target="_blank"
-                    rel="noreferrer"
-                    className="btn btn-primary"
-                    style={{ padding: '0.5rem 1.25rem', fontSize: '0.95rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
-                  >
-                    Daftar Sekarang
-                  </a>
-                </li>
-                <li>
-                  <Link
-                    to="/login"
-                    className="btn btn-primary"
-                    id="loginNavBtn"
-                    style={{ padding: '0.5rem 1.25rem', fontSize: '0.95rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="1.2em" height="1.2em" viewBox="0 0 24 24">
-                      <path fill="currentColor" d="M12 21v-2h7V5h-7V3h7q.825 0 1.413.588T21 5v14q0 .825-.587 1.413T19 21zm-2-4l-1.375-1.45l2.55-2.55H3v-2h8.175l-2.55-2.55L10 7l5 5z"/>
-                    </svg>
-                    Login/Masuk
-                  </Link>
-                </li>
+                <a
+                  href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak."
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn btn-yellow"
+                  style={{ padding: '0.5rem 1.25rem', fontSize: '0.95rem' }}
+                >
+                  Konsultasi
+                </a>
+                <Link
+                  to="/login"
+                  className="btn btn-primary"
+                  id="loginNavBtn"
+                  style={{ padding: '0.5rem 1.25rem', fontSize: '0.95rem' }}
+                >
+                  Masuk
+                </Link>
               </>
             )}
-          </ul>
+          </div>
         </div>
       </nav>
 

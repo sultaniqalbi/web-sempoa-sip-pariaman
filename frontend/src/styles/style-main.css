@@ -219,15 +219,22 @@ img {
     justify-content: space-between !important;
     align-items: center !important;
     height: 80px !important;
-    max-width: 1200px;
+    max-width: 1400px !important;
     margin: 0 auto;
-    padding: 0 1.5rem;
+    padding: 0 3rem !important;
+}
+
+@media (max-width: 768px) {
+    .navbar .container {
+        padding: 0 1.5rem !important;
+    }
 }
 
 .nav-brand-logo {
     display: flex;
     align-items: center;
     text-decoration: none;
+    flex: 0 0 auto;
 }
 
 .nav-brand-logo img {
@@ -239,12 +246,21 @@ img {
 }
 
 .nav-links {
+    flex: 1;
     display: flex !important;
+    justify-content: center !important;
     gap: 1.5rem !important;
     align-items: center !important;
     list-style: none !important;
     margin: 0 !important;
     padding: 0 !important;
+}
+
+.nav-buttons {
+    flex: 0 0 auto;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
 }
 
 .nav-links li {

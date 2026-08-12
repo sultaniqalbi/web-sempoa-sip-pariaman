@@ -96,9 +96,9 @@ export const GaleriPage: React.FC = () => {
     <div className="galeri-page-wrapper" style={{ background: '#f8fafc', minHeight: '100vh' }}>
       {/* NAVBAR */}
       <nav className="navbar" id="navbar" style={{ position: 'sticky', top: 0, zIndex: 1000, background: 'rgba(255,255,255,0.98)', borderBottom: '1px solid #e2e8f0' }}>
-        <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '80px', maxWidth: '1200px', margin: '0 auto', padding: '0 1.5rem' }}>
+        <div className="container">
           <Link to="/" className="nav-brand-logo">
-            <img src="/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa SIP TC Pariaman" style={{ height: '55px', width: 'auto' }} />
+            <img src="/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa SIP TC Pariaman" />
           </Link>
 
           <button
@@ -110,63 +110,57 @@ export const GaleriPage: React.FC = () => {
             <i className={`fas ${isMobileMenuOpen ? 'fa-times' : 'fa-bars'}`}></i>
           </button>
 
-          <ul className={`nav-links ${isMobileMenuOpen ? 'active' : ''}`} id="navLinks" style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', listStyle: 'none', margin: 0, padding: 0 }}>
+          <ul className={`nav-links ${isMobileMenuOpen ? 'active' : ''}`} id="navLinks">
             <li><Link to="/" style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>Beranda</Link></li>
             <li><a href="/#programs" style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>Program</a></li>
             <li><a href="/#advantages" style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>Keunggulan</a></li>
             <li><a href="/#achievements" style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>Prestasi</a></li>
             <li><Link to="/galeri" style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>Galeri</Link></li>
             <li><a href="/#lokasi-peta" style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>Lokasi</a></li>
+          </ul>
+
+          <div className="nav-buttons">
             {user ? (
               <>
-                <li>
-                  <Link
-                    to={user.role === 'admin' || user.role === 'owner' ? '/admin' : user.role === 'guru' ? '/guru' : '/ortu'}
-                    className="btn btn-yellow"
-                    style={{ padding: '0.5rem 1.1rem', fontSize: '0.9rem', background: '#ffd54f', color: '#1e293b', borderRadius: '50px', fontWeight: 600, textDecoration: 'none' }}
-                  >
-                    Dashboard
-                  </Link>
-                </li>
-                <li>
-                  <a
-                    href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20dengan%20program%20bimbingan..."
-                    target="_blank"
-                    rel="noreferrer"
-                    className="btn btn-primary"
-                    style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem', background: '#e65100', color: '#fff', borderRadius: '50px', border: 'none', fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
-                  >
-                    Daftar Sekarang
-                  </a>
-                </li>
+                <Link
+                  to={user.role === 'admin' || user.role === 'owner' ? '/admin' : user.role === 'guru' ? '/guru' : '/ortu'}
+                  className="btn btn-yellow"
+                  style={{ padding: '0.5rem 1.1rem', fontSize: '0.9rem', background: '#ffd54f', color: '#1e293b', borderRadius: '50px', fontWeight: 600, textDecoration: 'none' }}
+                >
+                  Dashboard
+                </Link>
+                <a
+                  href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20dengan%20program%20bimbingan..."
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn btn-primary"
+                  style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem', background: '#e65100', color: '#fff', borderRadius: '50px', border: 'none', fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                >
+                  Konsultasi
+                </a>
               </>
             ) : (
               <>
-                <li>
-                  <a
-                    href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20dengan%20program%20bimbingan..."
-                    target="_blank"
-                    rel="noreferrer"
-                    className="btn btn-primary"
-                    style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem', background: '#e65100', color: '#fff', borderRadius: '50px', border: 'none', fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
-                  >
-                    Daftar Sekarang
-                  </a>
-                </li>
-                <li>
-                  <Link
-                    to="/login"
-                    className="btn btn-primary"
-                    id="loginNavBtn"
-                    style={{ padding: '0.5rem 1.1rem', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: '#ff7043', color: '#fff', borderRadius: '50px', fontWeight: 600, textDecoration: 'none' }}
-                  >
-                    <img src="/assets/icons/login.svg" alt="Login" style={{ width: '16px', height: '16px', filter: 'brightness(0) invert(1)' }} />
-                    Login/Masuk
-                  </Link>
-                </li>
+                <a
+                  href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20dengan%20program%20bimbingan..."
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn btn-yellow"
+                  style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem', background: '#ffd54f', color: '#1e293b', borderRadius: '50px', border: 'none', fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                >
+                  Konsultasi
+                </a>
+                <Link
+                  to="/login"
+                  className="btn btn-primary"
+                  id="loginNavBtn"
+                  style={{ padding: '0.5rem 1.1rem', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: '#ff7043', color: '#fff', borderRadius: '50px', fontWeight: 600, textDecoration: 'none' }}
+                >
+                  Masuk
+                </Link>
               </>
             )}
-          </ul>
+          </div>
         </div>
       </nav>
 
