@@ -1586,7 +1586,8 @@ img {
   height: 65px;
   max-width: 130px;
   object-fit: contain;
-  margin-bottom: 0.8rem;
+  display: block;
+  margin: 0 auto 0.8rem auto;
 }
 
 .login-modal-title {

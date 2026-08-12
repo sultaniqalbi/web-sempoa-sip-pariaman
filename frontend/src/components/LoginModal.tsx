@@ -25,12 +25,6 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   // Forgot Password State
   const [forgotEmail, setForgotEmail] = useState('');
 
-  // Validation State
-  const [emailError, setEmailError] = useState('');
-  const [passwordError, setPasswordError] = useState('');
-  const [emailValid, setEmailValid] = useState(false);
-  const [passwordValid, setPasswordValid] = useState(false);
-
   // Submission State
   const [isLoading, setIsLoading] = useState(false);
   const [globalError, setGlobalError] = useState('');
@@ -43,54 +37,15 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   // Refs for a11y & focus trap
   const modalRef = useRef<HTMLDivElement>(null);
   const emailInputRef = useRef<HTMLInputElement>(null);
-
-  // Validate Email
-  const validateEmail = (val: string) => {
-    const emailRegex = /^[^\s@]+@sempoasippariaman\.com$/i;
-    if (!val) {
-      setEmailError("Email tidak boleh kosong");
-      setEmailValid(false);
-      return false;
-    }
-    if (!emailRegex.test(val)) {
-      setEmailError("Format email harus nama@sempoasippariaman.com");
-      setEmailValid(false);
-      return false;
-    }
-    setEmailError('');
-    setEmailValid(true);
-    return true;
-  };
-
-  // Validate Password
-  const validatePassword = (val: string) => {
-    if (!val) {
-      setPasswordError("Kata sandi tidak boleh kosong");
-      setPasswordValid(false);
-      return false;
-    }
-    if (val.length < 8) {
-      setPasswordError(`Kata sandi minimal 8 karakter (saat ini: ${val.length})`);
-      setPasswordValid(false);
-      return false;
-    }
-    setPasswordError('');
-    setPasswordValid(true);
-    return true;
-  };
-
-  // Handlers for blur/change
-  const handleEmailBlur = () => validateEmail(email);
-  const handlePasswordBlur = () => validatePassword(password);
   
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
-    if (emailError) validateEmail(e.target.value); // real-time clear if previously errored
+    setGlobalError(''); // Clear error on typing
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
-    if (passwordError) validatePassword(e.target.value);
+    setGlobalError(''); // Clear error on typing
   };
 
   // Submit Login
@@ -99,11 +54,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     setGlobalError('');
     setGlobalSuccess('');
     
-    const isEmailOk = validateEmail(email);
-    const isPasswordOk = validatePassword(password);
-    
-    if (!isEmailOk || !isPasswordOk) {
-      setGlobalError("Periksa kembali email dan kata sandi");
+    if (!email || !password) {
+      setGlobalError("Email dan kata sandi wajib diisi");
       return;
     }
 
@@ -131,10 +83,10 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       console.error('Login failed:', err);
       if (err.response?.status === 429) {
         setGlobalError('Terlalu banyak percobaan masuk salah. Akun Anda diblokir selama 15 menit.');
-      } else if (err.response?.status === 401) {
-        setGlobalError('Email atau kata sandi salah');
+      } else if (err.response?.status === 401 || err.response?.status === 404) {
+        setGlobalError('Email atau kata sandi tidak ditemukan');
       } else {
-        setGlobalError(err.message || 'Koneksi server gagal. Silakan coba sesaat lagi.');
+        setGlobalError('Email atau kata sandi tidak ditemukan');
       }
     } finally {
       setIsLoading(false);
@@ -235,10 +187,6 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       setEmail('');
       setPassword('');
       setForgotEmail('');
-      setEmailError('');
-      setPasswordError('');
-      setEmailValid(false);
-      setPasswordValid(false);
       setGlobalError('');
       setGlobalSuccess('');
     }
@@ -283,14 +231,6 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                 <p className="login-modal-subtitle">Akses portal Sempoa SIP TC Pariaman</p>
               </div>
 
-              {globalError && (
-                <div className="login-alert login-alert-error" style={{ margin: '1.5rem 2.5rem 0' }}>
-                  <i className="fas fa-exclamation-triangle"></i>
-                  <span>{globalError}</span>
-                  <button type="button" className="login-alert-close" onClick={() => setGlobalError('')}>&times;</button>
-                </div>
-              )}
-
               {globalSuccess && (
                 <div className="login-alert login-alert-success" style={{ margin: '1.5rem 2.5rem 0' }}>
                   <i className="fas fa-check-circle"></i>
@@ -308,39 +248,19 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                       type="email"
                       id="login-email"
                       name="email"
-                      className={`login-form-control ${emailError ? 'is-invalid' : ''} ${emailValid && !emailError ? 'is-valid' : ''}`}
+                      className="login-form-control"
                       placeholder="nama@sempoasippariaman.com"
                       aria-label="Email"
-                      aria-describedby={emailError ? "email-error" : undefined}
                       value={email}
                       onChange={handleEmailChange}
-                      onBlur={handleEmailBlur}
                       ref={emailInputRef}
                       required
                     />
                     <span className="login-input-icon"><i className="fas fa-envelope"></i></span>
                   </div>
-                  
-                  {emailError && (
-                    <div id="email-error" className="login-form-error" style={{ display: 'flex' }}>
-                      <i className="fas fa-exclamation-circle"></i>
-                      <span>{emailError}</span>
-                    </div>
-                  )}
-                  
-                  {emailValid && !emailError && (
-                    <div className="login-form-success" style={{ display: 'flex' }}>
-                      <i className="fas fa-check-circle"></i>
-                      <span>Email valid</span>
-                    </div>
-                  )}
-                  
-                  {!emailError && !emailValid && (
-                    <p className="login-form-helper">Email harus menggunakan domain @sempoasippariaman.com</p>
-                  )}
                 </div>
 
-                <div className="login-form-group">
+                <div className="login-form-group" style={{ marginBottom: globalError ? '0.5rem' : '1.2rem' }}>
                   <label htmlFor="login-password" className="login-form-label">
                     Kata Sandi <span className="login-required">*</span>
                   </label>
@@ -349,13 +269,11 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                       type={showPassword ? "text" : "password"}
                       id="login-password"
                       name="password"
-                      className={`login-form-control ${passwordError ? 'is-invalid' : ''} ${passwordValid && !passwordError ? 'is-valid' : ''}`}
+                      className="login-form-control"
                       placeholder="••••••••••••"
                       aria-label="Kata Sandi"
-                      aria-describedby={passwordError ? "password-error" : undefined}
                       value={password}
                       onChange={handlePasswordChange}
-                      onBlur={handlePasswordBlur}
                       required
                     />
                     <span className="login-input-icon"><i className="fas fa-lock"></i></span>
@@ -390,18 +308,14 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                       </svg>
                     </button>
                   </div>
-                  
-                  {passwordError && (
-                    <div id="password-error" className="login-form-error" style={{ display: 'flex' }}>
-                      <i className="fas fa-exclamation-circle"></i>
-                      <span>{passwordError}</span>
-                    </div>
-                  )}
-                  
-                  {!passwordError && !passwordValid && (
-                    <p className="login-form-helper">Minimal 8 karakter</p>
-                  )}
                 </div>
+
+                {globalError && (
+                  <div className="login-form-error" style={{ display: 'flex', marginBottom: '1.2rem' }}>
+                    <i className="fas fa-exclamation-circle"></i>
+                    <span>{globalError}</span>
+                  </div>
+                )}
 
                 <div className="login-forgot-wrapper">
                   <button 
