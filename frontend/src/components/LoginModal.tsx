@@ -251,9 +251,11 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                       xmlns="http://www.w3.org/2000/svg" 
                       viewBox="0 0 24 24" 
                       width="20" height="20"
+                      fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
                       style={{ display: showPassword ? 'block' : 'none' }}
                     >
-                      <path fill="currentColor" fillRule="evenodd" d="M1 12c2.028-4.152 6.192-7 11-7s8.972 2.848 11 7c-2.028 4.152-6.192 7-11 7s-8.972-2.848-11-7m11 3.5a3.5 3.5 0 1 0 0-7a3.5 3.5 0 0 0 0 7"/>
+                      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                      <circle cx="12" cy="12" r="3" />
                     </svg>
                     
                     {/* SVG Eye Slash (shown ketika password hidden) */}
@@ -262,9 +264,13 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                       xmlns="http://www.w3.org/2000/svg" 
                       viewBox="0 0 24 24" 
                       width="20" height="20" 
+                      fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
                       style={{ display: showPassword ? 'none' : 'block' }}
                     >
-                      <path fill="currentColor" fillRule="evenodd" d="m18.922 16.8l3.17 3.17l-1.06 1.061L4.06 4.061L5.12 3l2.74 2.738A11.9 11.9 0 0 1 12 5c4.808 0 8.972 2.848 11 7a12.66 12.66 0 0 1-4.078 4.8l3.625 3.624a3.5 3.5 0 0 0 4.474 4.474l2.964 2.964z"/>
+                      <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                      <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                      <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                      <line x1="2" y1="2" x2="22" y2="22" />
                     </svg>
                   </button>
                 </div>
