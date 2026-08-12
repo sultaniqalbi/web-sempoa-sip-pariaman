@@ -1709,6 +1709,12 @@ img {
   transition: all 0.2s ease;
 }
 
+/* Hide native browser password reveal icon (Edge/IE) */
+.login-form-control::-ms-reveal,
+.login-form-control::-ms-clear {
+  display: none;
+}
+
 /* Error/Success Feedback */
 .login-form-error,
 .login-form-success {
