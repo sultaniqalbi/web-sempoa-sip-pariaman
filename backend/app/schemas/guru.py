@@ -8,6 +8,7 @@ class GuruBase(BaseModel):
     kategori_program: str = "Sempoa SIP"
     hari_wajib: str
     target_kehadiran: int = 12
+    whatsapp_guru: Optional[str] = None
     bio: Optional[str] = None
     foto_profil: Optional[str] = None
 
@@ -20,6 +21,7 @@ class GuruUpdate(BaseModel):
     kategori_program: Optional[str] = None
     hari_wajib: Optional[str] = None
     target_kehadiran: Optional[int] = None
+    whatsapp_guru: Optional[str] = None
     bio: Optional[str] = None
     foto_profil: Optional[str] = None
 
@@ -28,3 +30,9 @@ class GuruResponse(GuruBase):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+class GuruCreateResponse(BaseModel):
+    guru: GuruResponse
+    guru_email: str
+    guru_password_plaintext: str
+    whatsapp_number: Optional[str] = None

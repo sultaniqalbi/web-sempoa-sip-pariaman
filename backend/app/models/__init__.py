@@ -9,6 +9,7 @@ from app.models.pembayaran_periode import PembayaranPeriode, StatusPembayaran
 from app.models.bukti_transfer import BuktiTransfer, StatusBuktiTransfer
 from app.models.galeri import Galeri
 from app.models.pendaftaran_baru import PendaftaranBaru, StatusPendaftaran
+from app.models.audit_log import AuditLog
 
 __all__ = [
     "Base",
@@ -30,4 +31,6 @@ __all__ = [
     "Galeri",
     "PendaftaranBaru",
     "StatusPendaftaran",
+    "AuditLog",
 ]
+

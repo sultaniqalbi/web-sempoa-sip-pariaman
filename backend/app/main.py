@@ -8,11 +8,30 @@ from sqlalchemy import text
 logging.basicConfig(level=settings.log_level)
 logger = logging.getLogger(__name__)
 
+import os
+from pathlib import Path
+from app.core.database import engine, Base
+from app.seed_data import run_seed
+
 app = FastAPI(
     title="Sempoa SIP API",
     version="1.0.0",
     description="API for Sempoa SIP TC Pariaman attendance system"
 )
+
+@app.on_event("startup")
+def on_startup():
+    # Ensure backup directory exists
+    backup_dir = Path(os.getenv("BACKUP_DIR", "backups"))
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    logger.info(f"Backup directory initialized at: {backup_dir.resolve()}")
+    
+    # Auto-create tables & seed admin/owner accounts
+    try:
+        Base.metadata.create_all(bind=engine)
+        run_seed()
+    except Exception as e:
+        logger.error(f"Startup initialization error: {e}")
 
 # CORS Middleware (exact-match allowlist, no wildcard)
 app.add_middleware(
@@ -22,6 +41,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # Health check endpoint
 @app.get("/health")

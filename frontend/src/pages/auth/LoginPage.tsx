@@ -20,15 +20,18 @@ export const LoginPage: React.FC = () => {
     try {
       const user = await login(email, password);
 
-      if (user.role === 'admin' || user.role === 'owner') {
+      if (user?.role === 'owner') {
+        navigate('/owner');
+      } else if (user?.role === 'admin') {
         navigate('/admin');
-      } else if (user.role === 'guru') {
+      } else if (user?.role === 'guru') {
         navigate('/guru');
-      } else if (user.role === 'ortu') {
+      } else if (user?.role === 'ortu') {
         navigate('/ortu');
       } else {
         navigate('/');
       }
+
     } catch (err: any) {
       console.error('Login failed:', err);
       if (err.response?.status === 429) {

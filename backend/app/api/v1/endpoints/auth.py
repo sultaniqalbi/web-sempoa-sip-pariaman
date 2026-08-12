@@ -12,6 +12,8 @@ from app.schemas.auth import LoginRequest, TokenResponse, RefreshRequest
 
 router = APIRouter()
 
+from sqlalchemy import func
+
 @router.post("/login", response_model=TokenResponse)
 async def login(
     request: Request,
@@ -24,8 +26,9 @@ async def login(
     # 1. Rate limiting check
     login_limiter.check_rate_limit(client_ip, email)
 
-    # 2. Query user
-    user = db.query(User).filter(User.email == email).first()
+    # 2. Query user (case-insensitive email matching)
+    user = db.query(User).filter(func.lower(User.email) == email.lower()).first()
+
     
     # 3. Verify password
     if not user or not verify_password(login_data.password, user.password):
@@ -44,13 +47,21 @@ async def login(
     access_token = create_access_token(subject=user.email)
     refresh_token = create_refresh_token(subject=user.email)
 
+    role_str = user.role.value if hasattr(user.role, 'value') else str(user.role)
     return TokenResponse(
         access_token=access_token,
         refresh_token=refresh_token,
         email=user.email,
-        role=user.role,
-        nama=user.nama
+        role=role_str,
+        nama=user.nama,
+        user={
+            "id": user.id,
+            "email": user.email,
+            "nama": user.nama,
+            "role": role_str
+        }
     )
+
 
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh(
@@ -91,10 +102,18 @@ async def refresh(
     new_access = create_access_token(subject=user.email)
     new_refresh = create_refresh_token(subject=user.email)
 
+    role_str = user.role.value if hasattr(user.role, 'value') else str(user.role)
     return TokenResponse(
         access_token=new_access,
         refresh_token=new_refresh,
         email=user.email,
-        role=user.role,
-        nama=user.nama
+        role=role_str,
+        nama=user.nama,
+        user={
+            "id": user.id,
+            "email": user.email,
+            "nama": user.nama,
+            "role": role_str
+        }
     )
+

@@ -59,16 +59,19 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       // Delay for success animation before redirect
       setTimeout(() => {
         onClose(); // Close modal on success
-        if (user.role === 'admin' || user.role === 'owner') {
+        if (user?.role === 'owner') {
+          navigate('/owner');
+        } else if (user?.role === 'admin') {
           navigate('/admin');
-        } else if (user.role === 'guru') {
+        } else if (user?.role === 'guru') {
           navigate('/guru');
-        } else if (user.role === 'ortu') {
+        } else if (user?.role === 'ortu') {
           navigate('/ortu');
         } else {
           navigate('/');
         }
-      }, 1500);
+      }, 1000);
+
 
     } catch (err: any) {
       console.error('Login failed:', err);

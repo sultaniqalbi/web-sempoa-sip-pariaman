@@ -1,23 +1,34 @@
-from typing import List
+import os
+from typing import List, Optional
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user, RoleChecker
+from app.core.security import get_password_hash, generate_random_password, normalize_whatsapp_number
 from app.models.users import User, UserRole
-from app.schemas.guru import GuruCreate, GuruUpdate, GuruResponse
-from app.crud import guru as crud_guru
+from app.models.guru import Guru
+from app.schemas.guru import GuruCreate, GuruUpdate, GuruResponse, GuruCreateResponse
+from pydantic import BaseModel
 
 router = APIRouter()
+admin_or_owner = RoleChecker([UserRole.admin, UserRole.owner])
+
+class GuruResetPasswordResponse(BaseModel):
+    status: str
+    email: str
+    new_password_plaintext: str
 
 @router.get("/", response_model=List[GuruResponse])
 async def read_guru_list(
     skip: int = 0,
-    limit: int = 10,
+    limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(RoleChecker([UserRole.admin, UserRole.owner]))
+    current_user: User = Depends(get_current_user)
 ):
-    return crud_guru.get_guru_list(db, skip=skip, limit=limit)
+    return db.query(Guru).offset(skip).limit(limit).all()
 
 @router.get("/{id}", response_model=GuruResponse)
 async def read_guru(
@@ -25,62 +36,241 @@ async def read_guru(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    db_guru = crud_guru.get_guru(db, guru_id=id)
+    db_guru = db.query(Guru).filter(Guru.id == id).first()
     if not db_guru:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Data guru tidak ditemukan"
-        )
-    if current_user.role in [UserRole.admin, UserRole.owner]:
-        return db_guru
-    if current_user.role == UserRole.guru and current_user.uid_terhubung == db_guru.uid:
-        return db_guru
-    
-    raise HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN,
-        detail="Anda tidak memiliki akses ke data guru ini"
-    )
+        raise HTTPException(status_code=404, detail="Data guru tidak ditemukan")
+    return db_guru
 
-@router.post("/", response_model=GuruResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=GuruCreateResponse, status_code=status.HTTP_201_CREATED)
 async def create_new_guru(
     guru_in: GuruCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(RoleChecker([UserRole.admin, UserRole.owner]))
+    current_user: User = Depends(admin_or_owner)
 ):
-    db_guru = crud_guru.get_guru_by_uid(db, uid=guru_in.uid)
-    if db_guru:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="UID guru sudah terdaftar"
+    """
+    Tambah Guru Baru + Auto-Provisioning Akun Login Guru + Assign RFID UID
+    """
+    existing_uid = db.query(Guru).filter(Guru.uid == guru_in.uid).first()
+    if existing_uid:
+        raise HTTPException(status_code=400, detail="UID RFID kartu guru sudah terdaftar")
+
+    # Generate teacher email: [nama_guru_lowercase]@sempoasippariaman.com
+    clean_prefix = "".join(c for c in guru_in.nama.lower().replace(" ", "") if c.isalnum())
+    if not clean_prefix:
+        clean_prefix = "guru"
+        
+    email_candidate = f"{clean_prefix}@sempoasippariaman.com"
+    suffix = 1
+    while db.query(User).filter(func.lower(User.email) == email_candidate.lower()).first():
+        suffix += 1
+        email_candidate = f"{clean_prefix}{suffix}@sempoasippariaman.com"
+
+    plain_password = generate_random_password(10)
+    hashed_password = get_password_hash(plain_password)
+    normalized_wa = normalize_whatsapp_number(guru_in.whatsapp_guru or "")
+
+    try:
+        new_guru = Guru(
+            uid=guru_in.uid,
+            nama=guru_in.nama,
+            kategori_program=guru_in.kategori_program,
+            hari_wajib=guru_in.hari_wajib,
+            target_kehadiran=guru_in.target_kehadiran or 12,
+            whatsapp_guru=normalized_wa,
+            bio=guru_in.bio,
+            foto_profil=guru_in.foto_profil
         )
-    return crud_guru.create_guru(db, guru=guru_in)
+        db.add(new_guru)
+        db.flush()
+
+        # Auto-provision teacher login account
+        user_guru = User(
+            email=email_candidate,
+            password=hashed_password,
+            role=UserRole.guru,
+            nama=guru_in.nama,
+            uid_terhubung=str(new_guru.id)
+        )
+        db.add(user_guru)
+
+        db.commit()
+        db.refresh(new_guru)
+
+        return GuruCreateResponse(
+            guru=GuruResponse.model_validate(new_guru),
+            guru_email=email_candidate,
+            guru_password_plaintext=plain_password,
+            whatsapp_number=normalized_wa
+        )
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Gagal menambah guru: {str(e)}")
 
 @router.put("/{id}", response_model=GuruResponse)
 async def update_existing_guru(
     id: int,
     guru_in: GuruUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(RoleChecker([UserRole.admin, UserRole.owner]))
+    current_user: User = Depends(admin_or_owner)
 ):
-    db_guru = crud_guru.get_guru(db, guru_id=id)
+    db_guru = db.query(Guru).filter(Guru.id == id).first()
     if not db_guru:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Data guru tidak ditemukan"
-        )
-    return crud_guru.update_guru(db, db_guru=db_guru, update_data=guru_in)
+        raise HTTPException(status_code=404, detail="Data guru tidak ditemukan")
 
-@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+    update_dict = guru_in.model_dump(exclude_unset=True)
+    if "whatsapp_guru" in update_dict:
+        update_dict["whatsapp_guru"] = normalize_whatsapp_number(update_dict["whatsapp_guru"])
+
+    for key, value in update_dict.items():
+        setattr(db_guru, key, value)
+
+    db.commit()
+    db.refresh(db_guru)
+    return db_guru
+
+@router.delete("/{id}")
 async def delete_existing_guru(
     id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(RoleChecker([UserRole.admin, UserRole.owner]))
+    current_user: User = Depends(admin_or_owner)
 ):
-    db_guru = crud_guru.get_guru(db, guru_id=id)
+    db_guru = db.query(Guru).filter(Guru.id == id).first()
     if not db_guru:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Data guru tidak ditemukan"
-        )
-    crud_guru.delete_guru(db, db_guru=db_guru)
-    return None
+        raise HTTPException(status_code=404, detail="Data guru tidak ditemukan")
+
+    # Cascade delete teacher user
+    db.query(User).filter(User.role == UserRole.guru, User.uid_terhubung == str(id)).delete()
+    db.delete(db_guru)
+    db.commit()
+    return {"status": "success", "message": "Guru dan akun terhubung berhasil dihapus"}
+
+@router.post("/{id}/reset-password", response_model=GuruResetPasswordResponse)
+async def reset_guru_password(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(admin_or_owner)
+):
+    db_guru = db.query(Guru).filter(Guru.id == id).first()
+    if not db_guru:
+        raise HTTPException(status_code=404, detail="Guru tidak ditemukan")
+
+    user_guru = db.query(User).filter(User.role == UserRole.guru, User.uid_terhubung == str(id)).first()
+    if not user_guru:
+        raise HTTPException(status_code=404, detail="Akun guru terhubung tidak ditemukan")
+
+    new_pwd = generate_random_password(10)
+    user_guru.password = get_password_hash(new_pwd)
+    db.commit()
+
+    return GuruResetPasswordResponse(
+        status="success",
+        email=user_guru.email,
+        new_password_plaintext=new_pwd
+    )
+
+@router.post("/{id}/push-whatsapp")
+async def push_whatsapp_guru(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(admin_or_owner)
+):
+    guru = db.query(Guru).filter(Guru.id == id).first()
+    if not guru:
+        raise HTTPException(status_code=404, detail="Guru tidak ditemukan")
+
+    wa_num = guru.whatsapp_guru
+    if not wa_num:
+        raise HTTPException(status_code=400, detail="Nomor WhatsApp guru belum diisi")
+
+    user_guru = db.query(User).filter(User.role == UserRole.guru, User.uid_terhubung == str(id)).first()
+    guru_email = user_guru.email if user_guru else f"guru_{guru.id}@sempoasippariaman.com"
+
+    message_template = f"""Halo {guru.nama},
+
+Anda telah terdaftar sebagai Pengajar di Sempoa SIP TC Pariaman.
+
+📧 Email: {guru.email if hasattr(guru, 'email') else guru_email}
+📇 UID RFID: {guru.uid}
+🔐 Portal Link: https://sempoasippariaman.com/login
+
+Silakan login ke portal untuk melihat jadwal kelas dan presensi mengajar.
+
+---
+Tim Sempoa SIP TC Pariaman"""
+
+    account_sid = os.getenv("TWILIO_ACCOUNT_SID")
+    auth_token = os.getenv("TWILIO_AUTH_TOKEN")
+    from_number = os.getenv("TWILIO_WHATSAPP_FROM")
+
+    if not all([account_sid, auth_token, from_number]):
+        return {
+            "status": "pending",
+            "message": "WhatsApp API belum dikonfigurasi. Kirim pesan ini manual:",
+            "fallback_message": message_template,
+            "whatsapp_number": wa_num
+        }
+
+    try:
+        from twilio.rest import Client
+        client = Client(account_sid, auth_token)
+        client.messages.create(from_=from_number, body=message_template, to=f"whatsapp:+{wa_num}")
+        return {
+            "status": "success",
+            "message": f"Pesan WhatsApp terkirim ke +{wa_num}",
+            "whatsapp_number": wa_num,
+            "sent_at": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Gagal kirim WA: {str(e)}",
+            "fallback_message": message_template,
+            "whatsapp_number": wa_num
+        }
+
+@router.post("/export-sheets")
+async def export_guru_sheets(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(admin_or_owner)
+):
+    guru_list = db.query(Guru).all()
+    rows = [["ID", "UID (RFID)", "Nama Guru", "Kategori Program", "Hari Wajib Mengajar", "No WhatsApp", "Target Kehadiran"]]
+    for g in guru_list:
+        rows.append([g.id, g.uid, g.nama, g.kategori_program, g.hari_wajib, g.whatsapp_guru or "-", g.target_kehadiran])
+
+    service_account_json = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
+    sheet_id = os.getenv("GOOGLE_SHEET_ID")
+    tab_name = f"Guru_{datetime.utcnow().strftime('%Y%m%d')}"
+
+    if not service_account_json or not sheet_id or not os.path.exists(service_account_json):
+        return {
+            "status": "pending",
+            "message": "Google Sheets belum dikonfigurasi. Hubungi developer.",
+            "worksheet_name": tab_name,
+            "rows_written": len(rows) - 1,
+            "preview": rows[:5]
+        }
+
+    try:
+        import gspread
+        gc = gspread.service_account(filename=service_account_json)
+        sh = gc.open_by_key(sheet_id)
+        try:
+            ws = sh.worksheet(tab_name)
+            ws.clear()
+        except Exception:
+            ws = sh.add_worksheet(title=tab_name, rows=len(rows)+10, cols=10)
+        ws.update("A1", rows)
+        return {
+            "status": "success",
+            "sheet_url": f"https://docs.google.com/spreadsheets/d/{sheet_id}/edit#gid={ws.id}",
+            "worksheet_name": tab_name,
+            "rows_written": len(rows) - 1,
+            "sent_at": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Gagal export ke Google Sheets: {str(e)}",
+            "rows_written": len(rows) - 1
+        }

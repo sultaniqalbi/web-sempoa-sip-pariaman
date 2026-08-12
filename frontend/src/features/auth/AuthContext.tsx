@@ -40,7 +40,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         password,
       });
       
-      const { access_token, refresh_token, user: userProfile } = response.data;
+      const { access_token, refresh_token, email: resEmail, role, nama, user: nestedUser } = response.data;
+      
+      const userProfile: User = nestedUser || {
+        id: 0,
+        email: resEmail || email,
+        nama: nama || email.split('@')[0],
+        role: role as UserRole,
+      };
       
       localStorage.setItem('access_token', access_token);
       localStorage.setItem('refresh_token', refresh_token);
@@ -49,6 +56,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setUser(userProfile);
       setIsLoading(false);
       return userProfile;
+
     } catch (error) {
       setIsLoading(false);
       throw error;

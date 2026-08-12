@@ -11,6 +11,7 @@ class Guru(Base):
     kategori_program = Column(String(50), nullable=False, default="Sempoa SIP")
     hari_wajib = Column(String(100), nullable=False)
     target_kehadiran = Column(Integer, nullable=False, default=12)
+    whatsapp_guru = Column(String(20), nullable=True)
     bio = Column(Text, nullable=True)
     foto_profil = Column(String(255), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from app.core.dependencies import get_current_user, RoleChecker
 from app.models.users import User, UserRole
-from app.api.v1.endpoints import auth, siswa, guru, jadwal, absensi, pembayaran, bukti_transfer, quota
+from app.api.v1.endpoints import auth, siswa, guru, jadwal, absensi, pembayaran, bukti_transfer, quota, owner, galeri, portal
 
 api_router = APIRouter()
 
@@ -14,8 +14,10 @@ api_router.include_router(absensi.router, prefix="/absensi", tags=["absensi"])
 api_router.include_router(pembayaran.router, prefix="/pembayaran", tags=["pembayaran"])
 api_router.include_router(bukti_transfer.router, prefix="/bukti-transfer", tags=["bukti-transfer"])
 api_router.include_router(quota.router, prefix="/quota", tags=["quota"])
+api_router.include_router(owner.router, prefix="/owner", tags=["owner"])
+api_router.include_router(galeri.router, prefix="/galeri", tags=["galeri"])
+api_router.include_router(portal.router, prefix="/portal", tags=["portal"])
 
-# Test routes for authentication & authorization
 @api_router.get("/test-protected")
 async def test_protected(current_user: User = Depends(get_current_user)):
     return {

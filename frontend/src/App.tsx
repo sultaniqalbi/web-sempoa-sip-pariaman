@@ -10,19 +10,25 @@ import ErrorBoundary from './components/ErrorBoundary';
 import HomePage from './pages/public/HomePage';
 import ProgramsPage from './pages/public/ProgramsPage';
 import ProgramDetailPage from './pages/public/ProgramDetailPage';
-import GaleriPage from './pages/public/GaleriPage';
+import PublicGaleriPage from './pages/public/GaleriPage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 
-// Admin Pages
-import AdminLayout from './pages/admin/AdminLayout';
-import DashboardPage from './pages/admin/DashboardPage';
-import SiswaPage from './pages/admin/SiswaPage';
-import GuruPage from './pages/admin/GuruPage';
-import JadwalPage from './pages/admin/JadwalPage';
-import KeuanganPage from './pages/admin/KeuanganPage';
-import PembayaranPage from './pages/admin/PembayaranPage';
-import AbsensiPage from './pages/admin/AbsensiPage';
+// Shared Layout & Shared Pages
+import PortalLayout from './layouts/PortalLayout';
+import SharedDashboardPage from './pages/portal/DashboardPage';
+import SharedSiswaPage from './pages/portal/SiswaPage';
+import SharedGuruPage from './pages/portal/GuruPage';
+import SharedJadwalPage from './pages/portal/JadwalPage';
+import SharedAbsensiGuruPage from './pages/portal/AbsensiGuruPage';
+import SharedPembayaranPage from './pages/portal/PembayaranPage';
+import SharedGaleriPage from './pages/portal/GaleriPage';
+
+// Owner Exclusive Pages
+import PertumbuhanPage from './pages/owner-only/PertumbuhanPage';
+import KeuanganPage from './pages/owner-only/KeuanganPage';
+import RekapBulananPage from './pages/owner-only/RekapBulananPage';
+import ResetDataPage from './pages/owner-only/ResetDataPage';
 
 // Teacher Pages
 import GuruLayout from './pages/guru/GuruLayout';
@@ -56,29 +62,55 @@ export function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/programs" element={<ProgramsPage />} />
               <Route path="/program/:programId" element={<ProgramDetailPage />} />
-              <Route path="/galeri" element={<GaleriPage />} />
+              <Route path="/galeri" element={<PublicGaleriPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
 
-              {/* Admin & Owner Routes */}
+              {/* Admin Portal Routes (Shared Components) */}
               <Route
                 path="/admin"
                 element={
                   <ProtectedRoute allowedRoles={['admin', 'owner']}>
-                    <AdminLayout />
+                    <PortalLayout role="admin" />
                   </ProtectedRoute>
                 }
               >
-                <Route index element={<DashboardPage />} />
-                <Route path="siswa" element={<SiswaPage />} />
-                <Route path="guru" element={<GuruPage />} />
-                <Route path="jadwal" element={<JadwalPage />} />
-                <Route path="keuangan" element={<KeuanganPage />} />
-                <Route path="pembayaran" element={<PembayaranPage />} />
-                <Route path="absensi" element={<AbsensiPage />} />
+                <Route index element={<Navigate to="dashboard" replace />} />
+                <Route path="dashboard" element={<SharedDashboardPage />} />
+                <Route path="siswa" element={<SharedSiswaPage />} />
+                <Route path="guru" element={<SharedGuruPage />} />
+                <Route path="jadwal" element={<SharedJadwalPage />} />
+                <Route path="absensi-guru" element={<SharedAbsensiGuruPage />} />
+                <Route path="pembayaran" element={<SharedPembayaranPage />} />
+                <Route path="galeri" element={<SharedGaleriPage />} />
               </Route>
 
-              {/* Teacher Routes */}
+              {/* Owner Portal Routes (Shared + Exclusive Components) */}
+              <Route
+                path="/owner"
+                element={
+                  <ProtectedRoute allowedRoles={['owner']}>
+                    <PortalLayout role="owner" />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<Navigate to="dashboard" replace />} />
+                <Route path="dashboard" element={<SharedDashboardPage />} />
+                <Route path="siswa" element={<SharedSiswaPage />} />
+                <Route path="guru" element={<SharedGuruPage />} />
+                <Route path="jadwal" element={<SharedJadwalPage />} />
+                <Route path="absensi-guru" element={<SharedAbsensiGuruPage />} />
+                <Route path="pembayaran" element={<SharedPembayaranPage />} />
+                <Route path="galeri" element={<SharedGaleriPage />} />
+
+                {/* Owner Exclusive Routes */}
+                <Route path="pertumbuhan" element={<PertumbuhanPage />} />
+                <Route path="keuangan" element={<KeuanganPage />} />
+                <Route path="rekap-bulanan" element={<RekapBulananPage />} />
+                <Route path="reset-data" element={<ResetDataPage />} />
+              </Route>
+
+              {/* Teacher Portal Routes */}
               <Route
                 path="/guru"
                 element={
@@ -92,7 +124,7 @@ export function App() {
                 <Route path="absensi-input" element={<AbsensiInputPage />} />
               </Route>
 
-              {/* Parent Routes */}
+              {/* Parent Portal Routes */}
               <Route
                 path="/ortu"
                 element={
@@ -106,7 +138,7 @@ export function App() {
                 <Route path="pembayaran" element={<PembayaranOrtuPage />} />
               </Route>
 
-              {/* Catch-all Fallback */}
+              {/* Fallback Redirect */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </AuthProvider>
