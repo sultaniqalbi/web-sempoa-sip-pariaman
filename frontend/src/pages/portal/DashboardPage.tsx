@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import apiClient from '../../features/api/apiClient';
 import useAuth from '../../features/auth/useAuth';
 import AdminDashboard, { StatItem, FeatureItem } from '../../components/AdminDashboard';
+import { Modal } from '../../components/Modal';
 
 interface DashboardStats {
   total_siswa: number;
@@ -115,36 +116,6 @@ export const DashboardPage: React.FC = () => {
     },
   ];
 
-  const featuresList: FeatureItem[] = [
-    {
-      title: 'Kelola Data Siswa',
-      description: 'Pendaftaran siswa baru, auto-provisioning akun ortu, dan sisa pertemuan.',
-      icon: 'siswa',
-      iconColor: '#1976D2',
-      linkText: 'Buka Data Siswa →',
-      onClick: () => navigate(role === 'owner' ? '/owner/siswa' : '/admin/siswa'),
-    },
-    {
-      title: 'Pembayaran & Reminder',
-      description: 'Verifikasi bukti transfer ortu dan draft pesan pengingat WhatsApp SPP.',
-      icon: 'pembayaran',
-      iconColor: '#D32F2F',
-      linkText: 'Buka Pembayaran →',
-      onClick: () => navigate(role === 'owner' ? '/owner/pembayaran' : '/admin/pembayaran'),
-    },
-    {
-      title: 'Rekap Bulanan',
-      description: 'Kirim data operasional secara instan ke tab Google Sheets yang selalu terbaru.',
-      icon: 'sheets',
-      iconColor: '#388E3C',
-      linkText: 'Buat Rekap Sekarang →',
-      onClick: () => {
-        const el = document.getElementById('rekap-bulanan-section');
-        if (el) el.scrollIntoView({ behavior: 'smooth' });
-      },
-    },
-  ];
-
   return (
     <AdminDashboard
       userName={statsData?.user_name || 'Admin SIP Pariaman'}
@@ -182,61 +153,66 @@ export const DashboardPage: React.FC = () => {
       standalone={false}
     >
       {role === 'owner' && (
-        <div id="rekap-bulanan-section" className="mt-8 space-y-6 max-w-4xl">
-          {toastMessage && (
-            <div className={`p-4 rounded-xl text-sm font-bold shadow-sm border ${
-              toastMessage.type === 'success' ? 'bg-[#E8F5E9] text-[#388E3C] border-[#A5D6A7]' : 'bg-[#FFF1F2] text-[#D32F2F] border-[#FECDD3]'
-            }`}>
-              {toastMessage.text}
-            </div>
-          )}
+        <Modal
+          isOpen={isRekapModalOpen}
+          onClose={() => setIsRekapModalOpen(false)}
+          title="Rekap Bulanan Google Sheets"
+          size="lg"
+        >
+          <div className="space-y-6">
+            {toastMessage && (
+              <div className={`p-4 rounded-xl text-sm font-bold shadow-sm border ${
+                toastMessage.type === 'success' ? 'bg-[#E8F5E9] text-[#388E3C] border-[#A5D6A7]' : 'bg-[#FFF1F2] text-[#D32F2F] border-[#FECDD3]'
+              }`}>
+                {toastMessage.text}
+              </div>
+            )}
 
-          <div>
-            <h2 className="text-xl md:text-2xl font-extrabold tracking-tight text-[#424242]">Rekap Bulanan Google Sheets</h2>
-            <p className="text-xs text-[#757575] mt-1">Otomatisasi pengiriman ringkasan data operasional dan keuangan ke spreadsheet resmi</p>
-          </div>
+            <p className="text-xs text-[#757575]">
+              Otomatisasi pengiriman ringkasan data operasional dan keuangan ke spreadsheet resmi
+            </p>
 
-          <div className="bg-white p-6 md:p-8 rounded-3xl border border-[#E0E0E0] shadow-sm space-y-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="bg-[#FAFAFA] p-5 rounded-2xl border border-[#E0E0E0] space-y-5">
               <div>
                 <label className="block text-xs font-bold text-[#424242] mb-1">Pilih Periode Bulan Rekap*</label>
                 <input
                   type="month"
                   value={selectedBulan}
                   onChange={(e) => setSelectedBulan(e.target.value)}
-                  className="bg-[#F5F5F5] border border-[#E0E0E0] rounded-xl px-4 py-2.5 text-sm text-[#424242] font-mono outline-none focus:border-[#FF7043]"
+                  className="w-full bg-white border border-[#E0E0E0] rounded-xl px-4 py-2 text-sm text-[#424242] font-mono outline-none focus:border-[#FF7043]"
                 />
               </div>
+              
               <button
                 onClick={() => rekapMutation.mutate(selectedBulan)}
                 disabled={rekapMutation.isPending}
-                className="px-6 py-3 bg-[#FF7043] hover:bg-[#F4511E] text-white rounded-2xl text-xs font-extrabold shadow-md flex items-center gap-2"
+                className="w-full py-3 bg-[#FF7043] hover:bg-[#F4511E] text-white rounded-xl text-xs font-extrabold shadow-sm flex items-center justify-center gap-2 transition-colors"
               >
                 {rekapMutation.isPending ? '🔄 Memproses Rekap...' : '📊 Buat & Kirim Rekap ke Google Sheets'}
               </button>
             </div>
 
             {rekapResult && (
-              <div className="pt-6 border-t border-[#E0E0E0] space-y-4">
+              <div className="pt-4 border-t border-[#E0E0E0] space-y-4">
                 <h3 className="text-sm font-extrabold text-[#424242]">Hasil Rekap Periode {selectedBulan}</h3>
                 {rekapResult.status === 'success' ? (
-                  <div className="p-5 bg-[#E8F5E9] border border-[#A5D6A7] rounded-2xl space-y-3">
+                  <div className="p-4 bg-[#E8F5E9] border border-[#A5D6A7] rounded-xl space-y-2">
                     <p className="text-xs text-[#388E3C] font-bold">✅ Tab rekap berhasil dibuat / diperbarui!</p>
                     <p className="text-xs text-[#757575]">Worksheet: <code className="text-[#FF7043] font-bold">{rekapResult.worksheet_name}</code></p>
                     <a
                       href={rekapResult.sheet_url}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-block px-5 py-2.5 bg-[#388E3C] hover:bg-[#2E7D32] text-white font-bold rounded-xl text-xs shadow-md"
+                      className="inline-block mt-2 px-4 py-2 bg-[#388E3C] hover:bg-[#2E7D32] text-white font-bold rounded-lg text-xs shadow-sm"
                     >
-                      Buka Spreadsheet Baru
+                      Buka Spreadsheet
                     </a>
                   </div>
                 ) : (
-                  <div className="p-5 bg-[#FFF3E0] border border-[#FFCC80] rounded-2xl space-y-3 text-xs text-[#FF7043]">
+                  <div className="p-4 bg-[#FFF3E0] border border-[#FFCC80] rounded-xl space-y-2 text-xs text-[#FF7043]">
                     <p className="font-bold">ℹ️ {rekapResult.message}</p>
                     {rekapResult.rekap_summary && (
-                      <div className="p-3 bg-white rounded-xl font-mono text-[11px] space-y-1 border border-[#FFE0B2]">
+                      <div className="p-2 bg-white rounded-lg font-mono text-[11px] space-y-1 border border-[#FFE0B2]">
                         <p>Total Siswa Aktif: {rekapResult.rekap_summary.total_siswa_aktif}</p>
                         <p>Total Pendapatan: Rp {rekapResult.rekap_summary.total_pendapatan?.toLocaleString('id-ID')}</p>
                       </div>
@@ -246,7 +222,7 @@ export const DashboardPage: React.FC = () => {
               </div>
             )}
           </div>
-        </div>
+        </Modal>
       )}
     </AdminDashboard>
   );
