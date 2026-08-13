@@ -86,21 +86,21 @@ export function DataTable<T>({
               setCurrentPage(1);
             }}
             placeholder={searchPlaceholder}
-            className="bg-white border border-[#CCCCCC] focus:border-[#E67E22] focus:ring-2 focus:ring-[#E67E22] focus:outline-none rounded-lg px-4 py-2.5 text-xs text-[#333333] max-w-xs w-full transition-all"
+            className="bg-slate-900 border border-slate-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 max-w-xs w-full transition-all"
             aria-label="Cari data"
           />
         </div>
       )}
 
-      <div className="bg-white border border-[#CCCCCC] rounded-lg overflow-hidden shadow-sm">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg">
         <table className="w-full text-left border-collapse" aria-label="Tabel Data">
           <thead>
-            <tr className="border-b border-[#CCCCCC] bg-white text-xs text-[#E67E22] uppercase font-bold">
+            <tr className="border-b border-slate-800 bg-slate-900/90 text-xs text-amber-400 uppercase font-extrabold">
               {columns.map((col, idx) => (
                 <th
                   key={idx}
                   onClick={() => handleSort(col.sortKey)}
-                  className={`p-4 ${col.sortKey ? 'cursor-pointer select-none hover:text-[#D35400]' : ''}`}
+                  className={`p-4 ${col.sortKey ? 'cursor-pointer select-none hover:text-amber-300' : ''}`}
                 >
                   <div className="flex items-center gap-1.5">
                     {col.header}
@@ -114,13 +114,13 @@ export function DataTable<T>({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#CCCCCC] text-xs text-[#333333]">
+          <tbody className="divide-y divide-slate-800/60 text-xs text-slate-200">
             {paginatedData.length > 0 ? (
               paginatedData.map((row, rowIdx) => (
                 <tr
                   key={rowIdx}
-                  className={`transition-all duration-200 hover:scale-102 hover:shadow-md cursor-default ${
-                    rowIdx % 2 === 0 ? 'bg-white' : 'bg-[#F9F9F9]'
+                  className={`transition-colors hover:bg-slate-800/40 cursor-default ${
+                    rowIdx % 2 === 0 ? 'bg-slate-900' : 'bg-slate-900/50'
                   }`}
                 >
                   {columns.map((col, colIdx) => (
@@ -132,7 +132,7 @@ export function DataTable<T>({
               ))
             ) : (
               <tr>
-                <td colSpan={columns.length} className="p-8 text-center text-slate-400 font-bold">
+                <td colSpan={columns.length} className="p-8 text-center text-slate-400 font-medium">
                   Data tidak ditemukan.
                 </td>
               </tr>
@@ -143,7 +143,7 @@ export function DataTable<T>({
 
       {/* Pagination controls */}
       {totalPages > 1 && (
-        <nav className="flex justify-between items-center text-xs text-slate-500 font-bold" aria-label="Navigasi Paginasi">
+        <nav className="flex justify-between items-center text-xs text-slate-400 font-medium" aria-label="Navigasi Paginasi">
           <div>
             Menampilkan {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, sortedData.length)} dari {sortedData.length} baris
           </div>
@@ -151,7 +151,7 @@ export function DataTable<T>({
             <button
               onClick={() => setCurrentPage(currentPage - 1)}
               disabled={currentPage === 1}
-              className="px-3 py-2 bg-white border border-[#CCCCCC] hover:bg-[#F5F5F5] disabled:opacity-50 disabled:hover:bg-white text-[#333333] rounded-lg transition-colors font-bold flex items-center justify-center focus:ring-2 focus:ring-[#E67E22] focus:outline-none"
+              className="px-3 py-1.5 bg-slate-800 border border-slate-700 hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-slate-800 text-white rounded-lg transition-colors font-bold flex items-center justify-center"
               aria-label="Halaman sebelumnya"
             >
               &larr;
@@ -160,10 +160,10 @@ export function DataTable<T>({
               <button
                 key={num}
                 onClick={() => setCurrentPage(num)}
-                className={`w-8 h-8 rounded-lg border font-bold transition-all flex items-center justify-center focus:ring-2 focus:ring-[#E67E22] focus:outline-none ${
+                className={`w-8 h-8 rounded-lg border font-bold transition-all flex items-center justify-center ${
                   currentPage === num
-                    ? 'bg-[#E67E22] border-[#E67E22] text-white'
-                    : 'bg-white border-[#CCCCCC] text-[#333333] hover:bg-[#F5F5F5]'
+                    ? 'bg-amber-500 border-amber-500 text-slate-950 font-extrabold shadow'
+                    : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white'
                 }`}
                 aria-label={`Halaman ${num}`}
                 aria-current={currentPage === num ? 'page' : undefined}
@@ -174,7 +174,7 @@ export function DataTable<T>({
             <button
               onClick={() => setCurrentPage(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="px-3 py-2 bg-white border border-[#CCCCCC] hover:bg-[#F5F5F5] disabled:opacity-50 disabled:hover:bg-white text-[#333333] rounded-lg transition-colors font-bold flex items-center justify-center focus:ring-2 focus:ring-[#E67E22] focus:outline-none"
+              className="px-3 py-1.5 bg-slate-800 border border-slate-700 hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-slate-800 text-white rounded-lg transition-colors font-bold flex items-center justify-center"
               aria-label="Halaman berikutnya"
             >
               &rarr;

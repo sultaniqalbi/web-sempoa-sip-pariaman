@@ -5,10 +5,11 @@ import useAuth from '../features/auth/useAuth';
 interface SidebarProps {
   onClose?: () => void;
   isCollapsed?: boolean;
+  role?: 'admin' | 'owner';
 }
 
-export const AdminSidebar: React.FC<SidebarProps> = ({ onClose, isCollapsed = false }) => {
-  const { user, logout } = useAuth();
+export const AdminSidebar: React.FC<SidebarProps> = ({ onClose, isCollapsed = false, role = 'admin' }) => {
+  const { logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -16,47 +17,44 @@ export const AdminSidebar: React.FC<SidebarProps> = ({ onClose, isCollapsed = fa
     navigate('/login');
   };
 
-  const links = [
-    { to: '/admin', label: 'Dashboard', icon: '📊', end: true },
-    { to: '/admin/siswa', label: 'Data Siswa', icon: '🎓' },
-    { to: '/admin/guru', label: 'Data Guru', icon: '🧑‍🏫' },
-    { to: '/admin/jadwal', label: 'Jadwal Kelas', icon: '📅' },
-    { to: '/admin/keuangan', label: 'Ledger Keuangan', icon: '💸' },
-    { to: '/admin/pembayaran', label: 'SPP & Tagihan', icon: '💰' },
-    { to: '/admin/absensi', label: 'Log Kehadiran', icon: '🗒️' },
+  const basePath = `/${role}`;
+
+  const links = role === 'owner' ? [
+    { to: `${basePath}/dashboard`, label: 'Dashboard', icon: 'fas fa-chart-pie', end: true },
+    { to: `${basePath}/siswa`, label: 'Data Siswa', icon: 'fas fa-users' },
+    { to: `${basePath}/guru`, label: 'Data Guru', icon: 'fas fa-chalkboard-teacher' },
+    { to: `${basePath}/absensi-guru`, label: 'Absensi Guru', icon: 'fas fa-user-clock' },
+    { to: `${basePath}/jadwal`, label: 'Jadwal & Kelas', icon: 'fas fa-calendar-alt' },
+    { to: `${basePath}/keuangan`, label: 'Keuangan', icon: 'fas fa-coins' },
+    { to: `${basePath}/rekap-bulanan`, label: 'Riwayat Absensi', icon: 'fas fa-history' },
+    { to: `${basePath}/galeri`, label: 'Galeri Kegiatan', icon: 'fas fa-images' },
+  ] : [
+    { to: `${basePath}/dashboard`, label: 'Dashboard', icon: 'fas fa-chart-pie', end: true },
+    { to: `${basePath}/siswa`, label: 'Data Siswa', icon: 'fas fa-users' },
+    { to: `${basePath}/guru`, label: 'Data Guru', icon: 'fas fa-chalkboard-teacher' },
+    { to: `${basePath}/jadwal`, label: 'Jadwal & Kelas', icon: 'fas fa-calendar-alt' },
+    { to: `${basePath}/pembayaran`, label: 'Reminder SPP', icon: 'fas fa-receipt' },
+    { to: `${basePath}/absensi-guru`, label: 'Riwayat Absensi', icon: 'fas fa-history' },
+    { to: `${basePath}/galeri`, label: 'Galeri Kegiatan', icon: 'fas fa-images' },
   ];
 
   return (
     <aside
-      className={`h-full bg-slate-900 border-r border-[#CCCCCC]/20 flex flex-col justify-between transition-all duration-200 ${
+      className={`h-full bg-white border-r border-[#e2e8f0] flex flex-col justify-between transition-all duration-200 ${
         isCollapsed ? 'w-[70px]' : 'w-[240px]'
       }`}
     >
       <div className="p-4">
-        <div className={`flex items-center justify-between mb-8 ${isCollapsed ? 'justify-center' : ''}`}>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#E67E22] rounded-xl flex items-center justify-center text-xl font-bold text-white shrink-0">
-              🧮
-            </div>
-            {!isCollapsed && (
-              <div>
-                <h1 className="font-extrabold text-xs text-white tracking-tight leading-tight">SEMPOA SIP</h1>
-                <p className="text-[9px] text-[#CCCCCC] font-bold uppercase tracking-wider">TC PARIAMAN</p>
-              </div>
-            )}
-          </div>
-          {!isCollapsed && onClose && (
-            <button
-              onClick={onClose}
-              className="md:hidden text-slate-400 hover:text-white font-bold text-sm focus:ring-2 focus:ring-[#E67E22] focus:outline-none p-1 rounded"
-              aria-label="Tutup menu samping"
-            >
-              ✕
-            </button>
+        <div className={`flex items-center gap-3 mb-6 ${isCollapsed ? 'justify-center' : 'px-2 py-1'}`}>
+          <img src="/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa SIP" className="h-9 w-auto shrink-0" />
+          {!isCollapsed && (
+            <h2 className="font-extrabold text-lg tracking-tight text-[#f97316]">
+              {role === 'owner' ? 'Hai Owner' : 'Admin Portal'}
+            </h2>
           )}
         </div>
 
-        <nav className="space-y-1.5" aria-label="Navigasi Utama">
+        <nav className="space-y-1" aria-label="Navigasi Utama">
           {links.map((link) => (
             <NavLink
               key={link.to}
@@ -65,42 +63,31 @@ export const AdminSidebar: React.FC<SidebarProps> = ({ onClose, isCollapsed = fa
               onClick={onClose}
               title={isCollapsed ? link.label : undefined}
               className={({ isActive }) =>
-                `flex items-center rounded-lg text-sm font-semibold transition-all duration-200 focus:ring-2 focus:ring-[#E67E22] focus:outline-none ${
+                `flex items-center rounded-xl text-sm font-semibold transition-all duration-200 ${
                   isCollapsed ? 'justify-center py-3 px-0' : 'px-4 py-2.5 gap-3'
                 } ${
                   isActive
-                    ? 'bg-[#E67E22] text-white shadow-md border-l-4 border-white'
-                    : 'text-[#CCCCCC] hover:text-white hover:bg-slate-800'
+                    ? 'bg-[#fff7ed] text-[#f97316] font-bold border-l-4 border-[#f97316]'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`
               }
             >
-              <span className="text-lg" aria-hidden="true">{link.icon}</span>
+              <i className={`${link.icon} text-base w-5 text-center`} aria-hidden="true" />
               {!isCollapsed && <span>{link.label}</span>}
             </NavLink>
           ))}
         </nav>
       </div>
 
-      <div className="p-4 border-t border-[#CCCCCC]/10 space-y-4">
-        {user && !isCollapsed && (
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-slate-800 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0 border border-[#CCCCCC]/10">
-              {user.nama.substring(0, 2).toUpperCase()}
-            </div>
-            <div className="truncate">
-              <p className="text-xs font-bold text-white truncate">{user.nama}</p>
-              <p className="text-[9px] font-bold text-[#E67E22] uppercase tracking-wider">{user.role}</p>
-            </div>
-          </div>
-        )}
+      <div className="p-4 border-t border-[#e2e8f0]">
         <button
           onClick={handleLogout}
-          className={`w-full flex items-center justify-center bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-bold rounded-lg border border-rose-500/20 transition-all focus:ring-2 focus:ring-rose-500 focus:outline-none ${
-            isCollapsed ? 'py-3 px-0' : 'py-2 gap-2'
+          className={`w-full flex items-center justify-center bg-[#fff1f2] hover:bg-[#ffe4e6] text-[#e11d48] text-xs font-bold rounded-xl transition-all ${
+            isCollapsed ? 'py-3 px-0' : 'py-2.5 gap-2'
           }`}
-          aria-label="Keluar dari portal"
         >
-          {isCollapsed ? '🚪' : '🚪 Keluar'}
+          <i className="fas fa-sign-out-alt" />
+          {!isCollapsed && <span>Keluar</span>}
         </button>
       </div>
     </aside>

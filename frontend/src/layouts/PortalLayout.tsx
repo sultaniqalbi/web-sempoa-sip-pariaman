@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import useAuth from '../features/auth/useAuth';
+import '../styles/style-admin.css';
 
 interface PortalLayoutProps {
   role: 'admin' | 'owner';
@@ -18,39 +19,42 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
 
   const basePath = `/${role}`;
 
-  const operationalLinks = [
-    { to: `${basePath}/dashboard`, label: 'Dashboard', icon: '📊', end: true },
-    { to: `${basePath}/siswa`, label: 'Data Siswa', icon: '🎓' },
-    { to: `${basePath}/guru`, label: 'Data Guru', icon: '🧑‍🏫' },
-    { to: `${basePath}/jadwal`, label: 'Jadwal & Kelas', icon: '📅' },
-    { to: `${basePath}/absensi-guru`, label: 'Laporan Absensi Guru', icon: '🗒️' },
-    { to: `${basePath}/pembayaran`, label: 'Pembayaran & Reminder', icon: '💰' },
-    { to: `${basePath}/galeri`, label: 'Galeri Kegiatan', icon: '🖼️' },
+  const operationalLinks = role === 'owner' ? [
+    { to: `${basePath}/dashboard`, label: 'Dashboard', icon: 'fas fa-chart-pie', end: true },
+    { to: `${basePath}/siswa`, label: 'Data Siswa', icon: 'fas fa-users' },
+    { to: `${basePath}/guru`, label: 'Data Guru', icon: 'fas fa-chalkboard-teacher' },
+    { to: `${basePath}/jadwal`, label: 'Jadwal & Kelas', icon: 'fas fa-calendar-alt' },
+    { to: `${basePath}/keuangan`, label: 'Keuangan', icon: 'fas fa-coins' },
+    { to: `${basePath}/rekap-bulanan`, label: 'Riwayat Absensi', icon: 'fas fa-history' },
+    { to: `${basePath}/galeri`, label: 'Galeri Kegiatan', icon: 'fas fa-images' },
+  ] : [
+    { to: `${basePath}/dashboard`, label: 'Dashboard', icon: 'fas fa-chart-pie', end: true },
+    { to: `${basePath}/siswa`, label: 'Data Siswa', icon: 'fas fa-users' },
+    { to: `${basePath}/guru`, label: 'Data Guru', icon: 'fas fa-chalkboard-teacher' },
+    { to: `${basePath}/jadwal`, label: 'Jadwal & Kelas', icon: 'fas fa-calendar-alt' },
+    { to: `${basePath}/pembayaran`, label: 'Reminder SPP', icon: 'fas fa-receipt' },
+    { to: `${basePath}/absensi-guru`, label: 'Riwayat Absensi', icon: 'fas fa-history' },
+    { to: `${basePath}/galeri`, label: 'Galeri Kegiatan', icon: 'fas fa-images' },
   ];
 
   const ownerExclusiveLinks = [
-    { to: '/owner/pertumbuhan', label: 'Pertumbuhan Murid', icon: '📈' },
-    { to: '/owner/keuangan', label: 'Laporan Keuangan', icon: '💸' },
-    { to: '/owner/rekap-bulanan', label: 'Rekap Google Sheets', icon: '📊' },
-    { to: '/owner/reset-data', label: 'Reset Semua Data', icon: '⚠️' },
+    { to: '/owner/pertumbuhan', label: 'Pertumbuhan Murid', icon: 'fas fa-chart-line' },
+    { to: '/owner/reset-data', label: 'Reset Semua Data', icon: 'fas fa-exclamation-triangle' },
   ];
 
   const headerTitle = role === 'owner' ? 'Hai Owner' : 'Admin Portal';
-  const roleBadge = role === 'owner' ? 'Owner Portal' : 'Admin Operations';
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row">
+    <div className="admin-portal-wrapper flex min-h-screen bg-[#f8fafc] text-slate-800">
       {/* Mobile Top Navbar */}
-      <div className="md:hidden bg-slate-900 border-b border-slate-800 p-4 flex justify-between items-center sticky top-0 z-40">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center font-bold text-slate-950">
-            🧮
-          </div>
-          <span className="font-extrabold text-sm text-white tracking-tight">{headerTitle}</span>
+      <div className="md:hidden bg-white border-b border-[#e2e8f0] p-4 flex justify-between items-center sticky top-0 z-40 w-full">
+        <div className="flex items-center gap-3">
+          <img src="/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa SIP" className="h-8 w-auto" />
+          <span className="font-extrabold text-sm text-[#f97316] tracking-tight">{headerTitle}</span>
         </div>
         <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="p-2 bg-slate-800 rounded-lg text-slate-300 hover:text-white"
+          className="p-2 bg-slate-100 rounded-lg text-slate-700 hover:bg-slate-200"
         >
           {isSidebarOpen ? '✕' : '☰'}
         </button>
@@ -58,25 +62,21 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed md:static inset-y-0 left-0 z-50 w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between transform transition-transform duration-200 ease-in-out ${
+        className={`fixed md:static inset-y-0 left-0 z-50 w-[240px] bg-white border-r border-[#e2e8f0] flex flex-col justify-between transform transition-transform duration-200 ease-in-out ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
-        <div className="p-4 space-y-6 overflow-y-auto max-h-[calc(100vh-80px)] md:max-h-none">
+        <div className="p-4">
           {/* Header Branding */}
-          <div className="flex items-center gap-3 pb-4 border-b border-slate-800">
-            <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center text-xl font-bold text-slate-950 shadow-md">
-              🧮
-            </div>
-            <div>
-              <h1 className="font-extrabold text-sm text-white tracking-tight leading-tight">{headerTitle}</h1>
-              <p className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">{roleBadge}</p>
-            </div>
+          <div className="flex items-center gap-3 mb-6 px-2 py-1">
+            <img src="/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa SIP" className="h-10 w-auto shrink-0" />
+            <h2 className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-[#f97316] to-[#ea580c] bg-clip-text text-transparent">
+              {headerTitle}
+            </h2>
           </div>
 
           {/* Nav Links */}
           <nav className="space-y-1">
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-2">Operasional</p>
             {operationalLinks.map((link) => (
               <NavLink
                 key={link.to}
@@ -84,23 +84,23 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
                 end={link.end}
                 onClick={() => setIsSidebarOpen(false)}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 ${
+                  `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
                     isActive
-                      ? 'bg-amber-500 text-slate-950 shadow-lg font-extrabold'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                      ? 'bg-[#fff7ed] text-[#f97316] font-bold border-l-4 border-[#f97316]'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                   }`
                 }
               >
-                <span className="text-base">{link.icon}</span>
+                <i className={`${link.icon} text-base w-5 text-center`} aria-hidden="true" />
                 <span>{link.label}</span>
               </NavLink>
             ))}
 
             {/* Owner Exclusive Section */}
             {role === 'owner' && (
-              <div className="pt-4 mt-4 border-t border-slate-800/80 space-y-1">
-                <p className="text-[10px] font-bold text-amber-500 uppercase tracking-wider px-3 mb-2 flex items-center gap-1">
-                  👑 Menu Eksklusif Owner
+              <div className="pt-3 mt-3 border-t border-[#e2e8f0] space-y-1">
+                <p className="text-[10px] font-bold text-[#f97316] uppercase tracking-wider px-3 mb-1">
+                  Eksklusif Owner
                 </p>
                 {ownerExclusiveLinks.map((link) => (
                   <NavLink
@@ -108,14 +108,14 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
                     to={link.to}
                     onClick={() => setIsSidebarOpen(false)}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 ${
+                      `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
                         isActive
-                          ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-lg font-extrabold'
-                          : 'text-amber-300/80 hover:text-amber-300 hover:bg-amber-500/10 border border-amber-500/10'
+                          ? 'bg-[#fff7ed] text-[#f97316] font-bold border-l-4 border-[#f97316]'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                       }`
                     }
                   >
-                    <span className="text-base">{link.icon}</span>
+                    <i className={`${link.icon} text-base w-5 text-center`} aria-hidden="true" />
                     <span>{link.label}</span>
                   </NavLink>
                 ))}
@@ -125,29 +125,19 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
         </div>
 
         {/* Footer User Info & Logout */}
-        <div className="p-4 border-t border-slate-800 bg-slate-900/50 space-y-3">
-          {user && (
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center text-xs font-bold text-amber-400 border border-amber-500/20">
-                {user.nama ? user.nama.substring(0, 2).toUpperCase() : 'US'}
-              </div>
-              <div className="truncate">
-                <p className="text-xs font-bold text-white truncate">{user.nama}</p>
-                <p className="text-[9px] font-bold text-slate-400 truncate">{user.email}</p>
-              </div>
-            </div>
-          )}
+        <div className="p-4 border-t border-[#e2e8f0]">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-bold rounded-xl border border-rose-500/20 transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-[#fff1f2] hover:bg-[#ffe4e6] text-[#e11d48] text-xs font-bold rounded-xl transition-all"
           >
-            🚪 Keluar Portal
+            <i className="fas fa-sign-out-alt" />
+            <span>Keluar</span>
           </button>
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 p-4 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
+      <main className="flex-1 p-6 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
         <Outlet />
       </main>
     </div>

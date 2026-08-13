@@ -6,8 +6,8 @@ import Modal from '../../components/Modal';
 
 interface Siswa {
   id: number;
-  uid: str;
-  nama: str;
+  uid: string;
+  nama: string;
   nama_panggilan?: string;
   kategori_program: string;
   hari_masuk: string;
