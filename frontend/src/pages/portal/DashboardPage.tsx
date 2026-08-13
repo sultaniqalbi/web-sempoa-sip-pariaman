@@ -40,6 +40,7 @@ export const DashboardPage: React.FC = () => {
     },
   });
 
+  const [isRekapModalOpen, setIsRekapModalOpen] = useState(false);
   const [selectedBulan, setSelectedBulan] = useState(new Date().toISOString().substring(0, 7));
   const [rekapResult, setRekapResult] = useState<any>(null);
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
