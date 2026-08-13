@@ -39,6 +39,33 @@ export const DashboardPage: React.FC = () => {
     },
   });
 
+  const [selectedBulan, setSelectedBulan] = useState(new Date().toISOString().substring(0, 7));
+  const [rekapResult, setRekapResult] = useState<any>(null);
+  const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
+  const showToast = (text: string, type: 'success' | 'error' = 'success') => {
+    setToastMessage({ text, type });
+    setTimeout(() => setToastMessage(null), 4000);
+  };
+
+  const rekapMutation = useMutation({
+    mutationFn: async (bulan: string) => {
+      const res = await apiClient.post('/owner/rekap-bulanan', { bulan });
+      return res.data;
+    },
+    onSuccess: (data) => {
+      setRekapResult(data);
+      if (data.status === 'success') {
+        showToast('✅ Rekap bulanan berhasil terkirim ke Google Sheets!');
+      } else {
+        showToast(`ℹ️ ${data.message}`, 'error');
+      }
+    },
+    onError: (err: any) => {
+      showToast(`❌ Gagal generate rekap: ${err.message}`, 'error');
+    }
+  });
+
   if (isLoading) {
     return (
       <div className="py-20 text-center bg-[#FAFAFA] min-h-[400px] flex flex-col items-center justify-center">
@@ -117,33 +144,6 @@ export const DashboardPage: React.FC = () => {
       },
     },
   ];
-
-  const [selectedBulan, setSelectedBulan] = useState(new Date().toISOString().substring(0, 7));
-  const [rekapResult, setRekapResult] = useState<any>(null);
-  const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
-
-  const showToast = (text: string, type: 'success' | 'error' = 'success') => {
-    setToastMessage({ text, type });
-    setTimeout(() => setToastMessage(null), 4000);
-  };
-
-  const rekapMutation = useMutation({
-    mutationFn: async (bulan: string) => {
-      const res = await apiClient.post('/owner/rekap-bulanan', { bulan });
-      return res.data;
-    },
-    onSuccess: (data) => {
-      setRekapResult(data);
-      if (data.status === 'success') {
-        showToast('✅ Rekap bulanan berhasil terkirim ke Google Sheets!');
-      } else {
-        showToast(`ℹ️ ${data.message}`, 'error');
-      }
-    },
-    onError: (err: any) => {
-      showToast(`❌ Gagal generate rekap: ${err.message}`, 'error');
-    }
-  });
 
   return (
     <AdminDashboard
