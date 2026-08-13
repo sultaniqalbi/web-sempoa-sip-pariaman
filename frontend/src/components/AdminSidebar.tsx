@@ -26,7 +26,6 @@ export const AdminSidebar: React.FC<SidebarProps> = ({ onClose, isCollapsed = fa
 
     { to: `${basePath}/jadwal`, label: 'Jadwal & Kelas', icon: 'fas fa-calendar-alt' },
     { to: `${basePath}/keuangan`, label: 'Keuangan', icon: 'fas fa-coins' },
-    { to: `${basePath}/rekap-bulanan`, label: 'Rekap Bulanan', icon: 'fas fa-file-invoice-dollar' },
     { to: `${basePath}/galeri`, label: 'Galeri Kegiatan', icon: 'fas fa-images' },
   ] : [
     { to: `${basePath}/dashboard`, label: 'Dashboard', icon: 'fas fa-chart-pie', end: true },

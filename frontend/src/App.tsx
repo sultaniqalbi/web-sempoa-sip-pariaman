@@ -27,7 +27,6 @@ import SharedGaleriPage from './pages/portal/GaleriPage';
 // Owner Exclusive Pages
 import PertumbuhanPage from './pages/owner-only/PertumbuhanPage';
 import KeuanganPage from './pages/owner-only/KeuanganPage';
-import RekapBulananPage from './pages/owner-only/RekapBulananPage';
 import ResetDataPage from './pages/owner-only/ResetDataPage';
 
 // Teacher Pages
@@ -105,7 +104,6 @@ export function App() {
                 {/* Owner Exclusive Routes */}
                 <Route path="pertumbuhan" element={<PertumbuhanPage />} />
                 <Route path="keuangan" element={<KeuanganPage />} />
-                <Route path="rekap-bulanan" element={<RekapBulananPage />} />
                 <Route path="reset-data" element={<ResetDataPage />} />
               </Route>
 

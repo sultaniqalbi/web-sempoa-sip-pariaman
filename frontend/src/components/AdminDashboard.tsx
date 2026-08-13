@@ -49,6 +49,7 @@ export interface AdminDashboardProps {
   activeMenu?: string;
   onSelectMenu?: (menuLabel: string) => void;
   standalone?: boolean;
+  children?: React.ReactNode;
 }
 
 // ==========================================
@@ -91,6 +92,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   activeMenu = 'Dashboard',
   onSelectMenu,
   standalone = true,
+  children,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -253,6 +255,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           ))}
         </div>
       </section>
+      
+      {children}
     </div>
   );
 

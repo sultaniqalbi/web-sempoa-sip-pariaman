@@ -39,7 +39,6 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
           { to: `${basePath}/jadwal`, label: 'Jadwal & Kelas', icon: <JadwalIcon size={20} /> },
           { to: `${basePath}/keuangan`, label: 'Keuangan', icon: <PembayaranIcon size={20} /> },
           { to: `/owner/pertumbuhan`, label: 'Pertumbuhan', icon: <DashboardIcon size={20} /> },
-          { to: `${basePath}/rekap-bulanan`, label: 'Rekap Bulanan', icon: <PresensiIcon size={20} /> },
           { to: `${basePath}/galeri`, label: 'Galeri Kegiatan', icon: <GaleriIcon size={20} /> },
           { to: '/owner/reset-data', label: 'Reset Semua Data', icon: <PembayaranIcon size={20} /> },
         ]
