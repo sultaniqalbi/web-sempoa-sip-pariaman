@@ -16,6 +16,7 @@ router = APIRouter()
 admin_or_owner = RoleChecker([UserRole.admin, UserRole.owner])
 
 @router.get("/dashboard")
+@router.get("/stats")
 async def get_portal_dashboard_stats(
     db: Session = Depends(get_db),
     current_user: User = Depends(admin_or_owner)

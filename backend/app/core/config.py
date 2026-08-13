@@ -20,7 +20,14 @@ class Settings(BaseSettings):
     esp32_api_key: str = "SempoaPariaman_ESP32_SecureKey_2026!"
     
     # CORS
-    allowed_origins: List[str] = ["http://localhost:5173"]
+    allowed_origins: List[str] = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5174",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
     
     # Logging
     log_level: str = "INFO"

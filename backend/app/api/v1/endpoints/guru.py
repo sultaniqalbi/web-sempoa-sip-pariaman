@@ -77,6 +77,9 @@ async def create_new_guru(
             hari_wajib=guru_in.hari_wajib,
             target_kehadiran=guru_in.target_kehadiran or 12,
             whatsapp_guru=normalized_wa,
+            alamat=guru_in.alamat,
+            riwayat_pendidikan=guru_in.riwayat_pendidikan,
+            paket_pengajaran=guru_in.paket_pengajaran,
             bio=guru_in.bio,
             foto_profil=guru_in.foto_profil
         )
@@ -185,15 +188,18 @@ async def push_whatsapp_guru(
     user_guru = db.query(User).filter(User.role == UserRole.guru, User.uid_terhubung == str(id)).first()
     guru_email = user_guru.email if user_guru else f"guru_{guru.id}@sempoasippariaman.com"
 
+    new_sandi = generate_random_password(10)
+    if user_guru:
+        user_guru.password = get_password_hash(new_sandi)
+        db.commit()
+
     message_template = f"""Halo {guru.nama},
 
-Anda telah terdaftar sebagai Pengajar di Sempoa SIP TC Pariaman.
+Anda telah terdaftar sebagai pengajar di Sempoa SIP TC Pariaman.
 
-📧 Email: {guru.email if hasattr(guru, 'email') else guru_email}
-📇 UID RFID: {guru.uid}
-🔐 Portal Link: https://sempoasippariaman.com/login
-
-Silakan login ke portal untuk melihat jadwal kelas dan presensi mengajar.
+📧 Email: {guru_email}
+🔐 Sandi: {new_sandi}
+🌐 Portal: https://sempoasippariaman.com/login
 
 ---
 Tim Sempoa SIP TC Pariaman"""
@@ -233,44 +239,13 @@ async def export_guru_sheets(
     db: Session = Depends(get_db),
     current_user: User = Depends(admin_or_owner)
 ):
+    from app.services.google_sheets import send_to_google_sheet
+
     guru_list = db.query(Guru).all()
     rows = [["ID", "UID (RFID)", "Nama Guru", "Kategori Program", "Hari Wajib Mengajar", "No WhatsApp", "Target Kehadiran"]]
     for g in guru_list:
-        rows.append([g.id, g.uid, g.nama, g.kategori_program, g.hari_wajib, g.whatsapp_guru or "-", g.target_kehadiran])
+        rows.append([g.id, g.uid or "-", g.nama, g.kategori_program or "-", g.hari_wajib or "-", g.whatsapp_guru or "-", g.target_kehadiran])
 
-    service_account_json = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
-    sheet_id = os.getenv("GOOGLE_SHEET_ID")
     tab_name = f"Guru_{datetime.utcnow().strftime('%Y%m%d')}"
+    return send_to_google_sheet(tab_name=tab_name, rows=rows, title="Data Guru")
 
-    if not service_account_json or not sheet_id or not os.path.exists(service_account_json):
-        return {
-            "status": "pending",
-            "message": "Google Sheets belum dikonfigurasi. Hubungi developer.",
-            "worksheet_name": tab_name,
-            "rows_written": len(rows) - 1,
-            "preview": rows[:5]
-        }
-
-    try:
-        import gspread
-        gc = gspread.service_account(filename=service_account_json)
-        sh = gc.open_by_key(sheet_id)
-        try:
-            ws = sh.worksheet(tab_name)
-            ws.clear()
-        except Exception:
-            ws = sh.add_worksheet(title=tab_name, rows=len(rows)+10, cols=10)
-        ws.update("A1", rows)
-        return {
-            "status": "success",
-            "sheet_url": f"https://docs.google.com/spreadsheets/d/{sheet_id}/edit#gid={ws.id}",
-            "worksheet_name": tab_name,
-            "rows_written": len(rows) - 1,
-            "sent_at": datetime.utcnow().isoformat()
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Gagal export ke Google Sheets: {str(e)}",
-            "rows_written": len(rows) - 1
-        }

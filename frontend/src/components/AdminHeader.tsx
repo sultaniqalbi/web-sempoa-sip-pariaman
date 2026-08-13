@@ -11,12 +11,12 @@ export const AdminHeader: React.FC<HeaderProps> = ({ onToggleSidebar, onToggleCo
   const { user } = useAuth();
 
   return (
-    <header className="h-16 bg-white border-b border-[#CCCCCC] flex items-center justify-between px-6 shadow-sm relative z-30">
+    <header className="h-16 bg-white border-b border-[#E2E8F0] flex items-center justify-between px-6 shadow-sm relative z-30">
       <div className="flex items-center gap-4">
         {onToggleSidebar && (
           <button
             onClick={onToggleSidebar}
-            className="md:hidden text-[#333333] hover:text-[#E67E22] font-bold text-lg p-1.5 focus:ring-2 focus:ring-[#E67E22] focus:outline-none rounded"
+            className="md:hidden text-[#1E293B] hover:text-[#FF7043] font-bold text-lg p-1.5 focus:ring-2 focus:ring-[#FF7043] focus:outline-none rounded"
             aria-label="Buka menu navigasi"
           >
             ☰
@@ -25,23 +25,23 @@ export const AdminHeader: React.FC<HeaderProps> = ({ onToggleSidebar, onToggleCo
         {onToggleCollapse && (
           <button
             onClick={onToggleCollapse}
-            className="hidden md:block text-[#333333] hover:text-[#E67E22] font-bold text-lg p-1.5 focus:ring-2 focus:ring-[#E67E22] focus:outline-none rounded"
+            className="hidden md:block text-[#1E293B] hover:text-[#FF7043] font-bold text-lg p-1.5 focus:ring-2 focus:ring-[#FF7043] focus:outline-none rounded"
             aria-label={isCollapsed ? "Buka panel samping" : "Kecilkan panel samping"}
           >
             {isCollapsed ? '➡️' : '⬅️'}
           </button>
         )}
-        <h2 className="text-[#333333] font-extrabold text-sm tracking-tight font-heading">
-          Admin Portal <span className="font-medium text-xs text-slate-500">| TC Pariaman</span>
+        <h2 className="text-[#1E293B] font-extrabold text-sm tracking-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+          Admin Portal <span className="font-medium text-xs text-[#94A3B8]">| TC Pariaman</span>
         </h2>
       </div>
       <div className="flex items-center gap-4">
         {user && (
           <div className="flex items-center gap-2.5">
-            <span className="hidden sm:inline-block text-xs bg-[#F5F5F5] text-slate-600 font-bold px-3 py-1.5 rounded-full border border-[#CCCCCC]">
-              User: <span className="text-[#333333] font-bold">{user.email}</span>
+            <span className="hidden sm:inline-block text-xs bg-[#F1F5F9] text-[#475569] font-bold px-3 py-1.5 rounded-full border border-[#E2E8F0]">
+              User: <span className="text-[#1E293B] font-bold">{user.email}</span>
             </span>
-            <div className="w-8 h-8 rounded-full bg-[#E67E22]/10 border border-[#E67E22]/20 text-[#E67E22] flex items-center justify-center font-bold text-xs">
+            <div className="w-8 h-8 rounded-full bg-[#FFF3E0] border border-[#FFCC80] text-[#FF7043] flex items-center justify-center font-bold text-xs">
               🧑‍💻
             </div>
           </div>

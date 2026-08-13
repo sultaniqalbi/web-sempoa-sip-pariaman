@@ -196,49 +196,10 @@ async def generate_rekap_bulanan(
     for prog, count in program_stats:
         rows.append([prog, count])
 
-    if not service_account_json or not sheet_id or not os.path.exists(service_account_json):
-        return {
-            "status": "pending",
-            "message": "Google Sheets belum dikonfigurasi (.env GOOGLE_SERVICE_ACCOUNT_JSON atau GOOGLE_SHEET_ID belum valid).",
-            "rekap_summary": {
-                "bulan": bulan,
-                "total_siswa_aktif": siswa_aktif,
-                "total_pendapatan": float(revenue),
-                "rows_generated": len(rows)
-            }
-        }
+    from app.services.google_sheets import send_to_google_sheet
+    tab_name = f"Rekap-{bulan}"
+    return send_to_google_sheet(tab_name=tab_name, rows=rows, title=f"Rekap Bulanan {bulan}")
 
-    try:
-        import gspread
-        gc = gspread.service_account(filename=service_account_json)
-        sh = gc.open_by_key(sheet_id)
-        tab_name = f"Rekap-{bulan}"
-
-        try:
-            ws = sh.worksheet(tab_name)
-            ws.clear()
-        except Exception:
-            ws = sh.add_worksheet(title=tab_name, rows=50, cols=10)
-
-        ws.update("A1", rows)
-        sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/edit#gid={ws.id}"
-
-        return {
-            "status": "success",
-            "sheet_url": sheet_url,
-            "worksheet_name": tab_name,
-            "generated_at": datetime.utcnow().isoformat()
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Gagal update Google Sheet: {str(e)}",
-            "rekap_summary": {
-                "bulan": bulan,
-                "total_siswa_aktif": siswa_aktif,
-                "total_pendapatan": float(revenue)
-            }
-        }
 
 @router.post("/reset-data")
 async def reset_semua_data(

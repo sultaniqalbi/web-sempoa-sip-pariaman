@@ -17,6 +17,7 @@ api_router.include_router(quota.router, prefix="/quota", tags=["quota"])
 api_router.include_router(owner.router, prefix="/owner", tags=["owner"])
 api_router.include_router(galeri.router, prefix="/galeri", tags=["galeri"])
 api_router.include_router(portal.router, prefix="/portal", tags=["portal"])
+api_router.include_router(portal.router, prefix="/admin", tags=["admin"])
 
 @api_router.get("/test-protected")
 async def test_protected(current_user: User = Depends(get_current_user)):

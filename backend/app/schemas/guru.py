@@ -9,6 +9,9 @@ class GuruBase(BaseModel):
     hari_wajib: str
     target_kehadiran: int = 12
     whatsapp_guru: Optional[str] = None
+    alamat: Optional[str] = None
+    riwayat_pendidikan: Optional[str] = None
+    paket_pengajaran: Optional[str] = None
     bio: Optional[str] = None
     foto_profil: Optional[str] = None
 
@@ -22,6 +25,9 @@ class GuruUpdate(BaseModel):
     hari_wajib: Optional[str] = None
     target_kehadiran: Optional[int] = None
     whatsapp_guru: Optional[str] = None
+    alamat: Optional[str] = None
+    riwayat_pendidikan: Optional[str] = None
+    paket_pengajaran: Optional[str] = None
     bio: Optional[str] = None
     foto_profil: Optional[str] = None
 

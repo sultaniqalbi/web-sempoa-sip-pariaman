@@ -62,6 +62,8 @@ async def export_jadwal_sheets(
     db: Session = Depends(get_db),
     current_user: User = Depends(admin_or_owner)
 ):
+    from app.services.google_sheets import send_to_google_sheet
+
     items = db.query(Jadwal).all()
     rows = [["ID Jadwal", "Hari", "Jam Mulai", "Jam Selesai", "ID Guru", "Nama Guru", "ID Siswa", "Nama Siswa", "Lokasi"]]
     for j in items:
@@ -71,42 +73,9 @@ async def export_jadwal_sheets(
             j.id, j.hari, j.jam_mulai, j.jam_selesai,
             j.id_guru or "-", guru.nama if guru else "-",
             j.id_siswa or "-", siswa.nama if siswa else "-",
-            j.lokasi
+            j.lokasi or "-"
         ])
 
-    service_account_json = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
-    sheet_id = os.getenv("GOOGLE_SHEET_ID")
     tab_name = f"Jadwal_{datetime.utcnow().strftime('%Y%m%d')}"
+    return send_to_google_sheet(tab_name=tab_name, rows=rows, title="Jadwal Kelas Sempoa")
 
-    if not service_account_json or not sheet_id or not os.path.exists(service_account_json):
-        return {
-            "status": "pending",
-            "message": "Google Sheets belum dikonfigurasi. Hubungi developer.",
-            "worksheet_name": tab_name,
-            "rows_written": len(rows) - 1,
-            "preview": rows[:5]
-        }
-
-    try:
-        import gspread
-        gc = gspread.service_account(filename=service_account_json)
-        sh = gc.open_by_key(sheet_id)
-        try:
-            ws = sh.worksheet(tab_name)
-            ws.clear()
-        except Exception:
-            ws = sh.add_worksheet(title=tab_name, rows=len(rows)+10, cols=10)
-        ws.update("A1", rows)
-        return {
-            "status": "success",
-            "sheet_url": f"https://docs.google.com/spreadsheets/d/{sheet_id}/edit#gid={ws.id}",
-            "worksheet_name": tab_name,
-            "rows_written": len(rows) - 1,
-            "sent_at": datetime.utcnow().isoformat()
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Gagal export ke Google Sheets: {str(e)}",
-            "rows_written": len(rows) - 1
-        }

@@ -3,6 +3,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
 import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
+import PageHeader from '../../components/PageHeader';
+import EmptyState from '../../components/EmptyState';
+import DayPicker from '../../components/DayPicker';
+import { DataSiswaIcon, TrashIcon } from '../../components/SvgIcons';
 
 interface Siswa {
   id: number;
@@ -10,17 +14,21 @@ interface Siswa {
   nama: string;
   nama_panggilan?: string;
   kategori_program: string;
+  paket_jadwal?: string;
   hari_masuk: string;
   sisa_pertemuan: number;
   status_spp: string;
   nama_orang_tua?: string;
   whatsapp_orang_tua?: string;
+  alamat?: string;
   created_at: string;
 }
 
 export const SiswaPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingSiswa, setEditingSiswa] = useState<Siswa | null>(null);
+  
   const [isCredentialModalOpen, setIsCredentialModalOpen] = useState(false);
   const [isWAFallbackModalOpen, setIsWAFallbackModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -29,6 +37,7 @@ export const SiswaPage: React.FC = () => {
   const [waFallbackData, setWAFallbackData] = useState<{ message: string; number: string } | null>(null);
   const [exportResult, setExportResult] = useState<any>(null);
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -36,14 +45,26 @@ export const SiswaPage: React.FC = () => {
     nama: '',
     nama_panggilan: '',
     kategori_program: 'Sempoa SIP',
+    paket_jadwal: 'Paket 1: 8 Pertemuan, 90 Menit',
     hari_masuk: 'Senin, Rabu',
     nama_orang_tua: '',
-    whatsapp_orang_tua: ''
+    whatsapp_orang_tua: '',
+    alamat: ''
   });
 
   const showToast = (text: string, type: 'success' | 'error' = 'success') => {
     setToastMessage({ text, type });
     setTimeout(() => setToastMessage(null), 4000);
+  };
+
+  const validatePhone = (num: string): boolean => {
+    const clean = num.replace(/[^0-9]/g, '');
+    if (!clean || clean.length < 10 || clean.length > 13) {
+      setPhoneError('Nomor HP harus berupa angka (10-13 digit)');
+      return false;
+    }
+    setPhoneError(null);
+    return true;
   };
 
   // Fetch Siswa List
@@ -78,6 +99,24 @@ export const SiswaPage: React.FC = () => {
     }
   });
 
+  // Update Mutation
+  const updateMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      if (!editingSiswa) return;
+      const res = await apiClient.put(`/siswa/${editingSiswa.id}`, data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['siswa'] });
+      setIsAddModalOpen(false);
+      setEditingSiswa(null);
+      showToast('✅ Data siswa berhasil diperbarui!');
+    },
+    onError: (err: any) => {
+      showToast(`❌ Gagal memperbarui siswa: ${err.response?.data?.detail || err.message}`, 'error');
+    }
+  });
+
   // Reset Password Mutation
   const resetPasswordMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -107,7 +146,7 @@ export const SiswaPage: React.FC = () => {
     onSuccess: (data) => {
       if (data.status === 'success') {
         showToast(`✅ Pesan WhatsApp terkirim ke +${data.whatsapp_number}`);
-      } else if (data.status === 'pending') {
+      } else if (data.status === 'pending' || data.fallback_message) {
         setWAFallbackData({
           message: data.fallback_message,
           number: data.whatsapp_number
@@ -156,17 +195,63 @@ export const SiswaPage: React.FC = () => {
     }
   });
 
+  const openCreateModal = () => {
+    setEditingSiswa(null);
+    setFormData({
+      uid: `SW-${Math.floor(1000 + Math.random() * 9000)}`,
+      nama: '',
+      nama_panggilan: '',
+      kategori_program: 'Sempoa SIP',
+      paket_jadwal: 'Paket 1: 8 Pertemuan, 90 Menit',
+      hari_masuk: 'Senin, Rabu',
+      nama_orang_tua: '',
+      whatsapp_orang_tua: '',
+      alamat: ''
+    });
+    setPhoneError(null);
+    setIsAddModalOpen(true);
+  };
+
+  const openEditModal = (siswa: Siswa) => {
+    setEditingSiswa(siswa);
+    setFormData({
+      uid: siswa.uid,
+      nama: siswa.nama,
+      nama_panggilan: siswa.nama_panggilan || '',
+      kategori_program: siswa.kategori_program || 'Sempoa SIP',
+      paket_jadwal: siswa.paket_jadwal || 'Paket 1: 8 Pertemuan, 90 Menit',
+      hari_masuk: siswa.hari_masuk || 'Senin, Rabu',
+      nama_orang_tua: siswa.nama_orang_tua || '',
+      whatsapp_orang_tua: siswa.whatsapp_orang_tua || '',
+      alamat: siswa.alamat || ''
+    });
+    setPhoneError(null);
+    setIsAddModalOpen(true);
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validatePhone(formData.whatsapp_orang_tua)) {
+      return;
+    }
+    if (editingSiswa) {
+      updateMutation.mutate(formData);
+    } else {
+      createMutation.mutate(formData);
+    }
+  };
+
   const columns = [
     {
-      header: 'UID Kartu',
-      accessor: (row: Siswa) => <span className="font-mono text-amber-400 font-bold">{row.uid}</span>
+      header: 'Kode Siswa',
+      accessor: (row: Siswa) => <span className="font-mono text-[#FF7043] font-bold">{row.uid}</span>
     },
     {
       header: 'Nama Siswa',
       accessor: (row: Siswa) => (
         <div>
-          <p className="font-bold text-white">{row.nama}</p>
-          <p className="text-[10px] text-slate-400">Ortu: {row.nama_orang_tua || '-'}</p>
+          <p className="font-bold text-[#1E293B]">{row.nama}</p>
+          <p className="text-[10px] text-[#94A3B8]">Ortu: {row.nama_orang_tua || '-'}</p>
         </div>
       )
     },
@@ -174,10 +259,13 @@ export const SiswaPage: React.FC = () => {
       header: 'Program & Hari',
       accessor: (row: Siswa) => (
         <div>
-          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FFF3E0] text-[#FF7043] border border-[#FFCC80]">
             {row.kategori_program}
           </span>
-          <p className="text-[10px] text-slate-400 mt-1">{row.hari_masuk}</p>
+          {row.paket_jadwal && row.kategori_program === 'Sempoa SIP' && (
+            <p className="text-[9px] font-semibold text-[#64748B] mt-0.5">{row.paket_jadwal}</p>
+          )}
+          <p className="text-[10px] text-[#94A3B8] mt-1">{row.hari_masuk}</p>
         </div>
       )
     },
@@ -185,7 +273,7 @@ export const SiswaPage: React.FC = () => {
       header: 'Sisa Pertemuan',
       accessor: (row: Siswa) => (
         <span className={`px-2.5 py-1 rounded-full text-xs font-extrabold ${
-          row.sisa_pertemuan <= 2 ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+          row.sisa_pertemuan <= 2 ? 'bg-[#FFF1F2] text-[#e11d48] border border-[#FECDD3]' : 'bg-[#E8F5E9] text-[#388E3C] border border-[#A5D6A7]'
         }`}>
           {row.sisa_pertemuan} / 8
         </span>
@@ -195,7 +283,7 @@ export const SiswaPage: React.FC = () => {
       header: 'Status SPP',
       accessor: (row: Siswa) => (
         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-          row.status_spp === 'AKTIF' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'
+          row.status_spp === 'AKTIF' ? 'bg-[#E8F5E9] text-[#388E3C]' : 'bg-[#FFF1F2] text-[#e11d48]'
         }`}>
           {row.status_spp}
         </span>
@@ -204,11 +292,18 @@ export const SiswaPage: React.FC = () => {
     {
       header: 'Aksi & Provisioning',
       accessor: (row: Siswa) => (
-        <div className="flex gap-2">
+        <div className="flex gap-1.5 flex-wrap">
+          <button
+            onClick={() => openEditModal(row)}
+            className="px-2 py-1 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#475569] text-xs font-bold rounded-lg border border-[#CBD5E1]"
+            title="Edit Data Siswa"
+          >
+            ✏️ Edit
+          </button>
           <button
             onClick={() => pushWAMutation.mutate(row.id)}
             disabled={pushWAMutation.isPending}
-            className="px-2.5 py-1 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 text-xs font-bold rounded-lg border border-sky-500/20"
+            className="px-2 py-1 bg-[#E3F2FD] hover:bg-[#BBDEFB] text-[#1976D2] text-xs font-bold rounded-lg border border-[#90CAF9]"
             title="Kirim Pesan WhatsApp Login Ortu"
           >
             📲 WA Push
@@ -216,10 +311,10 @@ export const SiswaPage: React.FC = () => {
           <button
             onClick={() => resetPasswordMutation.mutate(row.id)}
             disabled={resetPasswordMutation.isPending}
-            className="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-xs font-bold rounded-lg border border-amber-500/20"
+            className="px-2 py-1 bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#E65100] text-xs font-bold rounded-lg border border-[#FFCC80]"
             title="Reset Password Akun Ortu"
           >
-            🔐 Reset Pass
+            🔐 Reset
           </button>
           <button
             onClick={() => {
@@ -227,9 +322,10 @@ export const SiswaPage: React.FC = () => {
                 deleteMutation.mutate(row.id);
               }
             }}
-            className="px-2 py-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-bold rounded-lg"
+            className="px-2 py-1 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] text-xs font-bold rounded-lg border border-[#FECDD3]"
+            title="Hapus Siswa"
           >
-            🗑️
+            <TrashIcon size={14} />
           </button>
         </div>
       )
@@ -240,50 +336,36 @@ export const SiswaPage: React.FC = () => {
     <div className="space-y-6">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className={`p-4 rounded-xl text-sm font-bold shadow-xl border ${
-          toastMessage.type === 'success' ? 'bg-emerald-950 text-emerald-300 border-emerald-500/30' : 'bg-rose-950 text-rose-300 border-rose-500/30'
+        <div className={`p-4 rounded-xl text-sm font-bold shadow-sm border ${
+          toastMessage.type === 'success' ? 'bg-[#E8F5E9] text-[#388E3C] border-[#A5D6A7]' : 'bg-[#FFF1F2] text-[#e11d48] border-[#FECDD3]'
         }`}>
           {toastMessage.text}
         </div>
       )}
 
-      {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">Data Siswa</h1>
-          <p className="text-xs text-slate-400 mt-1">Manajemen siswa, kuota pertemuan, dan auto-provisioning akun orang tua</p>
-        </div>
-        <div className="flex gap-3">
-          <button
-            onClick={() => exportSheetsMutation.mutate()}
-            disabled={exportSheetsMutation.isPending}
-            className="px-4 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-xl text-xs font-bold transition-colors"
-          >
-            {exportSheetsMutation.isPending ? '🔄 Mengirim...' : '📊 Kirim ke Google Sheets'}
-          </button>
-          <button
-            onClick={() => {
-              setFormData({
-                uid: `SW-${Math.floor(1000 + Math.random() * 9000)}`,
-                nama: '',
-                nama_panggilan: '',
-                kategori_program: 'Sempoa SIP',
-                hari_masuk: 'Senin, Rabu',
-                nama_orang_tua: '',
-                whatsapp_orang_tua: ''
-              });
-              setIsAddModalOpen(true);
-            }}
-            className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-extrabold shadow-lg"
-          >
-            ➕ Tambah Siswa Baru
-          </button>
-        </div>
-      </div>
+      {/* Standardized Page Header */}
+      <PageHeader
+        icon={<DataSiswaIcon size={24} className="text-[#1976D2]" />}
+        title="Data Siswa"
+        subtitle="Manajemen siswa, kuota pertemuan, dan auto-provisioning akun ortu"
+        iconColorBg="bg-[#E3F2FD] text-[#1976D2]"
+        onExportSheets={() => exportSheetsMutation.mutate()}
+        isExporting={exportSheetsMutation.isPending}
+        actionLabel="Tambah Siswa Baru"
+        onAction={openCreateModal}
+      />
 
-      {/* Data Table */}
+      {/* Data Table / Empty State */}
       {isLoading ? (
-        <div className="py-16 text-center text-slate-400 text-xs">Memuat daftar siswa...</div>
+        <div className="py-16 text-center text-[#757575] text-xs">Memuat daftar siswa...</div>
+      ) : siswaList.length === 0 ? (
+        <EmptyState
+          icon={<DataSiswaIcon size={40} className="text-[#757575]" />}
+          title="Belum ada data siswa"
+          description="Daftarkan siswa baru untuk mengaktifkan sisa pertemuan dan akun orang tua."
+          actionLabel="Tambah Siswa Baru"
+          onAction={openCreateModal}
+        />
       ) : (
         <DataTable
           columns={columns}
@@ -298,121 +380,182 @@ export const SiswaPage: React.FC = () => {
         />
       )}
 
-      {/* Modal Form Tambah Siswa */}
-      <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="➕ Tambah Siswa Baru">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            createMutation.mutate(formData);
-          }}
-          className="space-y-4 text-xs"
-        >
-          <div>
-            <label className="block text-slate-300 font-bold mb-1">UID Kartu / Kode Siswa*</label>
-            <input
-              type="text"
-              required
-              value={formData.uid}
-              onChange={(e) => setFormData({ ...formData, uid: e.target.value })}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white font-mono"
-            />
-          </div>
-
+      {/* Modal Form Tambah / Edit Siswa */}
+      <Modal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        title={editingSiswa ? '✏️ Edit Data Siswa' : '➕ Tambah Siswa Baru'}
+      >
+        <form onSubmit={handleFormSubmit} className="space-y-4 text-xs">
+          {/* 1 & 2. Nama Lengkap & Nama Panggilan */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-slate-300 font-bold mb-1">Nama Lengkap Siswa*</label>
+              <label className="block text-[#1E293B] font-bold mb-1">Nama Lengkap Siswa*</label>
               <input
                 type="text"
                 required
                 value={formData.nama}
                 onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white"
+                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
                 placeholder="Budi Santoso"
               />
             </div>
             <div>
-              <label className="block text-slate-300 font-bold mb-1">Nama Panggilan* (untuk email ortu)</label>
+              <label className="block text-[#1E293B] font-bold mb-1">Nama Panggilan* (untuk email ortu)</label>
               <input
                 type="text"
                 required
                 value={formData.nama_panggilan}
                 onChange={(e) => setFormData({ ...formData, nama_panggilan: e.target.value })}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white"
+                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
                 placeholder="budi"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-slate-300 font-bold mb-1">Kategori Program*</label>
-              <select
-                value={formData.kategori_program}
-                onChange={(e) => setFormData({ ...formData, kategori_program: e.target.value })}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white"
-              >
-                <option value="Sempoa SIP">Sempoa SIP</option>
-                <option value="Fonem">Fonem</option>
-                <option value="Tahfidz">Tahfidz</option>
-                <option value="Bahasa Inggris">Bahasa Inggris</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-slate-300 font-bold mb-1">Hari Masuk Kelas*</label>
-              <input
-                type="text"
-                required
-                value={formData.hari_masuk}
-                onChange={(e) => setFormData({ ...formData, hari_masuk: e.target.value })}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white"
-                placeholder="Senin, Rabu"
-              />
-            </div>
+          {/* 3. Kategori Program* (Fixed/Dropdown defaulting to Sempoa SIP) */}
+          <div>
+            <label className="block text-[#1E293B] font-bold mb-1">Kategori Program*</label>
+            <select
+              value={formData.kategori_program}
+              onChange={(e) => setFormData({ ...formData, kategori_program: e.target.value })}
+              className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none font-medium"
+            >
+              <option value="Sempoa SIP">Sempoa SIP</option>
+              <option value="Fonem">Fonem</option>
+              <option value="Tahfidz">Tahfidz</option>
+              <option value="Bahasa Inggris">Bahasa Inggris</option>
+            </select>
           </div>
 
-          <div className="border-t border-slate-800 pt-3 grid grid-cols-2 gap-3">
+          {/* 4. Paket Jadwal Sempoa SIP* (Show conditionally when Sempoa SIP selected) */}
+          {formData.kategori_program === 'Sempoa SIP' && (
+            <div className="p-3 bg-[#FFF3E0] border border-[#FFCC80] rounded-xl space-y-2">
+              <label className="block text-[#E65100] font-bold text-xs">
+                Paket Jadwal Sempoa SIP*
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <label className={`flex items-center gap-2.5 p-2.5 rounded-lg border cursor-pointer transition-all ${
+                  formData.paket_jadwal === 'Paket 1: 8 Pertemuan, 90 Menit'
+                    ? 'bg-white border-[#FF7043] shadow-xs'
+                    : 'bg-[#FAFAFA] border-[#E0E0E0]'
+                }`}>
+                  <input
+                    type="radio"
+                    name="paket_jadwal"
+                    value="Paket 1: 8 Pertemuan, 90 Menit"
+                    checked={formData.paket_jadwal === 'Paket 1: 8 Pertemuan, 90 Menit'}
+                    onChange={(e) => setFormData({ ...formData, paket_jadwal: e.target.value })}
+                    className="accent-[#FF7043]"
+                  />
+                  <div>
+                    <p className="font-bold text-[#1E293B] text-xs">Paket 1</p>
+                    <p className="text-[10px] text-[#64748B]">8 Pertemuan, 90 Menit</p>
+                  </div>
+                </label>
+
+                <label className={`flex items-center gap-2.5 p-2.5 rounded-lg border cursor-pointer transition-all ${
+                  formData.paket_jadwal === 'Paket 2: 12 Pertemuan, 60 Menit'
+                    ? 'bg-white border-[#FF7043] shadow-xs'
+                    : 'bg-[#FAFAFA] border-[#E0E0E0]'
+                }`}>
+                  <input
+                    type="radio"
+                    name="paket_jadwal"
+                    value="Paket 2: 12 Pertemuan, 60 Menit"
+                    checked={formData.paket_jadwal === 'Paket 2: 12 Pertemuan, 60 Menit'}
+                    onChange={(e) => setFormData({ ...formData, paket_jadwal: e.target.value })}
+                    className="accent-[#FF7043]"
+                  />
+                  <div>
+                    <p className="font-bold text-[#1E293B] text-xs">Paket 2</p>
+                    <p className="text-[10px] text-[#64748B]">12 Pertemuan, 60 Menit</p>
+                  </div>
+                </label>
+              </div>
+            </div>
+          )}
+
+          {/* 5. Hari Masuk Kelas* [DayPicker multi-select] */}
+          <DayPicker
+            label="Hari Masuk Kelas*"
+            selectedDays={formData.hari_masuk}
+            onChange={(val) => setFormData({ ...formData, hari_masuk: val })}
+            multiSelect={true}
+            required={true}
+          />
+
+          {/* 6 & 7. Nama Orang Tua & No. WhatsApp */}
+          <div className="border-t border-[#E2E8F0] pt-3 grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-slate-300 font-bold mb-1">Nama Orang Tua*</label>
+              <label className="block text-[#1E293B] font-bold mb-1">Nama Orang Tua*</label>
               <input
                 type="text"
                 required
                 value={formData.nama_orang_tua}
                 onChange={(e) => setFormData({ ...formData, nama_orang_tua: e.target.value })}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white"
+                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
                 placeholder="Ayah / Ibu Budi"
               />
             </div>
             <div>
-              <label className="block text-slate-300 font-bold mb-1">No. WhatsApp Orang Tua*</label>
+              <label className="block text-[#1E293B] font-bold mb-1">No. WhatsApp Orang Tua*</label>
               <input
-                type="text"
+                type="tel"
+                pattern="[0-9]*"
                 required
                 value={formData.whatsapp_orang_tua}
-                onChange={(e) => setFormData({ ...formData, whatsapp_orang_tua: e.target.value })}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white"
+                onChange={(e) => {
+                  const cleaned = e.target.value.replace(/[^0-9]/g, '');
+                  setFormData({ ...formData, whatsapp_orang_tua: cleaned });
+                  if (cleaned) validatePhone(cleaned);
+                }}
+                className={`w-full bg-[#F1F5F9] border rounded-lg p-2.5 text-[#1E293B] focus:outline-none ${
+                  phoneError ? 'border-[#D32F2F] focus:border-[#D32F2F]' : 'border-[#E2E8F0] focus:border-[#FF7043]'
+                }`}
                 placeholder="081234567890"
               />
+              {phoneError && <p className="text-[10px] text-[#D32F2F] font-semibold mt-1">{phoneError}</p>}
             </div>
           </div>
 
-          <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-[11px] text-amber-300">
-            ℹ️ Sistem akan <strong>otomatis membuat akun login Ortu</strong> dengan email <code className="font-mono">{formData.nama_panggilan.toLowerCase().replace(/\s+/g, '') || 'nama'}@sempoasippariaman.com</code> dan password acak 10 karakter.
+          {/* 8. Alamat* (NEW textarea field) */}
+          <div>
+            <label className="block text-[#1E293B] font-bold mb-1">Alamat Tempat Tinggal Siswa*</label>
+            <textarea
+              rows={2}
+              required
+              value={formData.alamat}
+              onChange={(e) => setFormData({ ...formData, alamat: e.target.value })}
+              className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
+              placeholder="Jl. Sudirman No. 12, Pariaman"
+            />
           </div>
+
+          {!editingSiswa && (
+            <div className="p-3 bg-[#FFF3E0] border border-[#FFCC80] rounded-xl text-[11px] text-[#E65100]">
+              ℹ️ Sistem akan <strong>otomatis membuat akun login Ortu</strong> dengan email <code className="font-mono">{formData.nama_panggilan.toLowerCase().replace(/\s+/g, '') || 'nama'}@sempoasippariaman.com</code> dan password acak 10 karakter.
+            </div>
+          )}
 
           <div className="flex justify-end gap-3 pt-3">
             <button
               type="button"
               onClick={() => setIsAddModalOpen(false)}
-              className="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg font-bold hover:bg-slate-700"
+              className="px-4 py-2 bg-[#F1F5F9] text-[#475569] rounded-lg font-bold hover:bg-[#E2E8F0] border border-[#E2E8F0]"
             >
               Batal
             </button>
             <button
               type="submit"
-              disabled={createMutation.isPending}
-              className="px-4 py-2 bg-amber-500 text-slate-950 font-bold rounded-lg hover:bg-amber-400"
+              disabled={createMutation.isPending || updateMutation.isPending}
+              className="px-4 py-2 bg-[#FF7043] text-white font-bold rounded-lg hover:bg-[#F4511E] disabled:opacity-50"
             >
-              {createMutation.isPending ? 'Simpan...' : 'Simpan & buat Akun'}
+              {createMutation.isPending || updateMutation.isPending
+                ? 'Simpan...'
+                : editingSiswa
+                ? 'Perbarui Data Siswa'
+                : 'Simpan & buat Akun'}
             </button>
           </div>
         </form>
@@ -422,28 +565,32 @@ export const SiswaPage: React.FC = () => {
       <Modal isOpen={isCredentialModalOpen} onClose={() => setIsCredentialModalOpen(false)} title="🔑 Kredensial Akun Dibuat">
         {createdCredential && (
           <div className="space-y-4 text-xs">
-            <p className="text-slate-300">
-              Kredensial login berikut telah dibuat untuk <strong>{createdCredential.name}</strong>. Salin dan catat sekarang (password tidak disimpan di state):
+            <p className="text-[#475569]">
+              Kredensial login berikut telah dibuat untuk <strong>{createdCredential.name}</strong>:
             </p>
-            <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl font-mono text-sm space-y-2">
-              <p><span className="text-slate-500">Email:</span> <span className="text-white font-bold">{createdCredential.email}</span></p>
-              <p><span className="text-slate-500">Password:</span> <span className="text-amber-400 font-bold">{createdCredential.pwd}</span></p>
-            </div>
+            <textarea
+              readOnly
+              rows={7}
+              value={`Halo ${createdCredential.name},\n\nPutra/putri Anda telah terdaftar di Sempoa SIP TC Pariaman.\n\n📧 Email: ${createdCredential.email}\n🔐 Sandi: ${createdCredential.pwd}\n🌐 Portal: https://sempoasippariaman.com/login\n\n---\nTim Sempoa SIP TC Pariaman`}
+              className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl p-3 font-mono text-xs text-[#1E293B]"
+            />
             <div className="flex gap-3">
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(`Email: ${createdCredential.email}\nPassword: ${createdCredential.pwd}`);
-                  showToast('📋 Kredensial disalin ke clipboard!');
+                  navigator.clipboard.writeText(
+                    `Halo ${createdCredential.name},\n\nPutra/putri Anda telah terdaftar di Sempoa SIP TC Pariaman.\n\n📧 Email: ${createdCredential.email}\n🔐 Sandi: ${createdCredential.pwd}\n🌐 Portal: https://sempoasippariaman.com/login\n\n---\nTim Sempoa SIP TC Pariaman`
+                  );
+                  showToast('📋 Pesan WhatsApp disalin ke clipboard!');
                 }}
-                className="flex-1 py-2.5 bg-amber-500 text-slate-950 font-bold rounded-xl"
+                className="flex-1 py-2.5 bg-[#FF7043] text-white font-bold rounded-xl hover:bg-[#F4511E]"
               >
-                📋 Salin Email + Password
+                📋 Salin Teks Pesan WhatsApp
               </button>
               <button
                 onClick={() => setIsCredentialModalOpen(false)}
-                className="px-4 py-2.5 bg-slate-800 text-slate-300 font-bold rounded-xl"
+                className="px-4 py-2.5 bg-[#F1F5F9] text-[#475569] font-bold rounded-xl border border-[#E2E8F0]"
               >
-                Sudah Dicatat, Tutup
+                Tutup
               </button>
             </div>
           </div>
@@ -451,31 +598,44 @@ export const SiswaPage: React.FC = () => {
       </Modal>
 
       {/* Modal WA Fallback */}
-      <Modal isOpen={isWAFallbackModalOpen} onClose={() => setIsWAFallbackModalOpen(false)} title="⚠️ Kirim Pesan WhatsApp Manual">
+      <Modal isOpen={isWAFallbackModalOpen} onClose={() => setIsWAFallbackModalOpen(false)} title="📱 WhatsApp Push Message Preview">
         {waFallbackData && (
           <div className="space-y-4 text-xs">
-            <p className="text-amber-400 font-bold">
-              Twilio WhatsApp API belum dikonfigurasi. Salin teks di bawah untuk dikirim manual ke WhatsApp +{waFallbackData.number}:
+            <p className="text-[#E65100] font-bold">
+              Pratinjau pesan WhatsApp ke nomor +{waFallbackData.number}:
             </p>
-            <pre className="p-3 bg-slate-900 border border-slate-800 rounded-xl whitespace-pre-wrap font-sans text-slate-200">
-              {waFallbackData.message}
-            </pre>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(waFallbackData.message);
-                  showToast('📋 Pesan WA disalin!');
-                }}
-                className="px-4 py-2 bg-amber-500 text-slate-950 font-bold rounded-lg"
+            <textarea
+              readOnly
+              rows={8}
+              value={waFallbackData.message}
+              className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl p-3 font-mono text-xs text-[#1E293B]"
+            />
+            <div className="flex justify-between items-center pt-2">
+              <a
+                href={`https://wa.me/${waFallbackData.number}?text=${encodeURIComponent(waFallbackData.message)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="px-4 py-2 bg-[#388E3C] text-white font-bold rounded-lg hover:bg-[#2E7D32]"
               >
-                Salin Teks Pesan
-              </button>
-              <button
-                onClick={() => setIsWAFallbackModalOpen(false)}
-                className="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-lg"
-              >
-                Tutup
-              </button>
+                Buka WhatsApp Web
+              </a>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(waFallbackData.message);
+                    showToast('📋 Pesan WA disalin!');
+                  }}
+                  className="px-4 py-2 bg-[#FF7043] text-white font-bold rounded-lg hover:bg-[#F4511E]"
+                >
+                  Salin Teks
+                </button>
+                <button
+                  onClick={() => setIsWAFallbackModalOpen(false)}
+                  className="px-4 py-2 bg-[#F1F5F9] text-[#475569] font-bold rounded-lg border border-[#E2E8F0]"
+                >
+                  Tutup
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -485,26 +645,26 @@ export const SiswaPage: React.FC = () => {
       <Modal isOpen={isExportModalOpen} onClose={() => setIsExportModalOpen(false)} title="📊 Status Google Sheets Export">
         {exportResult && (
           <div className="space-y-4 text-xs">
-            <p className="text-white font-bold">{exportResult.message}</p>
+            <p className="text-[#1E293B] font-bold">{exportResult.message}</p>
             {exportResult.status === 'success' ? (
               <div className="space-y-3">
-                <p className="text-slate-400">Tab: <code className="text-amber-400 font-bold">{exportResult.worksheet_name}</code> ({exportResult.rows_written} baris ditulis)</p>
+                <p className="text-[#475569]">Tab: <code className="text-[#FF7043] font-bold">{exportResult.worksheet_name}</code> ({exportResult.rows_written} baris ditulis)</p>
                 <a
                   href={exportResult.sheet_url}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-block px-4 py-2.5 bg-emerald-500 text-slate-950 font-bold rounded-xl"
+                  className="inline-block px-4 py-2.5 bg-[#388E3C] text-white font-bold rounded-xl hover:bg-[#2E7D32]"
                 >
                   📂 Buka Google Sheets
                 </a>
               </div>
             ) : (
-              <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-300">
+              <div className="p-3 bg-[#FFF3E0] border border-[#FFCC80] rounded-xl text-[#E65100]">
                 Fitur ini memerlukan <code>GOOGLE_SERVICE_ACCOUNT_JSON</code> dan <code>GOOGLE_SHEET_ID</code> pada file .env backend.
               </div>
             )}
             <div className="flex justify-end pt-2">
-              <button onClick={() => setIsExportModalOpen(false)} className="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-lg">
+              <button onClick={() => setIsExportModalOpen(false)} className="px-4 py-2 bg-[#F1F5F9] text-[#475569] font-bold rounded-lg border border-[#E2E8F0]">
                 Tutup
               </button>
             </div>

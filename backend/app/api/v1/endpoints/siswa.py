@@ -85,6 +85,7 @@ async def create_new_siswa(
             uid=siswa_in.uid,
             nama=siswa_in.nama,
             kategori_program=siswa_in.kategori_program,
+            paket_jadwal=siswa_in.paket_jadwal,
             hari_masuk=siswa_in.hari_masuk,
             id_guru=siswa_in.id_guru,
             target_pertemuan=siswa_in.target_pertemuan or 8,
@@ -92,6 +93,7 @@ async def create_new_siswa(
             status_spp=StatusSPP.AKTIF,
             nama_orang_tua=siswa_in.nama_orang_tua,
             whatsapp_orang_tua=normalized_wa,
+            alamat=siswa_in.alamat,
             bio=siswa_in.bio,
             foto_profil=siswa_in.foto_profil
         )
@@ -216,14 +218,19 @@ async def push_whatsapp_siswa(
     user_ortu = db.query(User).filter(User.role == UserRole.ortu, User.uid_terhubung == str(id)).first()
     ortu_email = user_ortu.email if user_ortu else f"ortu_{siswa.id}@sempoasippariaman.com"
 
+    # Auto generate fresh password for credential push
+    new_sandi = generate_random_password(10)
+    if user_ortu:
+        user_ortu.password = get_password_hash(new_sandi)
+        db.commit()
+
     message_template = f"""Halo {siswa.nama_orang_tua or 'Orang Tua'},
 
 Putra/putri Anda, {siswa.nama}, telah terdaftar di Sempoa SIP TC Pariaman.
 
 📧 Email: {ortu_email}
-🔐 Portal Link: https://sempoasippariaman.com/login
-
-Silakan login ke portal untuk memantau perkembangan belajar dan kuota pertemuan anak Anda.
+🔐 Sandi: {new_sandi}
+🌐 Portal: https://sempoasippariaman.com/login
 
 ---
 Tim Sempoa SIP TC Pariaman"""
@@ -270,48 +277,17 @@ async def export_siswa_sheets(
     """
     Export Data Siswa ke Google Sheets
     """
+    from app.services.google_sheets import send_to_google_sheet
+
     siswa_list = db.query(Siswa).filter(Siswa.is_deleted == False).all()
     rows = [["ID", "UID", "Nama Siswa", "Program", "Hari Masuk", "Nama Orang Tua", "No WhatsApp", "Sisa Pertemuan", "Status SPP"]]
     for s in siswa_list:
         rows.append([
-            s.id, s.uid, s.nama, s.kategori_program, s.hari_masuk,
+            s.id, s.uid or "-", s.nama, s.kategori_program or "-", s.hari_masuk or "-",
             s.nama_orang_tua or "-", s.whatsapp_orang_tua or "-",
-            s.sisa_pertemuan, s.status_spp.value
+            s.sisa_pertemuan, s.status_spp.value if hasattr(s.status_spp, 'value') else str(s.status_spp)
         ])
 
-    service_account_json = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
-    sheet_id = os.getenv("GOOGLE_SHEET_ID")
     tab_name = f"Siswa_{datetime.utcnow().strftime('%Y%m%d')}"
+    return send_to_google_sheet(tab_name=tab_name, rows=rows, title="Data Siswa")
 
-    if not service_account_json or not sheet_id or not os.path.exists(service_account_json):
-        return {
-            "status": "pending",
-            "message": "Google Sheets belum dikonfigurasi. Hubungi developer.",
-            "worksheet_name": tab_name,
-            "rows_written": len(rows) - 1,
-            "preview": rows[:5]
-        }
-
-    try:
-        import gspread
-        gc = gspread.service_account(filename=service_account_json)
-        sh = gc.open_by_key(sheet_id)
-        try:
-            ws = sh.worksheet(tab_name)
-            ws.clear()
-        except Exception:
-            ws = sh.add_worksheet(title=tab_name, rows=len(rows)+10, cols=10)
-        ws.update("A1", rows)
-        return {
-            "status": "success",
-            "sheet_url": f"https://docs.google.com/spreadsheets/d/{sheet_id}/edit#gid={ws.id}",
-            "worksheet_name": tab_name,
-            "rows_written": len(rows) - 1,
-            "sent_at": datetime.utcnow().isoformat()
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Gagal export ke Google Sheets: {str(e)}",
-            "rows_written": len(rows) - 1
-        }

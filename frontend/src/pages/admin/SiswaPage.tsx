@@ -52,7 +52,10 @@ export const SiswaPage: React.FC = () => {
           <p className="text-sm text-slate-400 mt-1">Daftar siswa terdaftar dan kuota kehadiran SPP</p>
         </div>
         <button
-          onClick={() => setIsOpen(true)}
+          onClick={() => {
+            setUid(`SW-${Math.floor(10000 + Math.random() * 90000)}`);
+            setIsOpen(true);
+          }}
           className="px-4 py-2 bg-amber-500 text-slate-950 rounded-xl font-bold hover:bg-amber-400 transition-colors shadow-md text-sm"
         >
           ➕ Tambah Siswa Baru
@@ -66,7 +69,7 @@ export const SiswaPage: React.FC = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-700 bg-slate-900/40 text-xs text-slate-450 uppercase font-bold">
-                <th className="p-4">UID Kartu</th>
+                <th className="p-4">Kode Siswa</th>
                 <th className="p-4">Nama Siswa</th>
                 <th className="p-4">Program Studi</th>
                 <th className="p-4">Hari Masuk</th>
@@ -119,17 +122,6 @@ export const SiswaPage: React.FC = () => {
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 max-w-md w-full shadow-2xl space-y-6">
             <h3 className="text-xl font-bold text-white">Tambah Siswa Baru</h3>
             <form onSubmit={handleCreate} className="space-y-4 text-xs">
-              <div>
-                <label className="block text-slate-400 font-bold uppercase tracking-wider mb-2">UID Kartu RFID</label>
-                <input
-                  type="text"
-                  value={uid}
-                  onChange={(e) => setUid(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 rounded-xl px-4 py-2 text-white font-mono uppercase"
-                  placeholder="Scan kartu atau isi manual"
-                  required
-                />
-              </div>
               <div>
                 <label className="block text-slate-400 font-bold uppercase tracking-wider mb-2">Nama Lengkap Siswa</label>
                 <input

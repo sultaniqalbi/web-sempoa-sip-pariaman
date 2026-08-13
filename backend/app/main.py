@@ -33,10 +33,11 @@ def on_startup():
     except Exception as e:
         logger.error(f"Startup initialization error: {e}")
 
-# CORS Middleware (exact-match allowlist, no wildcard)
+# CORS Middleware (supports localhost & 127.0.0.1 on all dev ports)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins,
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

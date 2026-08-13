@@ -207,48 +207,18 @@ async def export_absensi_sheets(
     db: Session = Depends(get_db),
     current_user: User = Depends(admin_or_owner)
 ):
+    from app.services.google_sheets import send_to_google_sheet
+
     items = db.query(AbsensiLog).order_by(AbsensiLog.waktu.desc()).limit(500).all()
     rows = [["ID Log", "UID", "Nama Terkait", "Waktu Tap", "Mode", "Status Absensi"]]
     for a in items:
-        # Check if belongs to guru or siswa
         guru = db.query(Guru).filter(Guru.uid == a.uid).first()
         siswa = db.query(Siswa).filter(Siswa.uid == a.uid).first()
         nama = guru.nama if guru else (siswa.nama if siswa else "Kartu Belum Terdaftar")
-        rows.append([a.id, a.uid, nama, a.waktu.strftime("%Y-%m-%d %H:%M:%S") if a.waktu else "-", a.mode.value, a.status.value])
+        mode_str = a.mode.value if hasattr(a.mode, 'value') else str(a.mode)
+        status_str = a.status.value if hasattr(a.status, 'value') else str(a.status)
+        rows.append([a.id, a.uid, nama, a.waktu.strftime("%Y-%m-%d %H:%M:%S") if a.waktu else "-", mode_str, status_str])
 
-    service_account_json = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
-    sheet_id = os.getenv("GOOGLE_SHEET_ID")
     tab_name = f"Absensi_{datetime.utcnow().strftime('%Y%m%d')}"
+    return send_to_google_sheet(tab_name=tab_name, rows=rows, title="Log Absensi RFID")
 
-    if not service_account_json or not sheet_id or not os.path.exists(service_account_json):
-        return {
-            "status": "pending",
-            "message": "Google Sheets belum dikonfigurasi. Hubungi developer.",
-            "worksheet_name": tab_name,
-            "rows_written": len(rows) - 1,
-            "preview": rows[:5]
-        }
-
-    try:
-        import gspread
-        gc = gspread.service_account(filename=service_account_json)
-        sh = gc.open_by_key(sheet_id)
-        try:
-            ws = sh.worksheet(tab_name)
-            ws.clear()
-        except Exception:
-            ws = sh.add_worksheet(title=tab_name, rows=len(rows)+10, cols=10)
-        ws.update("A1", rows)
-        return {
-            "status": "success",
-            "sheet_url": f"https://docs.google.com/spreadsheets/d/{sheet_id}/edit#gid={ws.id}",
-            "worksheet_name": tab_name,
-            "rows_written": len(rows) - 1,
-            "sent_at": datetime.utcnow().isoformat()
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Gagal export ke Google Sheets: {str(e)}",
-            "rows_written": len(rows) - 1
-        }

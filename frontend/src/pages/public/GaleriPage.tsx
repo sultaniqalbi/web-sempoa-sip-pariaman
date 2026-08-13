@@ -193,7 +193,7 @@ export const GaleriPage: React.FC = () => {
                 transition: 'transform 0.25s ease, boxShadow 0.25s ease',
               }}
             >
-              <div className="gallery-img-wrap" style={{ width: '100%', aspectRatio: '4 / 3', overflow: 'hidden', background: '#f8f9fa' }}>
+              <div className="gallery-img-wrap" style={{ width: '100%', aspectRatio: '1 / 1', overflow: 'hidden', background: '#f8f9fa' }}>
                 <img src={item.src} alt={item.title} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
               <div

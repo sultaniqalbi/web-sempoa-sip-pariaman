@@ -26,7 +26,7 @@ export const GuruLayout: React.FC = () => {
       {isSidebarOpen && (
         <div
           onClick={() => setIsSidebarOpen(false)}
-          className="fixed inset-0 z-30 bg-black/60 md:hidden"
+          className="fixed inset-0 z-30 bg-slate-900/40 backdrop-blur-xs md:hidden transition-opacity"
           aria-hidden="true"
         />
       )}
@@ -37,7 +37,7 @@ export const GuruLayout: React.FC = () => {
           onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
           isCollapsed={isCollapsed}
         />
-        <main className="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-8 bg-[#f8fafc] dashboard-content">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 sm:p-6 lg:p-8 bg-[#F8FAFC] dashboard-content">
           <div className="max-w-7xl mx-auto space-y-6">
             <Outlet />
           </div>

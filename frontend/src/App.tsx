@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { AuthProvider } from './features/auth/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import PublicRoute from './components/PublicRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 
 // Public Pages
@@ -20,7 +21,6 @@ import SharedDashboardPage from './pages/portal/DashboardPage';
 import SharedSiswaPage from './pages/portal/SiswaPage';
 import SharedGuruPage from './pages/portal/GuruPage';
 import SharedJadwalPage from './pages/portal/JadwalPage';
-import SharedAbsensiGuruPage from './pages/portal/AbsensiGuruPage';
 import SharedPembayaranPage from './pages/portal/PembayaranPage';
 import SharedGaleriPage from './pages/portal/GaleriPage';
 
@@ -58,13 +58,14 @@ export function App() {
         <BrowserRouter>
           <AuthProvider>
             <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<HomePage />} />
-              <Route path="/programs" element={<ProgramsPage />} />
-              <Route path="/program/:programId" element={<ProgramDetailPage />} />
-              <Route path="/galeri" element={<PublicGaleriPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
+              {/* Public Routes (Auto-Redirect ke Portal jika sudah Login) */}
+              <Route path="/" element={<PublicRoute><HomePage /></PublicRoute>} />
+              <Route path="/programs" element={<PublicRoute><ProgramsPage /></PublicRoute>} />
+              <Route path="/program/:programId" element={<PublicRoute><ProgramDetailPage /></PublicRoute>} />
+              <Route path="/galeri" element={<PublicRoute><PublicGaleriPage /></PublicRoute>} />
+              <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+              <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+
 
               {/* Admin Portal Routes (Shared Components) */}
               <Route
@@ -80,7 +81,6 @@ export function App() {
                 <Route path="siswa" element={<SharedSiswaPage />} />
                 <Route path="guru" element={<SharedGuruPage />} />
                 <Route path="jadwal" element={<SharedJadwalPage />} />
-                <Route path="absensi-guru" element={<SharedAbsensiGuruPage />} />
                 <Route path="pembayaran" element={<SharedPembayaranPage />} />
                 <Route path="galeri" element={<SharedGaleriPage />} />
               </Route>
@@ -99,7 +99,6 @@ export function App() {
                 <Route path="siswa" element={<SharedSiswaPage />} />
                 <Route path="guru" element={<SharedGuruPage />} />
                 <Route path="jadwal" element={<SharedJadwalPage />} />
-                <Route path="absensi-guru" element={<SharedAbsensiGuruPage />} />
                 <Route path="pembayaran" element={<SharedPembayaranPage />} />
                 <Route path="galeri" element={<SharedGaleriPage />} />
 

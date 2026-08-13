@@ -3,6 +3,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
 import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
+import PageHeader from '../../components/PageHeader';
+import EmptyState from '../../components/EmptyState';
+import DayPicker from '../../components/DayPicker';
+import { JadwalIcon, TrashIcon, PresensiIcon } from '../../components/SvgIcons';
 
 interface Jadwal {
   id: number;
@@ -15,18 +19,40 @@ interface Jadwal {
   created_at: string;
 }
 
+interface Guru {
+  id: number;
+  nama: string;
+  kategori_program: string;
+  paket_pengajaran?: string;
+}
+
+interface GuruAbsensiItem {
+  id_guru: number;
+  uid: string;
+  nama_guru: string;
+  kategori_program: string;
+  hari_wajib: string;
+  is_wajib_today: boolean;
+  status_hari_ini: string;
+  jam_tap_terakhir: string;
+  total_tap_bulan_ini: number;
+}
+
 export const JadwalPage: React.FC = () => {
   const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState<'jadwal' | 'absensi'>('jadwal');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [exportResult, setExportResult] = useState<any>(null);
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
+  const [selectedGuruId, setSelectedGuruId] = useState<string>('');
   const [formData, setFormData] = useState({
     hari: 'Senin',
     jam_mulai: '14:00',
     jam_selesai: '15:30',
-    lokasi: 'TC Pariaman - Ruang Utama'
+    lokasi: 'TC Pariaman - Ruang Utama',
+    id_guru: undefined as number | undefined,
   });
 
   const showToast = (text: string, type: 'success' | 'error' = 'success') => {
@@ -34,14 +60,33 @@ export const JadwalPage: React.FC = () => {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  const { data: jadwalList = [], isLoading } = useQuery<Jadwal[]>({
+  // Queries
+  const { data: jadwalList = [], isLoading: isLoadingJadwal } = useQuery<Jadwal[]>({
     queryKey: ['jadwal', 'list'],
     queryFn: async () => {
       const res = await apiClient.get('/jadwal/');
       return res.data;
-    }
+    },
   });
 
+  const { data: guruList = [] } = useQuery<Guru[]>({
+    queryKey: ['guru', 'list'],
+    queryFn: async () => {
+      const res = await apiClient.get('/guru/');
+      return res.data;
+    },
+  });
+
+  const { data: logs = [], isLoading: isLoadingAbsensi, refetch: refetchAbsensi } = useQuery<GuruAbsensiItem[]>({
+    queryKey: ['absensi', 'guru-log'],
+    queryFn: async () => {
+      const res = await apiClient.get('/absensi/guru-log');
+      return res.data;
+    },
+    enabled: activeTab === 'absensi',
+  });
+
+  // Mutations
   const createMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
       const res = await apiClient.post('/jadwal/', data);
@@ -54,10 +99,10 @@ export const JadwalPage: React.FC = () => {
     },
     onError: (err: any) => {
       showToast(`❌ Gagal menambah jadwal: ${err.message}`, 'error');
-    }
+    },
   });
 
-  const exportSheetsMutation = useMutation({
+  const exportJadwalSheetsMutation = useMutation({
     mutationFn: async () => {
       const res = await apiClient.post('/jadwal/export-sheets');
       return res.data;
@@ -73,7 +118,26 @@ export const JadwalPage: React.FC = () => {
     },
     onError: (err: any) => {
       showToast(`❌ Gagal export: ${err.message}`, 'error');
-    }
+    },
+  });
+
+  const exportAbsensiSheetsMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiClient.post('/absensi/export-sheets');
+      return res.data;
+    },
+    onSuccess: (data) => {
+      setExportResult(data);
+      setIsExportModalOpen(true);
+      if (data.status === 'success') {
+        showToast('✅ Data absensi terkirim ke Google Sheets!');
+      } else {
+        showToast(`ℹ️ ${data.message}`, 'error');
+      }
+    },
+    onError: (err: any) => {
+      showToast(`❌ Gagal export: ${err.message}`, 'error');
+    },
   });
 
   const deleteMutation = useMutation({
@@ -86,29 +150,115 @@ export const JadwalPage: React.FC = () => {
     },
     onError: (err: any) => {
       showToast(`❌ Delete gagal: ${err.message}`, 'error');
-    }
+    },
   });
 
-  const columns = [
+  const calcEndTime = (startTime: string, durationMinutes: number = 90): string => {
+    if (!startTime || !startTime.includes(':')) return '15:30';
+    const [hStr, mStr] = startTime.split(':');
+    let hours = parseInt(hStr, 10);
+    let minutes = parseInt(mStr, 10);
+
+    if (isNaN(hours) || isNaN(minutes)) return '15:30';
+
+    let totalMinutes = hours * 60 + minutes + durationMinutes;
+    let newHours = Math.floor(totalMinutes / 60) % 24;
+    let newMinutes = totalMinutes % 60;
+
+    const formattedH = newHours.toString().padStart(2, '0');
+    const formattedM = newMinutes.toString().padStart(2, '0');
+
+    return `${formattedH}:${formattedM}`;
+  };
+
+  const handleTeacherChange = (guruIdStr: string) => {
+    setSelectedGuruId(guruIdStr);
+    const guruId = parseInt(guruIdStr, 10);
+
+    if (isNaN(guruId)) {
+      setFormData((prev) => ({
+        ...prev,
+        id_guru: undefined,
+        lokasi: 'TC Pariaman - Ruang Utama',
+      }));
+      return;
+    }
+
+    const selectedGuru = guruList.find((g) => g.id === guruId);
+    let autoRoom = 'TC Pariaman - Ruang Utama';
+    let duration = 90;
+
+    if (selectedGuru) {
+      const cat = selectedGuru.kategori_program || '';
+      if (cat === 'Sempoa SIP') autoRoom = 'TC Pariaman - Ruang Sempoa';
+      else if (cat === 'Fonem') autoRoom = 'TC Pariaman - Ruang Fonem';
+      else if (cat === 'Tahfidz') autoRoom = 'TC Pariaman - Ruang Tahfidz';
+      else if (cat === 'Bahasa Inggris') autoRoom = 'TC Pariaman - Ruang English';
+      else autoRoom = `TC Pariaman - Ruang ${cat}`;
+
+      if (selectedGuru.paket_pengajaran?.includes('60menit')) {
+        duration = 60;
+      }
+    }
+
+    const autoEnd = calcEndTime(formData.jam_mulai, duration);
+
+    setFormData((prev) => ({
+      ...prev,
+      id_guru: guruId,
+      lokasi: autoRoom,
+      jam_selesai: autoEnd,
+    }));
+  };
+
+  const handleStartTimeChange = (newStartTime: string) => {
+    const selectedGuru = guruList.find((g) => g.id === formData.id_guru);
+    let duration = 90;
+    if (selectedGuru?.paket_pengajaran?.includes('60menit')) {
+      duration = 60;
+    }
+
+    const autoEnd = calcEndTime(newStartTime, duration);
+
+    setFormData((prev) => ({
+      ...prev,
+      jam_mulai: newStartTime,
+      jam_selesai: autoEnd,
+    }));
+  };
+
+  const openAddModal = () => {
+    setSelectedGuruId('');
+    setFormData({
+      hari: 'Senin, Rabu',
+      jam_mulai: '14:00',
+      jam_selesai: '15:30',
+      lokasi: 'TC Pariaman - Ruang Utama',
+      id_guru: undefined,
+    });
+    setIsAddModalOpen(true);
+  };
+
+  const jadwalColumns = [
     {
       header: 'Hari',
       accessor: (row: Jadwal) => (
-        <span className="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+        <span className="px-2.5 py-1 rounded-[6px] text-xs font-bold bg-[#FFF3E0] text-[#FF7043] border border-[#FFCC80] block w-fit leading-relaxed">
           {row.hari}
         </span>
-      )
+      ),
     },
     {
       header: 'Waktu / Jam',
       accessor: (row: Jadwal) => (
-        <span className="font-mono text-xs font-bold text-white">
+        <span className="font-mono text-xs font-bold text-[#424242]">
           {row.jam_mulai} - {row.jam_selesai}
         </span>
-      )
+      ),
     },
     {
       header: 'Lokasi Kelas',
-      accessor: (row: Jadwal) => <span className="text-slate-300 text-xs font-medium">{row.lokasi}</span>
+      accessor: (row: Jadwal) => <span className="text-[#757575] text-xs font-medium">{row.lokasi}</span>,
     },
     {
       header: 'Aksi',
@@ -119,63 +269,155 @@ export const JadwalPage: React.FC = () => {
               deleteMutation.mutate(row.id);
             }
           }}
-          className="px-2.5 py-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-bold rounded-lg"
+          className="px-2.5 py-1 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#D32F2F] text-xs font-bold rounded-[6px] border border-[#FECDD3] inline-flex items-center gap-1"
         >
-          🗑️ Hapus
+          <TrashIcon size={14} />
+          <span>Hapus</span>
         </button>
-      )
-    }
+      ),
+    },
+  ];
+
+  const absensiColumns = [
+    {
+      header: 'UID RFID',
+      accessor: (row: GuruAbsensiItem) => <span className="font-mono text-[#FF7043] font-bold">{row.uid}</span>,
+    },
+    {
+      header: 'Nama Pengajar',
+      accessor: (row: GuruAbsensiItem) => (
+        <div>
+          <p className="font-bold text-[#424242]">{row.nama_guru}</p>
+          <p className="text-[10px] text-[#757575]">Program: {row.kategori_program}</p>
+        </div>
+      ),
+    },
+    {
+      header: 'Hari Wajib',
+      accessor: (row: GuruAbsensiItem) => <span className="text-[#757575] text-xs">{row.hari_wajib}</span>,
+    },
+    {
+      header: 'Status Presensi Hari Ini',
+      accessor: (row: GuruAbsensiItem) => {
+        let badgeStyle = 'bg-[#FAFAFA] text-[#757575] border-[#E0E0E0]';
+        let label = row.status_hari_ini;
+        if (row.status_hari_ini === 'HADIR') {
+          badgeStyle = 'bg-[#E8F5E9] text-[#388E3C] border-[#A5D6A7]';
+          label = `HADIR (${row.jam_tap_terakhir})`;
+        } else if (row.status_hari_ini === 'TIDAK_HADIR') {
+          badgeStyle = 'bg-[#FFF1F2] text-[#D32F2F] border-[#FECDD3]';
+          label = 'TIDAK HADIR (WAJIB)';
+        } else if (row.status_hari_ini === 'LIBUR') {
+          badgeStyle = 'bg-[#FAFAFA] text-[#757575] border-[#E0E0E0]';
+          label = 'LIBUR HARI INI';
+        }
+        return <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${badgeStyle}`}>{label}</span>;
+      },
+    },
+    {
+      header: 'Kehadiran Bulan Ini',
+      accessor: (row: GuruAbsensiItem) => <span className="font-mono font-bold text-[#1976D2]">{row.total_tap_bulan_ini}x tap RFID</span>,
+    },
   ];
 
   return (
     <div className="space-y-6">
       {toastMessage && (
-        <div className={`p-4 rounded-xl text-sm font-bold shadow-xl border ${
-          toastMessage.type === 'success' ? 'bg-emerald-950 text-emerald-300 border-emerald-500/30' : 'bg-rose-950 text-rose-300 border-rose-500/30'
-        }`}>
+        <div
+          className={`p-4 rounded-[8px] text-xs font-bold shadow-sm border ${
+            toastMessage.type === 'success'
+              ? 'bg-[#E8F5E9] text-[#388E3C] border-[#A5D6A7]'
+              : 'bg-[#FFF1F2] text-[#D32F2F] border-[#FECDD3]'
+          }`}
+        >
           {toastMessage.text}
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">Jadwal & Kelas</h1>
-          <p className="text-xs text-slate-400 mt-1">Manajemen jadwal sesi mengajar dan alokasi ruang kelas</p>
-        </div>
-        <div className="flex gap-3">
-          <button
-            onClick={() => exportSheetsMutation.mutate()}
-            disabled={exportSheetsMutation.isPending}
-            className="px-4 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-xl text-xs font-bold transition-colors"
-          >
-            {exportSheetsMutation.isPending ? '🔄 Mengirim...' : '📊 Kirim ke Google Sheets'}
-          </button>
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-extrabold shadow-lg"
-          >
-            ➕ Buat Jadwal Baru
-          </button>
-        </div>
+      {/* Standardized Page Header */}
+      <PageHeader
+        icon={activeTab === 'jadwal' ? <JadwalIcon size={24} className="text-[#FF7043]" /> : <PresensiIcon size={24} className="text-[#388E3C]" />}
+        title="Jadwal & Kelas"
+        subtitle={activeTab === 'jadwal' ? "Manajemen jadwal sesi mengajar dan alokasi ruang kelas" : "Monitoring tap RFID kehadiran pengajar & auto-detect guru tidak hadir"}
+        iconColorBg={activeTab === 'jadwal' ? "bg-[#FFF3E0] text-[#FF7043]" : "bg-[#E8F5E9] text-[#388E3C]"}
+        onExportSheets={activeTab === 'jadwal' ? () => exportJadwalSheetsMutation.mutate() : () => exportAbsensiSheetsMutation.mutate()}
+        isExporting={activeTab === 'jadwal' ? exportJadwalSheetsMutation.isPending : exportAbsensiSheetsMutation.isPending}
+        actionLabel={activeTab === 'jadwal' ? "Buat Jadwal Baru" : "Segarkan"}
+        onAction={activeTab === 'jadwal' ? openAddModal : () => refetchAbsensi()}
+      />
+
+      {/* Navigation Tabs */}
+      <div className="flex border-b border-[#E0E0E0] gap-2">
+        <button
+          onClick={() => setActiveTab('jadwal')}
+          className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-colors cursor-pointer ${
+            activeTab === 'jadwal'
+              ? 'border-[#FF7043] text-[#FF7043] bg-[#FFF3E0]/50'
+              : 'border-transparent text-[#757575] hover:text-[#424242]'
+          }`}
+        >
+          Jadwal Kelas
+        </button>
+        <button
+          onClick={() => setActiveTab('absensi')}
+          className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-colors cursor-pointer ${
+            activeTab === 'absensi'
+              ? 'border-[#388E3C] text-[#388E3C] bg-[#E8F5E9]/50'
+              : 'border-transparent text-[#757575] hover:text-[#424242]'
+          }`}
+        >
+          Riwayat Absensi
+        </button>
       </div>
 
-      {isLoading ? (
-        <div className="py-16 text-center text-slate-400 text-xs">Memuat daftar jadwal...</div>
+      {activeTab === 'jadwal' ? (
+        isLoadingJadwal ? (
+          <div className="py-16 text-center text-[#757575] text-xs">Memuat daftar jadwal...</div>
+        ) : jadwalList.length === 0 ? (
+          <EmptyState
+            icon={<JadwalIcon size={40} className="text-[#757575]" />}
+            title="Belum ada jadwal kelas"
+            description="Tambahkan jadwal kelas baru untuk melihat daftar sesi yang tersedia."
+            actionLabel="+ Buat Jadwal Baru"
+            onAction={openAddModal}
+          />
+        ) : (
+          <DataTable
+            columns={jadwalColumns}
+            data={jadwalList}
+            searchPlaceholder="Cari hari atau lokasi..."
+            searchFilter={(row, q) =>
+              row.hari.toLowerCase().includes(q.toLowerCase()) || row.lokasi.toLowerCase().includes(q.toLowerCase())
+            }
+          />
+        )
       ) : (
-        <DataTable
-          columns={columns}
-          data={jadwalList}
-          searchPlaceholder="Cari hari, waktu, lokasi..."
-          searchFilter={(row, q) =>
-            row.hari.toLowerCase().includes(q.toLowerCase()) ||
-            row.lokasi.toLowerCase().includes(q.toLowerCase()) ||
-            row.jam_mulai.includes(q)
-          }
-        />
+        isLoadingAbsensi ? (
+          <div className="py-16 text-center text-[#757575] text-xs">Memuat laporan absensi guru...</div>
+        ) : logs.length === 0 ? (
+          <EmptyState
+            icon={<PresensiIcon size={40} className="text-[#757575]" />}
+            title="Belum ada riwayat absensi guru"
+            description="Presensi kehadiran pengajar via scan kartu RFID atau input manual akan dicatat otomatis di sini."
+            actionLabel="Segarkan Data"
+            onAction={() => refetchAbsensi()}
+          />
+        ) : (
+          <DataTable
+            columns={absensiColumns}
+            data={logs}
+            searchPlaceholder="Cari nama guru, UID, status..."
+            searchFilter={(row, q) =>
+              row.nama_guru.toLowerCase().includes(q.toLowerCase()) ||
+              row.uid.toLowerCase().includes(q.toLowerCase()) ||
+              row.status_hari_ini.toLowerCase().includes(q.toLowerCase())
+            }
+          />
+        )
       )}
 
-      {/* Modal Form Tambah Jadwal */}
-      <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="➕ Buat Jadwal Kelas Baru">
+      {/* Add Modal */}
+      <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Buat Jadwal Baru">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -183,71 +425,82 @@ export const JadwalPage: React.FC = () => {
           }}
           className="space-y-4 text-xs"
         >
+          {/* Day Picker Component (Multi Select) */}
+          <DayPicker
+            label="Hari Kelas*"
+            selectedDays={formData.hari}
+            onChange={(val) => setFormData({ ...formData, hari: val })}
+            multiSelect={true}
+            required={true}
+          />
+
+          {/* Select Guru Dropdown */}
           <div>
-            <label className="block text-slate-300 font-bold mb-1">Hari Kelas*</label>
+            <label className="block text-[#424242] font-bold mb-1">Nama Guru / Pengajar*</label>
             <select
-              value={formData.hari}
-              onChange={(e) => setFormData({ ...formData, hari: e.target.value })}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white"
+              value={selectedGuruId}
+              onChange={(e) => handleTeacherChange(e.target.value)}
+              className="w-full bg-[#FAFAFA] border border-[#E0E0E0] rounded-[8px] p-2.5 text-[#424242] focus:border-[#FF7043] focus:outline-none font-medium"
             >
-              <option value="Senin">Senin</option>
-              <option value="Selasa">Selasa</option>
-              <option value="Rabu">Rabu</option>
-              <option value="Kamis">Kamis</option>
-              <option value="Jumat">Jumat</option>
-              <option value="Sabtu">Sabtu</option>
+              <option value="">-- Pilih Guru / Pengajar --</option>
+              {guruList.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.nama} ({g.kategori_program})
+                </option>
+              ))}
             </select>
           </div>
 
+          {/* Optimized Native Time Input */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-slate-300 font-bold mb-1">Jam Mulai*</label>
+              <label className="block text-[#424242] font-bold mb-1">Jam Mulai*</label>
               <input
-                type="text"
+                type="time"
                 required
                 value={formData.jam_mulai}
-                onChange={(e) => setFormData({ ...formData, jam_mulai: e.target.value })}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white font-mono"
-                placeholder="14:00"
+                onChange={(e) => handleStartTimeChange(e.target.value)}
+                className="w-full bg-[#FAFAFA] border border-[#E0E0E0] rounded-[8px] p-2.5 text-[#424242] font-mono focus:border-[#FF7043] focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-slate-300 font-bold mb-1">Jam Selesai*</label>
+              <label className="block text-[#424242] font-bold mb-1">Jam Selesai*</label>
               <input
-                type="text"
+                type="time"
                 required
                 value={formData.jam_selesai}
                 onChange={(e) => setFormData({ ...formData, jam_selesai: e.target.value })}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white font-mono"
-                placeholder="15:30"
+                className="w-full bg-[#FAFAFA] border border-[#E0E0E0] rounded-[8px] p-2.5 text-[#424242] font-mono focus:border-[#FF7043] focus:outline-none"
               />
             </div>
           </div>
 
+          {/* Read-Only Auto-Ruangan */}
           <div>
-            <label className="block text-slate-300 font-bold mb-1">Lokasi Ruang Kelas*</label>
+            <label className="block text-[#424242] font-bold mb-1">Lokasi Ruang Kelas (Otomatis)</label>
             <input
               type="text"
-              required
+              readOnly
               value={formData.lokasi}
-              onChange={(e) => setFormData({ ...formData, lokasi: e.target.value })}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white"
-              placeholder="TC Pariaman - Ruang Utama"
+              className="w-full bg-[#F5F5F5] border border-[#E0E0E0] rounded-[8px] p-2.5 text-[#424242] font-semibold cursor-not-allowed"
             />
+            <p className="text-[10px] text-[#757575] mt-1">
+              Ruangan otomatis terisi sesuai kategori program guru yang dipilih.
+            </p>
           </div>
 
-          <div className="flex justify-end gap-3 pt-3">
+          <div className="flex justify-end gap-3 pt-3 border-t border-[#E0E0E0]">
             <button
               type="button"
               onClick={() => setIsAddModalOpen(false)}
-              className="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg font-bold hover:bg-slate-700"
+              className="px-4 py-2 bg-[#FAFAFA] text-[#757575] rounded-[8px] font-bold hover:bg-[#E0E0E0] border border-[#E0E0E0]"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={createMutation.isPending}
-              className="px-4 py-2 bg-amber-500 text-slate-950 font-bold rounded-lg hover:bg-amber-400"
+              className="px-4 py-2 bg-[#FF7043] text-white font-bold rounded-[8px] hover:bg-[#F4511E] disabled:opacity-50"
             >
               {createMutation.isPending ? 'Simpan...' : 'Simpan Jadwal'}
             </button>
@@ -255,30 +508,35 @@ export const JadwalPage: React.FC = () => {
         </form>
       </Modal>
 
-      {/* Modal Export Result */}
-      <Modal isOpen={isExportModalOpen} onClose={() => setIsExportModalOpen(false)} title="📊 Status Google Sheets Export">
+      {/* Export Status Modal */}
+      <Modal isOpen={isExportModalOpen} onClose={() => setIsExportModalOpen(false)} title="Status Google Sheets Export">
         {exportResult && (
           <div className="space-y-4 text-xs">
-            <p className="text-white font-bold">{exportResult.message}</p>
+            <p className="text-[#424242] font-bold">{exportResult.message}</p>
             {exportResult.status === 'success' ? (
               <div className="space-y-3">
-                <p className="text-slate-400">Tab: <code className="text-amber-400 font-bold">{exportResult.worksheet_name}</code> ({exportResult.rows_written} baris ditulis)</p>
+                <p className="text-[#757575]">
+                  Tab: <code className="text-[#FF7043] font-bold">{exportResult.worksheet_name}</code> ({exportResult.rows_written} baris ditulis)
+                </p>
                 <a
                   href={exportResult.sheet_url}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-block px-4 py-2.5 bg-emerald-500 text-slate-950 font-bold rounded-xl"
+                  className="inline-block px-4 py-2.5 bg-[#388E3C] text-white font-bold rounded-[8px] hover:bg-[#2E7D32]"
                 >
-                  📂 Buka Google Sheets
+                  Buka Google Sheets
                 </a>
               </div>
             ) : (
-              <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-300">
+              <div className="p-3 bg-[#FFF3E0] border border-[#FFCC80] rounded-[8px] text-[#FF7043]">
                 Fitur ini memerlukan <code>GOOGLE_SERVICE_ACCOUNT_JSON</code> dan <code>GOOGLE_SHEET_ID</code> pada file .env backend.
               </div>
             )}
             <div className="flex justify-end pt-2">
-              <button onClick={() => setIsExportModalOpen(false)} className="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-lg">
+              <button
+                onClick={() => setIsExportModalOpen(false)}
+                className="px-4 py-2 bg-[#FAFAFA] text-[#757575] font-bold rounded-[8px] border border-[#E0E0E0]"
+              >
                 Tutup
               </button>
             </div>

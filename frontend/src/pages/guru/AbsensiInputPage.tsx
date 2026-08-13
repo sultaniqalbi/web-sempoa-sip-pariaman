@@ -57,24 +57,24 @@ export const AbsensiInputPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight">Kehadiran & RFID</h1>
-        <p className="text-sm text-slate-400 mt-1">Kelola absensi siswa bimbingan serta pantau riwayat kartu RFID Anda</p>
+        <h1 className="text-3xl font-extrabold tracking-tight text-[#1E293B]" style={{ fontFamily: "'Poppins', sans-serif" }}>Kehadiran & RFID</h1>
+        <p className="text-sm text-[#94A3B8] mt-1">Kelola absensi siswa bimbingan serta pantau riwayat kartu RFID Anda</p>
       </div>
 
       {/* Sub Tabs */}
-      <div className="flex gap-2 border-b border-slate-800 pb-px text-xs font-bold uppercase tracking-wider">
+      <div className="flex gap-2 border-b border-[#E2E8F0] pb-px text-xs font-bold uppercase tracking-wider">
         <button
           onClick={() => setActiveTab('input')}
-          className={`pb-3 px-4 transition-colors ${
-            activeTab === 'input' ? 'text-amber-500 border-b-2 border-amber-500' : 'text-slate-400 hover:text-white'
+          className={`pb-3 px-4 ${
+            activeTab === 'input' ? 'text-[#FF7043] border-b-2 border-[#FF7043]' : 'text-[#94A3B8] hover:text-[#1E293B]'
           }`}
         >
           ✏️ Input Absensi Siswa
         </button>
         <button
           onClick={() => setActiveTab('rfid')}
-          className={`pb-3 px-4 transition-colors ${
-            activeTab === 'rfid' ? 'text-amber-500 border-b-2 border-amber-500' : 'text-slate-400 hover:text-white'
+          className={`pb-3 px-4 ${
+            activeTab === 'rfid' ? 'text-[#FF7043] border-b-2 border-[#FF7043]' : 'text-[#94A3B8] hover:text-[#1E293B]'
           }`}
         >
           🎴 Log RFID Kehadiran Saya
@@ -82,26 +82,26 @@ export const AbsensiInputPage: React.FC = () => {
       </div>
 
       {activeTab === 'input' ? (
-        <div className="bg-slate-800 border border-slate-700/60 rounded-2xl p-6 shadow-lg max-w-md">
+        <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 shadow-sm max-w-md">
           {success && (
-            <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold px-4 py-3 rounded-xl mb-4">
+            <div className="bg-[#E8F5E9] border border-[#A5D6A7] text-[#388E3C] text-xs font-semibold px-4 py-3 rounded-xl mb-4">
               ✓ Kehadiran siswa berhasil dicatat! Sisa pertemuan kuota otomatis berkurang.
             </div>
           )}
 
           {error && (
-            <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-semibold px-4 py-3 rounded-xl mb-4">
+            <div className="bg-[#FFF1F2] border border-[#FECDD3] text-[#e11d48] text-xs font-semibold px-4 py-3 rounded-xl mb-4">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4 text-xs">
             <div>
-              <label className="block text-slate-400 font-bold uppercase tracking-wider mb-2">Pilih Siswa</label>
+              <label className="block text-[#94A3B8] font-bold uppercase tracking-wider mb-2">Pilih Siswa</label>
               <select
                 value={siswaUid}
                 onChange={(e) => setSiswaUid(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 rounded-xl px-4 py-2.5 text-white"
+                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] focus:border-[#FF7043] focus:ring-1 focus:ring-[#FF7043] rounded-xl px-4 py-2.5 text-[#1E293B]"
                 required
               >
                 <option value="">-- Pilih Siswa --</option>
@@ -112,11 +112,11 @@ export const AbsensiInputPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-slate-400 font-bold uppercase tracking-wider mb-2">Status Kehadiran</label>
+              <label className="block text-[#94A3B8] font-bold uppercase tracking-wider mb-2">Status Kehadiran</label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as any)}
-                className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 rounded-xl px-4 py-2.5 text-white"
+                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] focus:border-[#FF7043] focus:ring-1 focus:ring-[#FF7043] rounded-xl px-4 py-2.5 text-[#1E293B]"
               >
                 <option value="HADIR">HADIR</option>
                 <option value="IZIN">IZIN</option>
@@ -128,33 +128,33 @@ export const AbsensiInputPage: React.FC = () => {
             <button
               type="submit"
               disabled={createAbsensiMutation.isPending}
-              className="w-full py-3 bg-amber-500 text-slate-950 text-sm font-bold rounded-xl hover:bg-amber-400 transition-all shadow-lg"
+              className="w-full py-3 bg-[#FF7043] text-white text-sm font-bold rounded-xl hover:bg-[#F4511E] shadow-md"
             >
               {createAbsensiMutation.isPending ? 'Mencatat...' : 'Catat Kehadiran 📝'}
             </button>
           </form>
         </div>
       ) : (
-        <div className="bg-slate-800 border border-slate-700/60 rounded-2xl overflow-hidden shadow-lg">
+        <div className="bg-white border border-[#E2E8F0] rounded-2xl overflow-hidden shadow-sm">
           {isLogsLoading ? (
-            <div className="p-8 text-center text-slate-400 text-xs">Memuat log RFID Anda...</div>
+            <div className="p-8 text-center text-[#94A3B8] text-xs">Memuat log RFID Anda...</div>
           ) : (
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-700 bg-slate-900/40 text-xs text-slate-450 uppercase font-bold">
+                <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-xs text-[#FF7043] uppercase font-extrabold">
                   <th className="p-4">Waktu Tap</th>
                   <th className="p-4">Mode</th>
                   <th className="p-4">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-700/50 text-xs">
+              <tbody className="divide-y divide-[#E2E8F0] text-xs">
                 {rfidLogs && rfidLogs.length > 0 ? (
                   rfidLogs.map((log) => (
-                    <tr key={log.id} className="hover:bg-slate-750/30">
-                      <td className="p-4 text-slate-200">{new Date(log.waktu).toLocaleString('id-ID')}</td>
-                      <td className="p-4 font-mono font-bold text-slate-400">{log.mode}</td>
+                    <tr key={log.id} className="hover:bg-[#F8FAFC]">
+                      <td className="p-4 text-[#1E293B]">{new Date(log.waktu).toLocaleString('id-ID')}</td>
+                      <td className="p-4 font-mono font-bold text-[#94A3B8]">{log.mode}</td>
                       <td className="p-4">
-                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-[#E8F5E9] text-[#388E3C]">
                           {log.status}
                         </span>
                       </td>
@@ -162,7 +162,7 @@ export const AbsensiInputPage: React.FC = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={3} className="p-8 text-center text-slate-500 font-bold">Belum ada log ketukan kartu RFID terdeteksi.</td>
+                    <td colSpan={3} className="p-8 text-center text-[#94A3B8] font-bold">Belum ada log ketukan kartu RFID terdeteksi.</td>
                   </tr>
                 )}
               </tbody>

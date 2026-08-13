@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
+import useAuth from '../../features/auth/useAuth';
 import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
+import PageHeader from '../../components/PageHeader';
+import EmptyState from '../../components/EmptyState';
+import { PembayaranIcon } from '../../components/SvgIcons';
 
 interface ReminderItem {
   id_siswa: number;
@@ -12,9 +16,14 @@ interface ReminderItem {
   program: string;
   sisa_pertemuan: number;
   status_spp: string;
-  status_pembayaran: string;
+  status: 'lancar' | 'peringatan' | 'urgent';
+  status_label: string;
+  color: 'hijau' | 'kuning' | 'merah';
+  jadwal_pembayaran_berikutnya?: string;
   jumlah_tagihan: number;
   wa_draft: string;
+  wa_draft_peringatan?: string;
+  wa_draft_urgent?: string;
 }
 
 interface BuktiTransferItem {
@@ -27,9 +36,18 @@ interface BuktiTransferItem {
 }
 
 export const PembayaranPage: React.FC = () => {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
+  const userRole = user?.role || 'admin';
+
   const [activeTab, setActiveTab] = useState<'reminder' | 'verifikasi'>('reminder');
-  const [selectedWADraft, setSelectedWADraft] = useState<{ name: string; draft: string; wa: string } | null>(null);
+  const [selectedWADraft, setSelectedWADraft] = useState<{
+    name: string;
+    draft: string;
+    wa: string;
+    title: string;
+  } | null>(null);
+
   const [isWADraftModalOpen, setIsWADraftModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [exportResult, setExportResult] = useState<any>(null);
@@ -40,25 +58,29 @@ export const PembayaranPage: React.FC = () => {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  // Fetch Reminder List
-  const { data: reminderList = [], isLoading: isLoadingReminders } = useQuery<ReminderItem[]>({
-    queryKey: ['pembayaran', 'reminder'],
+  // Fetch Reminders
+  const { data: reminderResponse, isLoading: isLoadingReminders } = useQuery({
+    queryKey: ['pembayaran', 'reminder-spp'],
     queryFn: async () => {
-      const res = await apiClient.get('/pembayaran/reminder');
+      const res = await apiClient.get('/pembayaran/reminder-spp');
       return res.data;
-    }
+    },
   });
 
-  // Fetch Bukti Transfer List
+  const reminderList: ReminderItem[] = Array.isArray(reminderResponse)
+    ? reminderResponse
+    : reminderResponse?.siswa || [];
+
+  // Fetch Bukti Transfer (Only queried if owner)
   const { data: buktiList = [], isLoading: isLoadingBukti } = useQuery<BuktiTransferItem[]>({
     queryKey: ['bukti-transfer', 'list'],
     queryFn: async () => {
       const res = await apiClient.get('/bukti-transfer/');
       return res.data;
-    }
+    },
+    enabled: userRole === 'owner',
   });
 
-  // Approve Transfer Proof Mutation
   const approveMutation = useMutation({
     mutationFn: async (id: number) => {
       const res = await apiClient.post(`/bukti-transfer/${id}/approve`);
@@ -72,10 +94,9 @@ export const PembayaranPage: React.FC = () => {
     },
     onError: (err: any) => {
       showToast(`❌ Verifikasi gagal: ${err.message}`, 'error');
-    }
+    },
   });
 
-  // Reject Transfer Proof Mutation
   const rejectMutation = useMutation({
     mutationFn: async (id: number) => {
       const res = await apiClient.post(`/bukti-transfer/${id}/reject`, { note: 'Bukti transfer tidak valid' });
@@ -87,10 +108,9 @@ export const PembayaranPage: React.FC = () => {
     },
     onError: (err: any) => {
       showToast(`❌ Proses penolakan gagal: ${err.message}`, 'error');
-    }
+    },
   });
 
-  // Export Sheets Mutation
   const exportSheetsMutation = useMutation({
     mutationFn: async () => {
       const res = await apiClient.post('/pembayaran/export-sheets');
@@ -107,71 +127,128 @@ export const PembayaranPage: React.FC = () => {
     },
     onError: (err: any) => {
       showToast(`❌ Gagal export: ${err.message}`, 'error');
-    }
+    },
   });
+
+  const openWAModal = (row: ReminderItem, type: 'peringatan' | 'urgent') => {
+    const draftText = type === 'urgent'
+      ? (row.wa_draft_urgent || row.wa_draft)
+      : (row.wa_draft_peringatan || row.wa_draft);
+
+    setSelectedWADraft({
+      name: row.nama_siswa,
+      draft: draftText,
+      wa: row.whatsapp_orang_tua,
+      title: type === 'urgent' ? '⚠️ Kirim WhatsApp Tagihan Urgent' : '📲 Kirim WhatsApp Peringatan SPP',
+    });
+    setIsWADraftModalOpen(true);
+  };
 
   const reminderColumns = [
     {
       header: 'Nama Siswa & Ortu',
       accessor: (row: ReminderItem) => (
-        <div>
-          <p className="font-bold text-white">{row.nama_siswa}</p>
-          <p className="text-[10px] text-slate-400">Ortu: {row.nama_orang_tua} ({row.whatsapp_orang_tua || 'No WA'})</p>
+        <div className="flex items-start gap-2.5">
+          <div className="pt-0.5">
+            {row.status === 'urgent' ? (
+              <span className="text-base" title="Urgent Status">🔴</span>
+            ) : row.status === 'peringatan' ? (
+              <span className="text-base" title="Peringatan Status">⚠️</span>
+            ) : (
+              <span className="text-base" title="Lancar Status">🟢</span>
+            )}
+          </div>
+          <div>
+            <p className="font-bold text-[#1E293B] text-xs">{row.nama_siswa}</p>
+            <p className="text-[10px] text-[#64748B] mt-0.5">
+              Ortu: <span className="font-medium text-[#334155]">{row.nama_orang_tua}</span> ({row.whatsapp_orang_tua || 'No WA'})
+            </p>
+          </div>
         </div>
-      )
+      ),
     },
     {
       header: 'Program',
       accessor: (row: ReminderItem) => (
-        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+        <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-[#FFF3E0] text-[#FF7043] border border-[#FFCC80] inline-block shadow-2xs">
           {row.program}
         </span>
-      )
+      ),
     },
     {
       header: 'Sisa Pertemuan',
       accessor: (row: ReminderItem) => (
-        <span className={`px-2.5 py-1 rounded-full text-xs font-extrabold ${
-          row.sisa_pertemuan <= 0 ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-        }`}>
-          {row.sisa_pertemuan <= 0 ? '0 (EXPIRED)' : `${row.sisa_pertemuan}x lagi`}
-        </span>
-      )
-    },
-    {
-      header: 'Tagihan SPP',
-      accessor: (row: ReminderItem) => (
-        <span className="font-mono text-xs font-bold text-rose-400">
-          Rp {row.jumlah_tagihan.toLocaleString('id-ID')}
-        </span>
-      )
-    },
-    {
-      header: 'Draf WA Reminder',
-      accessor: (row: ReminderItem) => (
-        <button
-          onClick={() => {
-            setSelectedWADraft({
-              name: row.nama_siswa,
-              draft: row.wa_draft,
-              wa: row.whatsapp_orang_tua
-            });
-            setIsWADraftModalOpen(true);
-          }}
-          className="px-3 py-1.5 bg-amber-500 text-slate-950 text-xs font-extrabold rounded-lg hover:bg-amber-400 flex items-center gap-1.5 shadow"
+        <span
+          className={`px-3 py-1 rounded-full text-xs font-extrabold inline-block ${
+            row.sisa_pertemuan <= 1
+              ? 'bg-[#FFF1F2] text-[#D32F2F] border border-[#FECDD3]'
+              : row.sisa_pertemuan <= 3
+              ? 'bg-[#FFF8E1] text-[#E65100] border border-[#FFE082]'
+              : 'bg-[#E8F5E9] text-[#388E3C] border border-[#A5D6A7]'
+          }`}
         >
-          📲 Salin Draf WA
-        </button>
-      )
-    }
+          {row.sisa_pertemuan} / 8 kali
+        </span>
+      ),
+    },
+    {
+      header: 'Status SPP',
+      accessor: (row: ReminderItem) => {
+        if (row.status === 'urgent') {
+          return (
+            <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#FFEBEE] text-[#D32F2F] border border-[#FFCDD2] inline-flex items-center gap-1">
+              <span>🔴⚠️</span>
+              <span>Urgent</span>
+            </span>
+          );
+        }
+        if (row.status === 'peringatan') {
+          return (
+            <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#FFF8E1] text-[#E65100] border border-[#FFE082] inline-flex items-center gap-1">
+              <span>⚠️</span>
+              <span>Peringatan</span>
+            </span>
+          );
+        }
+        return (
+          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#E8F5E9] text-[#388E3C] border border-[#A5D6A7] inline-block">
+            Lancar
+          </span>
+        );
+      },
+    },
+    {
+      header: 'Aksi Notification',
+      accessor: (row: ReminderItem) => {
+        if (row.status === 'urgent') {
+          return (
+            <button
+              onClick={() => openWAModal(row, 'urgent')}
+              className="px-3 py-1.5 bg-[#D32F2F] text-white text-xs font-bold rounded-lg hover:bg-[#B71C1C] flex items-center gap-1.5 shadow-xs transition-colors"
+            >
+              <span>📲 Kirim WA Tagihan</span>
+            </button>
+          );
+        }
+        if (row.status === 'peringatan') {
+          return (
+            <button
+              onClick={() => openWAModal(row, 'peringatan')}
+              className="px-3 py-1.5 bg-[#FF7043] text-white text-xs font-bold rounded-lg hover:bg-[#F4511E] flex items-center gap-1.5 shadow-xs transition-colors"
+            >
+              <span>📲 Kirim WA Peringatan</span>
+            </button>
+          );
+        }
+        return <span className="text-[11px] text-[#94A3B8] italic font-medium">No action needed</span>;
+      },
+    },
   ];
 
   const buktiColumns = [
     {
-      header: 'ID / Transaksi',
-      accessor: (row: BuktiTransferItem) => (
-        <span className="font-mono text-amber-400 font-bold">#BT-{row.id}</span>
-      )
+      header: 'ID Transaksi',
+      accessor: (row: BuktiTransferItem) => <span className="font-mono text-[#FF7043] font-bold">#BT-{row.id}</span>,
     },
     {
       header: 'Bukti Transfer File',
@@ -180,21 +257,27 @@ export const PembayaranPage: React.FC = () => {
           href={row.file_path}
           target="_blank"
           rel="noreferrer"
-          className="text-xs font-bold text-sky-400 hover:underline flex items-center gap-1"
+          className="text-xs font-bold text-[#1976D2] hover:underline flex items-center gap-1"
         >
           🖼️ Lihat File Bukti
         </a>
-      )
+      ),
     },
     {
       header: 'Status Verifikasi',
       accessor: (row: BuktiTransferItem) => (
-        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
-          row.status === 'approved' ? 'bg-emerald-500/10 text-emerald-400' : (row.status === 'rejected' ? 'bg-rose-500/10 text-rose-400' : 'bg-amber-500/10 text-amber-400')
-        }`}>
+        <span
+          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+            row.status === 'approved'
+              ? 'bg-[#E8F5E9] text-[#388E3C]'
+              : row.status === 'rejected'
+              ? 'bg-[#FFF1F2] text-[#D32F2F]'
+              : 'bg-[#FFF3E0] text-[#E65100]'
+          }`}
+        >
           {row.status}
         </span>
-      )
+      ),
     },
     {
       header: 'Aksi Verifikasi',
@@ -205,159 +288,202 @@ export const PembayaranPage: React.FC = () => {
               <button
                 onClick={() => approveMutation.mutate(row.id)}
                 disabled={approveMutation.isPending}
-                className="px-3 py-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold rounded-lg shadow"
+                className="px-3 py-1 bg-[#388E3C] hover:bg-[#2E7D32] text-white text-xs font-bold rounded-[6px] shadow-xs"
               >
                 ✓ Setujui
               </button>
               <button
                 onClick={() => rejectMutation.mutate(row.id)}
                 disabled={rejectMutation.isPending}
-                className="px-3 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 text-xs font-bold rounded-lg border border-rose-500/30"
+                className="px-3 py-1 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#D32F2F] text-xs font-bold rounded-[6px] border border-[#FECDD3]"
               >
                 ✕ Tolak
               </button>
             </>
           ) : (
-            <span className="text-[10px] text-slate-500 italic">Sudah diverifikasi</span>
+            <span className="text-[10px] text-[#757575] italic">Sudah diverifikasi</span>
           )}
         </div>
-      )
-    }
+      ),
+    },
   ];
 
   return (
     <div className="space-y-6">
+      {/* Toast Notification */}
       {toastMessage && (
-        <div className={`p-4 rounded-xl text-sm font-bold shadow-xl border ${
-          toastMessage.type === 'success' ? 'bg-emerald-950 text-emerald-300 border-emerald-500/30' : 'bg-rose-950 text-rose-300 border-rose-500/30'
-        }`}>
+        <div
+          className={`p-4 rounded-xl text-xs font-bold shadow-sm border ${
+            toastMessage.type === 'success'
+              ? 'bg-[#E8F5E9] text-[#388E3C] border-[#A5D6A7]'
+              : 'bg-[#FFF1F2] text-[#D32F2F] border-[#FECDD3]'
+          }`}
+        >
           {toastMessage.text}
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">Pembayaran & Reminder SPP</h1>
-          <p className="text-xs text-slate-400 mt-1">Pengingat tagihan SPP, draf pesan WhatsApp, dan verifikasi bukti transfer</p>
-        </div>
-        <div>
+      {/* Standardized Page Header */}
+      <PageHeader
+        icon={<PembayaranIcon size={24} className="text-[#D32F2F]" />}
+        title="Pembayaran & Reminder SPP"
+        subtitle="Sistem notifikasi tagihan SPP, kualifikasi status kuota, dan draf WhatsApp"
+        iconColorBg="bg-[#FFF1F2] text-[#D32F2F]"
+        onExportSheets={() => exportSheetsMutation.mutate()}
+        isExporting={exportSheetsMutation.isPending}
+      />
+
+      {/* Navigation Tabs (Owner sees both tabs, Admin sees Reminder only) */}
+      {userRole === 'owner' ? (
+        <div className="flex border-b border-[#E2E8F0] gap-2">
           <button
-            onClick={() => exportSheetsMutation.mutate()}
-            disabled={exportSheetsMutation.isPending}
-            className="px-4 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-xl text-xs font-bold transition-colors"
+            onClick={() => setActiveTab('reminder')}
+            className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-colors cursor-pointer ${
+              activeTab === 'reminder'
+                ? 'border-[#FF7043] text-[#FF7043] bg-[#FFF3E0]/50'
+                : 'border-transparent text-[#64748B] hover:text-[#1E293B]'
+            }`}
           >
-            {exportSheetsMutation.isPending ? '🔄 Mengirim...' : '📊 Kirim ke Google Sheets'}
+            Reminder SPP (Sisa Kuota ≤ 2)
+          </button>
+          <button
+            onClick={() => setActiveTab('verifikasi')}
+            className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-colors cursor-pointer ${
+              activeTab === 'verifikasi'
+                ? 'border-[#FF7043] text-[#FF7043] bg-[#FFF3E0]/50'
+                : 'border-transparent text-[#64748B] hover:text-[#1E293B]'
+            }`}
+          >
+            Verifikasi Bukti Transfer
           </button>
         </div>
-      </div>
-
-      {/* Navigation Tabs */}
-      <div className="flex border-b border-slate-800 gap-2">
-        <button
-          onClick={() => setActiveTab('reminder')}
-          className={`px-4 py-2.5 text-xs font-extrabold transition-all border-b-2 ${
-            activeTab === 'reminder' ? 'border-amber-500 text-amber-400 bg-amber-500/5' : 'border-transparent text-slate-400 hover:text-white'
-          }`}
-        >
-          🔔 Reminder SPP (Sisa Kuota ≤ 2)
-        </button>
-        <button
-          onClick={() => setActiveTab('verifikasi')}
-          className={`px-4 py-2.5 text-xs font-extrabold transition-all border-b-2 ${
-            activeTab === 'verifikasi' ? 'border-amber-500 text-amber-400 bg-amber-500/5' : 'border-transparent text-slate-400 hover:text-white'
-          }`}
-        >
-          💰 Verifikasi Bukti Transfer
-        </button>
-      </div>
-
-      {/* Tab Content */}
-      {activeTab === 'reminder' && (
-        <div>
-          {isLoadingReminders ? (
-            <div className="py-16 text-center text-slate-400 text-xs">Memuat data reminder SPP...</div>
-          ) : (
-            <DataTable
-              columns={reminderColumns}
-              data={reminderList}
-              searchPlaceholder="Cari nama siswa, ortu, program..."
-              searchFilter={(row, q) =>
-                row.nama_siswa.toLowerCase().includes(q.toLowerCase()) ||
-                row.nama_orang_tua.toLowerCase().includes(q.toLowerCase()) ||
-                row.program.toLowerCase().includes(q.toLowerCase())
-              }
-            />
-          )}
+      ) : (
+        <div className="p-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl flex items-center justify-between">
+          <span className="text-xs font-bold text-[#FF7043]">
+            📋 Reminder SPP Siswa (Kualifikasi Lancar, Peringatan & Urgent)
+          </span>
+          <span className="text-[11px] text-[#64748B] font-medium">Role: Admin</span>
         </div>
       )}
 
-      {activeTab === 'verifikasi' && (
-        <div>
-          {isLoadingBukti ? (
-            <div className="py-16 text-center text-slate-400 text-xs">Memuat bukti transfer...</div>
-          ) : (
-            <DataTable
-              columns={buktiColumns}
-              data={buktiList}
-              searchPlaceholder="Cari ID bukti transfer..."
-              searchFilter={(row, q) => row.id.toString().includes(q) || row.status.includes(q)}
-            />
-          )}
-        </div>
+      {/* Main Content View */}
+      {activeTab === 'reminder' || userRole === 'admin' ? (
+        isLoadingReminders ? (
+          <div className="py-16 text-center text-[#757575] text-xs">Memuat data pengingat SPP...</div>
+        ) : reminderList.length === 0 ? (
+          <EmptyState
+            icon={<PembayaranIcon size={40} className="text-[#757575]" />}
+            title="Tidak ada tagihan SPP jatuh tempo"
+            description="Semua murid memiliki sisa pertemuan kuota kelas yang mencukupi."
+          />
+        ) : (
+          <DataTable
+            columns={reminderColumns}
+            data={reminderList}
+            searchPlaceholder="Cari siswa, orang tua, program..."
+            searchFilter={(row, q) =>
+              row.nama_siswa.toLowerCase().includes(q.toLowerCase()) ||
+              row.nama_orang_tua.toLowerCase().includes(q.toLowerCase()) ||
+              row.program.toLowerCase().includes(q.toLowerCase()) ||
+              row.status.toLowerCase().includes(q.toLowerCase())
+            }
+          />
+        )
+      ) : isLoadingBukti ? (
+        <div className="py-16 text-center text-[#757575] text-xs">Memuat daftar bukti transfer...</div>
+      ) : buktiList.length === 0 ? (
+        <EmptyState
+          icon={<PembayaranIcon size={40} className="text-[#757575]" />}
+          title="Belum ada bukti transfer pending"
+          description="Bukti pembayaran SPP dari orang tua murid akan muncul di sini untuk diverifikasi."
+        />
+      ) : (
+        <DataTable
+          columns={buktiColumns}
+          data={buktiList}
+          searchPlaceholder="Cari ID transaksi, status..."
+          searchFilter={(row, q) => row.id.toString().includes(q) || row.status.toLowerCase().includes(q.toLowerCase())}
+        />
       )}
 
-      {/* Modal WA Draft Copy */}
-      <Modal isOpen={isWADraftModalOpen} onClose={() => setIsWADraftModalOpen(false)} title="📲 Draf Pesan WhatsApp Reminder SPP">
+      {/* WhatsApp Message Draft Modal */}
+      <Modal
+        isOpen={isWADraftModalOpen}
+        onClose={() => setIsWADraftModalOpen(false)}
+        title={selectedWADraft?.title || '📲 Draf Pesan WhatsApp'}
+      >
         {selectedWADraft && (
           <div className="space-y-4 text-xs">
-            <p className="text-slate-300">
-              Draf pesan pengingat SPP untuk orang tua <strong>{selectedWADraft.name}</strong> (+{selectedWADraft.wa || 'no WA'}):
+            <p className="text-[#475569]">
+              Pratinjau draf pesan yang akan dikirimkan ke orang tua <strong>{selectedWADraft.name}</strong> (+
+              {selectedWADraft.wa || 'Nomor Belum Ada'}):
             </p>
-            <pre className="p-4 bg-slate-900 border border-slate-800 rounded-2xl whitespace-pre-wrap font-sans text-slate-200">
-              {selectedWADraft.draft}
-            </pre>
-            <div className="flex gap-3">
+            <textarea
+              readOnly
+              rows={10}
+              value={selectedWADraft.draft}
+              className="w-full bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl p-3.5 text-[#1E293B] font-mono text-[11px] leading-relaxed focus:outline-none"
+            />
+            <div className="flex justify-between items-center pt-2 gap-3">
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(selectedWADraft.draft);
-                  showToast('📋 Draf pesan WA disalin ke clipboard!');
+                  showToast('📋 Teks pesan WhatsApp berhasil disalin ke clipboard!');
                 }}
-                className="flex-1 py-2.5 bg-amber-500 text-slate-950 font-bold rounded-xl"
+                className="px-4 py-2.5 bg-[#FF7043] text-white font-bold rounded-xl hover:bg-[#F4511E] transition-colors flex items-center gap-1.5 shadow-xs"
               >
-                📋 Salin Teks Draf WA
+                📋 Salin Teks
               </button>
-              <button onClick={() => setIsWADraftModalOpen(false)} className="px-4 py-2.5 bg-slate-800 text-slate-300 font-bold rounded-xl">
-                Tutup
-              </button>
+              <div className="flex gap-2">
+                <a
+                  href={`https://wa.me/${selectedWADraft.wa}?text=${encodeURIComponent(selectedWADraft.draft)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-4 py-2.5 bg-[#388E3C] text-white font-bold rounded-xl hover:bg-[#2E7D32] transition-colors flex items-center gap-1.5 shadow-xs"
+                >
+                  📲 Buka WhatsApp Web
+                </a>
+                <button
+                  onClick={() => setIsWADraftModalOpen(false)}
+                  className="px-4 py-2.5 bg-[#F1F5F9] text-[#475569] font-bold rounded-xl hover:bg-[#E2E8F0] border border-[#E2E8F0]"
+                >
+                  Tutup
+                </button>
+              </div>
             </div>
           </div>
         )}
       </Modal>
 
-      {/* Modal Export Result */}
+      {/* Export Status Modal */}
       <Modal isOpen={isExportModalOpen} onClose={() => setIsExportModalOpen(false)} title="📊 Status Google Sheets Export">
         {exportResult && (
           <div className="space-y-4 text-xs">
-            <p className="text-white font-bold">{exportResult.message}</p>
+            <p className="text-[#1E293B] font-bold">{exportResult.message}</p>
             {exportResult.status === 'success' ? (
               <div className="space-y-3">
-                <p className="text-slate-400">Tab: <code className="text-amber-400 font-bold">{exportResult.worksheet_name}</code> ({exportResult.rows_written} baris ditulis)</p>
+                <p className="text-[#475569]">
+                  Tab: <code className="text-[#FF7043] font-bold">{exportResult.worksheet_name}</code> ({exportResult.rows_written} baris ditulis)
+                </p>
                 <a
                   href={exportResult.sheet_url}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-block px-4 py-2.5 bg-emerald-500 text-slate-950 font-bold rounded-xl"
+                  className="inline-block px-4 py-2.5 bg-[#388E3C] text-white font-bold rounded-xl hover:bg-[#2E7D32]"
                 >
                   📂 Buka Google Sheets
                 </a>
               </div>
             ) : (
-              <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-300">
+              <div className="p-3 bg-[#FFF3E0] border border-[#FFCC80] rounded-xl text-[#E65100]">
                 Fitur ini memerlukan <code>GOOGLE_SERVICE_ACCOUNT_JSON</code> dan <code>GOOGLE_SHEET_ID</code> pada file .env backend.
               </div>
             )}
             <div className="flex justify-end pt-2">
-              <button onClick={() => setIsExportModalOpen(false)} className="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-lg">
+              <button
+                onClick={() => setIsExportModalOpen(false)}
+                className="px-4 py-2 bg-[#F1F5F9] text-[#475569] font-bold rounded-lg border border-[#E2E8F0]"
+              >
                 Tutup
               </button>
             </div>
