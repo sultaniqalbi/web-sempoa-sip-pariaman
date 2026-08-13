@@ -116,6 +116,33 @@ export const DashboardPage: React.FC = () => {
     },
   ];
 
+  const featuresList: FeatureItem[] = [
+    {
+      title: 'Kelola Data Siswa',
+      description: 'Pendaftaran siswa baru, auto-provisioning akun ortu, dan sisa pertemuan.',
+      icon: 'siswa',
+      iconColor: '#1976D2',
+      linkText: 'Buka Data Siswa →',
+      onClick: () => navigate(role === 'owner' ? '/owner/siswa' : '/admin/siswa'),
+    },
+    {
+      title: 'Pembayaran & Reminder',
+      description: 'Verifikasi bukti transfer ortu dan draft pesan pengingat WhatsApp SPP.',
+      icon: 'pembayaran',
+      iconColor: '#D32F2F',
+      linkText: 'Buka Pembayaran →',
+      onClick: () => navigate(role === 'owner' ? '/owner/pembayaran' : '/admin/pembayaran'),
+    },
+    {
+      title: 'Rekap Bulanan',
+      description: 'Kirim data operasional secara instan ke tab Google Sheets yang selalu terbaru.',
+      icon: 'sheets',
+      iconColor: '#388E3C',
+      linkText: 'Buat Rekap Sekarang →',
+      onClick: () => setIsRekapModalOpen(true),
+    },
+  ];
+
   return (
     <AdminDashboard
       userName={statsData?.user_name || 'Admin SIP Pariaman'}
