@@ -394,7 +394,7 @@ export const HomePage: React.FC = () => {
               onClick={() => handleAdvCardClick(1)}
             >
               <div className="adv-card-image-wrap" style={{ backgroundColor: '#FFF8E1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <img src="/assets/icons/otak.svg" alt="Metode Senam Otak" style={{ width: '68px', height: '68px' }} />
+                <img src="/assets/image/braingym.png" alt="Metode Senam Otak" style={{ width: '80px', height: '80px', objectFit: 'contain' }} />
               </div>
               <div className="adv-card-body">
                 <h3>Metode Senam Otak (Brain Gym)</h3>
@@ -416,7 +416,7 @@ export const HomePage: React.FC = () => {
               onClick={() => handleAdvCardClick(2)}
             >
               <div className="adv-card-image-wrap" style={{ backgroundColor: '#E0F7FA', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <img src="/assets/icons/game.svg" alt="Belajar Menyenangkan" style={{ width: '68px', height: '68px' }} />
+                <img src="/assets/image/belajar-menyenangkan.png" alt="Belajar Menyenangkan" style={{ width: '80px', height: '80px', objectFit: 'contain' }} />
               </div>
               <div className="adv-card-body">
                 <h3>Belajar Menyenangkan (Playful Learning)</h3>
@@ -438,7 +438,7 @@ export const HomePage: React.FC = () => {
               onClick={() => handleAdvCardClick(3)}
             >
               <div className="adv-card-image-wrap" style={{ backgroundColor: '#FFEBEE', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <img src="/assets/icons/pengajar.svg" alt="Pengajar Terlatih" style={{ width: '68px', height: '68px' }} />
+                <img src="/assets/image/pengajar-terlatih.png" alt="Pengajar Terlatih" style={{ width: '80px', height: '80px', objectFit: 'contain' }} />
               </div>
               <div className="adv-card-body">
                 <h3>Pengajar Terlatih & Ramah Anak</h3>
@@ -460,7 +460,7 @@ export const HomePage: React.FC = () => {
               onClick={() => handleAdvCardClick(4)}
             >
               <div className="adv-card-image-wrap" style={{ backgroundColor: '#E8F5E9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <img src="/assets/icons/ramah-anak.svg" alt="Tempat Ramah Anak" style={{ width: '68px', height: '68px' }} />
+                <img src="/assets/image/ramah-anak.png" alt="Tempat Ramah Anak" style={{ width: '80px', height: '80px', objectFit: 'contain' }} />
               </div>
               <div className="adv-card-body">
                 <h3>Tempat Ramah Anak & Penuh Keceriaan</h3>
