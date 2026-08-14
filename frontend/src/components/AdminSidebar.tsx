@@ -14,7 +14,7 @@ export const AdminSidebar: React.FC<SidebarProps> = ({ onClose, isCollapsed = fa
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/');
   };
 
   const basePath = `/${role}`;

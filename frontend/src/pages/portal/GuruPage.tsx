@@ -528,14 +528,14 @@ export const GuruPage: React.FC = () => {
             <textarea
               readOnly
               rows={7}
-              value={`Halo ${createdCredential.name},\n\nAnda telah terdaftar sebagai pengajar di Sempoa SIP TC Pariaman.\n\n📧 Email: ${createdCredential.email}\n🔐 Sandi: ${createdCredential.pwd}\n🌐 Portal: https://sempoasippariaman.com/login\n\n---\nTim Sempoa SIP TC Pariaman`}
+              value={`Halo ${createdCredential.name},\n\nAnda telah terdaftar sebagai pengajar di Sempoa SIP TC Pariaman.\n\n📧 Email: ${createdCredential.email}\n🔐 Sandi: ${createdCredential.pwd}\n🌐 Portal: https://sempoasippariaman.com/\n\n---\nTim Sempoa SIP TC Pariaman`}
               className="w-full bg-[#FAFAFA] border border-[#E0E0E0] rounded-[8px] p-3 font-mono text-xs text-[#424242]"
             />
             <div className="flex gap-3">
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(
-                    `Halo ${createdCredential.name},\n\nAnda telah terdaftar sebagai pengajar di Sempoa SIP TC Pariaman.\n\n📧 Email: ${createdCredential.email}\n🔐 Sandi: ${createdCredential.pwd}\n🌐 Portal: https://sempoasippariaman.com/login\n\n---\nTim Sempoa SIP TC Pariaman`
+                    `Halo ${createdCredential.name},\n\nAnda telah terdaftar sebagai pengajar di Sempoa SIP TC Pariaman.\n\n📧 Email: ${createdCredential.email}\n🔐 Sandi: ${createdCredential.pwd}\n🌐 Portal: https://sempoasippariaman.com/\n\n---\nTim Sempoa SIP TC Pariaman`
                   );
                   showToast('📋 Pesan WhatsApp disalin!');
                 }}

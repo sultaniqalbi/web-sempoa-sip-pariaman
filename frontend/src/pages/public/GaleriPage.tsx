@@ -148,7 +148,7 @@ export const GaleriPage: React.FC = () => {
                   Daftar Sekarang
                 </a>
                 <Link
-                  to="/login"
+                  to="/"
                   className="btn btn-primary"
                   id="loginNavBtn"
                 >

@@ -151,7 +151,7 @@ export const DashboardPage: React.FC = () => {
       features={featuresList}
       onLogout={() => {
         logout();
-        navigate('/login');
+        navigate('/');
       }}
       onAddStudent={() => navigate(role === 'owner' ? '/owner/siswa' : '/admin/siswa')}
       onSelectMenu={(label) => {

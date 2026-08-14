@@ -1,7 +1,10 @@
 import os
 from typing import List, Optional
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+import io
+import uuid
+from PIL import Image
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -94,6 +97,9 @@ async def create_new_siswa(
             nama_orang_tua=siswa_in.nama_orang_tua,
             whatsapp_orang_tua=normalized_wa,
             alamat=siswa_in.alamat,
+            tempat_lahir=siswa_in.tempat_lahir,
+            tanggal_lahir=siswa_in.tanggal_lahir,
+            asal_sekolah=siswa_in.asal_sekolah,
             bio=siswa_in.bio,
             foto_profil=siswa_in.foto_profil
         )
@@ -268,6 +274,58 @@ Tim Sempoa SIP TC Pariaman"""
             "fallback_message": message_template,
             "whatsapp_number": wa_num
         }
+
+@router.post("/{id}/upload-foto")
+async def upload_foto_siswa(
+    id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(admin_or_owner)
+):
+    siswa = db.query(Siswa).filter(Siswa.id == id, Siswa.is_deleted == False).first()
+    if not siswa:
+        raise HTTPException(status_code=404, detail="Siswa tidak ditemukan")
+        
+    try:
+        contents = await file.read()
+        image = Image.open(io.BytesIO(contents))
+        
+        # Convert to RGB if needed (e.g. from PNG with alpha)
+        if image.mode in ("RGBA", "P"):
+            image = image.convert("RGB")
+            
+        # Resize if too large (e.g., max width 800px) while maintaining aspect ratio
+        max_size = (800, 800)
+        image.thumbnail(max_size, Image.Resampling.LANCZOS)
+        
+        # Save as WebP
+        filename = f"{siswa.uid}_{uuid.uuid4().hex[:8]}.webp"
+        upload_dir = os.path.join(os.path.dirname(__file__), "../../../uploads/profil")
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        filepath = os.path.join(upload_dir, filename)
+        # Quality 80 usually produces small files (100-300kb for 800px images)
+        image.save(filepath, "WEBP", quality=80)
+        
+        file_url = f"/uploads/profil/{filename}"
+        
+        # Delete old photo if exists
+        if siswa.foto_profil and siswa.foto_profil.startswith("/uploads/profil/"):
+            old_filename = os.path.basename(siswa.foto_profil)
+            old_filepath = os.path.join(upload_dir, old_filename)
+            if os.path.exists(old_filepath):
+                try:
+                    os.remove(old_filepath)
+                except Exception:
+                    pass
+                    
+        siswa.foto_profil = file_url
+        db.commit()
+        
+        return {"status": "success", "file_url": file_url}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Gagal memproses gambar: {str(e)}")
 
 @router.post("/export-sheets")
 async def export_siswa_sheets(

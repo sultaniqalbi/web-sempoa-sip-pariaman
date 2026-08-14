@@ -14,6 +14,8 @@ interface Jadwal {
   jam_mulai: string;
   jam_selesai: string;
   lokasi: string;
+  is_hari_libur: boolean;
+  kategori_program: string;
   id_guru?: number;
   id_siswa?: number;
   created_at: string;
@@ -49,10 +51,12 @@ export const JadwalPage: React.FC = () => {
   const [selectedGuruId, setSelectedGuruId] = useState<string>('');
   const [formData, setFormData] = useState({
     hari: 'Senin',
-    jam_mulai: '14:00',
-    jam_selesai: '15:30',
+    jam_mulai: '09:00',
+    jam_selesai: '17:00',
     lokasi: 'TC Pariaman - Ruang Utama',
     id_guru: undefined as number | undefined,
+    is_hari_libur: false,
+    kategori_program: 'Sempoa SIP',
   });
 
   const showToast = (text: string, type: 'success' | 'error' = 'success') => {
@@ -180,50 +184,54 @@ export const JadwalPage: React.FC = () => {
         ...prev,
         id_guru: undefined,
         lokasi: 'TC Pariaman - Ruang Utama',
+        kategori_program: 'Sempoa SIP'
       }));
       return;
     }
 
     const selectedGuru = guruList.find((g) => g.id === guruId);
     let autoRoom = 'TC Pariaman - Ruang Utama';
-    let duration = 90;
+    let cat = 'Sempoa SIP';
 
     if (selectedGuru) {
-      const cat = selectedGuru.kategori_program || '';
+      cat = selectedGuru.kategori_program || 'Sempoa SIP';
       if (cat === 'Sempoa SIP') autoRoom = 'TC Pariaman - Ruang Sempoa';
       else if (cat === 'Fonem') autoRoom = 'TC Pariaman - Ruang Fonem';
       else if (cat === 'Tahfidz') autoRoom = 'TC Pariaman - Ruang Tahfidz';
       else if (cat === 'Bahasa Inggris') autoRoom = 'TC Pariaman - Ruang English';
       else autoRoom = `TC Pariaman - Ruang ${cat}`;
-
-      if (selectedGuru.paket_pengajaran?.includes('60menit')) {
-        duration = 60;
-      }
     }
 
-    const autoEnd = calcEndTime(formData.jam_mulai, duration);
+    // Auto calculate initial read-only times based on program and is_hari_libur
+    const jam_mulai = cat === 'Bahasa Inggris' || cat === 'Tahfidz' ? '12:00' : '09:00';
+    const jam_selesai = formData.is_hari_libur ? '15:30' : '17:00';
+    
+    // For Bahasa Inggris, if current hari doesn't include Jumat or Sabtu, reset it
+    let newHari = formData.hari;
+    if (cat === 'Bahasa Inggris') {
+       newHari = 'Jumat, Sabtu';
+    }
 
     setFormData((prev) => ({
       ...prev,
       id_guru: guruId,
       lokasi: autoRoom,
-      jam_selesai: autoEnd,
+      kategori_program: cat,
+      jam_mulai: jam_mulai,
+      jam_selesai: jam_selesai,
+      hari: newHari
     }));
   };
 
-  const handleStartTimeChange = (newStartTime: string) => {
-    const selectedGuru = guruList.find((g) => g.id === formData.id_guru);
-    let duration = 90;
-    if (selectedGuru?.paket_pengajaran?.includes('60menit')) {
-      duration = 60;
-    }
-
-    const autoEnd = calcEndTime(newStartTime, duration);
-
+  const handleHariLiburToggle = (isLibur: boolean) => {
+    const jam_mulai = formData.kategori_program === 'Bahasa Inggris' || formData.kategori_program === 'Tahfidz' ? '12:00' : '09:00';
+    const jam_selesai = isLibur ? '15:30' : '17:00';
+    
     setFormData((prev) => ({
       ...prev,
-      jam_mulai: newStartTime,
-      jam_selesai: autoEnd,
+      is_hari_libur: isLibur,
+      jam_mulai: jam_mulai,
+      jam_selesai: jam_selesai,
     }));
   };
 
@@ -231,29 +239,41 @@ export const JadwalPage: React.FC = () => {
     setSelectedGuruId('');
     setFormData({
       hari: 'Senin, Rabu',
-      jam_mulai: '14:00',
-      jam_selesai: '15:30',
+      jam_mulai: '09:00',
+      jam_selesai: '17:00',
       lokasi: 'TC Pariaman - Ruang Utama',
       id_guru: undefined,
+      is_hari_libur: false,
+      kategori_program: 'Sempoa SIP'
     });
     setIsAddModalOpen(true);
   };
 
   const jadwalColumns = [
     {
-      header: 'Hari',
+      header: 'Program & Hari',
       accessor: (row: Jadwal) => (
-        <span className="px-2.5 py-1 rounded-[6px] text-xs font-bold bg-[#FFF3E0] text-[#FF7043] border border-[#FFCC80] block w-fit leading-relaxed">
-          {row.hari}
-        </span>
+        <div>
+          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FFF3E0] text-[#FF7043] border border-[#FFCC80] mr-2">
+            {row.kategori_program || 'Sempoa SIP'}
+          </span>
+          <span className="px-2 py-0.5 rounded-[6px] text-[10px] font-bold bg-[#F1F5F9] text-[#475569] border border-[#CBD5E1]">
+            {row.hari}
+          </span>
+        </div>
       ),
     },
     {
-      header: 'Waktu / Jam',
+      header: 'Waktu & Tipe',
       accessor: (row: Jadwal) => (
-        <span className="font-mono text-xs font-bold text-[#424242]">
-          {row.jam_mulai} - {row.jam_selesai}
-        </span>
+        <div>
+          <span className="font-mono text-xs font-bold text-[#424242]">
+            {row.jam_mulai} - {row.jam_selesai}
+          </span>
+          <p className="text-[10px] text-[#757575] mt-1 font-semibold">
+            {row.is_hari_libur ? 'Libur Nasional' : 'Hari Biasa'}
+          </p>
+        </div>
       ),
     },
     {
@@ -425,16 +445,7 @@ export const JadwalPage: React.FC = () => {
           }}
           className="space-y-4 text-xs"
         >
-          {/* Day Picker Component (Multi Select) */}
-          <DayPicker
-            label="Hari Kelas*"
-            selectedDays={formData.hari}
-            onChange={(val) => setFormData({ ...formData, hari: val })}
-            multiSelect={true}
-            required={true}
-          />
-
-          {/* Select Guru Dropdown */}
+          {/* Select Guru Dropdown (Moved Up) */}
           <div>
             <label className="block text-[#424242] font-bold mb-1">Nama Guru / Pengajar*</label>
             <select
@@ -451,26 +462,62 @@ export const JadwalPage: React.FC = () => {
             </select>
           </div>
 
-          {/* Optimized Native Time Input */}
-          <div className="grid grid-cols-2 gap-3">
+          {/* Day Picker Component (Multi Select) */}
+          <DayPicker
+            label={formData.kategori_program === 'Bahasa Inggris' ? "Hari Kelas* (Jumat/Sabtu Saja)" : "Hari Kelas*"}
+            selectedDays={formData.hari}
+            onChange={(val) => {
+              if (formData.kategori_program === 'Bahasa Inggris') {
+                 // filter to only allow Jumat / Sabtu
+                 const days = val.split(',').map(d => d.trim());
+                 const validDays = days.filter(d => ['Jumat', 'Sabtu'].includes(d));
+                 if (validDays.length > 0) {
+                    setFormData({ ...formData, hari: validDays.join(', ') });
+                 } else {
+                    setFormData({ ...formData, hari: '' });
+                 }
+              } else {
+                 setFormData({ ...formData, hari: val });
+              }
+            }}
+            multiSelect={true}
+            required={true}
+          />
+
+
+
+          {/* Tipe Hari Toggle */}
+          <div className="flex items-center gap-3 p-3 bg-[#F1F5F9] border border-[#E2E8F0] rounded-[8px]">
+            <input
+              type="checkbox"
+              id="is_hari_libur"
+              checked={formData.is_hari_libur}
+              onChange={(e) => handleHariLiburToggle(e.target.checked)}
+              className="w-4 h-4 accent-[#FF7043]"
+            />
+            <label htmlFor="is_hari_libur" className="text-[#1E293B] font-bold text-xs cursor-pointer select-none">
+              Jadwal Hari Libur Nasional
+            </label>
+          </div>
+
+          {/* Read-Only Time Inputs */}
+          <div className="grid grid-cols-2 gap-3 group relative" title="Jam ditentukan oleh sistem berdasarkan program">
             <div>
-              <label className="block text-[#424242] font-bold mb-1">Jam Mulai*</label>
+              <label className="block text-[#424242] font-bold mb-1">Jam Mulai (Auto)</label>
               <input
                 type="time"
-                required
+                readOnly
                 value={formData.jam_mulai}
-                onChange={(e) => handleStartTimeChange(e.target.value)}
-                className="w-full bg-[#FAFAFA] border border-[#E0E0E0] rounded-[8px] p-2.5 text-[#424242] font-mono focus:border-[#FF7043] focus:outline-none"
+                className="w-full bg-[#F5F5F5] border border-[#E0E0E0] rounded-[8px] p-2.5 text-[#9E9E9E] font-mono cursor-not-allowed outline-none"
               />
             </div>
             <div>
-              <label className="block text-[#424242] font-bold mb-1">Jam Selesai*</label>
+              <label className="block text-[#424242] font-bold mb-1">Jam Selesai (Auto)</label>
               <input
                 type="time"
-                required
+                readOnly
                 value={formData.jam_selesai}
-                onChange={(e) => setFormData({ ...formData, jam_selesai: e.target.value })}
-                className="w-full bg-[#FAFAFA] border border-[#E0E0E0] rounded-[8px] p-2.5 text-[#424242] font-mono focus:border-[#FF7043] focus:outline-none"
+                className="w-full bg-[#F5F5F5] border border-[#E0E0E0] rounded-[8px] p-2.5 text-[#9E9E9E] font-mono cursor-not-allowed outline-none"
               />
             </div>
           </div>

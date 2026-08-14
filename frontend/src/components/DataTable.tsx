@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import SearchIcon from '@/assets/icons/search.svg';
+import SearchIcon from '../assets/icons/search.svg';
 
 interface Column<T> {
   header: string | React.ReactNode;

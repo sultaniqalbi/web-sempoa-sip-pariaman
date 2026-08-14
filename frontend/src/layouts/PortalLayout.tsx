@@ -25,7 +25,7 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/');
   };
 
   const basePath = `/${role}`;

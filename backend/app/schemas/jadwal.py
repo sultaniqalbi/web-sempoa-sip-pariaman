@@ -6,9 +6,11 @@ class JadwalBase(BaseModel):
     id_guru: Optional[int] = None
     id_siswa: Optional[int] = None
     hari: str
-    jam_mulai: str
-    jam_selesai: str
+    jam_mulai: Optional[str] = None
+    jam_selesai: Optional[str] = None
     lokasi: str = "TC Pariaman"
+    is_hari_libur: bool = False
+    kategori_program: str = "Sempoa SIP"
 
 class JadwalCreate(JadwalBase):
     pass
@@ -20,6 +22,8 @@ class JadwalUpdate(BaseModel):
     jam_mulai: Optional[str] = None
     jam_selesai: Optional[str] = None
     lokasi: Optional[str] = None
+    is_hari_libur: Optional[bool] = None
+    kategori_program: Optional[str] = None
 
 class JadwalResponse(JadwalBase):
     id: int

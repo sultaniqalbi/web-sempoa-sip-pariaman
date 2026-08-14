@@ -18,11 +18,7 @@ if config.config_file_name:
 target_metadata = Base.metadata
 
 def get_url():
-    # If POSTGRES_HOST is 'db' (Docker network) but running from host outside Docker,
-    # fallback host to localhost and port to 5433
     url = settings.database_url
-    if "db:5432" in url:
-        url = url.replace("db:5432", "localhost:5433")
     return url
 
 def run_migrations_offline() -> None:

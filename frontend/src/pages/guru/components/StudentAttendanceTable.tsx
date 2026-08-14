@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import SearchIcon from '@/assets/icons/search.svg';
+import SearchIcon from '../../../assets/icons/search.svg';
 
 export interface SiswaAbsensi {
   no: number;

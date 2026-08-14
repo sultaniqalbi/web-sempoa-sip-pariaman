@@ -17,4 +17,4 @@ email-validator>=2.1.0
 gspread>=6.0.0
 google-auth-oauthlib>=1.2.0
 google-auth>=2.30.0
-
+Pillow>=10.1.0

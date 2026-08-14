@@ -1,12 +1,15 @@
 from pydantic import BaseModel, ConfigDict
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, date
 from app.models.siswa import StatusSPP
 
 class SiswaBase(BaseModel):
     uid: str
     nama: str
     nama_panggilan: Optional[str] = None
+    tempat_lahir: Optional[str] = None
+    tanggal_lahir: Optional[date] = None
+    asal_sekolah: Optional[str] = None
     kategori_program: str
     paket_jadwal: Optional[str] = None
     hari_masuk: str
@@ -27,6 +30,9 @@ class SiswaUpdate(BaseModel):
     uid: Optional[str] = None
     nama: Optional[str] = None
     nama_panggilan: Optional[str] = None
+    tempat_lahir: Optional[str] = None
+    tanggal_lahir: Optional[date] = None
+    asal_sekolah: Optional[str] = None
     kategori_program: Optional[str] = None
     paket_jadwal: Optional[str] = None
     hari_masuk: Optional[str] = None

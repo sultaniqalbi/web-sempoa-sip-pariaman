@@ -24,7 +24,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowe
   }
 
   if (!isAuthenticated || !user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/" state={{ from: location }} replace />;
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
@@ -36,7 +36,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowe
           <p className="text-sm text-slate-400">
             Anda tidak memiliki hak akses (Role: <span className="font-semibold text-amber-500">{user.role}</span>) untuk membuka halaman ini.
           </p>
-          <Navigate to="/login" replace />
+          <Navigate to="/" replace />
         </div>
       </div>
     );

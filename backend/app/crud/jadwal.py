@@ -16,7 +16,9 @@ def create_jadwal(db: Session, jadwal: JadwalCreate) -> Jadwal:
         hari=jadwal.hari,
         jam_mulai=jadwal.jam_mulai,
         jam_selesai=jadwal.jam_selesai,
-        lokasi=jadwal.lokasi
+        lokasi=jadwal.lokasi,
+        is_hari_libur=jadwal.is_hari_libur,
+        kategori_program=jadwal.kategori_program
     )
     db.add(db_jadwal)
     db.commit()

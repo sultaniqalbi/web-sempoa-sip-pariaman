@@ -3,6 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../../features/auth/useAuth';
 import useMascotCursor from '../../hooks/useMascotCursor';
 import LoginModal from '../../components/LoginModal';
+import { ApaItuSempoa } from '../../components/ApaItuSempoa';
+import { LevelPembelajaran } from '../../components/LevelPembelajaran';
+import { DiakuiInternasional } from '../../components/DiakuiInternasional';
 
 export const HomePage: React.FC = () => {
   useMascotCursor();
@@ -204,6 +207,10 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
+      <ApaItuSempoa />
+      <LevelPembelajaran />
+      <DiakuiInternasional />
+
       {/* TRUST & ABOUT SECTION */}
       <section className="trust section-padding" id="about">
         <div className="container">
@@ -253,9 +260,15 @@ export const HomePage: React.FC = () => {
                 </div>
                 <div className="program-schedule-box" style={{ padding: '0.75rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', minHeight: '85px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                   <div style={{ fontSize: '0.8rem', color: '#e65100', fontWeight: 700, marginBottom: '0.35rem' }}>Sesi & Jadwal Kelas</div>
-                  <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
+                    <span style={{ minWidth: '60px' }}>Hari Biasa:</span>
                     <span>Senin - Sabtu</span>
-                    <span style={{ background: '#fff3e0', color: '#e65100', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>12.00 - 17.00 WIB</span>
+                    <span style={{ background: '#fff3e0', color: '#e65100', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>09:00 - 17:00 WIB</span>
+                  </div>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <span style={{ minWidth: '60px' }}>Hari Libur:</span>
+                    <span>Senin - Sabtu</span>
+                    <span style={{ background: '#fff3e0', color: '#e65100', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>09:00 - 15:30 WIB</span>
                   </div>
                 </div>
               </div>
@@ -278,9 +291,15 @@ export const HomePage: React.FC = () => {
                 </div>
                 <div className="program-schedule-box" style={{ padding: '0.75rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', minHeight: '85px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                   <div style={{ fontSize: '0.8rem', color: '#00838f', fontWeight: 700, marginBottom: '0.35rem' }}>Sesi & Jadwal Kelas</div>
-                  <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
+                    <span style={{ minWidth: '60px' }}>Hari Biasa:</span>
                     <span>Senin - Sabtu</span>
-                    <span style={{ background: '#e0f7fa', color: '#00838f', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>12.00 - 17.00 WIB</span>
+                    <span style={{ background: '#e0f7fa', color: '#00838f', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>09:00 - 17:00 WIB</span>
+                  </div>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <span style={{ minWidth: '60px' }}>Hari Libur:</span>
+                    <span>Senin - Sabtu</span>
+                    <span style={{ background: '#e0f7fa', color: '#00838f', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>09:00 - 15:30 WIB</span>
                   </div>
                 </div>
               </div>
@@ -303,9 +322,15 @@ export const HomePage: React.FC = () => {
                 </div>
                 <div className="program-schedule-box" style={{ padding: '0.75rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', minHeight: '85px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                   <div style={{ fontSize: '0.8rem', color: '#1b5e20', fontWeight: 700, marginBottom: '0.35rem' }}>Sesi & Jadwal Kelas</div>
-                  <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
+                    <span style={{ minWidth: '60px' }}>Hari Biasa:</span>
                     <span>Senin - Sabtu</span>
-                    <span style={{ background: '#e8f5e9', color: '#1b5e20', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>12.00 - 17.00 WIB</span>
+                    <span style={{ background: '#e8f5e9', color: '#1b5e20', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>12:00 - 17:00 WIB</span>
+                  </div>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <span style={{ minWidth: '60px' }}>Hari Libur:</span>
+                    <span>Senin - Sabtu</span>
+                    <span style={{ background: '#e8f5e9', color: '#1b5e20', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>12:00 - 15:30 WIB</span>
                   </div>
                 </div>
               </div>
@@ -328,9 +353,15 @@ export const HomePage: React.FC = () => {
                 </div>
                 <div className="program-schedule-box" style={{ padding: '0.75rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', minHeight: '85px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                   <div style={{ fontSize: '0.8rem', color: '#c62828', fontWeight: 700, marginBottom: '0.35rem' }}>Sesi & Jadwal Kelas</div>
-                  <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
+                    <span style={{ minWidth: '60px' }}>Hari Biasa:</span>
                     <span>Jumat - Sabtu</span>
-                    <span style={{ background: '#ffebee', color: '#c62828', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>11.00 - 17.00 WIB</span>
+                    <span style={{ background: '#ffebee', color: '#c62828', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>12:00 - 17:00 WIB</span>
+                  </div>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <span style={{ minWidth: '60px' }}>Hari Libur:</span>
+                    <span>Jumat - Sabtu</span>
+                    <span style={{ background: '#ffebee', color: '#c62828', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>12:00 - 15:30 WIB</span>
                   </div>
                 </div>
               </div>
@@ -703,8 +734,8 @@ export const HomePage: React.FC = () => {
                   <div>
                     <p className="location-label">Jam Operasional</p>
                     <div className="hours-list">
-                      <p><strong>Senin - Jumat:</strong> 14.00 - 18.00 WIB</p>
-                      <p><strong>Sabtu:</strong> 08.00 - 12.00 WIB</p>
+                      <p><strong>Senin - Sabtu:</strong> 09.00 - 17.00 WIB</p>
+                      <p><strong>Hari Libur:</strong> 09.00 - 15.30 WIB</p>
                       <p><strong>Minggu:</strong> Libur</p>
                     </div>
                   </div>

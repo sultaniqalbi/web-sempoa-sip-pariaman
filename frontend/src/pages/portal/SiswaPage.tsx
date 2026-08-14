@@ -13,6 +13,10 @@ interface Siswa {
   uid: string;
   nama: string;
   nama_panggilan?: string;
+  tempat_lahir?: string;
+  tanggal_lahir?: string;
+  asal_sekolah?: string;
+  foto_profil?: string;
   kategori_program: string;
   paket_jadwal?: string;
   hari_masuk: string;
@@ -28,6 +32,7 @@ export const SiswaPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingSiswa, setEditingSiswa] = useState<Siswa | null>(null);
+  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   
   const [isCredentialModalOpen, setIsCredentialModalOpen] = useState(false);
   const [isWAFallbackModalOpen, setIsWAFallbackModalOpen] = useState(false);
@@ -49,7 +54,10 @@ export const SiswaPage: React.FC = () => {
     hari_masuk: 'Senin, Rabu',
     nama_orang_tua: '',
     whatsapp_orang_tua: '',
-    alamat: ''
+    alamat: '',
+    tempat_lahir: '',
+    tanggal_lahir: '',
+    asal_sekolah: ''
   });
 
   const showToast = (text: string, type: 'success' | 'error' = 'success') => {
@@ -67,6 +75,18 @@ export const SiswaPage: React.FC = () => {
     return true;
   };
 
+  const calculateAge = (birthDate: string | undefined) => {
+    if (!birthDate) return null;
+    const today = new Date();
+    const dob = new Date(birthDate);
+    let age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
   // Fetch Siswa List
   const { data: siswaList = [], isLoading } = useQuery<Siswa[]>({
     queryKey: ['siswa', 'list'],
@@ -80,6 +100,13 @@ export const SiswaPage: React.FC = () => {
   const createMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
       const res = await apiClient.post('/siswa/', data);
+      if (selectedPhoto) {
+        const fileData = new FormData();
+        fileData.append('file', selectedPhoto);
+        await apiClient.post(`/siswa/${res.data.siswa.id}/upload-foto`, fileData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      }
       return res.data;
     },
     onSuccess: (data) => {
@@ -104,6 +131,13 @@ export const SiswaPage: React.FC = () => {
     mutationFn: async (data: typeof formData) => {
       if (!editingSiswa) return;
       const res = await apiClient.put(`/siswa/${editingSiswa.id}`, data);
+      if (selectedPhoto) {
+        const fileData = new FormData();
+        fileData.append('file', selectedPhoto);
+        await apiClient.post(`/siswa/${editingSiswa.id}/upload-foto`, fileData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      }
       return res.data;
     },
     onSuccess: () => {
@@ -206,8 +240,12 @@ export const SiswaPage: React.FC = () => {
       hari_masuk: 'Senin, Rabu',
       nama_orang_tua: '',
       whatsapp_orang_tua: '',
-      alamat: ''
+      alamat: '',
+      tempat_lahir: '',
+      tanggal_lahir: '',
+      asal_sekolah: ''
     });
+    setSelectedPhoto(null);
     setPhoneError(null);
     setIsAddModalOpen(true);
   };
@@ -223,8 +261,12 @@ export const SiswaPage: React.FC = () => {
       hari_masuk: siswa.hari_masuk || 'Senin, Rabu',
       nama_orang_tua: siswa.nama_orang_tua || '',
       whatsapp_orang_tua: siswa.whatsapp_orang_tua || '',
-      alamat: siswa.alamat || ''
+      alamat: siswa.alamat || '',
+      tempat_lahir: siswa.tempat_lahir || '',
+      tanggal_lahir: siswa.tanggal_lahir || '',
+      asal_sekolah: siswa.asal_sekolah || ''
     });
+    setSelectedPhoto(null);
     setPhoneError(null);
     setIsAddModalOpen(true);
   };
@@ -244,13 +286,26 @@ export const SiswaPage: React.FC = () => {
   const columns = [
     {
       header: 'Kode Siswa',
-      accessor: (row: Siswa) => <span className="font-mono text-[#FF7043] font-bold">{row.uid}</span>
+      accessor: (row: Siswa) => (
+        <div className="flex items-center gap-3">
+          {row.foto_profil ? (
+            <img src={import.meta.env.VITE_API_URL.replace('/api/v1', '') + row.foto_profil} alt="Foto" className="w-9 h-12 object-cover rounded shadow-sm border border-[#E2E8F0]" />
+          ) : (
+            <div className="w-9 h-12 bg-[#F1F5F9] border border-[#E2E8F0] rounded flex items-center justify-center">
+              <span className="text-[#94A3B8] text-[10px]">3x4</span>
+            </div>
+          )}
+          <span className="font-mono text-[#FF7043] font-bold">{row.uid}</span>
+        </div>
+      )
     },
     {
       header: 'Nama Siswa',
       accessor: (row: Siswa) => (
         <div>
-          <p className="font-bold text-[#1E293B]">{row.nama}</p>
+          <p className="font-bold text-[#1E293B]">
+            {row.nama} {calculateAge(row.tanggal_lahir) ? <span className="text-[10px] font-normal text-[#64748B] ml-1">({calculateAge(row.tanggal_lahir)} thn)</span> : ''}
+          </p>
           <p className="text-[10px] text-[#94A3B8]">Ortu: {row.nama_orang_tua || '-'}</p>
         </div>
       )
@@ -413,6 +468,53 @@ export const SiswaPage: React.FC = () => {
             </div>
           </div>
 
+          {/* Tempat Lahir & Tanggal Lahir & Asal Sekolah */}
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">Tempat Lahir</label>
+              <input
+                type="text"
+                value={formData.tempat_lahir}
+                onChange={(e) => setFormData({ ...formData, tempat_lahir: e.target.value })}
+                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
+                placeholder="Pariaman"
+              />
+            </div>
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">Tanggal Lahir</label>
+              <input
+                type="date"
+                value={formData.tanggal_lahir}
+                onChange={(e) => setFormData({ ...formData, tanggal_lahir: e.target.value })}
+                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">Asal Sekolah</label>
+              <input
+                type="text"
+                value={formData.asal_sekolah}
+                onChange={(e) => setFormData({ ...formData, asal_sekolah: e.target.value })}
+                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
+                placeholder="SDN 01 Pariaman"
+              />
+            </div>
+          </div>
+
+          {/* Pas Foto Profil */}
+          <div>
+            <label className="block text-[#1E293B] font-bold mb-1">Pas Foto (Tampil 3x4)</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setSelectedPhoto(e.target.files ? e.target.files[0] : null)}
+              className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2 text-[#1E293B] focus:border-[#FF7043] focus:outline-none file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#FF7043] file:text-white hover:file:bg-[#F4511E]"
+            />
+            {editingSiswa?.foto_profil && !selectedPhoto && (
+              <p className="text-[10px] text-[#64748B] mt-1">Siswa ini sudah memiliki foto. Upload baru untuk mengganti.</p>
+            )}
+          </div>
+
           {/* 3. Kategori Program* (Fixed/Dropdown defaulting to Sempoa SIP) */}
           <div>
             <label className="block text-[#1E293B] font-bold mb-1">Kategori Program*</label>
@@ -571,14 +673,14 @@ export const SiswaPage: React.FC = () => {
             <textarea
               readOnly
               rows={7}
-              value={`Halo ${createdCredential.name},\n\nPutra/putri Anda telah terdaftar di Sempoa SIP TC Pariaman.\n\n📧 Email: ${createdCredential.email}\n🔐 Sandi: ${createdCredential.pwd}\n🌐 Portal: https://sempoasippariaman.com/login\n\n---\nTim Sempoa SIP TC Pariaman`}
+              value={`Halo ${createdCredential.name},\n\nPutra/putri Anda telah terdaftar di Sempoa SIP TC Pariaman.\n\n📧 Email: ${createdCredential.email}\n🔐 Sandi: ${createdCredential.pwd}\n🌐 Portal: https://sempoasippariaman.com/\n\n---\nTim Sempoa SIP TC Pariaman`}
               className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl p-3 font-mono text-xs text-[#1E293B]"
             />
             <div className="flex gap-3">
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(
-                    `Halo ${createdCredential.name},\n\nPutra/putri Anda telah terdaftar di Sempoa SIP TC Pariaman.\n\n📧 Email: ${createdCredential.email}\n🔐 Sandi: ${createdCredential.pwd}\n🌐 Portal: https://sempoasippariaman.com/login\n\n---\nTim Sempoa SIP TC Pariaman`
+                    `Halo ${createdCredential.name},\n\nPutra/putri Anda telah terdaftar di Sempoa SIP TC Pariaman.\n\n📧 Email: ${createdCredential.email}\n🔐 Sandi: ${createdCredential.pwd}\n🌐 Portal: https://sempoasippariaman.com/\n\n---\nTim Sempoa SIP TC Pariaman`
                   );
                   showToast('📋 Pesan WhatsApp disalin ke clipboard!');
                 }}

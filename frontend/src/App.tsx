@@ -12,7 +12,6 @@ import HomePage from './pages/public/HomePage';
 import ProgramsPage from './pages/public/ProgramsPage';
 import ProgramDetailPage from './pages/public/ProgramDetailPage';
 import PublicGaleriPage from './pages/public/GaleriPage';
-import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 
 // Shared Layout & Shared Pages
@@ -62,7 +61,6 @@ export function App() {
               <Route path="/programs" element={<PublicRoute><ProgramsPage /></PublicRoute>} />
               <Route path="/program/:programId" element={<PublicRoute><ProgramDetailPage /></PublicRoute>} />
               <Route path="/galeri" element={<PublicRoute><PublicGaleriPage /></PublicRoute>} />
-              <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
               <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
 
 

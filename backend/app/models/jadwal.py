@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
 from sqlalchemy.sql import func
 from app.core.database import Base
 
@@ -12,4 +12,6 @@ class Jadwal(Base):
     jam_mulai = Column(String(10), nullable=False)
     jam_selesai = Column(String(10), nullable=False)
     lokasi = Column(String(100), nullable=False, default="TC Pariaman")
+    is_hari_libur = Column(Boolean, default=False, nullable=False)
+    kategori_program = Column(String(50), nullable=False, default="Sempoa SIP")
     created_at = Column(DateTime(timezone=True), server_default=func.now())

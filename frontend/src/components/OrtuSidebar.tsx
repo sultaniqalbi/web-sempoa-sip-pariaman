@@ -13,7 +13,7 @@ export const OrtuSidebar: React.FC<SidebarProps> = ({ onClose, isCollapsed = fal
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/');
   };
 
   const links = [

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Enum as SQLEnum, Boolean
+from sqlalchemy import Column, Integer, String, Text, DateTime, Date, ForeignKey, Enum as SQLEnum, Boolean
 from sqlalchemy.sql import func
 import enum
 from app.core.database import Base
@@ -23,6 +23,9 @@ class Siswa(Base):
     nama_orang_tua = Column(String(100), nullable=True)
     whatsapp_orang_tua = Column(String(20), nullable=True)
     alamat = Column(Text, nullable=True)
+    tempat_lahir = Column(String(100), nullable=True)
+    tanggal_lahir = Column(Date, nullable=True)
+    asal_sekolah = Column(String(100), nullable=True)
     bio = Column(Text, nullable=True)
     foto_profil = Column(String(255), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

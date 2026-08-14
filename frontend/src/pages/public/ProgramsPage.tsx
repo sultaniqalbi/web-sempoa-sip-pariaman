@@ -52,7 +52,7 @@ export const ProgramsPage: React.FC = () => {
           <Link to="/" className="text-slate-400 hover:text-white transition-colors">Beranda</Link>
           <Link to="/programs" className="text-white hover:text-amber-500 transition-colors">Program Studi</Link>
           <Link to="/galeri" className="text-slate-400 hover:text-white transition-colors">Galeri Kegiatan</Link>
-          <Link to="/login" className="px-4 py-2 bg-amber-500 text-slate-950 rounded-xl font-bold hover:bg-amber-400 transition-colors shadow-md">
+          <Link to="/" className="px-4 py-2 bg-amber-500 text-slate-950 rounded-xl font-bold hover:bg-amber-400 transition-colors shadow-md">
             Masuk Portal
           </Link>
         </nav>

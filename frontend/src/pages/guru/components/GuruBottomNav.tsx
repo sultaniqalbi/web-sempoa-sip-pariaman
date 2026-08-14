@@ -10,7 +10,7 @@ const GuruBottomNav: React.FC = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/');
   };
 
   const tabs = [
