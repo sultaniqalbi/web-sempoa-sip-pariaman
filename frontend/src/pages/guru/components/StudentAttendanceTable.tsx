@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import SearchIcon from '@/assets/icons/search.svg';
 
 export interface SiswaAbsensi {
   no: number;
@@ -49,22 +50,24 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({ student
         <h2 className="text-sm font-bold text-[#424242]">Input Absensi Siswa</h2>
         
         <div className="relative w-full sm:w-64">
-          <input
-            type="text"
-            placeholder="🔍 Cari nama siswa..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-[#F5F5F5] border border-[#E0E0E0] rounded-xl pl-10 pr-10 py-2.5 text-sm outline-none focus:border-[#FF7043] transition-colors"
-          />
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9E9E9E]">🔍</span>
-          {search && (
-            <button 
-              onClick={() => setSearch('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9E9E9E] hover:text-[#FF7043] font-bold"
-            >
-              ✕
-            </button>
-          )}
+          <div className="flex items-center gap-2 border border-[#E0E0E0] rounded-lg px-3 bg-[#F5F5F5] focus-within:border-[#FF7043] transition-colors">
+            <img src={SearchIcon} alt="Search" width="20" height="20" className="opacity-50" />
+            <input
+              type="text"
+              placeholder="Cari nama siswa..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="flex-1 bg-transparent py-2.5 text-sm outline-none"
+            />
+            {search && (
+              <button 
+                onClick={() => setSearch('')}
+                className="text-[#9E9E9E] hover:text-[#FF7043] font-bold"
+              >
+                ✕
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

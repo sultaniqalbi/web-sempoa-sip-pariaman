@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import SearchIcon from '@/assets/icons/search.svg';
 
 interface Column<T> {
   header: string | React.ReactNode;
@@ -78,7 +79,8 @@ export function DataTable<T>({
   return (
     <div className="space-y-4">
       {searchFilter && (
-        <div className="flex">
+        <div className="flex items-center gap-2 border border-[#E2E8F0] bg-[#F1F5F9] rounded-xl px-3 w-full max-w-xs focus-within:border-[#FF7043] focus-within:ring-1 focus-within:ring-[#FF7043] transition-colors">
+          <img src={SearchIcon} alt="Search" width="20" height="20" className="opacity-50" />
           <input
             type="text"
             value={query}
@@ -87,9 +89,14 @@ export function DataTable<T>({
               setCurrentPage(1);
             }}
             placeholder={searchPlaceholder}
-            className="bg-[#F1F5F9] border border-[#E2E8F0] focus:border-[#FF7043] focus:ring-1 focus:ring-[#FF7043] focus:outline-none rounded-xl px-4 py-2.5 text-xs text-[#1E293B] placeholder-[#94A3B8] max-w-xs w-full"
+            className="flex-1 bg-transparent py-2.5 text-xs text-[#1E293B] placeholder-[#94A3B8] outline-none"
             aria-label="Cari data"
           />
+          {query && (
+            <button onClick={() => { setQuery(''); setCurrentPage(1); }} className="text-[#94A3B8] hover:text-[#FF7043] font-bold">
+              ✕
+            </button>
+          )}
         </div>
       )}
 
