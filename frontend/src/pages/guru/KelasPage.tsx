@@ -1,60 +1,91 @@
 import React from 'react';
-import { useGetSiswaList } from '../../features/api/queries';
-import useAuth from '../../features/auth/useAuth';
+import { useQuery } from '@tanstack/react-query';
+import apiClient from '../../features/api/apiClient';
+import GuruProfileHeader from './components/GuruProfileHeader';
 
-export const KelasPage: React.FC = () => {
-  const { data: siswaList, isLoading } = useGetSiswaList();
-  const { user } = useAuth();
+const KelasPage: React.FC = () => {
+  const { data: dashboardData } = useQuery({
+    queryKey: ['guru-dashboard'],
+    queryFn: async () => {
+      const res = await apiClient.get('/portal-guru/dashboard');
+      return res.data;
+    },
+  });
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['guru-kelas'],
+    queryFn: async () => {
+      const res = await apiClient.get('/portal-guru/kelas-bimbingan');
+      return res.data;
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px]">
+        <div className="w-10 h-10 border-4 border-[#FF7043] border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-sm text-[#757575] font-bold animate-pulse">Memuat kelas bimbingan...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 m-4 bg-[#FFF1F2] border border-[#FECDD3] text-[#D32F2F] rounded-xl text-sm font-bold shadow-sm">
+        Gagal memuat data kelas bimbingan.
+      </div>
+    );
+  }
+
+  const kelasList = data?.kelas || [];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-[#1E293B]" style={{ fontFamily: "'Poppins', sans-serif" }}>Kelas Bimbingan Saya</h1>
-        <p className="text-sm text-[#94A3B8] mt-1">Daftar siswa aktif dalam bimbingan pengajar</p>
-      </div>
+    <div className="flex flex-col">
+      <GuruProfileHeader 
+        teacherName={dashboardData?.guru?.nama_guru || 'Guru'} 
+        program={dashboardData?.guru?.program || 'Program'} 
+      />
+      
+      <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 max-w-5xl mx-auto w-full">
+        <h2 className="text-lg font-extrabold text-[#424242]">Daftar Kelas Bimbingan</h2>
 
-      <div className="bg-white border border-[#E2E8F0] rounded-2xl overflow-hidden shadow-sm">
-        {isLoading ? (
-          <div className="p-8 text-center text-[#94A3B8] text-xs">Memuat daftar siswa...</div>
+        {kelasList.length === 0 ? (
+          <div className="bg-white p-8 rounded-2xl border border-[#E0E0E0] text-center shadow-sm">
+            <p className="text-[#757575]">Belum ada kelas yang ditugaskan.</p>
+          </div>
         ) : (
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-xs text-[#FF7043] uppercase font-extrabold">
-                <th className="p-4">UID Kartu</th>
-                <th className="p-4">Nama Siswa</th>
-                <th className="p-4">Program</th>
-                <th className="p-4">Hari Masuk</th>
-                <th className="p-4">Sisa Pertemuan</th>
-                <th className="p-4">Status SPP</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#E2E8F0] text-xs">
-              {siswaList && siswaList.length > 0 ? (
-                siswaList.map((siswa) => (
-                  <tr key={siswa.id} className="hover:bg-[#F8FAFC]">
-                    <td className="p-4 font-mono text-[#FF7043] font-bold">{siswa.uid}</td>
-                    <td className="p-4 font-semibold text-[#1E293B]">{siswa.nama}</td>
-                    <td className="p-4 text-[#475569]">{siswa.kategori_program}</td>
-                    <td className="p-4 text-[#94A3B8]">{siswa.hari_masuk}</td>
-                    <td className="p-4 font-bold text-[#1E293B]">{siswa.sisa_pertemuan} / 8</td>
-                    <td className="p-4">
-                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
-                        siswa.status_spp === 'AKTIF'
-                          ? 'bg-[#E8F5E9] text-[#388E3C]'
-                          : 'bg-[#FFF1F2] text-[#e11d48]'
-                      }`}>
-                        {siswa.status_spp}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={6} className="p-8 text-center text-[#94A3B8] font-bold">Belum ada siswa terdaftar di kelas Anda.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            {kelasList.map((kelas: any, idx: number) => (
+              <div key={idx} className="bg-white rounded-2xl border border-[#E0E0E0] p-5 shadow-sm space-y-4">
+                <h3 className="text-sm md:text-base font-extrabold text-[#FF7043] uppercase tracking-wide border-b border-[#F5F5F5] pb-3">
+                  {kelas.kode_program} - {kelas.nama_program}
+                </h3>
+                
+                <div className="grid grid-cols-2 gap-y-4 gap-x-2">
+                  <div>
+                    <p className="text-[10px] text-[#9E9E9E] font-bold uppercase tracking-wider">Waktu</p>
+                    <p className="text-sm font-mono text-[#424242] font-bold mt-0.5">{kelas.waktu}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-[#9E9E9E] font-bold uppercase tracking-wider">Ruangan</p>
+                    <p className="text-sm font-mono text-[#424242] font-bold mt-0.5">{kelas.ruangan}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-[10px] text-[#9E9E9E] font-bold uppercase tracking-wider">Hari</p>
+                    <p className="text-sm font-mono text-[#424242] font-bold mt-0.5">{kelas.hari}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-[#9E9E9E] font-bold uppercase tracking-wider">Jumlah Siswa</p>
+                    <p className="text-sm font-mono text-[#424242] font-bold mt-0.5">{kelas.jumlah_siswa} Anak</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-[#9E9E9E] font-bold uppercase tracking-wider">Paket</p>
+                    <p className="text-sm font-mono text-[#424242] font-bold mt-0.5">{kelas.paket}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>

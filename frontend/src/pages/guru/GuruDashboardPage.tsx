@@ -1,39 +1,53 @@
 import React from 'react';
-import useAuth from '../../features/auth/useAuth';
+import { useQuery } from '@tanstack/react-query';
+import apiClient from '../../features/api/apiClient';
+import GuruProfileHeader from './components/GuruProfileHeader';
+import JadwalCard from './components/JadwalCard';
+import AbsensiGuruCard from './components/AbsensiGuruCard';
+import AbsensiSiswaCard from './components/AbsensiSiswaCard';
 
-export const GuruDashboardPage: React.FC = () => {
-  const { user } = useAuth();
+const GuruDashboardPage: React.FC = () => {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['guru-dashboard'],
+    queryFn: async () => {
+      const res = await apiClient.get('/portal-guru/dashboard');
+      return res.data;
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px]">
+        <div className="w-10 h-10 border-4 border-[#FF7043] border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-sm text-[#757575] font-bold animate-pulse">Memuat dashboard...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 m-4 bg-[#FFF1F2] border border-[#FECDD3] text-[#D32F2F] rounded-xl text-sm font-bold shadow-sm">
+        Gagal memuat data dashboard.
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-[#1E293B]" style={{ fontFamily: "'Poppins', sans-serif" }}>Portal Pengajar (Guru)</h1>
-        <p className="text-sm text-[#94A3B8] mt-1">Kelola kelas harian dan pantau kehadiran mengajar Anda</p>
-      </div>
+    <div className="flex flex-col">
+      <GuruProfileHeader 
+        teacherName={data?.guru?.nama_guru || 'Guru'} 
+        program={data?.guru?.program || 'Program'} 
+      />
+      
+      <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 max-w-5xl mx-auto w-full">
+        {/* Jadwal Card - Full Width */}
+        <JadwalCard jadwal={data?.jadwal_hari_ini} />
 
-      {/* Info cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white border border-[#E2E8F0] p-6 rounded-2xl space-y-2 shadow-sm">
-          <div className="text-[#94A3B8] text-xs font-bold uppercase tracking-wider">Status Mengajar Hari Ini</div>
-          <div className="text-xl font-bold text-[#388E3C]">✅ Terabsen Hadir</div>
+        {/* 2-Column Grid on Desktop, Stacking on Mobile */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+          <AbsensiGuruCard absensi={data?.absensi_guru} />
+          <AbsensiSiswaCard stats={data?.absensi_siswa} />
         </div>
-        <div className="bg-white border border-[#E2E8F0] p-6 rounded-2xl space-y-2 shadow-sm">
-          <div className="text-[#94A3B8] text-xs font-bold uppercase tracking-wider">Jumlah Siswa Bimbingan</div>
-          <div className="text-2xl font-bold text-[#1E293B]" style={{ fontFamily: "'Poppins', sans-serif" }}>12 Anak</div>
-        </div>
-        <div className="bg-white border border-[#E2E8F0] p-6 rounded-2xl space-y-2 shadow-sm">
-          <div className="text-[#94A3B8] text-xs font-bold uppercase tracking-wider">Target Bulanan Selesai</div>
-          <div className="text-2xl font-bold text-[#1E293B]" style={{ fontFamily: "'Poppins', sans-serif" }}>8 / 12 Sesi</div>
-        </div>
-      </div>
-
-      {/* Announcements */}
-      <div className="bg-white border border-[#E2E8F0] p-6 rounded-2xl shadow-sm space-y-4">
-        <h3 className="text-lg font-bold text-[#1E293B]" style={{ fontFamily: "'Poppins', sans-serif" }}>Informasi Akademik</h3>
-        <p className="text-[#475569] text-xs leading-relaxed">
-          Gunakan menu <strong>Input Absensi</strong> untuk mengunggah kehadiran siswa secara manual jika terjadi kendala scan RFID. 
-          Pastikan sisa pertemuan siswa dipantau agar tidak kehabisan kuota pertemuan bulanan.
-        </p>
       </div>
     </div>
   );

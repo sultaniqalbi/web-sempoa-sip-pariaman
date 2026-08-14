@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -17,3 +19,25 @@
     -moz-osx-font-smoothing: grayscale;
   }
 }
+
+/* Portal Ortu — form input styles */
+@layer components {
+  .form-input-ortu {
+    @apply w-full bg-[#FAFAFA] border border-[#E0E0E0] rounded-lg px-3 py-2.5 text-[13px] font-medium text-[#424242] placeholder-[#BDBDBD] transition-colors;
+    @apply focus:outline-none focus:border-[#FF7043] focus:ring-1 focus:ring-[#FF7043]/20 focus:bg-white;
+    @apply disabled:bg-[#F5F5F5] disabled:text-[#9E9E9E] disabled:cursor-default;
+  }
+}
+
+/* Ortu modal/menu slide-up animation */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+

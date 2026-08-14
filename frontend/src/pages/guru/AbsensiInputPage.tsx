@@ -1,175 +1,157 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { useGetSiswaList, useCreateAbsensi, useGetAbsensiByGuru } from '../../features/api/queries';
-import useAuth from '../../features/auth/useAuth';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
-import { Guru } from '../../types';
+import GuruProfileHeader from './components/GuruProfileHeader';
+import StudentAttendanceTable, { SiswaAbsensi } from './components/StudentAttendanceTable';
 
-export const AbsensiInputPage: React.FC = () => {
-  const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'input' | 'rfid'>('input');
+const AbsensiInputPage: React.FC = () => {
+  const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState<'input' | 'log'>('input');
+  const [toast, setToast] = useState<{message: string, type: 'success' | 'error'} | null>(null);
 
-  const { data: siswaList } = useGetSiswaList();
-  const createAbsensiMutation = useCreateAbsensi();
-
-  // Fetch teacher profile to get their UID
-  const { data: teacher } = useQuery<Guru>({
-    queryKey: ['teacher-profile', user?.uid_terhubung],
+  const { data: dashboardData } = useQuery({
+    queryKey: ['guru-dashboard'],
     queryFn: async () => {
-      if (!user?.uid_terhubung) throw new Error("No linked teacher");
-      const response = await apiClient.get('/guru/');
-      const list: Guru[] = response.data;
-      return list.find(g => g.uid === user.uid_terhubung) || Promise.reject("Not found");
+      const res = await apiClient.get('/portal-guru/dashboard');
+      return res.data;
     },
-    enabled: !!user?.uid_terhubung
   });
 
-  // Fetch teacher's RFID tap logs using their UID
-  const { data: rfidLogs, isLoading: isLogsLoading } = useGetAbsensiByGuru(
-    teacher?.id || 0
-  );
+  const { data: siswaData, isLoading: isSiswaLoading } = useQuery({
+    queryKey: ['guru-siswa-absensi'],
+    queryFn: async () => {
+      const res = await apiClient.get('/portal-guru/siswa-absensi');
+      return res.data;
+    },
+  });
 
-  const [siswaUid, setSiswaUid] = useState('');
-  const [status, setStatus] = useState<'HADIR' | 'IZIN' | 'ALFA' | 'TERLAMBAT'>('HADIR');
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { data: logData, isLoading: isLogLoading } = useQuery({
+    queryKey: ['guru-absensi-list'],
+    queryFn: async () => {
+      const res = await apiClient.get('/portal-guru/absensi/list');
+      return res.data;
+    },
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSuccess(false);
-    setError(null);
-
-    try {
-      await createAbsensiMutation.mutateAsync({
-        uid: siswaUid,
-        waktu: new Date().toISOString(),
-        mode: 'ONLINE',
-        status: status
-      });
-      setSuccess(true);
-      setSiswaUid('');
-    } catch (err: any) {
-      console.error(err);
-      setError('Gagal mencatat absensi. Pastikan koneksi server aman.');
+  const saveMutation = useMutation({
+    mutationFn: async (attendanceData: { siswa_id: number; status: string }[]) => {
+      const res = await apiClient.post('/portal-guru/absensi/simpan', { siswa_absensi: attendanceData });
+      return res.data;
+    },
+    onSuccess: (data) => {
+      setToast({ message: data.message || 'Absensi berhasil disimpan', type: 'success' });
+      queryClient.invalidateQueries({ queryKey: ['guru-siswa-absensi'] });
+      setTimeout(() => setToast(null), 3000);
+    },
+    onError: (error: any) => {
+      setToast({ message: error.response?.data?.detail || 'Gagal menyimpan absensi', type: 'error' });
+      setTimeout(() => setToast(null), 3000);
     }
+  });
+
+  const handleSaveAttendance = (data: { siswa_id: number; status: string }[]) => {
+    saveMutation.mutate(data);
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-[#1E293B]" style={{ fontFamily: "'Poppins', sans-serif" }}>Kehadiran & RFID</h1>
-        <p className="text-sm text-[#94A3B8] mt-1">Kelola absensi siswa bimbingan serta pantau riwayat kartu RFID Anda</p>
-      </div>
-
-      {/* Sub Tabs */}
-      <div className="flex gap-2 border-b border-[#E2E8F0] pb-px text-xs font-bold uppercase tracking-wider">
-        <button
-          onClick={() => setActiveTab('input')}
-          className={`pb-3 px-4 ${
-            activeTab === 'input' ? 'text-[#FF7043] border-b-2 border-[#FF7043]' : 'text-[#94A3B8] hover:text-[#1E293B]'
-          }`}
-        >
-          ✏️ Input Absensi Siswa
-        </button>
-        <button
-          onClick={() => setActiveTab('rfid')}
-          className={`pb-3 px-4 ${
-            activeTab === 'rfid' ? 'text-[#FF7043] border-b-2 border-[#FF7043]' : 'text-[#94A3B8] hover:text-[#1E293B]'
-          }`}
-        >
-          🎴 Log RFID Kehadiran Saya
-        </button>
-      </div>
-
-      {activeTab === 'input' ? (
-        <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 shadow-sm max-w-md">
-          {success && (
-            <div className="bg-[#E8F5E9] border border-[#A5D6A7] text-[#388E3C] text-xs font-semibold px-4 py-3 rounded-xl mb-4">
-              ✓ Kehadiran siswa berhasil dicatat! Sisa pertemuan kuota otomatis berkurang.
-            </div>
-          )}
-
-          {error && (
-            <div className="bg-[#FFF1F2] border border-[#FECDD3] text-[#e11d48] text-xs font-semibold px-4 py-3 rounded-xl mb-4">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4 text-xs">
-            <div>
-              <label className="block text-[#94A3B8] font-bold uppercase tracking-wider mb-2">Pilih Siswa</label>
-              <select
-                value={siswaUid}
-                onChange={(e) => setSiswaUid(e.target.value)}
-                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] focus:border-[#FF7043] focus:ring-1 focus:ring-[#FF7043] rounded-xl px-4 py-2.5 text-[#1E293B]"
-                required
-              >
-                <option value="">-- Pilih Siswa --</option>
-                {siswaList?.map(s => (
-                  <option key={s.id} value={s.uid}>{s.nama} ({s.uid})</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-[#94A3B8] font-bold uppercase tracking-wider mb-2">Status Kehadiran</label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value as any)}
-                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] focus:border-[#FF7043] focus:ring-1 focus:ring-[#FF7043] rounded-xl px-4 py-2.5 text-[#1E293B]"
-              >
-                <option value="HADIR">HADIR</option>
-                <option value="IZIN">IZIN</option>
-                <option value="ALFA">ALFA</option>
-                <option value="TERLAMBAT">TERLAMBAT</option>
-              </select>
-            </div>
-
-            <button
-              type="submit"
-              disabled={createAbsensiMutation.isPending}
-              className="w-full py-3 bg-[#FF7043] text-white text-sm font-bold rounded-xl hover:bg-[#F4511E] shadow-md"
-            >
-              {createAbsensiMutation.isPending ? 'Mencatat...' : 'Catat Kehadiran 📝'}
-            </button>
-          </form>
+    <div className="flex flex-col">
+      <GuruProfileHeader 
+        teacherName={dashboardData?.guru?.nama_guru || 'Guru'} 
+        program={dashboardData?.guru?.program || 'Program'} 
+      />
+      
+      <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 max-w-5xl mx-auto w-full">
+        
+        {/* Tabs */}
+        <div className="flex bg-white rounded-xl border border-[#E0E0E0] p-1 shadow-sm w-full sm:w-fit">
+          <button
+            onClick={() => setActiveTab('input')}
+            className={`flex-1 sm:flex-none px-6 py-2.5 rounded-lg text-xs font-bold transition-colors ${
+              activeTab === 'input' ? 'bg-[#FF7043] text-white shadow-sm' : 'text-[#757575] hover:bg-[#F5F5F5]'
+            }`}
+          >
+            Input Absensi Siswa
+          </button>
+          <button
+            onClick={() => setActiveTab('log')}
+            className={`flex-1 sm:flex-none px-6 py-2.5 rounded-lg text-xs font-bold transition-colors ${
+              activeTab === 'log' ? 'bg-[#FF7043] text-white shadow-sm' : 'text-[#757575] hover:bg-[#F5F5F5]'
+            }`}
+          >
+            Log Absensi Saya
+          </button>
         </div>
-      ) : (
-        <div className="bg-white border border-[#E2E8F0] rounded-2xl overflow-hidden shadow-sm">
-          {isLogsLoading ? (
-            <div className="p-8 text-center text-[#94A3B8] text-xs">Memuat log RFID Anda...</div>
-          ) : (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-xs text-[#FF7043] uppercase font-extrabold">
-                  <th className="p-4">Waktu Tap</th>
-                  <th className="p-4">Mode</th>
-                  <th className="p-4">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#E2E8F0] text-xs">
-                {rfidLogs && rfidLogs.length > 0 ? (
-                  rfidLogs.map((log) => (
-                    <tr key={log.id} className="hover:bg-[#F8FAFC]">
-                      <td className="p-4 text-[#1E293B]">{new Date(log.waktu).toLocaleString('id-ID')}</td>
-                      <td className="p-4 font-mono font-bold text-[#94A3B8]">{log.mode}</td>
-                      <td className="p-4">
-                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-[#E8F5E9] text-[#388E3C]">
-                          {log.status}
-                        </span>
-                      </td>
+
+        {/* Toast */}
+        {toast && (
+          <div className={`p-4 rounded-xl text-sm font-bold shadow-sm border ${
+            toast.type === 'success' ? 'bg-[#E8F5E9] text-[#388E3C] border-[#A5D6A7]' : 'bg-[#FFF1F2] text-[#D32F2F] border-[#FECDD3]'
+          }`}>
+            {toast.message}
+          </div>
+        )}
+
+        {/* Tab Content */}
+        {activeTab === 'input' && (
+          <div>
+            {isSiswaLoading ? (
+              <div className="text-center p-10 bg-white rounded-2xl border border-[#E0E0E0]">
+                <div className="w-8 h-8 border-4 border-[#FF7043] border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                <p className="text-xs text-[#757575] font-bold">Memuat daftar siswa...</p>
+              </div>
+            ) : (
+              <StudentAttendanceTable 
+                students={siswaData?.siswa || []} 
+                onSave={handleSaveAttendance} 
+                isSaving={saveMutation.isPending} 
+              />
+            )}
+          </div>
+        )}
+
+        {activeTab === 'log' && (
+          <div className="bg-white rounded-2xl shadow-sm border border-[#E0E0E0] overflow-hidden">
+            <div className="p-4 border-b border-[#E0E0E0]">
+              <h2 className="text-sm font-bold text-[#424242]">Riwayat Absensi Kehadiran Guru</h2>
+              <p className="text-xs text-[#757575] mt-1">10 rekam tap terakhir</p>
+            </div>
+            
+            {isLogLoading ? (
+               <div className="p-8 text-center text-[#757575] text-sm">Memuat log absensi...</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-[#FAFAFA] border-b border-[#E0E0E0]">
+                      <th className="p-3 text-[11px] font-bold text-[#757575] uppercase tracking-wider">UID RFID</th>
+                      <th className="p-3 text-[11px] font-bold text-[#757575] uppercase tracking-wider">Waktu Tap</th>
+                      <th className="p-3 text-[11px] font-bold text-[#757575] uppercase tracking-wider">Status</th>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={3} className="p-8 text-center text-[#94A3B8] font-bold">Belum ada log ketukan kartu RFID terdeteksi.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          )}
-        </div>
-      )}
+                  </thead>
+                  <tbody className="divide-y divide-[#F5F5F5]">
+                    {(!logData?.logs || logData.logs.length === 0) ? (
+                      <tr>
+                        <td colSpan={3} className="p-8 text-center text-[#757575] text-sm">
+                          Belum ada riwayat absensi.
+                        </td>
+                      </tr>
+                    ) : (
+                      logData.logs.map((log: any, idx: number) => (
+                        <tr key={idx} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-[#FAFAFA]'} hover:bg-[#FFF3E0] transition-colors`}>
+                          <td className="p-3 text-sm font-mono text-[#757575]">{log.uid_rfid}</td>
+                          <td className="p-3 text-sm font-medium text-[#424242]">{log.waktu_tap}</td>
+                          <td className="p-3 text-sm font-bold">{log.status}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+      </div>
     </div>
   );
 };
