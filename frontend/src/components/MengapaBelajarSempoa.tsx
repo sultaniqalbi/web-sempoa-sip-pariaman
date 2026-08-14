@@ -6,7 +6,6 @@ const BrainIcon = ({ color }: { color: string }) => (
     viewBox="0 0 24 24" 
     width="80" 
     height="80"
-    style={{ animation: 'float 3s ease-in-out infinite' }}
   >
     <g fill="none" stroke={color} strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5">
       <path d="M12 18V5m3 8a4.17 4.17 0 0 1-3-4a4.17 4.17 0 0 1-3 4m8.598-6.5A3 3 0 1 0 12 5a3 3 0 1 0-5.598 1.5"/>
@@ -63,14 +62,6 @@ export const MengapaBelajarSempoa: React.FC = () => {
 
   return (
     <section ref={sectionRef} className="section-padding" style={{ backgroundColor: '#fff', position: 'relative' }}>
-      <style>
-        {`
-          @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-          }
-        `}
-      </style>
       <div className="container" style={{ maxWidth: '1200px', padding: '30px 20px' }}>
         
         {/* Title Section */}
@@ -124,11 +115,7 @@ export const MengapaBelajarSempoa: React.FC = () => {
                   style={{ 
                     display: 'flex',
                     alignItems: 'flex-start',
-                    gap: '8px',
-                    opacity: isVisible ? 1 : 0,
-                    transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
-                    transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                    transitionDelay: `${(index * 0.2) + 0.1}s`
+                    gap: '8px'
                   }}
                 >
                   <CheckIcon color="#1976D2" />
