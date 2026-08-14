@@ -26,7 +26,7 @@ export function useMascotCursor() {
     `;
 
     const img = document.createElement('img');
-    img.src = '/assets/image/custom-cursor.png';
+    img.src = '/assets/image/custom-cursor.webp';
     img.alt = '';
     img.onerror = () => {
       img.src = '/assets/image/custom-cursor.webp';

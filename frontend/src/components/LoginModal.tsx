@@ -22,7 +22,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   const [globalSuccess, setGlobalSuccess] = useState('');
 
   // Gallery Image State
-  const [galleryImgUrl, setGalleryImgUrl] = useState('/assets/image/maskot-hero.webp');
+  const [galleryImgUrl, setGalleryImgUrl] = useState('/assets/mascot/maskot-hero.webp');
   const [galleryImgAlt, setGalleryImgAlt] = useState('Maskot Sempoa SIP');
 
   // Refs for a11y & focus trap
@@ -91,12 +91,12 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   const loadRandomGalleryImage = async () => {
     try {
       // Fetch image from gallery
-      setGalleryImgUrl('/assets/image/maskot-hero.webp');
+      setGalleryImgUrl('/assets/mascot/maskot-hero.webp');
       setGalleryImgAlt('Galeri Sempoa SIP');
       
     } catch (error) {
       console.error("Error loading gallery image:", error);
-      setGalleryImgUrl('/assets/image/maskot-hero.webp');
+      setGalleryImgUrl('/assets/mascot/maskot-hero.webp');
       setGalleryImgAlt('Maskot Sempoa SIP');
     }
   };

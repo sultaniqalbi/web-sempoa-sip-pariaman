@@ -196,7 +196,7 @@ export const HomePage: React.FC = () => {
               </div>
             </div>
             <div className="hero-mascot-wrap">
-              <img src="/assets/image/maskot-hero-test.webp" alt="Maskot Sempoa SIP TC Pariaman" style={{ maxHeight: '420px', width: 'auto', filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.25))' }} />
+              <img src="/assets/mascot/maskot-hero-test.webp" alt="Maskot Sempoa SIP TC Pariaman" style={{ maxHeight: '420px', width: 'auto', filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.25))' }} />
             </div>
           </div>
         </div>
@@ -226,7 +226,7 @@ export const HomePage: React.FC = () => {
               <p>Sempoa SIP TC Pariaman adalah lembaga bimbingan belajar khusus pelatihan otak anak yang telah mendampingi ribuan buah hati di Pariaman tumbuh optimal.</p>
               <p>Kami menyelaraskan perkembangan otak kanan yang melatih kreativitas, visualisasi, dan intuisi, dengan otak kiri yang melatih kemampuan berhitung logis, rasional, dan konsentrasi tinggi.</p>
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginTop: '1.5rem' }}>
-                <img src="/assets/image/maskot_logo-removebg-preview.png" alt="logo-sempoa-sip.png" style={{ height: '70px', width: 'auto', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.15))' }} />
+                <img src="/assets/mascot/maskot_logo-removebg-preview.webp" alt="logo-sempoa-sip.png" style={{ height: '70px', width: 'auto', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.15))' }} />
                 <p style={{ fontStyle: 'italic', fontSize: '0.95rem', margin: 0, fontWeight: 600, color: 'var(--color-accent-maroon)' }}>
                   "Yuk gabung bersama kami dan kembangkan potensi terbaik belajarmu, teman-teman!"
                 </p>
@@ -394,7 +394,7 @@ export const HomePage: React.FC = () => {
               onClick={() => handleAdvCardClick(1)}
             >
               <div className="adv-card-image-wrap" style={{ backgroundColor: '#FFF8E1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <img src="/assets/image/braingym.png" alt="Metode Senam Otak" style={{ width: '120px', height: '120px', objectFit: 'contain' }} />
+                <img src="/assets/mascot/braingym.webp" alt="Metode Senam Otak" style={{ width: '120px', height: '120px', objectFit: 'contain' }} />
               </div>
               <div className="adv-card-body">
                 <h3>Metode Senam Otak (Brain Gym)</h3>
@@ -416,7 +416,7 @@ export const HomePage: React.FC = () => {
               onClick={() => handleAdvCardClick(2)}
             >
               <div className="adv-card-image-wrap" style={{ backgroundColor: '#E0F7FA', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <img src="/assets/image/belajar-menyenangkan.png" alt="Belajar Menyenangkan" style={{ width: '120px', height: '120px', objectFit: 'contain' }} />
+                <img src="/assets/mascot/belajar-menyenangkan.webp" alt="Belajar Menyenangkan" style={{ width: '120px', height: '120px', objectFit: 'contain' }} />
               </div>
               <div className="adv-card-body">
                 <h3>Belajar Menyenangkan (Playful Learning)</h3>
@@ -438,7 +438,7 @@ export const HomePage: React.FC = () => {
               onClick={() => handleAdvCardClick(3)}
             >
               <div className="adv-card-image-wrap" style={{ backgroundColor: '#FFEBEE', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <img src="/assets/image/pengajar-terlatih.png" alt="Pengajar Terlatih" style={{ width: '120px', height: '120px', objectFit: 'contain' }} />
+                <img src="/assets/mascot/pengajar-terlatih.webp" alt="Pengajar Terlatih" style={{ width: '120px', height: '120px', objectFit: 'contain' }} />
               </div>
               <div className="adv-card-body">
                 <h3>Pengajar Terlatih & Ramah Anak</h3>
@@ -460,7 +460,7 @@ export const HomePage: React.FC = () => {
               onClick={() => handleAdvCardClick(4)}
             >
               <div className="adv-card-image-wrap" style={{ backgroundColor: '#E8F5E9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <img src="/assets/image/ramah-anak.png" alt="Tempat Ramah Anak" style={{ width: '120px', height: '120px', objectFit: 'contain' }} />
+                <img src="/assets/mascot/ramah-anak.webp" alt="Tempat Ramah Anak" style={{ width: '120px', height: '120px', objectFit: 'contain' }} />
               </div>
               <div className="adv-card-body">
                 <h3>Tempat Ramah Anak & Penuh Keceriaan</h3>

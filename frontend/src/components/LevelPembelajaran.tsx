@@ -3,27 +3,27 @@ import React, { useState } from 'react';
 const levels = [
   { 
     id: 1, name: 'JUNIOR', subtitle: '1-2', color: '#FFD699', offset: 0, iconSize: 80, delay: 0,
-    img: '/assets/image/level-1.png', 
+    img: '/assets/mascot/level-1.webp', 
     desc: 'Mengembangkan Potensi dasar anak dengan Brain Gym dan dilatih motorik balita lewat alat Sempoa untuk memberikan pengertian tentang angka dengan Fun Learning.' 
   },
   { 
     id: 2, name: 'FOUNDATION', subtitle: '1-2', color: '#FFB3BA', offset: 40, iconSize: 110, delay: 0.2,
-    img: '/assets/image/level-2.png', 
+    img: '/assets/mascot/level-2.webp', 
     desc: 'Anak-anak mulai belajar dan berlatih merangsang syaraf-syaraf di jari yang akan menumbuhkan Sinapsis di otak yang penting untuk kecepatan proses pembelajaran dan memori, dan di level ini kemampuan imajiniatif anak sudah mulai dilatih.' 
   },
   { 
     id: 3, name: 'INTERMEDIATE', subtitle: '1-2-3', color: '#A8D8FF', offset: 80, iconSize: 140, delay: 0.4,
-    img: '/assets/image/level-3.png', 
+    img: '/assets/mascot/level-3.webp', 
     desc: 'Melalui proses operational Aritmatika maka, kemampuan imajiniatif dan fokus serta daya ingat anak lebih ditingkatkan. Kemampuan prosesingot ak sudah terlatih lebih cepat dari anak-anak pada umumnya, target di level ini adalah Cepat dan Tepat.' 
   },
   { 
     id: 4, name: 'ADVANCE', subtitle: '1-2-3', color: '#E5B3F0', offset: 120, iconSize: 170, delay: 0.6,
-    img: '/assets/image/level-4.png', 
+    img: '/assets/mascot/level-4.webp', 
     desc: 'Di level ini, penekanannnya adalah pada Cepat dan Tepat, karena otak hanya bisa berfungsi optimal bila ada tantangan dalam kecepatan dan soal yang lebih panjang dan rumit, sehingga kemampuan dan keberanian untuk bersoisng dan mengejar target / goal telah dimiliki oleh anak-anak.' 
   },
   { 
     id: 5, name: 'GRADUATE', subtitle: '1-2-3', color: '#B3E5B3', offset: 160, iconSize: 200, delay: 0.8,
-    img: '/assets/image/level-5.png', 
+    img: '/assets/mascot/level-5.webp', 
     desc: 'Level ini adalah level tertinggi dimana kemampuan fokus, daya ingat, kecepatan dan ketepatan dalam memoroses data telah terbentuk, sehingga menjadi kebiasaan dalam aplikasi kehidupan sehari hari, kemampuan ini akan memberi kesempatan sukses yang lebih besar untuk anak Sempoa dibandingkan dengan mereka yang tidak dilatih otaknya dengan metode SempoaSIP.' 
   },
 ];

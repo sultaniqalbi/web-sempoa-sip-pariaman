@@ -34,7 +34,7 @@ export const ApaItuSempoa: React.FC = () => {
           <div style={{ flex: '1 1 350px', display: 'flex', justifyContent: 'flex-start', alignItems: 'center', paddingLeft: '20px' }}>
             <div style={{ transform: 'translateX(160px)' }}>
               <img 
-                src="/assets/image/level-5.png" 
+                src="/assets/mascot/level-5.webp" 
                 alt="Mascot Sempoa" 
                 style={{ 
                   width: '380px', 
