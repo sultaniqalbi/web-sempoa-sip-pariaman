@@ -1,7 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 const BrainIcon = ({ color }: { color: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="60" height="60">
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    viewBox="0 0 24 24" 
+    width="80" 
+    height="80"
+    style={{ animation: 'float 3s ease-in-out infinite' }}
+  >
     <g fill="none" stroke={color} strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5">
       <path d="M12 18V5m3 8a4.17 4.17 0 0 1-3-4a4.17 4.17 0 0 1-3 4m8.598-6.5A3 3 0 1 0 12 5a3 3 0 1 0-5.598 1.5"/>
       <path d="M17.997 5.125a4 4 0 0 1 2.526 5.77"/>
@@ -13,18 +19,24 @@ const BrainIcon = ({ color }: { color: string }) => (
   </svg>
 );
 
+const CheckIcon = ({ color }: { color: string }) => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }}>
+    <polyline points="20 6 9 17 4 12"></polyline>
+  </svg>
+);
+
 const leftPoints = [
-  'Pemikiran sekuensial',
-  'Kemampuan Numerik',
-  'Berpikir Logis',
-  'Membaca dan Menulis'
+  { title: 'Pemikiran Sekuensial', desc: 'Menganalisis informasi secara berurutan dan logis' },
+  { title: 'Kemampuan Numerik', desc: 'Kepahaman angka dan kalkulasi matematis' },
+  { title: 'Berpikir Logis', desc: 'Kemampuan memecahkan masalah secara sistematis' },
+  { title: 'Membaca dan Menulis', desc: 'Kemampuan literasi dan ekspresi diri' }
 ];
 
 const rightPoints = [
-  'Ingatan Fotografis',
-  'Imajinasi',
-  'Kreativitas',
-  'Konsentrasi'
+  { title: 'Ingatan Fotografis', desc: 'Kemampuan mengingat visual dan detail dengan akurat' },
+  { title: 'Imajinasi', desc: 'Kreativitas dan kemampuan membayangkan konsep baru' },
+  { title: 'Kreativitas', desc: 'Menghasilkan ide-ide original dan inovatif' },
+  { title: 'Konsentrasi', desc: 'Fokus mendalam pada satu objek atau tugas tertentu' }
 ];
 
 export const MengapaBelajarSempoa: React.FC = () => {
@@ -51,7 +63,15 @@ export const MengapaBelajarSempoa: React.FC = () => {
 
   return (
     <section ref={sectionRef} className="section-padding" style={{ backgroundColor: '#fff', position: 'relative' }}>
-      <div className="container" style={{ maxWidth: '1200px', padding: '40px 20px' }}>
+      <style>
+        {`
+          @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+          }
+        `}
+      </style>
+      <div className="container" style={{ maxWidth: '1200px', padding: '30px 20px' }}>
         
         {/* Title Section */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '3rem' }}>
@@ -64,40 +84,58 @@ export const MengapaBelajarSempoa: React.FC = () => {
         {/* 2-Column Layout */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-          gap: '24px', 
-          justifyContent: 'center' 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
+          gap: '16px', 
+          justifyContent: 'center',
+          position: 'relative',
+          marginTop: '40px'
         }}>
+          
+          {/* Center Brain Icon (Absolute) */}
+          <div style={{
+            position: 'absolute',
+            top: '-40px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 10,
+            display: 'flex',
+            justifyContent: 'center'
+          }}>
+            <BrainIcon color="#F97316" />
+          </div>
           
           {/* BOX 1: Otak Kiri */}
           <div style={{ 
-            backgroundColor: '#BBE1FF', 
-            padding: '32px 24px', 
+            backgroundColor: '#A8D8FF', 
+            padding: '24px', 
             borderRadius: '16px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-            minHeight: '300px',
+            boxShadow: '0 4px 12px rgba(25, 118, 210, 0.12)',
+            minHeight: '280px',
             display: 'flex',
-            flexDirection: 'column'
+            flexDirection: 'column',
+            alignItems: 'center'
           }}>
-            <div style={{ marginBottom: '20px' }}>
-              <BrainIcon color="#1976D2" />
-            </div>
-            <h3 style={{ fontSize: '22px', fontWeight: 800, color: '#333', marginBottom: '24px' }}>Otak Kiri</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+            <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#424242', marginBottom: '14px', textAlign: 'center' }}>Otak Kiri</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
               {leftPoints.map((point, index) => (
                 <div 
                   key={index} 
                   style={{ 
-                    color: '#424242', 
-                    fontSize: '15px', 
-                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '8px',
                     opacity: isVisible ? 1 : 0,
                     transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
-                    transition: 'all 0.5s ease-out',
-                    transitionDelay: `${index * 0.3}s`
+                    transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                    transitionDelay: `${(index * 0.2) + 0.1}s`
                   }}
                 >
-                  {point}
+                  <CheckIcon color="#1976D2" />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#424242', lineHeight: 1.4 }}>{point.title}</span>
+                    <span style={{ fontSize: '12px', color: '#666', lineHeight: 1.4 }}>{point.desc}</span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -105,33 +143,35 @@ export const MengapaBelajarSempoa: React.FC = () => {
 
           {/* BOX 2: Otak Kanan */}
           <div style={{ 
-            backgroundColor: '#FFE0B2', 
-            padding: '32px 24px', 
+            backgroundColor: '#FFD699', 
+            padding: '24px', 
             borderRadius: '16px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-            minHeight: '300px',
+            boxShadow: '0 4px 12px rgba(255, 112, 67, 0.12)',
+            minHeight: '280px',
             display: 'flex',
-            flexDirection: 'column'
+            flexDirection: 'column',
+            alignItems: 'center'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
-              <BrainIcon color="#FF7043" />
-            </div>
-            <h3 style={{ fontSize: '22px', fontWeight: 800, color: '#333', marginBottom: '24px', textAlign: 'right' }}>Otak Kanan</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'flex-end', textAlign: 'right' }}>
+            <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#424242', marginBottom: '14px', textAlign: 'center' }}>Otak Kanan</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
               {rightPoints.map((point, index) => (
                 <div 
                   key={index} 
                   style={{ 
-                    color: '#424242', 
-                    fontSize: '15px', 
-                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '8px',
                     opacity: isVisible ? 1 : 0,
                     transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
-                    transition: 'all 0.5s ease-out',
-                    transitionDelay: `${index * 0.3}s`
+                    transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                    transitionDelay: `${(index * 0.2) + 0.1}s`
                   }}
                 >
-                  {point}
+                  <CheckIcon color="#FF7043" />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#424242', lineHeight: 1.4 }}>{point.title}</span>
+                    <span style={{ fontSize: '12px', color: '#666', lineHeight: 1.4 }}>{point.desc}</span>
+                  </div>
                 </div>
               ))}
             </div>
