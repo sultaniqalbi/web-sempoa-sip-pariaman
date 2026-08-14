@@ -5,6 +5,7 @@ import useMascotCursor from '../../hooks/useMascotCursor';
 import LoginModal from '../../components/LoginModal';
 import { ApaItuSempoa } from '../../components/ApaItuSempoa';
 import { LevelPembelajaran } from '../../components/LevelPembelajaran';
+import { MengapaBelajarSempoa } from '../../components/MengapaBelajarSempoa';
 import { DiakuiInternasional } from '../../components/DiakuiInternasional';
 
 export const HomePage: React.FC = () => {
@@ -209,6 +210,7 @@ export const HomePage: React.FC = () => {
 
       <ApaItuSempoa />
       <LevelPembelajaran />
+      <MengapaBelajarSempoa />
       <DiakuiInternasional />
 
       {/* TRUST & ABOUT SECTION */}
