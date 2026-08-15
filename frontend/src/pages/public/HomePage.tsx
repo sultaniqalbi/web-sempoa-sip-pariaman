@@ -209,9 +209,16 @@ export const HomePage: React.FC = () => {
       </section>
 
       <ApaItuSempoa />
+      <div className="section-divider"></div>
+      
       <LevelPembelajaran />
+      <div className="section-divider"></div>
+      
       <MengapaBelajarSempoa />
+      <div className="section-divider"></div>
+      
       <DiakuiInternasional />
+      <div className="section-divider"></div>
 
       {/* TRUST & ABOUT SECTION */}
       <section className="trust section-padding" id="about">
