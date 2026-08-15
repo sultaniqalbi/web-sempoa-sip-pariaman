@@ -289,7 +289,7 @@ export const SiswaPage: React.FC = () => {
       accessor: (row: Siswa) => (
         <div className="flex items-center gap-3">
           {row.foto_profil ? (
-            <img src={import.meta.env.VITE_API_URL.replace('/api/v1', '') + row.foto_profil} alt="Foto" className="w-9 h-12 object-cover rounded shadow-sm border border-[#E2E8F0]" />
+            <img src={(import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1').replace('/api/v1', '') + row.foto_profil} alt="Foto" className="w-9 h-12 object-cover rounded shadow-sm border border-[#E2E8F0]" />
           ) : (
             <div className="w-9 h-12 bg-[#F1F5F9] border border-[#E2E8F0] rounded flex items-center justify-center">
               <span className="text-[#94A3B8] text-[10px]">3x4</span>
