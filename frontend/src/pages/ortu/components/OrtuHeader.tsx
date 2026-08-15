@@ -15,6 +15,12 @@ const OrtuHeader: React.FC<OrtuHeaderProps> = ({ childName, program, noWaOrtu, f
     .join('')
     .toUpperCase();
 
+  const avatarSrc = fotoProfil
+    ? fotoProfil.startsWith('http')
+      ? fotoProfil
+      : (import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1').replace('/api/v1', '') + fotoProfil
+    : null;
+
   return (
     <header
       className="relative overflow-hidden"
@@ -31,11 +37,14 @@ const OrtuHeader: React.FC<OrtuHeaderProps> = ({ childName, program, noWaOrtu, f
       <div className="relative z-10 px-5 pt-6 pb-5">
         <div className="flex items-center gap-4">
           {/* Avatar */}
-          {fotoProfil ? (
+          {avatarSrc ? (
             <img
-              src={fotoProfil}
+              src={avatarSrc}
               alt={childName}
-              className="w-14 h-14 rounded-full border-[3px] border-white/40 shadow-lg object-cover flex-shrink-0"
+              className="w-14 h-14 rounded-full border-[3px] border-white/40 shadow-lg object-cover flex-shrink-0 bg-white"
+              onError={(e) => {
+                (e.target as HTMLElement).style.display = 'none';
+              }}
             />
           ) : (
             <div className="w-14 h-14 rounded-full border-[3px] border-white/40 shadow-lg bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
