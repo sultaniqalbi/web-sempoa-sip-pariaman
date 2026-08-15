@@ -26,9 +26,8 @@ export const AnakSayaPage: React.FC = () => {
     queryKey: ['child-profile', user?.uid_terhubung],
     queryFn: async () => {
       if (!user?.uid_terhubung) throw new Error('No linked child');
-      const response = await apiClient.get(`/siswa/`);
-      const list: Siswa[] = response.data;
-      return list.find((s) => String(s.id) === user.uid_terhubung) || Promise.reject('Not found');
+      const response = await apiClient.get(`/siswa/${user.uid_terhubung}`);
+      return response.data;
     },
     enabled: !!user?.uid_terhubung,
   });

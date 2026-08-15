@@ -18,10 +18,9 @@ export const OrtuLayout: React.FC = () => {
   const { data: child } = useQuery<Siswa>({
     queryKey: ['child-profile', user?.uid_terhubung],
     queryFn: async () => {
-      if (!user?.uid_terhubung) throw new Error('No linked child');
-      const response = await apiClient.get(`/siswa/`);
-      const list: Siswa[] = response.data;
-      return list.find((s) => String(s.id) === user.uid_terhubung) || Promise.reject('Not found');
+      if (!user?.uid_terhubung) return null;
+      const response = await apiClient.get(`/siswa/${user.uid_terhubung}`);
+      return response.data;
     },
     enabled: !!user?.uid_terhubung,
   });
