@@ -58,7 +58,11 @@ async def login(
             "id": user.id,
             "email": user.email,
             "nama": user.nama,
-            "role": role_str
+            "role": role_str,
+            "uid_terhubung": user.uid_terhubung,
+            "foto_profil": user.foto_profil,
+            "bio": user.bio,
+            "created_at": user.created_at.isoformat() if user.created_at else None
         }
     )
 
@@ -113,7 +117,11 @@ async def refresh(
             "id": user.id,
             "email": user.email,
             "nama": user.nama,
-            "role": role_str
+            "role": role_str,
+            "uid_terhubung": user.uid_terhubung,
+            "foto_profil": user.foto_profil,
+            "bio": user.bio,
+            "created_at": user.created_at.isoformat() if user.created_at else None
         }
     )
 
