@@ -2,7 +2,7 @@ from typing import List, Dict, Any
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from pydantic import BaseModel
 
 from app.core.database import get_db
@@ -25,9 +25,12 @@ async def get_guru_dashboard(
     if not guru:
         raise HTTPException(status_code=404, detail="Data guru tidak ditemukan")
 
-    # Get active students for this teacher
+    # Get active students for this teacher or matching teacher's program
     active_students = db.query(Siswa).filter(
-        Siswa.id_guru == guru.id,
+        or_(
+            Siswa.id_guru == guru.id,
+            func.lower(Siswa.kategori_program) == func.lower(guru.kategori_program)
+        ),
         Siswa.status_spp == StatusSPP.AKTIF,
         Siswa.is_deleted == False
     ).all()
@@ -48,19 +51,27 @@ async def get_guru_dashboard(
         "jam": last_tap.waktu.strftime("%H:%M") if last_tap else "-"
     }
 
-    # Jadwal hari ini (mock based on current day)
+    # Jadwal hari ini
     days = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
     hari_ini = days[today.weekday()]
     
     # Check if teacher teaches today
     is_active_today = hari_ini in (guru.hari_wajib or "")
     
+    # Find actual schedule if available
+    jadwal_row = db.query(Jadwal).filter(
+        or_(
+            Jadwal.id_guru == guru.id,
+            func.lower(Jadwal.program) == func.lower(guru.kategori_program)
+        )
+    ).first()
+
     jadwal_hari_ini = {
         "kode_program": "SEMPOA",
         "nama_program": guru.kategori_program,
-        "jam_mulai": "08:30",
-        "jam_selesai": "11:30",
-        "ruangan": "Ruang Kelas A",
+        "jam_mulai": jadwal_row.jam_mulai.strftime("%H:%M") if jadwal_row and jadwal_row.jam_mulai else "08:30",
+        "jam_selesai": jadwal_row.jam_selesai.strftime("%H:%M") if jadwal_row and jadwal_row.jam_selesai else "11:30",
+        "ruangan": jadwal_row.ruangan if jadwal_row and jadwal_row.ruangan else "Ruang Kelas A",
         "jumlah_siswa": total_siswa,
         "is_active_today": is_active_today
     }
@@ -69,13 +80,15 @@ async def get_guru_dashboard(
         "guru": {
             "nama_guru": guru.nama,
             "uid_rfid": guru.uid,
-            "program": guru.kategori_program
+            "program": guru.kategori_program,
+            "foto_profil": guru.foto_profil,
+            "no_wa": guru.whatsapp_guru
         },
         "jadwal_hari_ini": jadwal_hari_ini,
         "absensi_guru": absensi_guru,
         "absensi_siswa": {
             "total_siswa": total_siswa,
-            "jumlah_hadir": 0, # Could be calculated from today's student logs
+            "jumlah_hadir": 0,
             "jumlah_absen": 0
         }
     }
@@ -91,7 +104,10 @@ async def get_kelas_bimbingan(
         raise HTTPException(status_code=404, detail="Data guru tidak ditemukan")
         
     total_siswa = db.query(Siswa).filter(
-        Siswa.id_guru == guru.id,
+        or_(
+            Siswa.id_guru == guru.id,
+            func.lower(Siswa.kategori_program) == func.lower(guru.kategori_program)
+        ),
         Siswa.status_spp == StatusSPP.AKTIF,
         Siswa.is_deleted == False
     ).count()
@@ -130,7 +146,7 @@ async def get_absensi_list(
         result.append({
             "uid_rfid": log.uid,
             "waktu_tap": f"{waktu_str} ({tanggal_str})",
-            "status": "✅ Hadir" if log.status == StatusAbsensi.HADIR else f"❌ {log.status.value}"
+            "status": "Hadir" if log.status == StatusAbsensi.HADIR else log.status.value
         })
         
     return {"logs": result}
@@ -145,14 +161,16 @@ async def get_siswa_absensi(
         raise HTTPException(status_code=404, detail="Data guru tidak ditemukan")
 
     students = db.query(Siswa).filter(
-        Siswa.id_guru == guru.id,
+        or_(
+            Siswa.id_guru == guru.id,
+            func.lower(Siswa.kategori_program) == func.lower(guru.kategori_program)
+        ),
         Siswa.is_deleted == False
     ).order_by(Siswa.nama).all()
     
     result = []
     for i, s in enumerate(students, 1):
-        # panggilan extraction (simple logic: first word)
-        panggilan = s.nama.split()[0] if s.nama else ""
+        panggilan = s.nama_panggilan if s.nama_panggilan else (s.nama.split()[0] if s.nama else "")
         pertemuan_selesai = s.target_pertemuan - s.sisa_pertemuan
         result.append({
             "no": i,
@@ -162,7 +180,10 @@ async def get_siswa_absensi(
             "panggilan": panggilan,
             "pertemuan_selesai": pertemuan_selesai,
             "total_pertemuan": s.target_pertemuan,
-            "is_disabled": s.sisa_pertemuan <= 0
+            "is_disabled": s.sisa_pertemuan <= 0,
+            "foto_profil": s.foto_profil,
+            "kelas_sekolah": s.kelas_sekolah,
+            "asal_sekolah": s.asal_sekolah
         })
         
     return {"siswa": result}
@@ -184,7 +205,6 @@ async def save_siswa_absensi(
     if not guru:
         raise HTTPException(status_code=404, detail="Data guru tidak ditemukan")
 
-    # Map status string to StatusAbsensi enum
     status_map = {
         "hadir": StatusAbsensi.HADIR,
         "izin": StatusAbsensi.IZIN,
@@ -195,17 +215,22 @@ async def save_siswa_absensi(
     saved_count = 0
 
     for item in data.siswa_absensi:
-        # verify student belongs to teacher
-        siswa = db.query(Siswa).filter(Siswa.id == item.siswa_id, Siswa.id_guru == guru.id).first()
+        siswa = db.query(Siswa).filter(
+            Siswa.id == item.siswa_id,
+            or_(
+                Siswa.id_guru == guru.id,
+                func.lower(Siswa.kategori_program) == func.lower(guru.kategori_program)
+            ),
+            Siswa.is_deleted == False
+        ).first()
         if not siswa:
             continue
             
         if siswa.sisa_pertemuan <= 0:
-            continue # Skip exhausted sessions
+            continue
             
         status_enum = status_map.get(item.status.lower(), StatusAbsensi.HADIR)
         
-        # log attendance
         log = AbsensiLog(
             uid=siswa.uid,
             waktu=now,
@@ -214,7 +239,6 @@ async def save_siswa_absensi(
         )
         db.add(log)
         
-        # decrement session if they attended or absent
         if status_enum in [StatusAbsensi.HADIR, StatusAbsensi.ALFA]:
              siswa.sisa_pertemuan -= 1
              
@@ -226,3 +250,4 @@ async def save_siswa_absensi(
         "status": "success",
         "message": f"Berhasil menyimpan absensi untuk {saved_count} siswa"
     }
+

@@ -3,40 +3,75 @@ import React from 'react';
 interface GuruProfileHeaderProps {
   teacherName: string;
   program: string;
+  noWa?: string;
   fotoProfil?: string;
 }
 
-const GuruProfileHeader: React.FC<GuruProfileHeaderProps> = ({ teacherName, program, fotoProfil }) => {
-  return (
-    <div className="bg-gradient-to-r from-[#FF7043] to-[#F4511E] text-white p-6 md:p-8 flex items-center gap-4 relative overflow-hidden h-[140px] shrink-0">
-      {/* Decorative circles */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -translate-y-1/2 translate-x-1/4 pointer-events-none"></div>
-      <div className="absolute bottom-0 right-20 w-16 h-16 bg-white opacity-10 rounded-full translate-y-1/4 pointer-events-none"></div>
-      
-      {/* Avatar */}
-      <div className="w-16 h-16 md:w-20 md:h-20 bg-white/20 rounded-full flex items-center justify-center border-2 border-white/50 overflow-hidden shadow-sm shrink-0 relative z-10">
-        {fotoProfil ? (
-          <img src={fotoProfil} alt={teacherName} className="w-full h-full object-cover" />
-        ) : (
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 md:h-10 md:w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          </svg>
-        )}
-      </div>
+const GuruProfileHeader: React.FC<GuruProfileHeaderProps> = ({ teacherName, program, noWa, fotoProfil }) => {
+  const initials = teacherName
+    .split(' ')
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase();
 
-      {/* Info */}
-      <div className="flex-1 relative z-10">
-        <h1 className="text-xl md:text-2xl font-extrabold tracking-tight truncate">{teacherName}</h1>
-        <p className="text-sm md:text-base opacity-90 truncate mt-0.5">{program}</p>
-        
-        {/* Status Badge */}
-        <div className="inline-flex items-center gap-1.5 mt-2 bg-white/20 px-2.5 py-1 rounded-full border border-white/30 backdrop-blur-sm shadow-sm">
-          <span className="w-2 h-2 rounded-full bg-[#4CAF50] animate-pulse shadow-[0_0_8px_#4CAF50]"></span>
-          <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider">ONLINE</span>
+  const avatarSrc = fotoProfil
+    ? fotoProfil.startsWith('http')
+      ? fotoProfil
+      : (import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1').replace('/api/v1', '') + fotoProfil
+    : null;
+
+  return (
+    <header
+      className="relative overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, #FF7043 0%, #FF5722 50%, #E64A19 100%)',
+        fontFamily: "'Inter', sans-serif",
+      }}
+    >
+      {/* Decorative circles */}
+      <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10" />
+      <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full bg-white/5" />
+      <div className="absolute top-4 right-20 w-10 h-10 rounded-full bg-white/8" />
+
+      <div className="relative z-10 px-5 pt-6 pb-5">
+        <div className="flex items-center gap-4">
+          {/* Avatar */}
+          {avatarSrc ? (
+            <img
+              src={avatarSrc}
+              alt={teacherName}
+              className="w-14 h-14 rounded-full border-[3px] border-white/40 shadow-lg object-cover flex-shrink-0 bg-white"
+              onError={(e) => {
+                (e.target as HTMLElement).style.display = 'none';
+              }}
+            />
+          ) : (
+            <div className="w-14 h-14 rounded-full border-[3px] border-white/40 shadow-lg bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+              <span className="text-white font-bold text-lg tracking-tight">{initials || 'G'}</span>
+            </div>
+          )}
+
+          {/* Info */}
+          <div className="flex-1 min-w-0">
+            <h1 className="text-white font-extrabold text-[17px] leading-tight truncate drop-shadow-sm">
+              {teacherName}
+            </h1>
+            <p className="text-white/85 text-[12px] font-medium mt-0.5 truncate">
+              {program} {noWa ? `• ${noWa}` : ''}
+            </p>
+          </div>
+
+          {/* Online Badge */}
+          <div className="flex items-center gap-1.5 bg-white/15 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20 flex-shrink-0">
+            <span className="w-2 h-2 bg-[#4CAF50] rounded-full animate-pulse shadow-[0_0_6px_rgba(76,175,80,0.6)]" />
+            <span className="text-white text-[10px] font-bold uppercase tracking-wider">Online</span>
+          </div>
         </div>
       </div>
-    </div>
+    </header>
   );
 };
 
 export default GuruProfileHeader;
+

@@ -54,13 +54,15 @@ const AbsensiInputPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col" style={{ fontFamily: "'Inter', sans-serif" }}>
       <GuruProfileHeader 
         teacherName={dashboardData?.guru?.nama_guru || 'Guru'} 
-        program={dashboardData?.guru?.program || 'Program'} 
+        program={dashboardData?.guru?.program || 'Program Sempoa'} 
+        noWa={dashboardData?.guru?.no_wa}
+        fotoProfil={dashboardData?.guru?.foto_profil}
       />
       
-      <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 max-w-5xl mx-auto w-full">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-4 max-w-5xl mx-auto w-full">
         
         {/* Tabs */}
         <div className="flex bg-white rounded-xl border border-[#E0E0E0] p-1 shadow-sm w-full sm:w-fit">
