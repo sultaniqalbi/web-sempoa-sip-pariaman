@@ -1,10 +1,15 @@
 from pydantic import BaseModel, ConfigDict
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, date
 
 class GuruBase(BaseModel):
     uid: str
     nama: str
+    nama_panggilan: Optional[str] = None
+    tempat_lahir: Optional[str] = None
+    tanggal_lahir: Optional[date] = None
+    umur: Optional[int] = None
+    asal_sekolah: Optional[str] = None
     kategori_program: str = "Sempoa SIP"
     hari_wajib: str
     target_kehadiran: int = 12
@@ -21,6 +26,11 @@ class GuruCreate(GuruBase):
 class GuruUpdate(BaseModel):
     uid: Optional[str] = None
     nama: Optional[str] = None
+    nama_panggilan: Optional[str] = None
+    tempat_lahir: Optional[str] = None
+    tanggal_lahir: Optional[date] = None
+    umur: Optional[int] = None
+    asal_sekolah: Optional[str] = None
     kategori_program: Optional[str] = None
     hari_wajib: Optional[str] = None
     target_kehadiran: Optional[int] = None
@@ -42,3 +52,4 @@ class GuruCreateResponse(BaseModel):
     guru_email: str
     guru_password_plaintext: str
     whatsapp_number: Optional[str] = None
+

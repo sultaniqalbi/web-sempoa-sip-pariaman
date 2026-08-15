@@ -89,6 +89,29 @@ export const SiswaPage: React.FC = () => {
     return age;
   };
 
+  const generateKodeSiswa = (program: string, ageVal?: string | number | null, birthDate?: string) => {
+    let prefix = 'sp';
+    const progLower = (program || '').toLowerCase();
+    if (progLower.includes('fonem') || progLower.includes('baca')) {
+      prefix = 'fn';
+    } else if (progLower.includes('tahfidz') || progLower.includes('quran')) {
+      prefix = 'td';
+    } else if (progLower.includes('inggris') || progLower.includes('english')) {
+      prefix = 'bi';
+    } else {
+      prefix = 'sp';
+    }
+
+    let ageNum = ageVal ? parseInt(String(ageVal), 10) : calculateAge(birthDate);
+    let ageStr = '00';
+    if (ageNum !== null && !isNaN(ageNum) && ageNum >= 0) {
+      ageStr = ageNum < 10 ? `0${ageNum}` : String(ageNum).slice(0, 2);
+    }
+
+    const currentYear = new Date().getFullYear().toString().slice(-2);
+    return `${prefix}-${ageStr}${currentYear}`;
+  };
+
   // Fetch Siswa List
   const { data: siswaList = [], isLoading } = useQuery<Siswa[]>({
     queryKey: ['siswa', 'list'],
@@ -161,12 +184,12 @@ export const SiswaPage: React.FC = () => {
     },
     onSuccess: (data) => {
       setCreatedCredential({
-        name: 'Ortu Siswa',
+        name: 'Siswa / Akun Orang Tua',
         email: data.email,
         pwd: data.new_password_plaintext
       });
       setIsCredentialModalOpen(true);
-      showToast('✅ Password akun ortu berhasil direset!');
+      showToast('✅ Password berhasil di-reset!');
     },
     onError: (err: any) => {
       showToast(`❌ Reset password gagal: ${err.response?.data?.detail || err.message}`, 'error');
@@ -504,10 +527,13 @@ export const SiswaPage: React.FC = () => {
                 onChange={(e) => {
                   const val = e.target.value;
                   const calculated = calculateAge(val);
+                  const newUmur = calculated !== null ? calculated.toString() : formData.umur;
+                  const newUid = !editingSiswa ? generateKodeSiswa(formData.kategori_program, newUmur, val) : formData.uid;
                   setFormData({ 
                     ...formData, 
                     tanggal_lahir: val,
-                    umur: calculated !== null ? calculated.toString() : formData.umur
+                    umur: newUmur,
+                    uid: newUid
                   });
                 }}
                 className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
@@ -518,7 +544,11 @@ export const SiswaPage: React.FC = () => {
               <input
                 type="number"
                 value={formData.umur}
-                onChange={(e) => setFormData({ ...formData, umur: e.target.value })}
+                onChange={(e) => {
+                  const newUmur = e.target.value;
+                  const newUid = !editingSiswa ? generateKodeSiswa(formData.kategori_program, newUmur, formData.tanggal_lahir) : formData.uid;
+                  setFormData({ ...formData, umur: newUmur, uid: newUid });
+                }}
                 className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
                 placeholder="Contoh: 7"
               />
@@ -568,7 +598,11 @@ export const SiswaPage: React.FC = () => {
             <label className="block text-[#1E293B] font-bold mb-1">Kategori Program*</label>
             <select
               value={formData.kategori_program}
-              onChange={(e) => setFormData({ ...formData, kategori_program: e.target.value })}
+              onChange={(e) => {
+                const newProg = e.target.value;
+                const newUid = !editingSiswa ? generateKodeSiswa(newProg, formData.umur, formData.tanggal_lahir) : formData.uid;
+                setFormData({ ...formData, kategori_program: newProg, uid: newUid });
+              }}
               className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none font-medium"
             >
               <option value="Sempoa SIP">Sempoa SIP</option>

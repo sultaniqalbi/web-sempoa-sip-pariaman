@@ -1,7 +1,10 @@
 import os
+import io
+import uuid
 from typing import List, Optional
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status
+from PIL import Image
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -73,6 +76,11 @@ async def create_new_guru(
         new_guru = Guru(
             uid=guru_in.uid,
             nama=guru_in.nama,
+            nama_panggilan=guru_in.nama_panggilan,
+            tempat_lahir=guru_in.tempat_lahir,
+            tanggal_lahir=guru_in.tanggal_lahir,
+            umur=guru_in.umur,
+            asal_sekolah=guru_in.asal_sekolah,
             kategori_program=guru_in.kategori_program,
             hari_wajib=guru_in.hari_wajib,
             target_kehadiran=guru_in.target_kehadiran or 12,
@@ -108,6 +116,59 @@ async def create_new_guru(
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=f"Gagal menambah guru: {str(e)}")
+
+@router.post("/{id}/upload-foto")
+async def upload_foto_guru(
+    id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(admin_or_owner)
+):
+    guru = db.query(Guru).filter(Guru.id == id).first()
+    if not guru:
+        raise HTTPException(status_code=404, detail="Guru tidak ditemukan")
+        
+    try:
+        contents = await file.read()
+        image = Image.open(io.BytesIO(contents))
+        
+        if image.mode in ("RGBA", "P"):
+            image = image.convert("RGB")
+            
+        max_size = (800, 800)
+        image.thumbnail(max_size, Image.Resampling.LANCZOS)
+        
+        filename = f"guru_{guru.uid}_{uuid.uuid4().hex[:8]}.webp"
+        upload_dir = os.path.join(os.path.dirname(__file__), "../../../uploads/profil")
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        filepath = os.path.join(upload_dir, filename)
+        image.save(filepath, "WEBP", quality=80)
+        
+        file_url = f"/uploads/profil/{filename}"
+        
+        if guru.foto_profil and guru.foto_profil.startswith("/uploads/profil/"):
+            old_filename = os.path.basename(guru.foto_profil)
+            old_filepath = os.path.join(upload_dir, old_filename)
+            if os.path.exists(old_filepath):
+                try:
+                    os.remove(old_filepath)
+                except Exception:
+                    pass
+                    
+        guru.foto_profil = file_url
+        
+        user_guru = db.query(User).filter(User.role == UserRole.guru, User.uid_terhubung == str(id)).first()
+        if user_guru:
+            user_guru.foto_profil = file_url
+            
+        db.commit()
+        db.refresh(guru)
+        
+        return {"status": "success", "file_url": file_url}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Gagal memproses unggahan foto: {str(e)}")
 
 @router.put("/{id}", response_model=GuruResponse)
 async def update_existing_guru(

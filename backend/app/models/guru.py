@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime
+from sqlalchemy import Column, Integer, String, Text, DateTime, Date
 from sqlalchemy.sql import func
 from app.core.database import Base
 
@@ -8,6 +8,11 @@ class Guru(Base):
     id = Column(Integer, primary_key=True, index=True)
     uid = Column(String(50), unique=True, nullable=False, index=True)
     nama = Column(String(100), nullable=False)
+    nama_panggilan = Column(String(100), nullable=True)
+    tempat_lahir = Column(String(100), nullable=True)
+    tanggal_lahir = Column(Date, nullable=True)
+    umur = Column(Integer, nullable=True)
+    asal_sekolah = Column(String(150), nullable=True)
     kategori_program = Column(String(50), nullable=False, default="Sempoa SIP")
     hari_wajib = Column(String(100), nullable=False)
     target_kehadiran = Column(Integer, nullable=False, default=12)

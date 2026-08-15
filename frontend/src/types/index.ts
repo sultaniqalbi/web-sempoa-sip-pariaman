@@ -41,9 +41,18 @@ export interface Guru {
   id: number;
   uid: string;
   nama: string;
+  nama_panggilan?: string;
+  tempat_lahir?: string;
+  tanggal_lahir?: string;
+  umur?: number;
+  asal_sekolah?: string;
   kategori_program: string;
   hari_wajib: string;
   target_kehadiran: number;
+  whatsapp_guru?: string;
+  alamat?: string;
+  riwayat_pendidikan?: string;
+  paket_pengajaran?: string;
   bio?: string;
   foto_profil?: string;
   created_at: string;

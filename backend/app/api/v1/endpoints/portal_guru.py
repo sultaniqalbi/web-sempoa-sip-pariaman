@@ -62,16 +62,20 @@ async def get_guru_dashboard(
     jadwal_row = db.query(Jadwal).filter(
         or_(
             Jadwal.id_guru == guru.id,
-            func.lower(Jadwal.program) == func.lower(guru.kategori_program)
+            func.lower(Jadwal.kategori_program) == func.lower(guru.kategori_program)
         )
     ).first()
 
+    jam_mulai_str = str(jadwal_row.jam_mulai) if jadwal_row and jadwal_row.jam_mulai else "08:30"
+    jam_selesai_str = str(jadwal_row.jam_selesai) if jadwal_row and jadwal_row.jam_selesai else "11:30"
+    ruangan_str = str(jadwal_row.lokasi) if jadwal_row and jadwal_row.lokasi else "Ruang Kelas A"
+
     jadwal_hari_ini = {
         "kode_program": "SEMPOA",
-        "nama_program": guru.kategori_program,
-        "jam_mulai": jadwal_row.jam_mulai.strftime("%H:%M") if jadwal_row and jadwal_row.jam_mulai else "08:30",
-        "jam_selesai": jadwal_row.jam_selesai.strftime("%H:%M") if jadwal_row and jadwal_row.jam_selesai else "11:30",
-        "ruangan": jadwal_row.ruangan if jadwal_row and jadwal_row.ruangan else "Ruang Kelas A",
+        "nama_program": guru.kategori_program or "Sempoa SIP",
+        "jam_mulai": jam_mulai_str,
+        "jam_selesai": jam_selesai_str,
+        "ruangan": ruangan_str,
         "jumlah_siswa": total_siswa,
         "is_active_today": is_active_today
     }

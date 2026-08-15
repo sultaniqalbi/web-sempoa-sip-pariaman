@@ -12,6 +12,11 @@ interface Guru {
   id: number;
   uid: string;
   nama: string;
+  nama_panggilan?: string;
+  tempat_lahir?: string;
+  tanggal_lahir?: string;
+  umur?: number;
+  asal_sekolah?: string;
   kategori_program: string;
   hari_wajib: string;
   target_kehadiran?: number;
@@ -19,6 +24,8 @@ interface Guru {
   alamat?: string;
   riwayat_pendidikan?: string;
   paket_pengajaran?: string;
+  bio?: string;
+  foto_profil?: string;
   created_at: string;
 }
 
@@ -26,6 +33,8 @@ export const GuruPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingGuru, setEditingGuru] = useState<Guru | null>(null);
+  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
+
   const [isCredentialModalOpen, setIsCredentialModalOpen] = useState(false);
   const [isWAFallbackModalOpen, setIsWAFallbackModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -39,12 +48,17 @@ export const GuruPage: React.FC = () => {
   const [formData, setFormData] = useState({
     uid: '',
     nama: '',
+    nama_panggilan: '',
+    umur: '',
     kategori_program: 'Sempoa SIP',
+    paket_pengajaran: 'Reguler',
     hari_wajib: 'Senin, Selasa, Kamis',
     whatsapp_guru: '',
     alamat: '',
+    tempat_lahir: '',
+    tanggal_lahir: '',
+    asal_sekolah: '',
     riwayat_pendidikan: '',
-    paket_pengajaran: '',
   });
 
   const showToast = (text: string, type: 'success' | 'error' = 'success') => {
@@ -62,6 +76,18 @@ export const GuruPage: React.FC = () => {
     return true;
   };
 
+  const calculateAge = (birthDate: string | undefined) => {
+    if (!birthDate) return null;
+    const today = new Date();
+    const dob = new Date(birthDate);
+    let age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
   const { data: guruList = [], isLoading } = useQuery<Guru[]>({
     queryKey: ['guru', 'list'],
     queryFn: async () => {
@@ -71,8 +97,15 @@ export const GuruPage: React.FC = () => {
   });
 
   const createMutation = useMutation({
-    mutationFn: async (data: typeof formData) => {
+    mutationFn: async (data: any) => {
       const res = await apiClient.post('/guru/', data);
+      if (selectedPhoto) {
+        const fileData = new FormData();
+        fileData.append('file', selectedPhoto);
+        await apiClient.post(`/guru/${res.data.guru.id}/upload-foto`, fileData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      }
       return res.data;
     },
     onSuccess: (data) => {
@@ -93,9 +126,16 @@ export const GuruPage: React.FC = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (data: typeof formData) => {
+    mutationFn: async (data: any) => {
       if (!editingGuru) return;
       const res = await apiClient.put(`/guru/${editingGuru.id}`, data);
+      if (selectedPhoto) {
+        const fileData = new FormData();
+        fileData.append('file', selectedPhoto);
+        await apiClient.post(`/guru/${editingGuru.id}/upload-foto`, fileData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      }
       return res.data;
     },
     onSuccess: () => {
@@ -188,29 +228,42 @@ export const GuruPage: React.FC = () => {
     setFormData({
       uid: `GR-${Math.floor(1000 + Math.random() * 9000)}`,
       nama: '',
+      nama_panggilan: '',
+      umur: '',
       kategori_program: 'Sempoa SIP',
+      paket_pengajaran: 'Reguler',
       hari_wajib: 'Senin, Selasa, Kamis',
       whatsapp_guru: '',
       alamat: '',
+      tempat_lahir: '',
+      tanggal_lahir: '',
+      asal_sekolah: '',
       riwayat_pendidikan: '',
-      paket_pengajaran: '',
     });
+    setSelectedPhoto(null);
     setPhoneError(null);
     setIsAddModalOpen(true);
   };
 
   const openEditModal = (guru: Guru) => {
     setEditingGuru(guru);
+    const calculatedAge = calculateAge(guru.tanggal_lahir);
     setFormData({
       uid: guru.uid,
       nama: guru.nama,
+      nama_panggilan: guru.nama_panggilan || '',
+      umur: guru.umur !== undefined && guru.umur !== null ? String(guru.umur) : (calculatedAge !== null ? String(calculatedAge) : ''),
       kategori_program: guru.kategori_program || 'Sempoa SIP',
+      paket_pengajaran: guru.paket_pengajaran || 'Reguler',
       hari_wajib: guru.hari_wajib || 'Senin, Selasa, Kamis',
       whatsapp_guru: guru.whatsapp_guru || '',
       alamat: guru.alamat || '',
+      tempat_lahir: guru.tempat_lahir || '',
+      tanggal_lahir: guru.tanggal_lahir || '',
+      asal_sekolah: guru.asal_sekolah || '',
       riwayat_pendidikan: guru.riwayat_pendidikan || '',
-      paket_pengajaran: guru.paket_pengajaran || '',
     });
+    setSelectedPhoto(null);
     setPhoneError(null);
     setIsAddModalOpen(true);
   };
@@ -220,21 +273,23 @@ export const GuruPage: React.FC = () => {
     if (!validatePhone(formData.whatsapp_guru)) {
       return;
     }
+    const payload = {
+      ...formData,
+      umur: formData.umur ? parseInt(formData.umur, 10) : (calculateAge(formData.tanggal_lahir) || null),
+    };
     if (editingGuru) {
-      updateMutation.mutate(formData);
+      updateMutation.mutate(payload);
     } else {
-      createMutation.mutate(formData);
+      createMutation.mutate(payload);
     }
   };
 
-  const formatJadwalDisplay = (hariWajib: string, jamMulai?: string, jamSelesai?: string): string => {
+  const formatJadwalDisplay = (hariWajib: string): string => {
     if (!hariWajib) return '-';
-
     const daysList = hariWajib.split(',').map((d) => d.trim()).filter(Boolean);
     const allDaysOrder = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
 
     let formattedDays = hariWajib;
-
     if (daysList.length >= 3) {
       const indices = daysList.map((d) => allDaysOrder.indexOf(d)).filter((idx) => idx !== -1);
       const isConsecutive = indices.every((val, i, arr) => i === 0 || val === arr[i - 1] + 1);
@@ -248,28 +303,57 @@ export const GuruPage: React.FC = () => {
       formattedDays = daysList.join(', ');
     }
 
-    const timeRange = jamMulai && jamSelesai ? `${jamMulai} - ${jamSelesai} WIB` : '07:00 - 17:00 WIB';
-
-    return `${formattedDays}, ${timeRange}`;
+    return `${formattedDays}, 07:00 - 17:00 WIB`;
   };
 
   const columns = [
     {
       header: 'UID RFID',
-      accessor: (row: Guru) => <span className="font-mono text-[#FF7043] font-bold">{row.uid}</span>,
-      className: 'w-[120px]',
+      accessor: (row: Guru) => {
+        const photoSrc = row.foto_profil
+          ? row.foto_profil.startsWith('http')
+            ? row.foto_profil
+            : (import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1').replace('/api/v1', '') + row.foto_profil
+          : null;
+
+        return (
+          <div className="flex items-center gap-3">
+            {photoSrc ? (
+              <img
+                src={photoSrc}
+                alt="Foto"
+                className="w-9 h-12 object-cover rounded shadow-sm border border-[#E2E8F0] bg-white"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = 'none';
+                }}
+              />
+            ) : (
+              <div className="w-9 h-12 bg-[#F1F5F9] border border-[#E2E8F0] rounded flex items-center justify-center">
+                <span className="text-[#94A3B8] text-[10px]">3x4</span>
+              </div>
+            )}
+            <span className="font-mono text-[#FF7043] font-bold">{row.uid}</span>
+          </div>
+        );
+      },
+      className: 'w-[180px]',
     },
     {
       header: 'NAMA GURU',
-      accessor: (row: Guru) => (
-        <div>
-          <p className="font-bold text-[#1E293B] text-xs">{row.nama}</p>
-          <p className="text-[10px] text-[#64748B] mt-0.5">
-            WA: {row.whatsapp_guru ? row.whatsapp_guru : '-'}
-          </p>
-        </div>
-      ),
-      className: 'w-[200px]',
+      accessor: (row: Guru) => {
+        const displayAge = row.umur ?? calculateAge(row.tanggal_lahir);
+        return (
+          <div>
+            <p className="font-bold text-[#1E293B] text-xs">
+              {row.nama} {displayAge ? <span className="text-[10px] font-normal text-[#64748B] ml-1">({displayAge} thn)</span> : ''}
+            </p>
+            <p className="text-[10px] text-[#64748B] mt-0.5">
+              {row.asal_sekolah ? `${row.asal_sekolah} • ` : ''}WA: {row.whatsapp_guru ? row.whatsapp_guru : '-'}
+            </p>
+          </div>
+        );
+      },
+      className: 'w-[220px]',
     },
     {
       header: 'KATEGORI',
@@ -278,16 +362,16 @@ export const GuruPage: React.FC = () => {
           {row.kategori_program}
         </span>
       ),
-      className: 'w-[150px]',
+      className: 'w-[140px]',
     },
     {
       header: 'JADWAL',
       accessor: (row: Guru) => (
         <span className="text-xs text-[#475569] font-medium leading-relaxed">
-          {formatJadwalDisplay(row.hari_wajib, row.jam_mulai, row.jam_selesai)}
+          {formatJadwalDisplay(row.hari_wajib)}
         </span>
       ),
-      className: 'w-[240px]',
+      className: 'w-[220px]',
     },
     {
       header: 'Aksi',
@@ -298,7 +382,7 @@ export const GuruPage: React.FC = () => {
             className="px-2.5 py-1 bg-[#FAFAFA] hover:bg-[#E2E8F0] text-[#334155] text-xs font-bold rounded-lg border border-[#CBD5E1] transition-colors"
             title="Edit Data Guru"
           >
-            ✏️ Edit
+            Edit
           </button>
           <button
             onClick={() => pushWAMutation.mutate(row.id)}
@@ -306,7 +390,7 @@ export const GuruPage: React.FC = () => {
             className="px-2.5 py-1 bg-[#E3F2FD] hover:bg-[#BBDEFB] text-[#1976D2] text-xs font-bold rounded-lg border border-[#90CAF9] transition-colors"
             title="Kirim Pesan WA Login Guru"
           >
-            📲 WA Push
+            WA Push
           </button>
           <button
             onClick={() => resetPasswordMutation.mutate(row.id)}
@@ -314,7 +398,7 @@ export const GuruPage: React.FC = () => {
             className="px-2.5 py-1 bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#E65100] text-xs font-bold rounded-lg border border-[#FFCC80] transition-colors"
             title="Reset Password Akun Guru"
           >
-            🔐 Reset
+            Reset
           </button>
           <button
             onClick={() => {
@@ -387,42 +471,125 @@ export const GuruPage: React.FC = () => {
       <Modal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        title={editingGuru ? '✏️ Edit Data Guru' : 'Tambah Guru Baru'}
+        title={editingGuru ? 'Edit Data Guru' : 'Tambah Guru Baru'}
       >
         <form onSubmit={handleFormSubmit} className="space-y-4 text-xs">
+          {/* UID Kartu RFID Guru */}
           <div>
-            <label className="block text-[#424242] font-bold mb-1">UID Kartu RFID Guru*</label>
+            <label className="block text-[#1E293B] font-bold mb-1">UID Kartu RFID Guru*</label>
             <input
               type="text"
               required
               value={formData.uid}
               onChange={(e) => setFormData({ ...formData, uid: e.target.value })}
-              className="w-full bg-[#FAFAFA] border border-[#E0E0E0] rounded-[8px] p-2.5 text-[#424242] font-mono focus:border-[#FF7043] focus:outline-none"
+              className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] font-mono focus:border-[#FF7043] focus:outline-none"
               placeholder="GR-3506 (Tempel kartu RFID atau ketik manual)"
             />
-            <p className="text-[10px] text-[#757575] mt-1">
+            <p className="text-[10px] text-[#64748B] mt-1">
               Admin dapat menempelkan kartu RFID ke alat pembaca atau memasukkan UID secara manual.
             </p>
           </div>
 
+          {/* Nama Lengkap & Nama Panggilan */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">Nama Lengkap Guru*</label>
+              <input
+                type="text"
+                required
+                value={formData.nama}
+                onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
+                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
+                placeholder="Siti Rahma"
+              />
+            </div>
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">Nama Panggilan* (untuk login email)</label>
+              <input
+                type="text"
+                required
+                value={formData.nama_panggilan}
+                onChange={(e) => setFormData({ ...formData, nama_panggilan: e.target.value })}
+                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
+                placeholder="rahma"
+              />
+            </div>
+          </div>
+
+          {/* Tempat Lahir, Tanggal Lahir, Umur */}
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">Tempat Lahir</label>
+              <input
+                type="text"
+                value={formData.tempat_lahir}
+                onChange={(e) => setFormData({ ...formData, tempat_lahir: e.target.value })}
+                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
+                placeholder="Pariaman"
+              />
+            </div>
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">Tanggal Lahir</label>
+              <input
+                type="date"
+                value={formData.tanggal_lahir}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const calculated = calculateAge(val);
+                  setFormData({
+                    ...formData,
+                    tanggal_lahir: val,
+                    umur: calculated !== null ? calculated.toString() : formData.umur,
+                  });
+                }}
+                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">Umur (Tahun)</label>
+              <input
+                type="number"
+                value={formData.umur}
+                onChange={(e) => setFormData({ ...formData, umur: e.target.value })}
+                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
+                placeholder="Contoh: 24"
+              />
+            </div>
+          </div>
+
+          {/* Asal Sekolah / Universitas */}
           <div>
-            <label className="block text-[#424242] font-bold mb-1">Nama Lengkap Guru*</label>
+            <label className="block text-[#1E293B] font-bold mb-1">Pendidikan Terakhir / Asal Kampus</label>
             <input
               type="text"
-              required
-              value={formData.nama}
-              onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
-              className="w-full bg-[#FAFAFA] border border-[#E0E0E0] rounded-[8px] p-2.5 text-[#424242] focus:border-[#FF7043] focus:outline-none"
-              placeholder="Siti Rahma"
+              value={formData.asal_sekolah}
+              onChange={(e) => setFormData({ ...formData, asal_sekolah: e.target.value })}
+              className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
+              placeholder="S1 Pendidikan Matematika - Universitas Negeri Padang"
             />
           </div>
 
+          {/* Pas Foto Profil (3x4) */}
           <div>
-            <label className="block text-[#424242] font-bold mb-1">Kategori Program*</label>
+            <label className="block text-[#1E293B] font-bold mb-1">Pas Foto (Tampil 3x4)</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setSelectedPhoto(e.target.files ? e.target.files[0] : null)}
+              className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2 text-[#1E293B] focus:border-[#FF7043] focus:outline-none file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#FF7043] file:text-white hover:file:bg-[#F4511E]"
+            />
+            {editingGuru?.foto_profil && !selectedPhoto && (
+              <p className="text-[10px] text-[#64748B] mt-1">Guru ini sudah memiliki foto. Upload baru untuk mengganti.</p>
+            )}
+          </div>
+
+          {/* Kategori Program* */}
+          <div>
+            <label className="block text-[#1E293B] font-bold mb-1">Kategori Program*</label>
             <select
               value={formData.kategori_program}
               onChange={(e) => setFormData({ ...formData, kategori_program: e.target.value })}
-              className="w-full bg-[#FAFAFA] border border-[#E0E0E0] rounded-[8px] p-2.5 text-[#424242] focus:border-[#FF7043] focus:outline-none"
+              className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none font-medium"
             >
               <option value="Sempoa SIP">Sempoa SIP</option>
               <option value="Fonem">Fonem</option>
@@ -431,7 +598,7 @@ export const GuruPage: React.FC = () => {
             </select>
           </div>
 
-          {/* 4. Hari Wajib Mengajar* [DayPicker multi-select] */}
+          {/* Hari Wajib Mengajar* [DayPicker multi-select] */}
           <DayPicker
             label="Hari Wajib Mengajar*"
             selectedDays={formData.hari_wajib}
@@ -440,35 +607,9 @@ export const GuruPage: React.FC = () => {
             required={true}
           />
 
-          {/* 5. Alamat* */}
+          {/* No. WhatsApp Guru* */}
           <div>
-            <label className="block text-[#424242] font-bold mb-1">Alamat Tempat Tinggal*</label>
-            <textarea
-              rows={2}
-              required
-              value={formData.alamat}
-              onChange={(e) => setFormData({ ...formData, alamat: e.target.value })}
-              className="w-full bg-[#FAFAFA] border border-[#E0E0E0] rounded-[8px] p-2.5 text-[#424242] focus:border-[#FF7043] focus:outline-none"
-              placeholder="Jl. Sudirman No. 12, Pariaman"
-            />
-          </div>
-
-          {/* 6. Riwayat Pendidikan* */}
-          <div>
-            <label className="block text-[#424242] font-bold mb-1">Riwayat Pendidikan*</label>
-            <textarea
-              rows={2}
-              required
-              value={formData.riwayat_pendidikan}
-              onChange={(e) => setFormData({ ...formData, riwayat_pendidikan: e.target.value })}
-              className="w-full bg-[#FAFAFA] border border-[#E0E0E0] rounded-[8px] p-2.5 text-[#424242] focus:border-[#FF7043] focus:outline-none"
-              placeholder="S1 Pendidikan Matematika - Universitas Negeri Padang"
-            />
-          </div>
-
-          {/* 7. No. WhatsApp Guru* */}
-          <div>
-            <label className="block text-[#424242] font-bold mb-1">No. WhatsApp Guru*</label>
+            <label className="block text-[#1E293B] font-bold mb-1">No. WhatsApp Guru*</label>
             <input
               type="tel"
               pattern="[0-9]*"
@@ -479,18 +620,43 @@ export const GuruPage: React.FC = () => {
                 setFormData({ ...formData, whatsapp_guru: cleaned });
                 if (cleaned) validatePhone(cleaned);
               }}
-              className={`w-full bg-[#FAFAFA] border rounded-[8px] p-2.5 text-[#424242] focus:outline-none ${
-                phoneError ? 'border-[#D32F2F] focus:border-[#D32F2F]' : 'border-[#E0E0E0] focus:border-[#FF7043]'
+              className={`w-full bg-[#F1F5F9] border rounded-lg p-2.5 text-[#1E293B] focus:outline-none ${
+                phoneError ? 'border-[#D32F2F] focus:border-[#D32F2F]' : 'border-[#E2E8F0] focus:border-[#FF7043]'
               }`}
               placeholder="081234567890"
             />
             {phoneError && <p className="text-[10px] text-[#D32F2F] font-semibold mt-1">{phoneError}</p>}
           </div>
 
+          {/* Alamat* */}
+          <div>
+            <label className="block text-[#1E293B] font-bold mb-1">Alamat Tempat Tinggal*</label>
+            <textarea
+              rows={2}
+              required
+              value={formData.alamat}
+              onChange={(e) => setFormData({ ...formData, alamat: e.target.value })}
+              className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
+              placeholder="Jl. Sudirman No. 12, Pariaman"
+            />
+          </div>
+
+          {/* Riwayat Pendidikan / Bio */}
+          <div>
+            <label className="block text-[#1E293B] font-bold mb-1">Riwayat Pendidikan / Keterangan Lain</label>
+            <textarea
+              rows={2}
+              value={formData.riwayat_pendidikan}
+              onChange={(e) => setFormData({ ...formData, riwayat_pendidikan: e.target.value })}
+              className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
+              placeholder="Pengalaman mengajar sempoa 2 tahun..."
+            />
+          </div>
+
           {!editingGuru && (
-            <div className="p-3 bg-[#FFF3E0] border border-[#FFCC80] rounded-[8px] text-[11px] text-[#FF7043]">
-              ℹ️ Sistem akan <strong>otomatis membuat akun login Guru</strong> dengan email{' '}
-              <code className="font-mono">{formData.nama.toLowerCase().replace(/\s+/g, '') || 'nama'}@sempoasippariaman.com</code>{' '}
+            <div className="p-3 bg-[#FFF3E0] border border-[#FFCC80] rounded-lg text-[11px] text-[#FF7043]">
+              Sistem akan <strong>otomatis membuat akun login Guru</strong> dengan email{' '}
+              <code className="font-mono">{(formData.nama_panggilan || formData.nama).toLowerCase().replace(/\s+/g, '') || 'guru'}@sempoasippariaman.com</code>{' '}
               dan password acak 10 karakter.
             </div>
           )}
@@ -499,14 +665,14 @@ export const GuruPage: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsAddModalOpen(false)}
-              className="px-4 py-2 bg-[#FAFAFA] text-[#757575] rounded-[8px] font-bold hover:bg-[#E0E0E0] border border-[#E0E0E0]"
+              className="px-4 py-2 bg-[#FAFAFA] text-[#757575] rounded-lg font-bold hover:bg-[#E0E0E0] border border-[#E0E0E0]"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={createMutation.isPending || updateMutation.isPending}
-              className="px-4 py-2 bg-[#FF7043] text-white font-bold rounded-[8px] hover:bg-[#F4511E] disabled:opacity-50"
+              className="px-4 py-2 bg-[#FF7043] text-white font-bold rounded-lg hover:bg-[#F4511E] disabled:opacity-50"
             >
               {createMutation.isPending || updateMutation.isPending
                 ? 'Simpan...'
@@ -519,7 +685,7 @@ export const GuruPage: React.FC = () => {
       </Modal>
 
       {/* Modal Kredensial Guru */}
-      <Modal isOpen={isCredentialModalOpen} onClose={() => setIsCredentialModalOpen(false)} title="🔑 Kredensial Akun Guru">
+      <Modal isOpen={isCredentialModalOpen} onClose={() => setIsCredentialModalOpen(false)} title="Kredensial Akun Guru">
         {createdCredential && (
           <div className="space-y-4 text-xs">
             <p className="text-[#424242]">
@@ -529,7 +695,7 @@ export const GuruPage: React.FC = () => {
               readOnly
               rows={7}
               value={`Halo ${createdCredential.name},\n\nAnda telah terdaftar sebagai pengajar di Sempoa SIP TC Pariaman.\n\n📧 Email: ${createdCredential.email}\n🔐 Sandi: ${createdCredential.pwd}\n🌐 Portal: https://sempoasippariaman.com/\n\n---\nTim Sempoa SIP TC Pariaman`}
-              className="w-full bg-[#FAFAFA] border border-[#E0E0E0] rounded-[8px] p-3 font-mono text-xs text-[#424242]"
+              className="w-full bg-[#FAFAFA] border border-[#E0E0E0] rounded-lg p-3 font-mono text-xs text-[#424242]"
             />
             <div className="flex gap-3">
               <button
@@ -537,15 +703,15 @@ export const GuruPage: React.FC = () => {
                   navigator.clipboard.writeText(
                     `Halo ${createdCredential.name},\n\nAnda telah terdaftar sebagai pengajar di Sempoa SIP TC Pariaman.\n\n📧 Email: ${createdCredential.email}\n🔐 Sandi: ${createdCredential.pwd}\n🌐 Portal: https://sempoasippariaman.com/\n\n---\nTim Sempoa SIP TC Pariaman`
                   );
-                  showToast('📋 Pesan WhatsApp disalin!');
+                  showToast('Pesan WhatsApp disalin!');
                 }}
-                className="flex-1 py-2.5 bg-[#FF7043] text-white font-bold rounded-[8px] hover:bg-[#F4511E]"
+                className="flex-1 py-2.5 bg-[#FF7043] text-white font-bold rounded-lg hover:bg-[#F4511E]"
               >
-                📋 Salin Teks Pesan WhatsApp
+                Salin Teks Pesan WhatsApp
               </button>
               <button
                 onClick={() => setIsCredentialModalOpen(false)}
-                className="px-4 py-2.5 bg-[#FAFAFA] text-[#757575] font-bold rounded-[8px] border border-[#E0E0E0]"
+                className="px-4 py-2.5 bg-[#FAFAFA] text-[#757575] font-bold rounded-lg border border-[#E0E0E0]"
               >
                 Tutup
               </button>
@@ -555,7 +721,7 @@ export const GuruPage: React.FC = () => {
       </Modal>
 
       {/* Fallback WhatsApp Modal */}
-      <Modal isOpen={isWAFallbackModalOpen} onClose={() => setIsWAFallbackModalOpen(false)} title="📱 WhatsApp Direct Link">
+      <Modal isOpen={isWAFallbackModalOpen} onClose={() => setIsWAFallbackModalOpen(false)} title="WhatsApp Direct Link">
         {waFallbackData && (
           <div className="space-y-4 text-xs">
             <p className="text-[#424242]">Pratinjau pesan WhatsApp yang dikirim ke +{waFallbackData.number}:</p>
@@ -563,14 +729,14 @@ export const GuruPage: React.FC = () => {
               readOnly
               rows={7}
               value={waFallbackData.message}
-              className="w-full bg-[#FAFAFA] border border-[#E0E0E0] rounded-[8px] p-2.5 text-[#424242] font-mono text-[11px]"
+              className="w-full bg-[#FAFAFA] border border-[#E0E0E0] rounded-lg p-2.5 text-[#424242] font-mono text-[11px]"
             />
             <div className="flex justify-between items-center pt-2">
               <a
                 href={`https://wa.me/${waFallbackData.number}?text=${encodeURIComponent(waFallbackData.message)}`}
                 target="_blank"
                 rel="noreferrer"
-                className="px-4 py-2 bg-[#388E3C] text-white font-bold rounded-[8px] hover:bg-[#2E7D32]"
+                className="px-4 py-2 bg-[#388E3C] text-white font-bold rounded-lg hover:bg-[#2E7D32]"
               >
                 Buka WhatsApp Web
               </a>
@@ -578,15 +744,15 @@ export const GuruPage: React.FC = () => {
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(waFallbackData.message);
-                    showToast('📋 Pesan WA disalin!');
+                    showToast('Pesan WA disalin!');
                   }}
-                  className="px-4 py-2 bg-[#FF7043] text-white font-bold rounded-[8px] hover:bg-[#F4511E]"
+                  className="px-4 py-2 bg-[#FF7043] text-white font-bold rounded-lg hover:bg-[#F4511E]"
                 >
                   Salin Teks
                 </button>
                 <button
                   onClick={() => setIsWAFallbackModalOpen(false)}
-                  className="px-4 py-2 bg-[#FAFAFA] text-[#757575] font-bold rounded-[8px] border border-[#E0E0E0]"
+                  className="px-4 py-2 bg-[#FAFAFA] text-[#757575] font-bold rounded-lg border border-[#E0E0E0]"
                 >
                   Tutup
                 </button>
@@ -610,20 +776,20 @@ export const GuruPage: React.FC = () => {
                   href={exportResult.sheet_url}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-block px-4 py-2.5 bg-[#388E3C] text-white font-bold rounded-[8px] hover:bg-[#2E7D32]"
+                  className="inline-block px-4 py-2.5 bg-[#388E3C] text-white font-bold rounded-lg hover:bg-[#2E7D32]"
                 >
                   Buka Google Sheets
                 </a>
               </div>
             ) : (
-              <div className="p-3 bg-[#FFF3E0] border border-[#FFCC80] rounded-[8px] text-[#FF7043]">
+              <div className="p-3 bg-[#FFF3E0] border border-[#FFCC80] rounded-lg text-[#FF7043]">
                 Fitur ini memerlukan <code>GOOGLE_SERVICE_ACCOUNT_JSON</code> dan <code>GOOGLE_SHEET_ID</code> pada file .env backend.
               </div>
             )}
             <div className="flex justify-end pt-2">
               <button
                 onClick={() => setIsExportModalOpen(false)}
-                className="px-4 py-2 bg-[#FAFAFA] text-[#757575] font-bold rounded-[8px] border border-[#E0E0E0]"
+                className="px-4 py-2 bg-[#FAFAFA] text-[#757575] font-bold rounded-lg border border-[#E0E0E0]"
               >
                 Tutup
               </button>

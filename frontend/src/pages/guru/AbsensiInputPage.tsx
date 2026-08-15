@@ -54,18 +54,9 @@ const AbsensiInputPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col" style={{ fontFamily: "'Inter', sans-serif" }}>
-      <GuruProfileHeader 
-        teacherName={dashboardData?.guru?.nama_guru || 'Guru'} 
-        program={dashboardData?.guru?.program || 'Program Sempoa'} 
-        noWa={dashboardData?.guru?.no_wa}
-        fotoProfil={dashboardData?.guru?.foto_profil}
-      />
-      
-      <div className="p-4 sm:p-6 lg:p-8 space-y-4 max-w-5xl mx-auto w-full">
-        
-        {/* Tabs */}
-        <div className="flex bg-white rounded-xl border border-[#E0E0E0] p-1 shadow-sm w-full sm:w-fit">
+    <div className="space-y-4" style={{ fontFamily: "'Inter', sans-serif" }}>
+      {/* Tabs */}
+      <div className="flex bg-white rounded-xl border border-[#E0E0E0] p-1 shadow-sm w-full sm:w-fit">
           <button
             onClick={() => setActiveTab('input')}
             className={`flex-1 sm:flex-none px-6 py-2.5 rounded-lg text-xs font-bold transition-colors ${
@@ -152,8 +143,6 @@ const AbsensiInputPage: React.FC = () => {
             )}
           </div>
         )}
-
-      </div>
     </div>
   );
 };
