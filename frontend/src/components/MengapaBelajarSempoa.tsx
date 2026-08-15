@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 
 const BrainIcon = ({ color }: { color: string }) => (
   <svg 
@@ -39,29 +39,8 @@ const rightPoints = [
 ];
 
 export const MengapaBelajarSempoa: React.FC = () => {
-  const [isVisible, setIsVisible] = useState(false);
-  const sectionRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.2 }
-    );
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, []);
-
   return (
-    <section ref={sectionRef} className="section-padding" style={{ backgroundColor: '#fff', position: 'relative' }}>
+    <section className="section-padding" style={{ backgroundColor: '#fff', position: 'relative' }}>
       <div className="container" style={{ maxWidth: '1200px', padding: '30px 20px' }}>
         
         {/* Title Section */}
@@ -147,11 +126,7 @@ export const MengapaBelajarSempoa: React.FC = () => {
                   style={{ 
                     display: 'flex',
                     alignItems: 'flex-start',
-                    gap: '8px',
-                    opacity: isVisible ? 1 : 0,
-                    transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
-                    transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                    transitionDelay: `${(index * 0.2) + 0.1}s`
+                    gap: '8px'
                   }}
                 >
                   <CheckIcon color="#FF7043" />
