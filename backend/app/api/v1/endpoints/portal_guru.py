@@ -347,8 +347,14 @@ async def save_siswa_absensi(
         ).first()
 
         if existing_log:
+            prev_status = existing_log.status
             existing_log.status = status_enum
             existing_log.waktu = now
+
+            if prev_status == StatusAbsensi.IZIN and status_enum in [StatusAbsensi.HADIR, StatusAbsensi.ALFA]:
+                siswa.sisa_pertemuan = max(0, siswa.sisa_pertemuan - 1)
+            elif prev_status in [StatusAbsensi.HADIR, StatusAbsensi.ALFA] and status_enum == StatusAbsensi.IZIN:
+                siswa.sisa_pertemuan = min(siswa.target_pertemuan, siswa.sisa_pertemuan + 1)
         else:
             log = AbsensiLog(
                 uid=siswa.uid,
@@ -358,8 +364,21 @@ async def save_siswa_absensi(
             )
             db.add(log)
             if status_enum in [StatusAbsensi.HADIR, StatusAbsensi.ALFA]:
-                siswa.sisa_pertemuan -= 1
-             
+                siswa.sisa_pertemuan = max(0, siswa.sisa_pertemuan - 1)
+
+        if siswa.sisa_pertemuan == 0 and siswa.status_spp != StatusSPP.EXPIRED:
+            siswa.status_spp = StatusSPP.EXPIRED
+            current_month = now.strftime("%Y-%m")
+            due_date = now.date() + timedelta(days=7)
+            billing = PembayaranPeriode(
+                id_siswa=siswa.id,
+                periode_bulan=current_month,
+                jumlah=150000.00,
+                status=StatusPembayaran.MENUNGGAK,
+                due_date=due_date
+            )
+            db.add(billing)
+
         saved_count += 1
 
     # Save catatan pembelajaran if provided

@@ -136,40 +136,57 @@ async def bulk_absensi_siswa(
     db: Session = Depends(get_db),
     current_user: User = Depends(RoleChecker([UserRole.admin, UserRole.owner, UserRole.guru]))
 ):
-    """
-    Input Absensi Siswa Massal oleh Guru.
-    Jika status HADIR: kurangi sisa_pertemuan -= 1. Jika mencapai 0: set status_spp EXPIRED dan buat tagihan MENUNGGAK 150rb.
-    """
     processed = 0
-    waktu_absensi = datetime.strptime(req.tanggal, "%Y-%m-%d") if req.tanggal else datetime.utcnow()
+    now = datetime.now()
+    if req.tanggal:
+        try:
+            target_date = datetime.strptime(req.tanggal, "%Y-%m-%d").date()
+            now = datetime.combine(target_date, datetime.now().time())
+        except Exception:
+            pass
 
     for item in req.absensi:
         siswa = db.query(Siswa).filter(Siswa.id == item.id_siswa, Siswa.is_deleted == False).first()
         if not siswa:
             continue
 
-        # Record log
-        absensi_log = AbsensiLog(
-            uid=siswa.uid,
-            waktu=waktu_absensi,
-            status=item.status
-        )
-        db.add(absensi_log)
+        existing_log = db.query(AbsensiLog).filter(
+            AbsensiLog.uid == siswa.uid,
+            func.date(AbsensiLog.waktu) == now.date()
+        ).order_by(AbsensiLog.waktu.desc()).first()
 
-        if item.status == StatusAbsensi.HADIR:
-            siswa.sisa_pertemuan = max(0, siswa.sisa_pertemuan - 1)
-            if siswa.sisa_pertemuan == 0:
-                siswa.status_spp = StatusSPP.EXPIRED
-                current_month = waktu_absensi.strftime("%Y-%m")
-                due_date = waktu_absensi.date() + timedelta(days=7)
-                billing = PembayaranPeriode(
-                    id_siswa=siswa.id,
-                    periode_bulan=current_month,
-                    jumlah=150000.00,
-                    status=StatusPembayaran.MENUNGGAK,
-                    due_date=due_date
-                )
-                db.add(billing)
+        if existing_log:
+            prev_status = existing_log.status
+            existing_log.status = item.status
+            existing_log.waktu = now
+
+            if prev_status == StatusAbsensi.IZIN and item.status in [StatusAbsensi.HADIR, StatusAbsensi.ALFA]:
+                siswa.sisa_pertemuan = max(0, siswa.sisa_pertemuan - 1)
+            elif prev_status in [StatusAbsensi.HADIR, StatusAbsensi.ALFA] and item.status == StatusAbsensi.IZIN:
+                siswa.sisa_pertemuan = min(siswa.target_pertemuan, siswa.sisa_pertemuan + 1)
+        else:
+            absensi_log = AbsensiLog(
+                uid=siswa.uid,
+                waktu=now,
+                status=item.status
+            )
+            db.add(absensi_log)
+
+            if item.status in [StatusAbsensi.HADIR, StatusAbsensi.ALFA]:
+                siswa.sisa_pertemuan = max(0, siswa.sisa_pertemuan - 1)
+
+        if siswa.sisa_pertemuan == 0 and siswa.status_spp != StatusSPP.EXPIRED:
+            siswa.status_spp = StatusSPP.EXPIRED
+            current_month = now.strftime("%Y-%m")
+            due_date = now.date() + timedelta(days=7)
+            billing = PembayaranPeriode(
+                id_siswa=siswa.id,
+                periode_bulan=current_month,
+                jumlah=150000.00,
+                status=StatusPembayaran.MENUNGGAK,
+                due_date=due_date
+            )
+            db.add(billing)
 
         processed += 1
 

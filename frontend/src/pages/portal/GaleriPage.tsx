@@ -58,10 +58,10 @@ export const GaleriPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['galeri'] });
       setIsAddModalOpen(false);
       resetForm();
-      showToast('✅ Foto berhasil diunggah!');
+      showToast('Foto berhasil diunggah');
     },
     onError: (err: any) => {
-      showToast(`❌ Gagal mengunggah foto: ${err.message}`, 'error');
+      showToast(`Gagal mengunggah foto: ${err.message}`, 'error');
     },
   });
 
@@ -71,10 +71,10 @@ export const GaleriPage: React.FC = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['galeri'] });
-      showToast('✅ Foto galeri berhasil dihapus');
+      showToast('Foto galeri berhasil dihapus');
     },
     onError: (err: any) => {
-      showToast(`❌ Delete gagal: ${err.message}`, 'error');
+      showToast(`Delete gagal: ${err.message}`, 'error');
     },
   });
 
@@ -87,13 +87,13 @@ export const GaleriPage: React.FC = () => {
       setExportResult(data);
       setIsExportModalOpen(true);
       if (data.status === 'success') {
-        showToast('✅ Data galeri terkirim ke Google Sheets!');
+        showToast('Data galeri terkirim ke Google Sheets');
       } else {
-        showToast(`ℹ️ ${data.message}`, 'error');
+        showToast(`Info: ${data.message}`, 'error');
       }
     },
     onError: (err: any) => {
-      showToast(`❌ Gagal export: ${err.message}`, 'error');
+      showToast(`Gagal export: ${err.message}`, 'error');
     },
   });
 
@@ -287,7 +287,7 @@ export const GaleriPage: React.FC = () => {
                     }}
                     className="px-3 py-2 bg-white text-[#1E293B] rounded-lg text-xs font-bold shadow-md hover:bg-[#FAFAFA] transition-colors"
                   >
-                    🔍 Lihat Full
+                    Lihat Full
                   </button>
                   <button
                     onClick={(e) => {
@@ -361,7 +361,7 @@ export const GaleriPage: React.FC = () => {
                   onClick={() => fileInputRef.current?.click()}
                   className="px-4 py-2.5 bg-[#FAFAFA] hover:bg-[#E0E0E0] text-[#424242] border border-[#E0E0E0] rounded-[8px] text-xs font-bold transition-colors inline-flex items-center gap-2 cursor-pointer shadow-xs"
                 >
-                  📷 Pilih File
+                  Pilih File
                 </button>
                 {selectedFile && (
                   <span className="text-xs text-[#424242] font-mono truncate max-w-xs bg-[#F5F5F5] px-2.5 py-1 rounded-[6px] border border-[#E0E0E0]">
@@ -370,7 +370,7 @@ export const GaleriPage: React.FC = () => {
                 )}
                 {isConverting && (
                   <span className="text-xs text-[#FF7043] font-bold animate-pulse">
-                    ⚡ Converting to WebP...
+                    Mengonversi ke WebP...
                   </span>
                 )}
               </div>
@@ -435,7 +435,7 @@ export const GaleriPage: React.FC = () => {
           {/* RIGHT COLUMN: Live Preview Card (1:1 Square Format) */}
           <div className="lg:col-span-6 flex flex-col justify-start overflow-hidden">
             <p className="text-[12px] font-bold text-[#FF7043] uppercase tracking-wider mb-2 flex items-center gap-1.5">
-              <span>🔴 LIVE PREVIEW LAYOUT CARD (1:1 SQUARE)</span>
+              <span>Pratinjau Foto (1:1 Square)</span>
             </p>
 
             {/* Live Preview Card Box */}
@@ -450,7 +450,6 @@ export const GaleriPage: React.FC = () => {
                   />
                 ) : (
                   <div className="text-center p-4 text-[#757575] flex flex-col items-center justify-center space-y-2">
-                    <span className="text-4xl">📷</span>
                     <span className="text-xs font-semibold">Pilih foto terlebih dahulu (1:1 Square)</span>
                   </div>
                 )}

@@ -118,10 +118,10 @@ export const GuruPage: React.FC = () => {
         wa: data.whatsapp_number,
       });
       setIsCredentialModalOpen(true);
-      showToast('✅ Data guru & akun login berhasil dibuat!');
+      showToast('Data guru & akun login berhasil dibuat');
     },
     onError: (err: any) => {
-      showToast(`❌ Gagal membuat guru: ${err.response?.data?.detail || err.message}`, 'error');
+      showToast(`Gagal membuat guru: ${err.response?.data?.detail || err.message}`, 'error');
     },
   });
 
@@ -142,10 +142,10 @@ export const GuruPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['guru'] });
       setIsAddModalOpen(false);
       setEditingGuru(null);
-      showToast('✅ Data guru berhasil diperbarui!');
+      showToast('Data guru berhasil diperbarui');
     },
     onError: (err: any) => {
-      showToast(`❌ Gagal memperbarui guru: ${err.response?.data?.detail || err.message}`, 'error');
+      showToast(`Gagal memperbarui guru: ${err.response?.data?.detail || err.message}`, 'error');
     },
   });
 
@@ -161,10 +161,10 @@ export const GuruPage: React.FC = () => {
         pwd: data.new_password_plaintext,
       });
       setIsCredentialModalOpen(true);
-      showToast('✅ Password akun guru berhasil direset!');
+      showToast('Password akun guru berhasil direset');
     },
     onError: (err: any) => {
-      showToast(`❌ Reset password gagal: ${err.response?.data?.detail || err.message}`, 'error');
+      showToast(`Reset password gagal: ${err.response?.data?.detail || err.message}`, 'error');
     },
   });
 
@@ -175,7 +175,7 @@ export const GuruPage: React.FC = () => {
     },
     onSuccess: (data) => {
       if (data.status === 'success') {
-        showToast(`✅ Pesan WhatsApp terkirim ke +${data.whatsapp_number}`);
+        showToast(`Pesan WhatsApp terkirim ke +${data.whatsapp_number}`);
       } else if (data.status === 'pending' || data.fallback_message) {
         setWAFallbackData({
           message: data.fallback_message,
@@ -183,11 +183,11 @@ export const GuruPage: React.FC = () => {
         });
         setIsWAFallbackModalOpen(true);
       } else {
-        showToast(`❌ ${data.message}`, 'error');
+        showToast(`${data.message}`, 'error');
       }
     },
     onError: (err: any) => {
-      showToast(`❌ Kirim WA gagal: ${err.response?.data?.detail || err.message}`, 'error');
+      showToast(`Kirim WA gagal: ${err.response?.data?.detail || err.message}`, 'error');
     },
   });
 
@@ -200,13 +200,13 @@ export const GuruPage: React.FC = () => {
       setExportResult(data);
       setIsExportModalOpen(true);
       if (data.status === 'success') {
-        showToast('✅ Data guru terkirim ke Google Sheets!');
+        showToast('Data guru terkirim ke Google Sheets');
       } else {
-        showToast(`ℹ️ ${data.message}`, 'error');
+        showToast(`Info: ${data.message}`, 'error');
       }
     },
     onError: (err: any) => {
-      showToast(`❌ Gagal export: ${err.message}`, 'error');
+      showToast(`Gagal export: ${err.message}`, 'error');
     },
   });
 
@@ -216,10 +216,10 @@ export const GuruPage: React.FC = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['guru'] });
-      showToast('✅ Data guru berhasil dihapus');
+      showToast('Data guru berhasil dihapus');
     },
     onError: (err: any) => {
-      showToast(`❌ Delete gagal: ${err.message}`, 'error');
+      showToast(`Delete gagal: ${err.message}`, 'error');
     },
   });
 
@@ -694,16 +694,16 @@ export const GuruPage: React.FC = () => {
             <textarea
               readOnly
               rows={7}
-              value={`Halo ${createdCredential.name},\n\nAnda telah terdaftar sebagai pengajar di Sempoa SIP TC Pariaman.\n\n📧 Email: ${createdCredential.email}\n🔐 Sandi: ${createdCredential.pwd}\n🌐 Portal: https://sempoasippariaman.com/\n\n---\nTim Sempoa SIP TC Pariaman`}
+              value={`Halo ${createdCredential.name},\n\nAnda telah terdaftar sebagai pengajar di Sempoa SIP TC Pariaman.\n\nEmail: ${createdCredential.email}\nSandi: ${createdCredential.pwd}\nPortal: https://sempoasippariaman.com/\n\n---\nTim Sempoa SIP TC Pariaman`}
               className="w-full bg-[#FAFAFA] border border-[#E0E0E0] rounded-lg p-3 font-mono text-xs text-[#424242]"
             />
             <div className="flex gap-3">
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(
-                    `Halo ${createdCredential.name},\n\nAnda telah terdaftar sebagai pengajar di Sempoa SIP TC Pariaman.\n\n📧 Email: ${createdCredential.email}\n🔐 Sandi: ${createdCredential.pwd}\n🌐 Portal: https://sempoasippariaman.com/\n\n---\nTim Sempoa SIP TC Pariaman`
+                    `Halo ${createdCredential.name},\n\nAnda telah terdaftar sebagai pengajar di Sempoa SIP TC Pariaman.\n\nEmail: ${createdCredential.email}\nSandi: ${createdCredential.pwd}\nPortal: https://sempoasippariaman.com/\n\n---\nTim Sempoa SIP TC Pariaman`
                   );
-                  showToast('Pesan WhatsApp disalin!');
+                  showToast('Pesan WhatsApp disalin');
                 }}
                 className="flex-1 py-2.5 bg-[#FF7043] text-white font-bold rounded-lg hover:bg-[#F4511E]"
               >

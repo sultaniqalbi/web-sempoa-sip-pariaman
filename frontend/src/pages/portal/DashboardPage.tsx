@@ -28,11 +28,11 @@ export const DashboardPage: React.FC = () => {
       try {
         const response = await apiClient.get('/portal/dashboard');
         return response.data;
-      } catch (err) {
+      } catch {
         try {
           const response = await apiClient.get('/admin/stats');
           return response.data;
-        } catch (err2) {
+        } catch {
           const response = await apiClient.get('/admin/dashboard');
           return response.data;
         }
@@ -58,14 +58,14 @@ export const DashboardPage: React.FC = () => {
     onSuccess: (data) => {
       setRekapResult(data);
       if (data.status === 'success') {
-        showToast('✅ Rekap bulanan berhasil terkirim ke Google Sheets!');
+        showToast('Rekap bulanan berhasil terkirim ke Google Sheets');
       } else {
-        showToast(`ℹ️ ${data.message}`, 'error');
+        showToast(`Info: ${data.message}`, 'error');
       }
     },
     onError: (err: any) => {
-      showToast(`❌ Gagal generate rekap: ${err.message}`, 'error');
-    }
+      showToast(`Gagal generate rekap: ${err.message}`, 'error');
+    },
   });
 
   if (isLoading) {
@@ -79,7 +79,7 @@ export const DashboardPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="m-6 p-6 bg-[#FFF1F2] border border-[#D32F2F] rounded-[8px] text-[#D32F2F] text-xs font-medium">
+      <div className="m-6 p-6 bg-[#FFF1F2] border border-[#D32F2F] rounded-lg text-[#D32F2F] text-xs font-medium">
         Gagal memuat statistik dashboard. Pastikan backend server terhubung.
       </div>
     );
@@ -180,27 +180,31 @@ export const DashboardPage: React.FC = () => {
       }}
       standalone={false}
     >
-      {role === 'owner' && (
+      {toastMessage && (
+        <div
+          className={`p-4 rounded-xl text-xs font-bold shadow-sm border mb-6 ${
+            toastMessage.type === 'success'
+              ? 'bg-[#E8F5E9] text-[#388E3C] border-[#A5D6A7]'
+              : 'bg-[#FFF1F2] text-[#D32F2F] border-[#FECDD3]'
+          }`}
+        >
+          {toastMessage.text}
+        </div>
+      )}
+
+      {/* Modal Rekap Bulanan */}
+      {isRekapModalOpen && (
         <Modal
           isOpen={isRekapModalOpen}
           onClose={() => setIsRekapModalOpen(false)}
           title="Rekap Bulanan Google Sheets"
-          size="lg"
         >
-          <div className="space-y-6">
-            {toastMessage && (
-              <div className={`p-4 rounded-xl text-sm font-bold shadow-sm border ${
-                toastMessage.type === 'success' ? 'bg-[#E8F5E9] text-[#388E3C] border-[#A5D6A7]' : 'bg-[#FFF1F2] text-[#D32F2F] border-[#FECDD3]'
-              }`}>
-                {toastMessage.text}
-              </div>
-            )}
-
-            <p className="text-xs text-[#757575]">
+          <div className="space-y-4 text-xs">
+            <p className="text-[#757575]">
               Otomatisasi pengiriman ringkasan data operasional dan keuangan ke spreadsheet resmi
             </p>
 
-            <div className="bg-[#FAFAFA] p-5 rounded-2xl border border-[#E0E0E0] space-y-5">
+            <div className="bg-[#FAFAFA] p-5 rounded-2xl border border-[#E0E0E0] space-y-4">
               <div>
                 <label className="block text-xs font-bold text-[#424242] mb-1">Pilih Periode Bulan Rekap*</label>
                 <input
@@ -210,13 +214,13 @@ export const DashboardPage: React.FC = () => {
                   className="w-full bg-white border border-[#E0E0E0] rounded-xl px-4 py-2 text-sm text-[#424242] font-mono outline-none focus:border-[#FF7043]"
                 />
               </div>
-              
+
               <button
                 onClick={() => rekapMutation.mutate(selectedBulan)}
                 disabled={rekapMutation.isPending}
                 className="w-full py-3 bg-[#FF7043] hover:bg-[#F4511E] text-white rounded-xl text-xs font-extrabold shadow-sm flex items-center justify-center gap-2 transition-colors"
               >
-                {rekapMutation.isPending ? '🔄 Memproses Rekap...' : '📊 Buat & Kirim Rekap ke Google Sheets'}
+                {rekapMutation.isPending ? 'Memproses Rekap...' : 'Buat & Kirim Rekap ke Google Sheets'}
               </button>
             </div>
 
@@ -225,8 +229,10 @@ export const DashboardPage: React.FC = () => {
                 <h3 className="text-sm font-extrabold text-[#424242]">Hasil Rekap Periode {selectedBulan}</h3>
                 {rekapResult.status === 'success' ? (
                   <div className="p-4 bg-[#E8F5E9] border border-[#A5D6A7] rounded-xl space-y-2">
-                    <p className="text-xs text-[#388E3C] font-bold">✅ Tab rekap berhasil dibuat / diperbarui!</p>
-                    <p className="text-xs text-[#757575]">Worksheet: <code className="text-[#FF7043] font-bold">{rekapResult.worksheet_name}</code></p>
+                    <p className="text-xs text-[#388E3C] font-bold">Tab rekap berhasil dibuat / diperbarui!</p>
+                    <p className="text-xs text-[#757575]">
+                      Worksheet: <code className="text-[#FF7043] font-bold">{rekapResult.worksheet_name}</code>
+                    </p>
                     <a
                       href={rekapResult.sheet_url}
                       target="_blank"
@@ -238,9 +244,9 @@ export const DashboardPage: React.FC = () => {
                   </div>
                 ) : (
                   <div className="p-4 bg-[#FFF3E0] border border-[#FFCC80] rounded-xl space-y-2 text-xs text-[#FF7043]">
-                    <p className="font-bold">ℹ️ {rekapResult.message}</p>
+                    <p className="font-bold">Info: {rekapResult.message}</p>
                     {rekapResult.rekap_summary && (
-                      <div className="p-2 bg-white rounded-lg font-mono text-[11px] space-y-1 border border-[#FFE0B2]">
+                      <div className="p-2 bg-white rounded-lg font-mono text-[11px] space-y-1 border border-[#FFE082]">
                         <p>Total Siswa Aktif: {rekapResult.rekap_summary.total_siswa_aktif}</p>
                         <p>Total Pendapatan: Rp {rekapResult.rekap_summary.total_pendapatan?.toLocaleString('id-ID')}</p>
                       </div>

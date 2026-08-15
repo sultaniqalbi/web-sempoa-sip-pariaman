@@ -15,12 +15,7 @@ interface ReminderItem {
   whatsapp_orang_tua: string;
   program: string;
   sisa_pertemuan: number;
-  status_spp: string;
   status: 'lancar' | 'peringatan' | 'urgent';
-  status_label: string;
-  color: 'hijau' | 'kuning' | 'merah';
-  jadwal_pembayaran_berikutnya?: string;
-  jumlah_tagihan: number;
   wa_draft: string;
   wa_draft_peringatan?: string;
   wa_draft_urgent?: string;
@@ -28,26 +23,21 @@ interface ReminderItem {
 
 interface BuktiTransferItem {
   id: number;
+  id_siswa: number;
   id_pembayaran: number;
   file_path: string;
   status: string;
-  admin_note?: string;
-  created_at: string;
+  catatan_admin?: string;
+  uploaded_at: string;
 }
 
 export const PembayaranPage: React.FC = () => {
-  const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const userRole = user?.role || 'admin';
 
   const [activeTab, setActiveTab] = useState<'reminder' | 'verifikasi'>('reminder');
-  const [selectedWADraft, setSelectedWADraft] = useState<{
-    name: string;
-    draft: string;
-    wa: string;
-    title: string;
-  } | null>(null);
-
+  const [selectedWADraft, setSelectedWADraft] = useState<{ name: string; draft: string; wa: string; title: string } | null>(null);
   const [isWADraftModalOpen, setIsWADraftModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [exportResult, setExportResult] = useState<any>(null);
@@ -58,20 +48,19 @@ export const PembayaranPage: React.FC = () => {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  // Fetch Reminders
-  const { data: reminderResponse, isLoading: isLoadingReminders } = useQuery({
-    queryKey: ['pembayaran', 'reminder-spp'],
+  const { data: reminderList = [], isLoading: isLoadingReminders } = useQuery<ReminderItem[]>({
+    queryKey: ['pembayaran', 'reminders'],
     queryFn: async () => {
-      const res = await apiClient.get('/pembayaran/reminder-spp');
-      return res.data;
+      try {
+        const res = await apiClient.get('/pembayaran/reminder-spp');
+        return res.data;
+      } catch {
+        const res = await apiClient.get('/quota/reminders');
+        return res.data;
+      }
     },
   });
 
-  const reminderList: ReminderItem[] = Array.isArray(reminderResponse)
-    ? reminderResponse
-    : reminderResponse?.siswa || [];
-
-  // Fetch Bukti Transfer (Only queried if owner)
   const { data: buktiList = [], isLoading: isLoadingBukti } = useQuery<BuktiTransferItem[]>({
     queryKey: ['bukti-transfer', 'list'],
     queryFn: async () => {
@@ -90,10 +79,10 @@ export const PembayaranPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['bukti-transfer'] });
       queryClient.invalidateQueries({ queryKey: ['pembayaran'] });
       queryClient.invalidateQueries({ queryKey: ['siswa'] });
-      showToast('✅ Bukti transfer DISETUJUI. Status SPP LUNAS & sisa kuota +8!');
+      showToast('Bukti transfer disetujui. Status SPP lunas & kuota diperbarui');
     },
     onError: (err: any) => {
-      showToast(`❌ Verifikasi gagal: ${err.message}`, 'error');
+      showToast(`Verifikasi gagal: ${err.message}`, 'error');
     },
   });
 
@@ -104,10 +93,10 @@ export const PembayaranPage: React.FC = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bukti-transfer'] });
-      showToast('❌ Bukti transfer DITOLAK');
+      showToast('Bukti transfer ditolak');
     },
     onError: (err: any) => {
-      showToast(`❌ Proses penolakan gagal: ${err.message}`, 'error');
+      showToast(`Proses penolakan gagal: ${err.message}`, 'error');
     },
   });
 
@@ -120,13 +109,13 @@ export const PembayaranPage: React.FC = () => {
       setExportResult(data);
       setIsExportModalOpen(true);
       if (data.status === 'success') {
-        showToast('✅ Data pembayaran terkirim ke Google Sheets!');
+        showToast('Data pembayaran terkirim ke Google Sheets');
       } else {
-        showToast(`ℹ️ ${data.message}`, 'error');
+        showToast(`Info: ${data.message}`, 'error');
       }
     },
     onError: (err: any) => {
-      showToast(`❌ Gagal export: ${err.message}`, 'error');
+      showToast(`Gagal export: ${err.message}`, 'error');
     },
   });
 
@@ -139,7 +128,7 @@ export const PembayaranPage: React.FC = () => {
       name: row.nama_siswa,
       draft: draftText,
       wa: row.whatsapp_orang_tua,
-      title: type === 'urgent' ? '⚠️ Kirim WhatsApp Tagihan Urgent' : '📲 Kirim WhatsApp Peringatan SPP',
+      title: type === 'urgent' ? 'Kirim WhatsApp Tagihan Urgent' : 'Kirim WhatsApp Peringatan SPP',
     });
     setIsWADraftModalOpen(true);
   };
@@ -149,13 +138,13 @@ export const PembayaranPage: React.FC = () => {
       header: 'Nama Siswa & Ortu',
       accessor: (row: ReminderItem) => (
         <div className="flex items-start gap-2.5">
-          <div className="pt-0.5">
+          <div className="pt-1">
             {row.status === 'urgent' ? (
-              <span className="text-base" title="Urgent Status">🔴</span>
+              <span className="w-2.5 h-2.5 rounded-full bg-[#D32F2F] inline-block" title="Urgent" />
             ) : row.status === 'peringatan' ? (
-              <span className="text-base" title="Peringatan Status">⚠️</span>
+              <span className="w-2.5 h-2.5 rounded-full bg-[#E65100] inline-block" title="Peringatan" />
             ) : (
-              <span className="text-base" title="Lancar Status">🟢</span>
+              <span className="w-2.5 h-2.5 rounded-full bg-[#2E7D32] inline-block" title="Lancar" />
             )}
           </div>
           <div>
@@ -197,16 +186,14 @@ export const PembayaranPage: React.FC = () => {
         if (row.status === 'urgent') {
           return (
             <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#FFEBEE] text-[#D32F2F] border border-[#FFCDD2] inline-flex items-center gap-1">
-              <span>🔴⚠️</span>
-              <span>Urgent</span>
+              Urgent
             </span>
           );
         }
         if (row.status === 'peringatan') {
           return (
             <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#FFF8E1] text-[#E65100] border border-[#FFE082] inline-flex items-center gap-1">
-              <span>⚠️</span>
-              <span>Peringatan</span>
+              Peringatan
             </span>
           );
         }
@@ -218,7 +205,7 @@ export const PembayaranPage: React.FC = () => {
       },
     },
     {
-      header: 'Aksi Notification',
+      header: 'Aksi Notifikasi',
       accessor: (row: ReminderItem) => {
         if (row.status === 'urgent') {
           return (
@@ -226,7 +213,7 @@ export const PembayaranPage: React.FC = () => {
               onClick={() => openWAModal(row, 'urgent')}
               className="px-3 py-1.5 bg-[#D32F2F] text-white text-xs font-bold rounded-lg hover:bg-[#B71C1C] flex items-center gap-1.5 shadow-xs transition-colors"
             >
-              <span>📲 Kirim WA Tagihan</span>
+              <span>Kirim WA Tagihan</span>
             </button>
           );
         }
@@ -236,11 +223,11 @@ export const PembayaranPage: React.FC = () => {
               onClick={() => openWAModal(row, 'peringatan')}
               className="px-3 py-1.5 bg-[#FF7043] text-white text-xs font-bold rounded-lg hover:bg-[#F4511E] flex items-center gap-1.5 shadow-xs transition-colors"
             >
-              <span>📲 Kirim WA Peringatan</span>
+              <span>Kirim WA Peringatan</span>
             </button>
           );
         }
-        return <span className="text-[11px] text-[#94A3B8] italic font-medium">No action needed</span>;
+        return <span className="text-[11px] text-[#94A3B8] italic font-medium">Lancar</span>;
       },
     },
   ];
@@ -259,7 +246,7 @@ export const PembayaranPage: React.FC = () => {
           rel="noreferrer"
           className="text-xs font-bold text-[#1976D2] hover:underline flex items-center gap-1"
         >
-          🖼️ Lihat File Bukti
+          Lihat File Bukti
         </a>
       ),
     },
@@ -288,16 +275,16 @@ export const PembayaranPage: React.FC = () => {
               <button
                 onClick={() => approveMutation.mutate(row.id)}
                 disabled={approveMutation.isPending}
-                className="px-3 py-1 bg-[#388E3C] hover:bg-[#2E7D32] text-white text-xs font-bold rounded-[6px] shadow-xs"
+                className="px-3 py-1 bg-[#388E3C] hover:bg-[#2E7D32] text-white text-xs font-bold rounded-lg shadow-xs"
               >
-                ✓ Setujui
+                Setujui
               </button>
               <button
                 onClick={() => rejectMutation.mutate(row.id)}
                 disabled={rejectMutation.isPending}
-                className="px-3 py-1 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#D32F2F] text-xs font-bold rounded-[6px] border border-[#FECDD3]"
+                className="px-3 py-1 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#D32F2F] text-xs font-bold rounded-lg border border-[#FECDD3]"
               >
-                ✕ Tolak
+                Tolak
               </button>
             </>
           ) : (
@@ -360,7 +347,7 @@ export const PembayaranPage: React.FC = () => {
       ) : (
         <div className="p-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl flex items-center justify-between">
           <span className="text-xs font-bold text-[#FF7043]">
-            📋 Reminder SPP Siswa (Kualifikasi Lancar, Peringatan & Urgent)
+            Reminder SPP Siswa (Kualifikasi Lancar, Peringatan & Urgent)
           </span>
           <span className="text-[11px] text-[#64748B] font-medium">Role: Admin</span>
         </div>
@@ -410,7 +397,7 @@ export const PembayaranPage: React.FC = () => {
       <Modal
         isOpen={isWADraftModalOpen}
         onClose={() => setIsWADraftModalOpen(false)}
-        title={selectedWADraft?.title || '📲 Draf Pesan WhatsApp'}
+        title={selectedWADraft?.title || 'Draf Pesan WhatsApp'}
       >
         {selectedWADraft && (
           <div className="space-y-4 text-xs">
@@ -428,11 +415,11 @@ export const PembayaranPage: React.FC = () => {
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(selectedWADraft.draft);
-                  showToast('📋 Teks pesan WhatsApp berhasil disalin ke clipboard!');
+                  showToast('Teks pesan WhatsApp berhasil disalin ke clipboard');
                 }}
                 className="px-4 py-2.5 bg-[#FF7043] text-white font-bold rounded-xl hover:bg-[#F4511E] transition-colors flex items-center gap-1.5 shadow-xs"
               >
-                📋 Salin Teks
+                Salin Teks
               </button>
               <div className="flex gap-2">
                 <a
@@ -441,7 +428,7 @@ export const PembayaranPage: React.FC = () => {
                   rel="noreferrer"
                   className="px-4 py-2.5 bg-[#388E3C] text-white font-bold rounded-xl hover:bg-[#2E7D32] transition-colors flex items-center gap-1.5 shadow-xs"
                 >
-                  📲 Buka WhatsApp Web
+                  Buka WhatsApp Web
                 </a>
                 <button
                   onClick={() => setIsWADraftModalOpen(false)}
@@ -456,7 +443,7 @@ export const PembayaranPage: React.FC = () => {
       </Modal>
 
       {/* Export Status Modal */}
-      <Modal isOpen={isExportModalOpen} onClose={() => setIsExportModalOpen(false)} title="📊 Status Google Sheets Export">
+      <Modal isOpen={isExportModalOpen} onClose={() => setIsExportModalOpen(false)} title="Status Google Sheets Export">
         {exportResult && (
           <div className="space-y-4 text-xs">
             <p className="text-[#1E293B] font-bold">{exportResult.message}</p>
@@ -471,7 +458,7 @@ export const PembayaranPage: React.FC = () => {
                   rel="noreferrer"
                   className="inline-block px-4 py-2.5 bg-[#388E3C] text-white font-bold rounded-xl hover:bg-[#2E7D32]"
                 >
-                  📂 Buka Google Sheets
+                  Buka Google Sheets
                 </a>
               </div>
             ) : (

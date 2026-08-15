@@ -144,10 +144,10 @@ export const SiswaPage: React.FC = () => {
         wa: data.whatsapp_number
       });
       setIsCredentialModalOpen(true);
-      showToast('✅ Siswa baru dan akun ortu berhasil ditambahkan!');
+      showToast('Siswa baru dan akun ortu berhasil ditambahkan');
     },
     onError: (err: any) => {
-      showToast(`❌ Gagal menambah siswa: ${err.response?.data?.detail || err.message}`, 'error');
+      showToast(`Gagal menambah siswa: ${err.response?.data?.detail || err.message}`, 'error');
     }
   });
 
@@ -169,10 +169,10 @@ export const SiswaPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['siswa'] });
       setIsAddModalOpen(false);
       setEditingSiswa(null);
-      showToast('✅ Data siswa berhasil diperbarui!');
+      showToast('Data siswa berhasil diperbarui');
     },
     onError: (err: any) => {
-      showToast(`❌ Gagal memperbarui siswa: ${err.response?.data?.detail || err.message}`, 'error');
+      showToast(`Gagal memperbarui siswa: ${err.response?.data?.detail || err.message}`, 'error');
     }
   });
 
@@ -189,10 +189,10 @@ export const SiswaPage: React.FC = () => {
         pwd: data.new_password_plaintext
       });
       setIsCredentialModalOpen(true);
-      showToast('✅ Password berhasil di-reset!');
+      showToast('Password berhasil di-reset!');
     },
     onError: (err: any) => {
-      showToast(`❌ Reset password gagal: ${err.response?.data?.detail || err.message}`, 'error');
+      showToast(`Reset password gagal: ${err.response?.data?.detail || err.message}`, 'error');
     }
   });
 
@@ -204,7 +204,7 @@ export const SiswaPage: React.FC = () => {
     },
     onSuccess: (data) => {
       if (data.status === 'success') {
-        showToast(`✅ Pesan WhatsApp terkirim ke +${data.whatsapp_number}`);
+        showToast(`Pesan WhatsApp terkirim ke +${data.whatsapp_number}`);
       } else if (data.status === 'pending' || data.fallback_message) {
         setWAFallbackData({
           message: data.fallback_message,
@@ -212,11 +212,11 @@ export const SiswaPage: React.FC = () => {
         });
         setIsWAFallbackModalOpen(true);
       } else {
-        showToast(`❌ ${data.message}`, 'error');
+        showToast(`${data.message}`, 'error');
       }
     },
     onError: (err: any) => {
-      showToast(`❌ Kirim WA gagal: ${err.response?.data?.detail || err.message}`, 'error');
+      showToast(`Kirim WA gagal: ${err.response?.data?.detail || err.message}`, 'error');
     }
   });
 
@@ -230,13 +230,13 @@ export const SiswaPage: React.FC = () => {
       setExportResult(data);
       setIsExportModalOpen(true);
       if (data.status === 'success') {
-        showToast('✅ Data siswa terkirim ke Google Sheets!');
+        showToast('Data siswa terkirim ke Google Sheets!');
       } else {
-        showToast(`ℹ️ ${data.message}`, 'error');
+        showToast(`Info: ${data.message}`, 'error');
       }
     },
     onError: (err: any) => {
-      showToast(`❌ Gagal export: ${err.message}`, 'error');
+      showToast(`Gagal export: ${err.message}`, 'error');
     }
   });
 
@@ -247,10 +247,10 @@ export const SiswaPage: React.FC = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['siswa'] });
-      showToast('✅ Data siswa berhasil dihapus');
+      showToast('Data siswa berhasil dihapus');
     },
     onError: (err: any) => {
-      showToast(`❌ Delete gagal: ${err.message}`, 'error');
+      showToast(`Delete gagal: ${err.message}`, 'error');
     }
   });
 
@@ -389,26 +389,26 @@ export const SiswaPage: React.FC = () => {
         <div className="flex gap-1.5 flex-wrap">
           <button
             onClick={() => openEditModal(row)}
-            className="px-2 py-1 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#475569] text-xs font-bold rounded-lg border border-[#CBD5E1]"
+            className="px-2 py-1 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#475569] text-xs font-bold rounded-lg border border-[#CBD5E1] transition-colors"
             title="Edit Data Siswa"
           >
-            ✏️ Edit
+            Edit
           </button>
           <button
             onClick={() => pushWAMutation.mutate(row.id)}
             disabled={pushWAMutation.isPending}
-            className="px-2 py-1 bg-[#E3F2FD] hover:bg-[#BBDEFB] text-[#1976D2] text-xs font-bold rounded-lg border border-[#90CAF9]"
+            className="px-2 py-1 bg-[#E3F2FD] hover:bg-[#BBDEFB] text-[#1976D2] text-xs font-bold rounded-lg border border-[#90CAF9] transition-colors"
             title="Kirim Pesan WhatsApp Login Ortu"
           >
-            📲 WA Push
+            WA Push
           </button>
           <button
             onClick={() => resetPasswordMutation.mutate(row.id)}
             disabled={resetPasswordMutation.isPending}
-            className="px-2 py-1 bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#E65100] text-xs font-bold rounded-lg border border-[#FFCC80]"
+            className="px-2 py-1 bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#E65100] text-xs font-bold rounded-lg border border-[#FFCC80] transition-colors"
             title="Reset Password Akun Ortu"
           >
-            🔐 Reset
+            Reset
           </button>
           <button
             onClick={() => {
@@ -416,7 +416,7 @@ export const SiswaPage: React.FC = () => {
                 deleteMutation.mutate(row.id);
               }
             }}
-            className="px-2 py-1 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] text-xs font-bold rounded-lg border border-[#FECDD3]"
+            className="px-2 py-1 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] text-xs font-bold rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center"
             title="Hapus Siswa"
           >
             <TrashIcon size={14} />
@@ -478,7 +478,7 @@ export const SiswaPage: React.FC = () => {
       <Modal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        title={editingSiswa ? '✏️ Edit Data Siswa' : '➕ Tambah Siswa Baru'}
+        title={editingSiswa ? 'Edit Data Siswa' : 'Tambah Siswa Baru'}
       >
         <form onSubmit={handleFormSubmit} className="space-y-4 text-xs">
           {/* 1 & 2. Nama Lengkap & Nama Panggilan */}
@@ -746,7 +746,7 @@ export const SiswaPage: React.FC = () => {
       </Modal>
 
       {/* Modal Credential Single-View */}
-      <Modal isOpen={isCredentialModalOpen} onClose={() => setIsCredentialModalOpen(false)} title="🔑 Kredensial Akun Dibuat">
+      <Modal isOpen={isCredentialModalOpen} onClose={() => setIsCredentialModalOpen(false)} title="Kredensial Akun Dibuat">
         {createdCredential && (
           <div className="space-y-4 text-xs">
             <p className="text-[#475569]">
@@ -755,20 +755,20 @@ export const SiswaPage: React.FC = () => {
             <textarea
               readOnly
               rows={7}
-              value={`Halo ${createdCredential.name},\n\nPutra/putri Anda telah terdaftar di Sempoa SIP TC Pariaman.\n\n📧 Email: ${createdCredential.email}\n🔐 Sandi: ${createdCredential.pwd}\n🌐 Portal: https://sempoasippariaman.com/\n\n---\nTim Sempoa SIP TC Pariaman`}
+              value={`Halo ${createdCredential.name},\n\nPutra/putri Anda telah terdaftar di Sempoa SIP TC Pariaman.\n\nEmail: ${createdCredential.email}\nSandi: ${createdCredential.pwd}\nPortal: https://sempoasippariaman.com/\n\n---\nTim Sempoa SIP TC Pariaman`}
               className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl p-3 font-mono text-xs text-[#1E293B]"
             />
             <div className="flex gap-3">
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(
-                    `Halo ${createdCredential.name},\n\nPutra/putri Anda telah terdaftar di Sempoa SIP TC Pariaman.\n\n📧 Email: ${createdCredential.email}\n🔐 Sandi: ${createdCredential.pwd}\n🌐 Portal: https://sempoasippariaman.com/\n\n---\nTim Sempoa SIP TC Pariaman`
+                    `Halo ${createdCredential.name},\n\nPutra/putri Anda telah terdaftar di Sempoa SIP TC Pariaman.\n\nEmail: ${createdCredential.email}\nSandi: ${createdCredential.pwd}\nPortal: https://sempoasippariaman.com/\n\n---\nTim Sempoa SIP TC Pariaman`
                   );
-                  showToast('📋 Pesan WhatsApp disalin ke clipboard!');
+                  showToast('Pesan WhatsApp disalin ke clipboard');
                 }}
                 className="flex-1 py-2.5 bg-[#FF7043] text-white font-bold rounded-xl hover:bg-[#F4511E]"
               >
-                📋 Salin Teks Pesan WhatsApp
+                Salin Teks Pesan WhatsApp
               </button>
               <button
                 onClick={() => setIsCredentialModalOpen(false)}
@@ -782,7 +782,7 @@ export const SiswaPage: React.FC = () => {
       </Modal>
 
       {/* Modal WA Fallback */}
-      <Modal isOpen={isWAFallbackModalOpen} onClose={() => setIsWAFallbackModalOpen(false)} title="📱 WhatsApp Push Message Preview">
+      <Modal isOpen={isWAFallbackModalOpen} onClose={() => setIsWAFallbackModalOpen(false)} title="WhatsApp Push Message Preview">
         {waFallbackData && (
           <div className="space-y-4 text-xs">
             <p className="text-[#E65100] font-bold">
@@ -807,7 +807,7 @@ export const SiswaPage: React.FC = () => {
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(waFallbackData.message);
-                    showToast('📋 Pesan WA disalin!');
+                    showToast('Pesan WA disalin');
                   }}
                   className="px-4 py-2 bg-[#FF7043] text-white font-bold rounded-lg hover:bg-[#F4511E]"
                 >
@@ -826,7 +826,7 @@ export const SiswaPage: React.FC = () => {
       </Modal>
 
       {/* Modal Export Result */}
-      <Modal isOpen={isExportModalOpen} onClose={() => setIsExportModalOpen(false)} title="📊 Status Google Sheets Export">
+      <Modal isOpen={isExportModalOpen} onClose={() => setIsExportModalOpen(false)} title="Status Google Sheets Export">
         {exportResult && (
           <div className="space-y-4 text-xs">
             <p className="text-[#1E293B] font-bold">{exportResult.message}</p>
@@ -839,7 +839,7 @@ export const SiswaPage: React.FC = () => {
                   rel="noreferrer"
                   className="inline-block px-4 py-2.5 bg-[#388E3C] text-white font-bold rounded-xl hover:bg-[#2E7D32]"
                 >
-                  📂 Buka Google Sheets
+                  Buka Google Sheets
                 </a>
               </div>
             ) : (
