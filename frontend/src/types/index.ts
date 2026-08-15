@@ -15,7 +15,17 @@ export interface Siswa {
   id: number;
   uid: string;
   nama: string;
+  nama_panggilan?: string;
+  umur?: number;
+  kelas_sekolah?: string;
+  tempat_lahir?: string;
+  tanggal_lahir?: string;
+  asal_sekolah?: string;
+  nama_orang_tua?: string;
+  whatsapp_orang_tua?: string;
+  alamat?: string;
   kategori_program: string;
+  paket_jadwal?: string;
   hari_masuk: string;
   id_guru?: number;
   target_pertemuan: number;

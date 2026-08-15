@@ -1,22 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import useAuth from '../../features/auth/useAuth';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
 import { Siswa, AbsensiLog } from '../../types';
 
 interface ChildFormData {
   nama: string;
+  nama_panggilan: string;
+  tempat_lahir: string;
+  tanggal_lahir: string;
   umur: string;
+  asal_sekolah: string;
   kelas_sekolah: string;
   alamat: string;
   program: string;
-  nama_panggilan: string;
   nama_ortu: string;
   no_wa_ortu: string;
 }
 
 export const AnakSayaPage: React.FC = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -46,27 +50,46 @@ export const AnakSayaPage: React.FC = () => {
   // Form state
   const [formData, setFormData] = useState<ChildFormData>({
     nama: '',
+    nama_panggilan: '',
+    tempat_lahir: '',
+    tanggal_lahir: '',
     umur: '',
+    asal_sekolah: '',
     kelas_sekolah: '',
     alamat: '',
     program: '',
-    nama_panggilan: '',
     nama_ortu: '',
     no_wa_ortu: '',
   });
 
+  const calculateAge = (birthDate: string | undefined) => {
+    if (!birthDate) return null;
+    const today = new Date();
+    const dob = new Date(birthDate);
+    let age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
   // Populate form when child data loads
   useEffect(() => {
     if (child) {
+      const calculatedAge = calculateAge(child.tanggal_lahir);
       setFormData({
         nama: child.nama || '',
-        umur: '',
-        kelas_sekolah: '',
-        alamat: '',
+        nama_panggilan: child.nama_panggilan || '',
+        tempat_lahir: child.tempat_lahir || '',
+        tanggal_lahir: child.tanggal_lahir ? String(child.tanggal_lahir).split('T')[0] : '',
+        umur: child.umur !== undefined && child.umur !== null ? String(child.umur) : (calculatedAge !== null ? String(calculatedAge) : ''),
+        asal_sekolah: child.asal_sekolah || '',
+        kelas_sekolah: child.kelas_sekolah || '',
+        alamat: child.alamat || '',
         program: child.kategori_program || '',
-        nama_panggilan: '',
-        nama_ortu: user?.nama || '',
-        no_wa_ortu: user?.bio || '',
+        nama_ortu: child.nama_orang_tua || user?.nama || '',
+        no_wa_ortu: child.whatsapp_orang_tua || user?.bio || '',
       });
     }
   }, [child, user]);
@@ -80,19 +103,32 @@ export const AnakSayaPage: React.FC = () => {
   };
 
   const handleSave = async () => {
-    if (!validateWa(formData.no_wa_ortu)) {
+    if (formData.no_wa_ortu && !validateWa(formData.no_wa_ortu)) {
       setSaveMessage({ type: 'error', text: 'No. WA harus diawali 08 dan 10-13 digit.' });
       return;
     }
     setIsSaving(true);
     setSaveMessage(null);
     try {
-      // In real implementation, PUT to /ortu/anak-saya
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      setSaveMessage({ type: 'success', text: 'Data berhasil disimpan!' });
+      if (!child?.id) throw new Error('Data anak tidak ditemukan');
+      const payload = {
+        nama: formData.nama,
+        nama_panggilan: formData.nama_panggilan,
+        tempat_lahir: formData.tempat_lahir,
+        tanggal_lahir: formData.tanggal_lahir || null,
+        umur: formData.umur ? parseInt(formData.umur, 10) : null,
+        asal_sekolah: formData.asal_sekolah,
+        kelas_sekolah: formData.kelas_sekolah,
+        alamat: formData.alamat,
+        nama_orang_tua: formData.nama_ortu,
+        whatsapp_orang_tua: formData.no_wa_ortu,
+      };
+      await apiClient.put(`/siswa/${child.id}`, payload);
+      await queryClient.invalidateQueries({ queryKey: ['child-profile'] });
+      setSaveMessage({ type: 'success', text: 'Data profil anak berhasil disimpan!' });
       setIsEditing(false);
-    } catch {
-      setSaveMessage({ type: 'error', text: 'Gagal menyimpan data. Silakan coba lagi.' });
+    } catch (err: any) {
+      setSaveMessage({ type: 'error', text: `Gagal menyimpan data: ${err.response?.data?.detail || err.message}` });
     } finally {
       setIsSaving(false);
     }
@@ -102,15 +138,19 @@ export const AnakSayaPage: React.FC = () => {
     setIsEditing(false);
     setSaveMessage(null);
     if (child) {
+      const calculatedAge = calculateAge(child.tanggal_lahir);
       setFormData({
         nama: child.nama || '',
-        umur: '',
-        kelas_sekolah: '',
-        alamat: '',
+        nama_panggilan: child.nama_panggilan || '',
+        tempat_lahir: child.tempat_lahir || '',
+        tanggal_lahir: child.tanggal_lahir ? String(child.tanggal_lahir).split('T')[0] : '',
+        umur: child.umur !== undefined && child.umur !== null ? String(child.umur) : (calculatedAge !== null ? String(calculatedAge) : ''),
+        asal_sekolah: child.asal_sekolah || '',
+        kelas_sekolah: child.kelas_sekolah || '',
+        alamat: child.alamat || '',
         program: child.kategori_program || '',
-        nama_panggilan: '',
-        nama_ortu: user?.nama || '',
-        no_wa_ortu: user?.bio || '',
+        nama_ortu: child.nama_orang_tua || user?.nama || '',
+        no_wa_ortu: child.whatsapp_orang_tua || user?.bio || '',
       });
     }
   };
@@ -169,18 +209,58 @@ export const AnakSayaPage: React.FC = () => {
             </div>
           )}
 
-          <FormField label="Nama Anak" required>
-            <input
-              type="text"
-              value={formData.nama}
-              onChange={(e) => handleInputChange('nama', e.target.value)}
-              disabled={!isEditing}
-              className="form-input-ortu"
-            />
-          </FormField>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <FormField label="Nama Lengkap Anak" required>
+              <input
+                type="text"
+                value={formData.nama}
+                onChange={(e) => handleInputChange('nama', e.target.value)}
+                disabled={!isEditing}
+                className="form-input-ortu"
+                placeholder="Nama lengkap"
+              />
+            </FormField>
+            <FormField label="Nama Panggilan">
+              <input
+                type="text"
+                value={formData.nama_panggilan}
+                onChange={(e) => handleInputChange('nama_panggilan', e.target.value)}
+                disabled={!isEditing}
+                placeholder="Nama panggilan"
+                className="form-input-ortu"
+              />
+            </FormField>
+          </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <FormField label="Umur" required>
+          <div className="grid grid-cols-3 gap-3">
+            <FormField label="Tempat Lahir">
+              <input
+                type="text"
+                value={formData.tempat_lahir}
+                onChange={(e) => handleInputChange('tempat_lahir', e.target.value)}
+                disabled={!isEditing}
+                placeholder="Kota/Kab"
+                className="form-input-ortu"
+              />
+            </FormField>
+            <FormField label="Tanggal Lahir">
+              <input
+                type="date"
+                value={formData.tanggal_lahir}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const calculated = calculateAge(val);
+                  setFormData(prev => ({
+                    ...prev,
+                    tanggal_lahir: val,
+                    umur: calculated !== null ? String(calculated) : prev.umur
+                  }));
+                }}
+                disabled={!isEditing}
+                className="form-input-ortu"
+              />
+            </FormField>
+            <FormField label="Umur (Thn)">
               <input
                 type="number"
                 value={formData.umur}
@@ -190,25 +270,38 @@ export const AnakSayaPage: React.FC = () => {
                 className="form-input-ortu"
               />
             </FormField>
-            <FormField label="Kelas di Sekolah" required>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <FormField label="Asal Sekolah">
+              <input
+                type="text"
+                value={formData.asal_sekolah}
+                onChange={(e) => handleInputChange('asal_sekolah', e.target.value)}
+                disabled={!isEditing}
+                placeholder="Contoh: SDN 01 Pariaman / TK Kemala"
+                className="form-input-ortu"
+              />
+            </FormField>
+            <FormField label="Kelas di Sekolah">
               <input
                 type="text"
                 value={formData.kelas_sekolah}
                 onChange={(e) => handleInputChange('kelas_sekolah', e.target.value)}
                 disabled={!isEditing}
-                placeholder="—"
+                placeholder="Contoh: 1 SD / TK B"
                 className="form-input-ortu"
               />
             </FormField>
           </div>
 
-          <FormField label="Alamat" required>
+          <FormField label="Alamat Tempat Tinggal">
             <textarea
               value={formData.alamat}
               onChange={(e) => handleInputChange('alamat', e.target.value)}
               disabled={!isEditing}
               rows={2}
-              placeholder="—"
+              placeholder="Alamat lengkap"
               className="form-input-ortu resize-none"
             />
           </FormField>
@@ -222,40 +315,31 @@ export const AnakSayaPage: React.FC = () => {
             />
           </FormField>
 
-          <FormField label="Nama Panggilan Anak" required>
-            <input
-              type="text"
-              value={formData.nama_panggilan}
-              onChange={(e) => handleInputChange('nama_panggilan', e.target.value)}
-              disabled={!isEditing}
-              placeholder="—"
-              className="form-input-ortu"
-            />
-          </FormField>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <FormField label="Nama Orang Tua" required>
+              <input
+                type="text"
+                value={formData.nama_ortu}
+                onChange={(e) => handleInputChange('nama_ortu', e.target.value)}
+                disabled={!isEditing}
+                className="form-input-ortu"
+              />
+            </FormField>
 
-          <FormField label="Nama Orang Tua" required>
-            <input
-              type="text"
-              value={formData.nama_ortu}
-              onChange={(e) => handleInputChange('nama_ortu', e.target.value)}
-              disabled={!isEditing}
-              className="form-input-ortu"
-            />
-          </FormField>
-
-          <FormField label="No. WhatsApp Ortu" required>
-            <input
-              type="tel"
-              value={formData.no_wa_ortu}
-              onChange={(e) => handleInputChange('no_wa_ortu', e.target.value)}
-              disabled={!isEditing}
-              placeholder="08xxxxxxxxxx"
-              className="form-input-ortu"
-            />
-            {isEditing && (
-              <p className="text-[10px] text-[#9E9E9E] mt-1">Format: 08 + 8-11 digit angka</p>
-            )}
-          </FormField>
+            <FormField label="No. WhatsApp Ortu" required>
+              <input
+                type="tel"
+                value={formData.no_wa_ortu}
+                onChange={(e) => handleInputChange('no_wa_ortu', e.target.value)}
+                disabled={!isEditing}
+                placeholder="08xxxxxxxxxx"
+                className="form-input-ortu"
+              />
+              {isEditing && (
+                <p className="text-[10px] text-[#9E9E9E] mt-1">Format: 08 + 8-11 digit angka</p>
+              )}
+            </FormField>
+          </div>
 
           {/* Action Buttons */}
           {isEditing && (
@@ -271,7 +355,7 @@ export const AnakSayaPage: React.FC = () => {
                 disabled={isSaving}
                 className="flex-1 py-3 bg-[#4CAF50] hover:bg-[#43A047] text-white rounded-xl text-[13px] font-bold shadow-[0_4px_12px_rgba(76,175,80,0.3)] transition-all active:scale-[0.98] min-h-[44px] disabled:opacity-50"
               >
-                {isSaving ? 'Menyimpan...' : 'Simpan'}
+                {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
               </button>
             </div>
           )}

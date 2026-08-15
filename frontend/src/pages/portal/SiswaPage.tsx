@@ -49,6 +49,8 @@ export const SiswaPage: React.FC = () => {
     uid: '',
     nama: '',
     nama_panggilan: '',
+    umur: '',
+    kelas_sekolah: '',
     kategori_program: 'Sempoa SIP',
     paket_jadwal: 'Paket 1: 8 Pertemuan, 90 Menit',
     hari_masuk: 'Senin, Rabu',
@@ -235,6 +237,8 @@ export const SiswaPage: React.FC = () => {
       uid: `SW-${Math.floor(1000 + Math.random() * 9000)}`,
       nama: '',
       nama_panggilan: '',
+      umur: '',
+      kelas_sekolah: '',
       kategori_program: 'Sempoa SIP',
       paket_jadwal: 'Paket 1: 8 Pertemuan, 90 Menit',
       hari_masuk: 'Senin, Rabu',
@@ -252,10 +256,13 @@ export const SiswaPage: React.FC = () => {
 
   const openEditModal = (siswa: Siswa) => {
     setEditingSiswa(siswa);
+    const calculatedAge = calculateAge(siswa.tanggal_lahir);
     setFormData({
       uid: siswa.uid,
       nama: siswa.nama,
       nama_panggilan: siswa.nama_panggilan || '',
+      umur: siswa.umur !== undefined && siswa.umur !== null ? String(siswa.umur) : (calculatedAge !== null ? String(calculatedAge) : ''),
+      kelas_sekolah: siswa.kelas_sekolah || '',
       kategori_program: siswa.kategori_program || 'Sempoa SIP',
       paket_jadwal: siswa.paket_jadwal || 'Paket 1: 8 Pertemuan, 90 Menit',
       hari_masuk: siswa.hari_masuk || 'Senin, Rabu',
@@ -276,10 +283,14 @@ export const SiswaPage: React.FC = () => {
     if (!validatePhone(formData.whatsapp_orang_tua)) {
       return;
     }
+    const payload = {
+      ...formData,
+      umur: formData.umur ? parseInt(formData.umur, 10) : (calculateAge(formData.tanggal_lahir) || null)
+    };
     if (editingSiswa) {
-      updateMutation.mutate(formData);
+      updateMutation.mutate(payload as any);
     } else {
-      createMutation.mutate(formData);
+      createMutation.mutate(payload as any);
     }
   };
 
@@ -301,14 +312,19 @@ export const SiswaPage: React.FC = () => {
     },
     {
       header: 'Nama Siswa',
-      accessor: (row: Siswa) => (
-        <div>
-          <p className="font-bold text-[#1E293B]">
-            {row.nama} {calculateAge(row.tanggal_lahir) ? <span className="text-[10px] font-normal text-[#64748B] ml-1">({calculateAge(row.tanggal_lahir)} thn)</span> : ''}
-          </p>
-          <p className="text-[10px] text-[#94A3B8]">Ortu: {row.nama_orang_tua || '-'}</p>
-        </div>
-      )
+      accessor: (row: Siswa) => {
+        const displayAge = row.umur ?? calculateAge(row.tanggal_lahir);
+        return (
+          <div>
+            <p className="font-bold text-[#1E293B]">
+              {row.nama} {displayAge ? <span className="text-[10px] font-normal text-[#64748B] ml-1">({displayAge} thn)</span> : ''}
+            </p>
+            <p className="text-[10px] text-[#94A3B8]">
+              {row.asal_sekolah ? `${row.asal_sekolah}${row.kelas_sekolah ? ` • ${row.kelas_sekolah}` : ''}` : `Ortu: ${row.nama_orang_tua || '-'}`}
+            </p>
+          </div>
+        );
+      }
     },
     {
       header: 'Program & Hari',
@@ -468,7 +484,7 @@ export const SiswaPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Tempat Lahir & Tanggal Lahir & Asal Sekolah */}
+          {/* Tempat Lahir, Tanggal Lahir, Umur */}
           <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="block text-[#1E293B] font-bold mb-1">Tempat Lahir</label>
@@ -485,10 +501,32 @@ export const SiswaPage: React.FC = () => {
               <input
                 type="date"
                 value={formData.tanggal_lahir}
-                onChange={(e) => setFormData({ ...formData, tanggal_lahir: e.target.value })}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const calculated = calculateAge(val);
+                  setFormData({ 
+                    ...formData, 
+                    tanggal_lahir: val,
+                    umur: calculated !== null ? calculated.toString() : formData.umur
+                  });
+                }}
                 className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
               />
             </div>
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">Umur (Tahun)</label>
+              <input
+                type="number"
+                value={formData.umur}
+                onChange={(e) => setFormData({ ...formData, umur: e.target.value })}
+                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
+                placeholder="Contoh: 7"
+              />
+            </div>
+          </div>
+
+          {/* Asal Sekolah & Kelas di Sekolah */}
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-[#1E293B] font-bold mb-1">Asal Sekolah</label>
               <input
@@ -496,7 +534,17 @@ export const SiswaPage: React.FC = () => {
                 value={formData.asal_sekolah}
                 onChange={(e) => setFormData({ ...formData, asal_sekolah: e.target.value })}
                 className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
-                placeholder="SDN 01 Pariaman"
+                placeholder="SDN 01 Pariaman / TK Kemala"
+              />
+            </div>
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">Kelas di Sekolah</label>
+              <input
+                type="text"
+                value={formData.kelas_sekolah}
+                onChange={(e) => setFormData({ ...formData, kelas_sekolah: e.target.value })}
+                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
+                placeholder="Contoh: 1 SD, 2 SD, TK B"
               />
             </div>
           </div>

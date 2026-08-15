@@ -87,6 +87,9 @@ async def create_new_siswa(
         new_siswa = Siswa(
             uid=siswa_in.uid,
             nama=siswa_in.nama,
+            nama_panggilan=siswa_in.nama_panggilan,
+            umur=siswa_in.umur,
+            kelas_sekolah=siswa_in.kelas_sekolah,
             kategori_program=siswa_in.kategori_program,
             paket_jadwal=siswa_in.paket_jadwal,
             hari_masuk=siswa_in.hari_masuk,
@@ -144,18 +147,33 @@ async def update_existing_siswa(
     id: int,
     siswa_in: SiswaUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(admin_or_owner)
+    current_user: User = Depends(get_current_user)
 ):
     db_siswa = db.query(Siswa).filter(Siswa.id == id, Siswa.is_deleted == False).first()
     if not db_siswa:
         raise HTTPException(status_code=404, detail="Data siswa tidak ditemukan")
 
+    if current_user.role in [UserRole.admin, UserRole.owner]:
+        pass
+    elif current_user.role == UserRole.ortu and (current_user.uid_terhubung == str(id) or current_user.uid_terhubung == db_siswa.uid):
+        pass
+    else:
+        raise HTTPException(status_code=403, detail="Anda tidak memiliki izin untuk mengedit data siswa ini")
+
     update_dict = siswa_in.model_dump(exclude_unset=True)
-    if "whatsapp_orang_tua" in update_dict:
+    if "whatsapp_orang_tua" in update_dict and update_dict["whatsapp_orang_tua"]:
         update_dict["whatsapp_orang_tua"] = normalize_whatsapp_number(update_dict["whatsapp_orang_tua"])
 
     for key, value in update_dict.items():
         setattr(db_siswa, key, value)
+
+    # Also sync parent user name/phone if updated
+    if current_user.role == UserRole.ortu:
+        ortu_user = db.query(User).filter(User.id == current_user.id).first()
+        if ortu_user and "nama_orang_tua" in update_dict and update_dict["nama_orang_tua"]:
+            ortu_user.nama = update_dict["nama_orang_tua"]
+        if ortu_user and "whatsapp_orang_tua" in update_dict and update_dict["whatsapp_orang_tua"]:
+            ortu_user.bio = update_dict["whatsapp_orang_tua"]
 
     db.commit()
     db.refresh(db_siswa)

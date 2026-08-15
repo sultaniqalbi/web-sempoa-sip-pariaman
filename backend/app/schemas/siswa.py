@@ -7,6 +7,8 @@ class SiswaBase(BaseModel):
     uid: str
     nama: str
     nama_panggilan: Optional[str] = None
+    umur: Optional[int] = None
+    kelas_sekolah: Optional[str] = None
     tempat_lahir: Optional[str] = None
     tanggal_lahir: Optional[date] = None
     asal_sekolah: Optional[str] = None
@@ -30,6 +32,8 @@ class SiswaUpdate(BaseModel):
     uid: Optional[str] = None
     nama: Optional[str] = None
     nama_panggilan: Optional[str] = None
+    umur: Optional[int] = None
+    kelas_sekolah: Optional[str] = None
     tempat_lahir: Optional[str] = None
     tanggal_lahir: Optional[date] = None
     asal_sekolah: Optional[str] = None
