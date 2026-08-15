@@ -10,6 +10,10 @@ class UserProfileSchema(BaseModel):
     email: str
     nama: str
     role: str
+    uid_terhubung: Optional[str] = None
+    foto_profil: Optional[str] = None
+    bio: Optional[str] = None
+    created_at: Optional[str] = None
 
 class TokenResponse(BaseModel):
     access_token: str

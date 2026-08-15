@@ -25,26 +25,39 @@ export const OrtuLayout: React.FC = () => {
     enabled: !!user?.uid_terhubung,
   });
 
-  // Fetch schedule for today (fallback to mock)
+  // Fetch schedule for today (or student's program schedule)
   const { data: scheduleToday } = useQuery<ScheduleData | null>({
-    queryKey: ['schedule-today', child?.id],
+    queryKey: ['schedule-today', child?.id, child?.kategori_program],
     queryFn: async () => {
       if (!child?.id) return null;
       try {
-        const response = await apiClient.get(`/jadwal/`);
-        const jadwalList: Jadwal[] = response.data;
+        const [jadwalRes, guruRes] = await Promise.all([
+          apiClient.get(`/jadwal/`),
+          apiClient.get(`/guru/`).catch(() => ({ data: [] }))
+        ]);
+        const jadwalList: Jadwal[] = jadwalRes.data || [];
+        const guruList: any[] = guruRes.data || [];
+
         const today = new Date().toLocaleDateString('id-ID', { weekday: 'long' });
-        const todayJadwal = jadwalList.find(
-          (j) => j.id_siswa === child.id && j.hari.toLowerCase() === today.toLowerCase()
+        
+        // Find matching schedule by student or by student's program and day
+        const matchedJadwal = jadwalList.find(
+          (j) => (j.id_siswa === child.id || j.kategori_program === child.kategori_program) &&
+                 (j.hari.toLowerCase().includes(today.toLowerCase()) ||
+                  (child.hari_masuk && child.hari_masuk.toLowerCase().includes(today.toLowerCase())))
+        ) || jadwalList.find(
+          (j) => j.id_siswa === child.id || j.kategori_program === child.kategori_program
         );
-        if (todayJadwal) {
+
+        if (matchedJadwal) {
+          const guru = guruList.find((g: any) => g.id === matchedJadwal.id_guru);
           return {
             kode_program: child.kategori_program?.substring(0, 8) || 'SMP',
-            nama_program: child.kategori_program || 'Sempoa',
-            jam_mulai: todayJadwal.jam_mulai,
-            jam_selesai: todayJadwal.jam_selesai,
-            ruangan: todayJadwal.lokasi || '-',
-            kode_guru: `Guru #${todayJadwal.id_guru || '-'}`,
+            nama_program: child.kategori_program || 'Sempoa SIP',
+            jam_mulai: matchedJadwal.jam_mulai || '09:00',
+            jam_selesai: matchedJadwal.jam_selesai || '17:00',
+            ruangan: matchedJadwal.lokasi || 'TC Pariaman',
+            kode_guru: guru ? guru.nama : (matchedJadwal.id_guru ? `Guru #${matchedJadwal.id_guru}` : 'Pengajar Sempoa'),
           };
         }
         return null;

@@ -8,9 +8,25 @@ from app.core.database import get_db
 from app.core.security import verify_password, create_access_token, create_refresh_token
 from app.core.rate_limit import login_limiter
 from app.models.users import User
-from app.schemas.auth import LoginRequest, TokenResponse, RefreshRequest
+from app.schemas.auth import LoginRequest, TokenResponse, RefreshRequest, UserProfileSchema
+from app.core.dependencies import get_current_user
 
 router = APIRouter()
+
+@router.get("/me", response_model=UserProfileSchema)
+async def get_me(current_user: User = Depends(get_current_user)):
+    role_str = current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role)
+    return UserProfileSchema(
+        id=current_user.id,
+        email=current_user.email,
+        nama=current_user.nama,
+        role=role_str,
+        uid_terhubung=current_user.uid_terhubung,
+        foto_profil=current_user.foto_profil,
+        bio=current_user.bio,
+        created_at=current_user.created_at.isoformat() if current_user.created_at else None
+    )
+
 
 from sqlalchemy import func
 

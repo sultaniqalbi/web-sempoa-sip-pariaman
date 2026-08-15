@@ -29,7 +29,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         logout();
       }
     }
-    setIsLoading(false);
+
+    if (token) {
+      axios.get('http://localhost:8000/api/v1/auth/me', {
+        headers: { Authorization: `Bearer ${token}` }
+      }).then(res => {
+        if (res.data) {
+          setUser(res.data);
+          localStorage.setItem('user', JSON.stringify(res.data));
+        }
+      }).catch(err => {
+        console.error('Failed to refresh user profile from /auth/me:', err);
+      }).finally(() => {
+        setIsLoading(false);
+      });
+    } else {
+      setIsLoading(false);
+    }
   }, []);
 
   const login = async (email: string, password: string): Promise<User> => {
