@@ -7,13 +7,29 @@ const apiClient = axios.create({
   },
 });
 
-// Request interceptor to add authorization header
+// Request interceptor to add authorization header and sanitize payload
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('access_token');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Convert empty strings to null for JSON payloads to prevent FastAPI 422 errors
+    if (config.data && typeof config.data === 'object' && !(config.data instanceof FormData)) {
+      const cleanData = (obj: any) => {
+        for (const key in obj) {
+          if (obj[key] === '') {
+            obj[key] = null;
+          } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+            cleanData(obj[key]);
+          }
+        }
+      };
+      config.data = JSON.parse(JSON.stringify(config.data));
+      cleanData(config.data);
+    }
+    
     return config;
   },
   (error) => Promise.reject(error)

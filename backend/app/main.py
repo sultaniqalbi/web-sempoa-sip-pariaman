@@ -9,6 +9,19 @@ from sqlalchemy import text
 logging.basicConfig(level=settings.log_level)
 logger = logging.getLogger(__name__)
 
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from fastapi import Request
+
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    logger.error(f"422 Validation Error on {request.url}")
+    logger.error(f"Body: {exc.body}")
+    logger.error(f"Errors: {exc.errors()}")
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors(), "body": exc.body},
+    )
+
 import os
 from pathlib import Path
 from app.core.database import engine, Base
@@ -19,6 +32,8 @@ app = FastAPI(
     version="1.0.0",
     description="API for Sempoa SIP TC Pariaman attendance system"
 )
+
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
 
 @app.on_event("startup")
 def on_startup():
