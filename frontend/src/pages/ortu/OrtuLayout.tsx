@@ -77,7 +77,13 @@ export const OrtuLayout: React.FC = () => {
       <OrtuHeader
         childName={child?.nama || user?.nama || 'Siswa Sempoa'}
         program={child?.kategori_program || 'Program Sempoa'}
-        noWaOrtu={user?.bio || '08xxxxxxxxxx'}
+        noWaOrtu={
+          child?.whatsapp_orang_tua
+            ? child.whatsapp_orang_tua.startsWith('62')
+              ? '0' + child.whatsapp_orang_tua.slice(2)
+              : child.whatsapp_orang_tua
+            : (user?.bio || '-')
+        }
         fotoProfil={child?.foto_profil}
       />
 

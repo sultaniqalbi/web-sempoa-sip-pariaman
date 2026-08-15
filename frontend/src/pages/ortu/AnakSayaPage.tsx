@@ -167,7 +167,7 @@ export const AnakSayaPage: React.FC = () => {
     return (
       <div className="bg-white border border-[#E0E0E0] rounded-xl p-6 text-center">
         <p className="text-[13px] font-semibold text-[#757575]">
-          ⚠️ Akun Orang Tua belum dihubungkan dengan data Siswa. Silakan hubungi Admin.
+          Akun Orang Tua belum dihubungkan dengan data Siswa. Silakan hubungi Admin.
         </p>
       </div>
     );
@@ -178,9 +178,14 @@ export const AnakSayaPage: React.FC = () => {
       {/* Section 1: Informasi Anak */}
       <div className="bg-white border border-[#E0E0E0] rounded-xl shadow-[0_2px_6px_rgba(0,0,0,0.04)] overflow-hidden">
         <div className="px-4 py-3 border-b border-[#F5F5F5] flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-[14px]">👤</span>
-            <h3 className="text-[14px] font-bold text-[#424242]">Informasi Anak</h3>
+          <div className="flex items-center gap-2.5">
+            <span className="text-[#FF7043]">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </span>
+            <h3 className="text-[14px] font-bold text-[#1E293B]">Informasi Anak</h3>
           </div>
           {!isEditing && (
             <button
@@ -364,9 +369,14 @@ export const AnakSayaPage: React.FC = () => {
 
       {/* Section 2: Perkembangan Anak */}
       <div className="bg-white border border-[#E0E0E0] rounded-xl shadow-[0_2px_6px_rgba(0,0,0,0.04)] overflow-hidden">
-        <div className="px-4 py-3 border-b border-[#F5F5F5] flex items-center gap-2">
-          <span className="text-[14px]">📈</span>
-          <h3 className="text-[14px] font-bold text-[#424242]">Perkembangan Anak</h3>
+        <div className="px-4 py-3 border-b border-[#F5F5F5] flex items-center gap-2.5">
+          <span className="text-[#1976D2]">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+              <polyline points="17 6 23 6 23 12" />
+            </svg>
+          </span>
+          <h3 className="text-[14px] font-bold text-[#1E293B]">Perkembangan Anak</h3>
         </div>
 
         <div className="p-4 space-y-5">

@@ -43,9 +43,9 @@ export const PembayaranOrtuPage: React.FC = () => {
   const sppStatus: SppStatus = sisaRatio > 0.4 ? 'Lancar' : sisaRatio > 0.2 ? 'Peringatan' : 'Urgent';
 
   const statusConfig = {
-    Lancar: { color: '#4CAF50', bg: '#E8F5E9', border: '#C8E6C9', emoji: '🟢', desc: 'Status SPP aktif & lancar.' },
-    Peringatan: { color: '#FFA726', bg: '#FFF3E0', border: '#FFE0B2', emoji: '🟡', desc: 'Sisa pertemuan tinggal sedikit. Mohon segera lakukan pembayaran.' },
-    Urgent: { color: '#D32F2F', bg: '#FFEBEE', border: '#FFCDD2', emoji: '🔴', desc: 'Sisa pertemuan hampir habis! Segera lunasi SPP.' },
+    Lancar: { color: '#2E7D32', bg: '#E8F5E9', border: '#A5D6A7', desc: 'Status SPP aktif & lancar.' },
+    Peringatan: { color: '#E65100', bg: '#FFF3E0', border: '#FFCC80', desc: 'Sisa pertemuan tinggal sedikit. Mohon segera lakukan pembayaran.' },
+    Urgent: { color: '#C62828', bg: '#FFEBEE', border: '#FFCDD2', desc: 'Sisa pertemuan hampir habis! Segera lunasi SPP.' },
   };
 
   const sc = statusConfig[sppStatus];
@@ -63,16 +63,8 @@ export const PembayaranOrtuPage: React.FC = () => {
     setTimeout(() => setCopied(false), 3000);
   };
 
-  const waMessage = encodeURIComponent(
-    `Assalamualaikum Admin / Owner Sempoa SIP TC Pariaman,\n\n` +
-    `Saya Orang Tua dari ananda:\n` +
-    `👤 *Nama Anak:* ${child?.nama || '-'}\n` +
-    `📚 *Program:* ${child?.kategori_program || 'Sempoa SIP'}\n` +
-    `💰 *Nominal SPP:* Rp ${sppAmount.toLocaleString('id-ID')}\n\n` +
-    `Saya ingin mengonfirmasi bahwa pembayaran SPP telah ditransfer ke rekening ${bankInfo.namaBank} (${bankInfo.noRekening}). Berikut saya lampirkan bukti transfernya.`
-  );
-
-  const waUrl = `https://wa.me/${bankInfo.nomorWaOwner}?text=${waMessage}`;
+  // Direct WA link without prefilled text
+  const waUrl = `https://wa.me/${bankInfo.nomorWaOwner}`;
 
   const childPhotoUrl = child?.foto_profil
     ? child.foto_profil.startsWith('http')
@@ -92,7 +84,7 @@ export const PembayaranOrtuPage: React.FC = () => {
     return (
       <div className="bg-white border border-[#E0E0E0] rounded-xl p-6 text-center">
         <p className="text-[13px] font-semibold text-[#757575]">
-          ⚠️ Akun Orang Tua belum dihubungkan dengan data Siswa. Silakan hubungi Admin.
+          Akun Orang Tua belum dihubungkan dengan data Siswa. Silakan hubungi Admin.
         </p>
       </div>
     );
@@ -128,10 +120,10 @@ export const PembayaranOrtuPage: React.FC = () => {
               </p>
             </div>
             <span
-              className="px-3 py-1 rounded-full text-[11px] font-bold border flex-shrink-0"
+              className="px-3 py-1 rounded-full text-[11px] font-black border flex-shrink-0 uppercase tracking-wider"
               style={{ color: sc.color, backgroundColor: sc.bg, borderColor: sc.border }}
             >
-              {sc.emoji} {sppStatus}
+              {sppStatus}
             </span>
           </div>
         </div>
@@ -183,7 +175,9 @@ export const PembayaranOrtuPage: React.FC = () => {
       <div className="bg-gradient-to-br from-[#FFF8E1] via-[#FFF3E0] to-[#FFE0B2] border-2 border-[#FFB74D] rounded-2xl shadow-[0_4px_16px_rgba(255,152,0,0.12)] p-5 space-y-4">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-[#FF9800] text-white flex items-center justify-center font-bold text-lg shadow-sm">
-            🏦
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 21h18M3 10h18M5 10v11M9 10v11M15 10v11M19 10v11M12 3l10 7H2l10-7z" />
+            </svg>
           </div>
           <div>
             <h3 className="text-[15px] font-extrabold text-[#E65100]">Rekening Resmi Pembayaran</h3>
@@ -209,7 +203,7 @@ export const PembayaranOrtuPage: React.FC = () => {
                 className="px-2.5 py-1 bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#E65100] border border-[#FFCC80] rounded-lg text-[10px] font-extrabold transition-all active:scale-95 cursor-pointer"
                 title="Salin Nomor Rekening"
               >
-                {copied ? '✓ Tersalin!' : 'Salin'}
+                {copied ? 'Tersalin' : 'Salin'}
               </button>
             </div>
           </div>
@@ -238,7 +232,14 @@ export const PembayaranOrtuPage: React.FC = () => {
       <div className="bg-white border border-[#E0E0E0] rounded-xl shadow-[0_2px_6px_rgba(0,0,0,0.04)] overflow-hidden">
         <div className="px-4 py-3 border-b border-[#F5F5F5] flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-[14px]">📋</span>
+            <span className="text-[#64748B]">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+            </span>
             <h3 className="text-[14px] font-bold text-[#1E293B]">Riwayat Tagihan & Pembayaran</h3>
           </div>
           <span className="text-[11px] text-[#64748B]">Total: {payments?.length || 0} Riwayat</span>
