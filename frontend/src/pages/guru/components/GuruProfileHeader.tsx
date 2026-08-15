@@ -34,7 +34,7 @@ const GuruProfileHeader: React.FC<GuruProfileHeaderProps> = ({ teacherName, prog
       <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full bg-white/5" />
       <div className="absolute top-4 right-20 w-10 h-10 rounded-full bg-white/8" />
 
-      <div className="relative z-10 px-5 pt-6 pb-5">
+      <div className="relative z-10 max-w-2xl mx-auto px-5 pt-6 pb-5">
         <div className="flex items-center gap-4">
           {/* Avatar */}
           {avatarSrc ? (

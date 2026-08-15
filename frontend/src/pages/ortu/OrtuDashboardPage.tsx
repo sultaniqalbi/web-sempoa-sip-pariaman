@@ -40,6 +40,19 @@ export const OrtuDashboardPage: React.FC = () => {
     enabled: !!child?.id,
   });
 
+  // Fetch learning notes from teacher
+  const { data: catatanData } = useQuery<{
+    catatan: Array<{ id: number; tanggal: string; catatan: string; nama_guru: string; waktu: string }>;
+  }>({
+    queryKey: ['child-catatan-dashboard', child?.id],
+    queryFn: async () => {
+      if (!child?.id) return { catatan: [] };
+      const response = await apiClient.get(`/catatan-pembelajaran/${child.id}`);
+      return response.data;
+    },
+    enabled: !!child?.id,
+  });
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -151,6 +164,40 @@ export const OrtuDashboardPage: React.FC = () => {
           </a>
         </div>
       </div>
+
+      {/* Card Catatan Pembelajaran Guru */}
+      <DashboardCard
+        title="Catatan Pembelajaran Guru"
+        iconSvg={
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E65100" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+          </svg>
+        }
+      >
+        {catatanData?.catatan && catatanData.catatan.length > 0 ? (
+          <div className="space-y-3">
+            {catatanData.catatan.slice(0, 3).map((item) => (
+              <div key={item.id} className="p-3.5 bg-[#FFFDE7] border border-[#FFF59D] rounded-xl space-y-1.5">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="font-extrabold text-[#F57F17] flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#F57F17]" />
+                    {item.nama_guru}
+                  </span>
+                  <span className="text-[#8D6E63] font-bold">
+                    {item.tanggal} {item.waktu ? `• ${item.waktu}` : ''}
+                  </span>
+                </div>
+                <p className="text-xs text-[#3E2723] leading-relaxed font-medium">
+                  "{item.catatan}"
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <EmptyState text="Belum ada catatan pembelajaran dari guru" />
+        )}
+      </DashboardCard>
 
       {/* Card 1: Riwayat Kelas */}
       <DashboardCard

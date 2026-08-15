@@ -165,6 +165,24 @@ const GuruDashboardPage: React.FC = () => {
         <AbsensiGuruCard absensi={data?.absensi_guru} />
         <AbsensiSiswaCard stats={data?.absensi_siswa} />
       </div>
+
+      {/* Catatan Pembelajaran Terakhir */}
+      {data?.catatan_terbaru && (
+        <div className="bg-[#FFFDE7] border border-[#FFF59D] rounded-2xl p-4 shadow-[0_2px_6px_rgba(0,0,0,0.04)] space-y-1.5">
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="font-extrabold text-[#F57F17] flex items-center gap-1.5 uppercase tracking-wider">
+              <span className="w-2 h-2 rounded-full bg-[#F57F17]" />
+              Catatan Pembelajaran Terakhir
+            </span>
+            <span className="text-[#8D6E63] font-bold">
+              {data.catatan_terbaru.tanggal} {data.catatan_terbaru.waktu ? `• ${data.catatan_terbaru.waktu}` : ''}
+            </span>
+          </div>
+          <p className="text-xs text-[#3E2723] font-medium leading-relaxed pl-3.5 border-l-2 border-[#FBC02D]">
+            "{data.catatan_terbaru.catatan}"
+          </p>
+        </div>
+      )}
     </div>
   );
 };

@@ -50,14 +50,20 @@ export const OrtuLayout: React.FC = () => {
         );
 
         if (matchedJadwal) {
-          const guru = guruList.find((g: any) => g.id === matchedJadwal.id_guru);
+          const guru = guruList.find(
+            (g: any) =>
+              g.id === matchedJadwal.id_guru ||
+              (g.kategori_program && child.kategori_program && g.kategori_program.toLowerCase() === child.kategori_program.toLowerCase())
+          );
           return {
             kode_program: child.kategori_program?.substring(0, 8) || 'SMP',
             nama_program: child.kategori_program || 'Sempoa SIP',
-            jam_mulai: matchedJadwal.jam_mulai || '09:00',
-            jam_selesai: matchedJadwal.jam_selesai || '17:00',
-            ruangan: matchedJadwal.lokasi || 'TC Pariaman',
-            kode_guru: guru ? guru.nama : (matchedJadwal.id_guru ? `Guru #${matchedJadwal.id_guru}` : 'Pengajar Sempoa'),
+            jam_mulai: matchedJadwal.jam_mulai || '08:30',
+            jam_selesai: matchedJadwal.jam_selesai || '11:30',
+            ruangan: guru?.mode_kelas === 'ONLINE' ? 'Kelas Online (Daring)' : (matchedJadwal.lokasi || 'TC Pariaman'),
+            kode_guru: guru ? guru.nama : 'Pengajar Sempoa',
+            no_wa_guru: guru?.whatsapp_guru || null,
+            mode_kelas: guru?.mode_kelas || 'OFFLINE',
           };
         }
         return null;

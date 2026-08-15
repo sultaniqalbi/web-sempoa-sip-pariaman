@@ -22,4 +22,5 @@ class Guru(Base):
     paket_pengajaran = Column(String(50), nullable=True)
     bio = Column(Text, nullable=True)
     foto_profil = Column(String(255), nullable=True)
+    mode_kelas = Column(String(20), nullable=True, default="OFFLINE")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
