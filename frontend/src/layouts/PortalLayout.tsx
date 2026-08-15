@@ -7,7 +7,6 @@ import {
   PengajarIcon,
   JadwalIcon,
   PembayaranIcon,
-  PresensiIcon,
   GaleriIcon,
   SearchIcon,
 } from '../components/SvgIcons';
@@ -20,7 +19,7 @@ interface PortalLayoutProps {
 export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleLogout = () => {
@@ -30,7 +29,7 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
 
   const basePath = `/${role}`;
 
-  const operationalLinks =
+  const menuItems =
     role === 'owner'
       ? [
           { to: `${basePath}/dashboard`, label: 'Dashboard', icon: <DashboardIcon size={20} />, end: true },
@@ -51,147 +50,165 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
           { to: `${basePath}/galeri`, label: 'Galeri Kegiatan', icon: <GaleriIcon size={20} /> },
         ];
 
-  const ownerExclusiveLinks: any[] = [];
-
-  const portalTitle = role === 'owner' ? 'Owner Portal' : 'Admin Portal';
+  const portalTitle = role === 'owner' ? 'Hai Owner' : 'Admin Portal';
 
   return (
     <div className="flex min-h-screen bg-[#FAFAFA] font-sans text-[#424242]">
-      {/* 1. Sidebar Nav (240px fixed width, 15px font, 16px padding per item) */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-40 w-[240px] bg-[#F5F5F5] border-r border-[#E0E0E0] flex flex-col justify-between transform transition-transform duration-200 ease-in-out md:translate-x-0 ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-        aria-label="Sidebar Menu"
-      >
-        <div className="p-4 sm:p-5">
-          {/* Logo / Portal Title (18px bold) */}
-          <div className="mb-6 px-2 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <img src="/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa SIP" className="h-8 w-auto shrink-0" />
-              <div>
-                <h1 className="text-[18px] font-bold text-[#FF7043] tracking-tight leading-snug">
-                  {portalTitle}
-                </h1>
-                <p className="text-[10px] text-[#757575] font-bold uppercase tracking-wider">TC PARIAMAN</p>
-              </div>
+      {/* 1. Desktop & Tablet Sidebar (3-mode adaptive) */}
+      <aside className="hidden md:flex flex-col w-20 lg:w-[280px] bg-[#F8FAFC] border-r border-slate-200 transition-all duration-300 shrink-0 sticky top-0 h-screen justify-between z-30">
+        <div className="flex flex-col flex-1 overflow-hidden">
+          {/* Logo & Portal Title */}
+          <div className="flex items-center gap-2.5 px-3 lg:px-5 py-5 border-b border-slate-200 justify-center lg:justify-start shrink-0">
+            <img src="/assets/logo/logo-sempoa-sip.png" alt="Sempoa SIP" className="h-8 w-auto shrink-0" />
+            <div className="hidden lg:block min-w-0">
+              <h1 className="text-base font-bold text-[#FF7043] tracking-tight leading-snug truncate">
+                {portalTitle}
+              </h1>
+              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">TC PARIAMAN</p>
             </div>
-            {isSidebarOpen && (
-              <button
-                onClick={() => setIsSidebarOpen(false)}
-                className="md:hidden text-[#757575] hover:text-[#424242] p-1 rounded focus:outline-none"
-                aria-label="Tutup Menu"
-              >
-                ✕
-              </button>
-            )}
           </div>
 
-          {/* Navigation Links with 20px Icons + 15px Text + 16px Padding */}
-          <nav className="space-y-1.5" aria-label="Main Navigation">
-            {operationalLinks.map((link) => (
+          {/* Nav Items */}
+          <nav className="flex-1 overflow-y-auto px-2 lg:px-3 py-4 space-y-1.5" aria-label="Main Navigation">
+            {menuItems.map((item) => (
               <NavLink
-                key={link.to}
-                to={link.to}
-                end={link.end}
-                onClick={() => setIsSidebarOpen(false)}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-3.5 rounded-[8px] text-[15px] font-medium leading-[1.6] transition-colors duration-150 ${
-                    isActive
-                      ? 'bg-[#FFF3E0] text-[#FF7043] font-bold border-l-4 border-[#FF7043] shadow-[0_1px_3px_rgba(0,0,0,0.12)]'
-                      : 'text-[#616161] hover:text-[#424242] hover:bg-[#FAFAFA]'
-                  }`
-                }
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                title={item.label}
+                className={({ isActive }) => `
+                  flex items-center gap-3
+                  justify-center lg:justify-start
+                  px-3 lg:px-4 py-3 rounded-xl
+                  text-[14px] font-medium leading-[1.6]
+                  transition-all duration-150
+                  ${isActive
+                    ? 'bg-[#FFF3E0] text-[#FF7043] font-bold shadow-xs lg:border-l-4 lg:border-[#FF7043]'
+                    : 'text-slate-600 hover:bg-[#FFF3E0]/60 hover:text-[#FF7043]'}
+                `}
               >
                 {({ isActive }) => (
                   <>
-                    <span className={isActive ? 'text-[#FF7043]' : 'text-[#757575]'}>
-                      {link.icon}
+                    <span className={`shrink-0 ${isActive ? 'text-[#FF7043]' : 'text-slate-500'}`}>
+                      {item.icon}
                     </span>
-                    <span>{link.label}</span>
+                    <span className="hidden lg:inline truncate">{item.label}</span>
                   </>
                 )}
               </NavLink>
             ))}
-
-            {/* Owner Exclusive Section */}
-            {role === 'owner' && (
-              <div className="pt-3 mt-3 border-t border-[#E0E0E0] space-y-1.5">
-
-                {ownerExclusiveLinks.map((link) => (
-                  <NavLink
-                    key={link.to}
-                    to={link.to}
-                    onClick={() => setIsSidebarOpen(false)}
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 px-4 py-3.5 rounded-[8px] text-[15px] font-medium leading-[1.6] transition-colors duration-150 ${
-                        isActive
-                          ? 'bg-[#FFF3E0] text-[#FF7043] font-bold border-l-4 border-[#FF7043] shadow-[0_1px_3px_rgba(0,0,0,0.12)]'
-                          : 'text-[#616161] hover:text-[#424242] hover:bg-[#FAFAFA]'
-                      }`
-                    }
-                  >
-                    {({ isActive }) => (
-                      <>
-                        <span className={isActive ? 'text-[#FF7043]' : 'text-[#757575]'}>
-                          {link.icon}
-                        </span>
-                        <span>{link.label}</span>
-                      </>
-                    )}
-                  </NavLink>
-                ))}
-              </div>
-            )}
           </nav>
         </div>
 
         {/* Footer User Info & Logout Button */}
-        <div className="p-4 border-t border-[#E0E0E0] bg-[#F5F5F5] space-y-3">
+        <div className="p-3 lg:p-4 border-t border-slate-200 bg-[#F8FAFC] space-y-2 shrink-0">
           {user && (
-            <div className="text-center px-1">
-              <p className="text-xs font-bold text-[#424242] truncate" title={user.nama}>
+            <div className="hidden lg:block text-center px-1">
+              <p className="text-xs font-bold text-slate-800 truncate" title={user.nama}>
                 {user.nama}
               </p>
-              <p className="text-[11px] text-[#757575] uppercase">{user.role}</p>
+              <p className="text-[10px] text-slate-500 uppercase">{user.role}</p>
             </div>
           )}
           <button
             onClick={handleLogout}
-            className="w-full py-2.5 px-3 bg-[#D32F2F] hover:bg-[#B71C1C] text-white text-[14px] font-bold rounded-[8px] transition-colors shadow-sm focus:outline-none text-center"
+            className="w-full py-2.5 px-2 bg-[#D32F2F] hover:bg-[#B71C1C] text-white text-xs lg:text-sm font-bold rounded-xl transition-colors shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+            title="Keluar dari Portal"
           >
-            Keluar
+            <span className="hidden lg:inline">Keluar</span>
+            <span className="lg:hidden text-xs">🚪</span>
           </button>
         </div>
       </aside>
 
-      {/* Overlay for Mobile Sidebar */}
-      {isSidebarOpen && (
-        <div
-          onClick={() => setIsSidebarOpen(false)}
-          className="fixed inset-0 z-30 bg-black/30 md:hidden"
-          aria-hidden="true"
-        />
+      {/* 2. Mobile Drawer Navigation (<768px) */}
+      {drawerOpen && (
+        <>
+          <div
+            className="md:hidden fixed inset-0 bg-black/50 backdrop-blur-2xs z-40 animate-in fade-in duration-200"
+            onClick={() => setDrawerOpen(false)}
+            aria-hidden="true"
+          />
+          <div className="md:hidden fixed inset-y-0 left-0 z-50 w-[280px] max-w-[85vw] bg-[#F8FAFC] border-r border-slate-200 flex flex-col justify-between overflow-y-auto animate-in slide-in-from-left duration-200 shadow-2xl">
+            <div className="p-4">
+              {/* Header Logo + Close Button */}
+              <div className="flex items-center justify-between pb-4 border-b border-slate-200">
+                <div className="flex items-center gap-2.5">
+                  <img src="/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa" className="h-8 w-auto" />
+                  <div>
+                    <h2 className="text-base font-bold text-[#FF7043]">{portalTitle}</h2>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase">TC PARIAMAN</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setDrawerOpen(false)}
+                  className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs"
+                  aria-label="Tutup Menu"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Menu items in Drawer */}
+              <nav className="mt-4 space-y-1.5">
+                {menuItems.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    end={item.end}
+                    onClick={() => setDrawerOpen(false)}
+                    className={({ isActive }) => `
+                      flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-semibold transition-all
+                      ${isActive
+                        ? 'bg-[#FFF3E0] text-[#FF7043] border-l-4 border-[#FF7043]'
+                        : 'text-slate-700 hover:bg-[#FFF3E0]/50 hover:text-[#FF7043]'}
+                    `}
+                  >
+                    <span className="shrink-0">{item.icon}</span>
+                    <span className="truncate">{item.label}</span>
+                  </NavLink>
+                ))}
+              </nav>
+            </div>
+
+            {/* Bottom User & Logout in Drawer */}
+            <div className="p-4 border-t border-slate-200 bg-[#F8FAFC] space-y-3">
+              {user && (
+                <div>
+                  <p className="text-xs font-bold text-slate-800 truncate">{user.nama}</p>
+                  <p className="text-[10px] text-slate-500 uppercase">{user.role}</p>
+                </div>
+              )}
+              <button
+                onClick={handleLogout}
+                className="w-full py-2.5 bg-[#D32F2F] text-white text-xs font-bold rounded-xl text-center shadow-xs"
+              >
+                Keluar
+              </button>
+            </div>
+          </div>
+        </>
       )}
 
-      {/* 2. Main Content Wrapper - 240px margin offset */}
-      <main className="ml-0 md:ml-[240px] w-full md:w-[calc(100%-240px)] flex flex-col min-h-screen">
-        {/* Header bar */}
-        <header className="bg-white px-6 py-4 border-b border-[#E0E0E0] shadow-[0_1px_3px_rgba(0,0,0,0.12)] flex items-center justify-between sticky top-0 z-20">
-          <div className="flex items-center gap-3">
+      {/* 3. Main Content Area */}
+      <main className="flex-1 min-w-0 flex flex-col bg-[#FAFAFA]">
+        {/* Header Bar */}
+        <header className="sticky top-0 z-20 bg-white border-b border-slate-200 px-3 sm:px-4 lg:px-8 py-3 lg:py-4 flex items-center justify-between gap-3 shadow-xs">
+          {/* Left: Hamburger Button (Mobile) + Search / Title */}
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
-              onClick={() => setIsSidebarOpen(true)}
-              className="md:hidden p-1.5 text-[#616161] hover:text-[#424242] rounded-[8px] focus:outline-none"
-              aria-label="Buka Menu Navigasi"
+              onClick={() => setDrawerOpen(true)}
+              className="md:hidden p-2 text-slate-700 hover:text-[#FF7043] rounded-lg focus:outline-none shrink-0"
+              aria-label="Buka Menu"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
 
             {/* Search Bar */}
-            <div className="relative w-48 sm:w-64">
-              <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center text-[#757575]">
+            <div className="relative w-40 xs:w-48 sm:w-64">
+              <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center text-slate-400">
                 <SearchIcon size={16} />
               </span>
               <input
@@ -199,19 +216,19 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Cari data..."
-                className="w-full pl-8 pr-3 py-1.5 bg-[#FAFAFA] border border-[#E0E0E0] rounded-[8px] text-xs text-[#424242] placeholder-[#757575] focus:outline-none focus:border-[#FF7043]"
+                className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#FF7043]"
                 aria-label="Cari data operasional"
               />
             </div>
           </div>
 
-          {/* User Avatar */}
-          <div className="flex items-center gap-3">
+          {/* Right: User Avatar & Info */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-[#FF7043] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+              <div className="w-8 h-8 rounded-full bg-[#FF7043] text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
                 {user?.nama ? user.nama.substring(0, 2).toUpperCase() : 'AP'}
               </div>
-              <span className="hidden sm:inline-block text-xs font-bold text-[#424242] max-w-[120px] truncate">
+              <span className="hidden sm:inline-block text-xs font-bold text-slate-800 max-w-[140px] truncate">
                 {user?.nama || 'Admin SIP Pariaman'}
               </span>
             </div>
@@ -219,9 +236,11 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
         </header>
 
         {/* Content Outlet Container */}
-        <div className="flex-1 bg-[#FAFAFA] p-6">
-          <Outlet />
-        </div>
+        <section className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 xl:p-8">
+          <div className="w-full max-w-[1400px] mx-auto min-w-0">
+            <Outlet />
+          </div>
+        </section>
       </main>
     </div>
   );

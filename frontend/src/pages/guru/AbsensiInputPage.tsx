@@ -8,15 +8,20 @@ export const AbsensiInputPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'input' | 'rekap' | 'log'>('input');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  // Rekap date filter state (defaults to today)
+  // Input date filter state (defaults to today)
   const todayStr = new Date().toISOString().split('T')[0];
+  const [inputDate, setInputDate] = useState<string>(todayStr);
+
+  // Rekap date filter state (defaults to today)
   const [rekapDate, setRekapDate] = useState<string>(todayStr);
 
   // Fetch Students for Attendance
   const { data: siswaData, isLoading: isLoadingSiswa } = useQuery({
-    queryKey: ['guru-siswa-absensi'],
+    queryKey: ['guru-siswa-absensi', inputDate],
     queryFn: async () => {
-      const res = await apiClient.get('/portal-guru/siswa-absensi');
+      const res = await apiClient.get('/portal-guru/siswa-absensi', {
+        params: { tanggal: inputDate },
+      });
       return res.data;
     },
   });
@@ -48,13 +53,16 @@ export const AbsensiInputPage: React.FC = () => {
     mutationFn: async ({
       attendance,
       catatan,
+      tanggal,
     }: {
       attendance: { siswa_id: number; status: string }[];
       catatan?: string;
+      tanggal: string;
     }) => {
       const payload = {
         siswa_absensi: attendance,
         catatan_pembelajaran: catatan || null,
+        tanggal: tanggal,
       };
       const res = await apiClient.post('/portal-guru/absensi/simpan', payload);
       return res.data;
@@ -73,7 +81,7 @@ export const AbsensiInputPage: React.FC = () => {
   });
 
   const handleSaveAttendance = (data: { siswa_id: number; status: string }[], catatan?: string) => {
-    saveMutation.mutate({ attendance: data, catatan });
+    saveMutation.mutate({ attendance: data, catatan, tanggal: inputDate });
   };
 
   return (
@@ -130,7 +138,8 @@ export const AbsensiInputPage: React.FC = () => {
           ) : (
             <StudentAttendanceTable
               students={siswaData?.siswa || []}
-              tanggalHariIni={siswaData?.tanggal_hari_ini}
+              tanggalTerpilih={inputDate}
+              onTanggalChange={setInputDate}
               onSave={handleSaveAttendance}
               isSaving={saveMutation.isPending}
             />

@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import List
+from pydantic import field_validator
+from typing import List, Union
 
 class Settings(BaseSettings):
     # Database
@@ -20,14 +21,25 @@ class Settings(BaseSettings):
     esp32_api_key: str = "SempoaPariaman_ESP32_SecureKey_2026!"
     
     # CORS
-    allowed_origins: List[str] = [
+    allowed_origins: Union[List[str], str] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:5174",
         "http://127.0.0.1:5174",
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "https://sempoasipariaman.com",
+        "https://www.sempoasipariaman.com",
+        "http://202.155.157.22",
+        "https://202.155.157.22",
     ]
+    
+    @field_validator("allowed_origins", mode="before")
+    @classmethod
+    def parse_allowed_origins(cls, v):
+        if isinstance(v, str):
+            return [x.strip() for x in v.split(",") if x.strip()]
+        return v
     
     # Logging
     log_level: str = "INFO"
@@ -44,3 +56,4 @@ class Settings(BaseSettings):
     )
 
 settings = Settings()
+

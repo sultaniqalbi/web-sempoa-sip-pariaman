@@ -62,6 +62,7 @@ export interface Jadwal {
   id: number;
   id_guru?: number;
   id_siswa?: number;
+  kategori_program?: string;
   hari: string;
   jam_mulai: string;
   jam_selesai: string;

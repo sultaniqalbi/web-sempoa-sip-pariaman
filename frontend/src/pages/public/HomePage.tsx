@@ -704,15 +704,15 @@ export const HomePage: React.FC = () => {
                 <div className="contact-item">
                   <img src="/assets/icons/whatsapp.svg" alt="WhatsApp" />
                   <div>
-                    <p className="contact-label">WhatsApp</p>
-                    <a href="https://wa.me/628126784986" target="_blank" rel="noopener noreferrer">0812-6784-986</a>
+                    <p className="contact-label">WhatsApp Admin</p>
+                    <a href="https://wa.me/6282385813163" target="_blank" rel="noopener noreferrer">0823-8581-3163</a>
                   </div>
                 </div>
                 <div className="contact-item">
-                  <img src="/assets/icons/telephone.svg" alt="Telepon" />
+                  <img src="/assets/icons/whatsapp.svg" alt="WhatsApp" />
                   <div>
-                    <p className="contact-label">Telepon</p>
-                    <a href="tel:+628126784986">(0812) 6784-986</a>
+                    <p className="contact-label">WhatsApp Owner</p>
+                    <a href="https://wa.me/628126784986" target="_blank" rel="noopener noreferrer">0812-6784-986</a>
                   </div>
                 </div>
                 <div className="contact-item">

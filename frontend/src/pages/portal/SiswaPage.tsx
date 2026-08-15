@@ -5,7 +5,8 @@ import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
 import PageHeader from '../../components/PageHeader';
 import EmptyState from '../../components/EmptyState';
-import DayPicker from '../../components/DayPicker';
+import { DayPicker } from '../../components/DayPicker';
+import { PhotoModal } from '../../components/PhotoModal';
 import { DataSiswaIcon, TrashIcon } from '../../components/SvgIcons';
 
 interface Siswa {
@@ -21,12 +22,43 @@ interface Siswa {
   paket_jadwal?: string;
   hari_masuk: string;
   sisa_pertemuan: number;
+  target_pertemuan: number;
   status_spp: string;
   nama_orang_tua?: string;
   whatsapp_orang_tua?: string;
   alamat?: string;
+  umur?: number;
+  kelas_sekolah?: string;
   created_at: string;
 }
+
+export const PROGRAM_CONFIG = {
+  'Sempoa SIP': {
+    spp: 350000,
+    packages: [
+      { label: 'Paket 1: 8 Pertemuan, 90 Menit', target: 8, duration: '90 Menit', count: '8x' },
+      { label: 'Paket 2: 12 Pertemuan, 60 Menit', target: 12, duration: '60 Menit', count: '12x' },
+    ]
+  },
+  'Fonem': {
+    spp: 200000,
+    packages: [
+      { label: 'Paket Reguler: 12 Pertemuan, 60 Menit', target: 12, duration: '60 Menit', count: '12x' },
+    ]
+  },
+  'Bahasa Inggris': {
+    spp: 200000,
+    packages: [
+      { label: 'Paket Reguler: 2 Pertemuan, 90 Menit', target: 2, duration: '90 Menit', count: '2x' },
+    ]
+  },
+  'Tahfidz': {
+    spp: 200000,
+    packages: [
+      { label: 'Paket Reguler: 12 Pertemuan, 60 Menit', target: 12, duration: '60 Menit', count: '12x' },
+    ]
+  }
+};
 
 export const SiswaPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -37,6 +69,7 @@ export const SiswaPage: React.FC = () => {
   const [isCredentialModalOpen, setIsCredentialModalOpen] = useState(false);
   const [isWAFallbackModalOpen, setIsWAFallbackModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [photoModalData, setPhotoModalData] = useState<{ url: string; name: string; subtitle: string } | null>(null);
   
   const [createdCredential, setCreatedCredential] = useState<{ email: string; pwd: string; wa?: string; name: string } | null>(null);
   const [waFallbackData, setWAFallbackData] = useState<{ message: string; number: string } | null>(null);
@@ -306,9 +339,16 @@ export const SiswaPage: React.FC = () => {
     if (!validatePhone(formData.whatsapp_orang_tua)) {
       return;
     }
+    const ageVal = calculateAge(formData.tanggal_lahir);
+    const progData = (PROGRAM_CONFIG as any)[formData.kategori_program] || PROGRAM_CONFIG['Sempoa SIP'];
+    const matchedPkg = progData.packages.find((p: any) => p.label === formData.paket_jadwal) || progData.packages[0];
+    const target = matchedPkg.target;
+
     const payload = {
       ...formData,
-      umur: formData.umur ? parseInt(formData.umur, 10) : (calculateAge(formData.tanggal_lahir) || null)
+      umur: ageVal,
+      target_pertemuan: target,
+      sisa_pertemuan: editingSiswa ? editingSiswa.sisa_pertemuan : target
     };
     if (editingSiswa) {
       updateMutation.mutate(payload as any);
@@ -319,28 +359,44 @@ export const SiswaPage: React.FC = () => {
 
   const columns = [
     {
-      header: 'Kode Siswa',
-      accessor: (row: Siswa) => (
-        <div className="flex items-center gap-3">
-          {row.foto_profil ? (
-            <img src={(import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1').replace('/api/v1', '') + row.foto_profil} alt="Foto" className="w-9 h-12 object-cover rounded shadow-sm border border-[#E2E8F0]" />
-          ) : (
-            <div className="w-9 h-12 bg-[#F1F5F9] border border-[#E2E8F0] rounded flex items-center justify-center">
-              <span className="text-[#94A3B8] text-[10px]">3x4</span>
-            </div>
-          )}
-          <span className="font-mono text-[#FF7043] font-bold">{row.uid}</span>
-        </div>
-      )
+      header: 'Foto Siswa',
+      accessor: (row: Siswa) => {
+        const fullPhotoUrl = row.foto_profil 
+          ? (import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1').replace('/api/v1', '') + row.foto_profil
+          : null;
+        return (
+          <div 
+            onClick={() => {
+              if (fullPhotoUrl) {
+                setPhotoModalData({
+                  url: fullPhotoUrl,
+                  name: `${row.nama} (${row.uid})`,
+                  subtitle: `${row.kategori_program} • Kelas ${row.kelas_sekolah || '-'}`
+                });
+              }
+            }}
+            className={`w-10 h-10 rounded-xl overflow-hidden border border-[#E2E8F0] shadow-xs flex items-center justify-center ${fullPhotoUrl ? 'cursor-pointer hover:ring-2 hover:ring-[#FF7043] transition-all hover:scale-105' : 'bg-[#F1F5F9]'}`}
+            title={fullPhotoUrl ? "Klik untuk melihat & download foto 1:1" : "Tidak ada foto"}
+          >
+            {fullPhotoUrl ? (
+              <img src={fullPhotoUrl} alt={row.nama} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-[#94A3B8] text-[10px] font-bold">Foto</span>
+            )}
+          </div>
+        );
+      },
+      className: 'w-[70px] text-center'
     },
     {
-      header: 'Nama Siswa',
+      header: 'Kode Siswa',
       accessor: (row: Siswa) => {
         const displayAge = row.umur ?? calculateAge(row.tanggal_lahir);
         return (
           <div>
-            <p className="font-bold text-[#1E293B]">
-              {row.nama} {displayAge ? <span className="text-[10px] font-normal text-[#64748B] ml-1">({displayAge} thn)</span> : ''}
+            <span className="font-mono text-[#FF7043] font-black text-xs block">{row.uid}</span>
+            <p className="font-bold text-[#1E293B] text-xs mt-0.5">
+              {row.nama} {displayAge ? <span className="text-[10px] font-normal text-[#64748B]">({displayAge} thn)</span> : ''}
             </p>
             <p className="text-[10px] text-[#94A3B8]">
               {row.asal_sekolah ? `${row.asal_sekolah}${row.kelas_sekolah ? ` • ${row.kelas_sekolah}` : ''}` : `Ortu: ${row.nama_orang_tua || '-'}`}
@@ -356,7 +412,7 @@ export const SiswaPage: React.FC = () => {
           <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FFF3E0] text-[#FF7043] border border-[#FFCC80]">
             {row.kategori_program}
           </span>
-          {row.paket_jadwal && row.kategori_program === 'Sempoa SIP' && (
+          {row.paket_jadwal && (
             <p className="text-[9px] font-semibold text-[#64748B] mt-0.5">{row.paket_jadwal}</p>
           )}
           <p className="text-[10px] text-[#94A3B8] mt-1">{row.hari_masuk}</p>
@@ -365,28 +421,43 @@ export const SiswaPage: React.FC = () => {
     },
     {
       header: 'Sisa Pertemuan',
-      accessor: (row: Siswa) => (
-        <span className={`px-2.5 py-1 rounded-full text-xs font-extrabold ${
-          row.sisa_pertemuan <= 2 ? 'bg-[#FFF1F2] text-[#e11d48] border border-[#FECDD3]' : 'bg-[#E8F5E9] text-[#388E3C] border border-[#A5D6A7]'
-        }`}>
-          {row.sisa_pertemuan} / 8
-        </span>
-      )
+      accessor: (row: Siswa) => {
+        const target = row.target_pertemuan || 8;
+        const ratio = target > 0 ? row.sisa_pertemuan / target : 1;
+        const isUrgent = ratio <= 0.20;
+        const isPeringatan = ratio <= 0.40 && !isUrgent;
+        
+        return (
+          <div>
+            <span className={`px-2.5 py-1 rounded-full text-xs font-extrabold inline-block ${
+              isUrgent 
+                ? 'bg-[#FFF1F2] text-[#e11d48] border border-[#FECDD3]' 
+                : isPeringatan 
+                ? 'bg-[#FFF8E1] text-[#E65100] border border-[#FFE082]'
+                : 'bg-[#E8F5E9] text-[#388E3C] border border-[#A5D6A7]'
+            }`}>
+              {row.sisa_pertemuan} / {target} kali
+            </span>
+          </div>
+        );
+      }
     },
     {
       header: 'Status SPP',
       accessor: (row: Siswa) => (
-        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-          row.status_spp === 'AKTIF' ? 'bg-[#E8F5E9] text-[#388E3C]' : 'bg-[#FFF1F2] text-[#e11d48]'
+        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+          row.status_spp === 'AKTIF' 
+            ? 'bg-[#E8F5E9] text-[#388E3C] border border-[#A5D6A7]' 
+            : 'bg-[#FFF1F2] text-[#e11d48] border border-[#FECDD3]'
         }`}>
           {row.status_spp}
         </span>
       )
     },
     {
-      header: 'Aksi & Provisioning',
+      header: 'Aksi',
       accessor: (row: Siswa) => (
-        <div className="flex gap-1.5 flex-wrap">
+        <div className="flex gap-1.5 flex-wrap items-center">
           <button
             onClick={() => openEditModal(row)}
             className="px-2 py-1 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#475569] text-xs font-bold rounded-lg border border-[#CBD5E1] transition-colors"
@@ -416,7 +487,7 @@ export const SiswaPage: React.FC = () => {
                 deleteMutation.mutate(row.id);
               }
             }}
-            className="px-2 py-1 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] text-xs font-bold rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center"
+            className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center"
             title="Hapus Siswa"
           >
             <TrashIcon size={14} />
@@ -507,7 +578,7 @@ export const SiswaPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Tempat Lahir, Tanggal Lahir, Umur */}
+          {/* Tempat Lahir, Tanggal Lahir, Umur Otomatis */}
           <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="block text-[#1E293B] font-bold mb-1">Tempat Lahir</label>
@@ -520,38 +591,50 @@ export const SiswaPage: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-[#1E293B] font-bold mb-1">Tanggal Lahir</label>
-              <input
-                type="date"
-                value={formData.tanggal_lahir}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  const calculated = calculateAge(val);
-                  const newUmur = calculated !== null ? calculated.toString() : formData.umur;
-                  const newUid = !editingSiswa ? generateKodeSiswa(formData.kategori_program, newUmur, val) : formData.uid;
-                  setFormData({ 
-                    ...formData, 
-                    tanggal_lahir: val,
-                    umur: newUmur,
-                    uid: newUid
-                  });
-                }}
-                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
-              />
+              <label className="block text-[#1E293B] font-bold mb-1">Tanggal Lahir*</label>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="date"
+                  required
+                  value={formData.tanggal_lahir}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const calculated = calculateAge(val);
+                    const newUmur = calculated !== null ? calculated.toString() : '';
+                    const newUid = !editingSiswa ? generateKodeSiswa(formData.kategori_program, newUmur, val) : formData.uid;
+                    setFormData({ 
+                      ...formData, 
+                      tanggal_lahir: val,
+                      umur: newUmur,
+                      uid: newUid
+                    });
+                  }}
+                  className="flex-1 bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none font-medium"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (formData.tanggal_lahir) {
+                      showToast('Tanggal lahir tersimpan: ' + formData.tanggal_lahir);
+                    }
+                  }}
+                  className="px-3 py-2.5 bg-[#E8F5E9] hover:bg-[#C8E6C9] text-[#2E7D32] border border-[#A5D6A7] rounded-lg text-xs font-extrabold transition-all cursor-pointer"
+                  title="Konfirmasi Tanggal Lahir"
+                >
+                  OK
+                </button>
+              </div>
             </div>
             <div>
-              <label className="block text-[#1E293B] font-bold mb-1">Umur (Tahun)</label>
-              <input
-                type="number"
-                value={formData.umur}
-                onChange={(e) => {
-                  const newUmur = e.target.value;
-                  const newUid = !editingSiswa ? generateKodeSiswa(formData.kategori_program, newUmur, formData.tanggal_lahir) : formData.uid;
-                  setFormData({ ...formData, umur: newUmur, uid: newUid });
-                }}
-                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
-                placeholder="Contoh: 7"
-              />
+              <label className="block text-[#1E293B] font-bold mb-1">Umur (Otomatis)</label>
+              <div className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] font-bold flex items-center justify-between">
+                <span>
+                  {formData.tanggal_lahir && calculateAge(formData.tanggal_lahir) !== null
+                    ? `${calculateAge(formData.tanggal_lahir)} Tahun`
+                    : <span className="text-[#94A3B8] font-normal italic">Auto dari Tgl Lahir</span>}
+                </span>
+                <span className="text-[9px] font-bold bg-[#E2E8F0] text-[#475569] px-1.5 py-0.5 rounded">Sistem</span>
+              </div>
             </div>
           </div>
 
@@ -593,72 +676,81 @@ export const SiswaPage: React.FC = () => {
             )}
           </div>
 
-          {/* 3. Kategori Program* (Fixed/Dropdown defaulting to Sempoa SIP) */}
+          {/* 3. Kategori Program & Info Biaya SPP / Pertemuan */}
           <div>
-            <label className="block text-[#1E293B] font-bold mb-1">Kategori Program*</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-[#1E293B] font-bold">Kategori Program*</label>
+              <span className="text-[11px] font-extrabold text-[#E65100] bg-[#FFF3E0] px-2 py-0.5 rounded border border-[#FFCC80]">
+                SPP: Rp {((PROGRAM_CONFIG as any)[formData.kategori_program]?.spp || 200000).toLocaleString('id-ID')} / bulan
+              </span>
+            </div>
             <select
               value={formData.kategori_program}
               onChange={(e) => {
                 const newProg = e.target.value;
                 const newUid = !editingSiswa ? generateKodeSiswa(newProg, formData.umur, formData.tanggal_lahir) : formData.uid;
-                setFormData({ ...formData, kategori_program: newProg, uid: newUid });
+                const progConf = (PROGRAM_CONFIG as any)[newProg] || PROGRAM_CONFIG['Sempoa SIP'];
+                const defaultPkg = progConf.packages[0].label;
+                setFormData({ 
+                  ...formData, 
+                  kategori_program: newProg, 
+                  paket_jadwal: defaultPkg,
+                  uid: newUid 
+                });
               }}
               className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none font-medium"
             >
-              <option value="Sempoa SIP">Sempoa SIP</option>
-              <option value="Fonem">Fonem</option>
-              <option value="Tahfidz">Tahfidz</option>
-              <option value="Bahasa Inggris">Bahasa Inggris</option>
+              <option value="Sempoa SIP">Sempoa SIP (8x 90m / 12x 60m • Rp 350.000/bln)</option>
+              <option value="Fonem">Fonem (12x 60m • Rp 200.000/bln)</option>
+              <option value="Tahfidz">Tahfidz (12x 60m • Rp 200.000/bln)</option>
+              <option value="Bahasa Inggris">Bahasa Inggris (2x 90m • Rp 200.000/bln)</option>
             </select>
           </div>
 
-          {/* 4. Paket Jadwal Sempoa SIP* (Show conditionally when Sempoa SIP selected) */}
-          {formData.kategori_program === 'Sempoa SIP' && (
-            <div className="p-3 bg-[#FFF3E0] border border-[#FFCC80] rounded-xl space-y-2">
+          {/* 4. Paket Jadwal & Detail Pertemuan */}
+          <div className="p-3 bg-[#FFF3E0] border border-[#FFCC80] rounded-xl space-y-2">
+            <div className="flex items-center justify-between">
               <label className="block text-[#E65100] font-bold text-xs">
-                Paket Jadwal Sempoa SIP*
+                Pilih Paket & Jumlah Pertemuan ({formData.kategori_program})*
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <label className={`flex items-center gap-2.5 p-2.5 rounded-lg border cursor-pointer transition-all ${
-                  formData.paket_jadwal === 'Paket 1: 8 Pertemuan, 90 Menit'
-                    ? 'bg-white border-[#FF7043] shadow-xs'
-                    : 'bg-[#FAFAFA] border-[#E0E0E0]'
-                }`}>
-                  <input
-                    type="radio"
-                    name="paket_jadwal"
-                    value="Paket 1: 8 Pertemuan, 90 Menit"
-                    checked={formData.paket_jadwal === 'Paket 1: 8 Pertemuan, 90 Menit'}
-                    onChange={(e) => setFormData({ ...formData, paket_jadwal: e.target.value })}
-                    className="accent-[#FF7043]"
-                  />
-                  <div>
-                    <p className="font-bold text-[#1E293B] text-xs">Paket 1</p>
-                    <p className="text-[10px] text-[#64748B]">8 Pertemuan, 90 Menit</p>
-                  </div>
-                </label>
-
-                <label className={`flex items-center gap-2.5 p-2.5 rounded-lg border cursor-pointer transition-all ${
-                  formData.paket_jadwal === 'Paket 2: 12 Pertemuan, 60 Menit'
-                    ? 'bg-white border-[#FF7043] shadow-xs'
-                    : 'bg-[#FAFAFA] border-[#E0E0E0]'
-                }`}>
-                  <input
-                    type="radio"
-                    name="paket_jadwal"
-                    value="Paket 2: 12 Pertemuan, 60 Menit"
-                    checked={formData.paket_jadwal === 'Paket 2: 12 Pertemuan, 60 Menit'}
-                    onChange={(e) => setFormData({ ...formData, paket_jadwal: e.target.value })}
-                    className="accent-[#FF7043]"
-                  />
-                  <div>
-                    <p className="font-bold text-[#1E293B] text-xs">Paket 2</p>
-                    <p className="text-[10px] text-[#64748B]">12 Pertemuan, 60 Menit</p>
-                  </div>
-                </label>
-              </div>
+              <span className="text-[10px] text-[#BF360C] font-semibold">
+                Siklus 30 Hari
+              </span>
             </div>
-          )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {((PROGRAM_CONFIG as any)[formData.kategori_program]?.packages || PROGRAM_CONFIG['Sempoa SIP'].packages).map((pkg: any, idx: number) => (
+                <label 
+                  key={pkg.label}
+                  className={`flex items-center gap-2.5 p-2.5 rounded-lg border cursor-pointer transition-all ${
+                    formData.paket_jadwal === pkg.label || (!formData.paket_jadwal && idx === 0)
+                      ? 'bg-white border-[#FF7043] shadow-xs ring-1 ring-[#FF7043]'
+                      : 'bg-[#FAFAFA] border-[#E0E0E0] hover:bg-white'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="paket_jadwal"
+                    value={pkg.label}
+                    checked={formData.paket_jadwal === pkg.label || (!formData.paket_jadwal && idx === 0)}
+                    onChange={(e) => setFormData({ ...formData, paket_jadwal: e.target.value })}
+                    className="accent-[#FF7043]"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <p className="font-bold text-[#1E293B] text-xs truncate">
+                        {pkg.count} ({pkg.duration})
+                      </p>
+                      <span className="text-[9px] font-extrabold text-[#E65100] bg-[#FFE0B2] px-1.5 py-0.2 rounded">
+                        {pkg.target} Pertemuan
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-[#64748B] mt-0.5">{pkg.label}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
 
           {/* 5. Hari Masuk Kelas* [DayPicker multi-select] */}
           <DayPicker
@@ -855,6 +947,15 @@ export const SiswaPage: React.FC = () => {
           </div>
         )}
       </Modal>
+
+      {/* Modal 1:1 Photo Viewer with Download Button */}
+      <PhotoModal
+        isOpen={!!photoModalData}
+        onClose={() => setPhotoModalData(null)}
+        photoUrl={photoModalData?.url || null}
+        name={photoModalData?.name || 'Foto Siswa'}
+        subtitle={photoModalData?.subtitle}
+      />
     </div>
   );
 };

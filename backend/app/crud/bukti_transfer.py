@@ -1,4 +1,5 @@
 from typing import List, Optional
+from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from app.models.bukti_transfer import BuktiTransfer, StatusBuktiTransfer
 from app.models.pembayaran_periode import PembayaranPeriode, StatusPembayaran
@@ -33,16 +34,17 @@ def approve_bukti_transfer(db: Session, db_proof: BuktiTransfer) -> BuktiTransfe
     db_proof.status = StatusBuktiTransfer.approved
     db.add(db_proof)
 
-    # Update payment to LUNAS
+    # Update payment to LUNAS and update 30-day due_date
     pembayaran = db.query(PembayaranPeriode).filter(PembayaranPeriode.id == db_proof.id_pembayaran).first()
     if pembayaran:
         pembayaran.status = StatusPembayaran.LUNAS
+        pembayaran.due_date = (datetime.utcnow() + timedelta(days=30)).date()
         db.add(pembayaran)
 
-        # Restore student quota +8 and set status back to AKTIF
+        # Reset student quota to full target and set status back to AKTIF for the new 30-day cycle
         siswa = db.query(Siswa).filter(Siswa.id == pembayaran.id_siswa).first()
         if siswa:
-            siswa.sisa_pertemuan += 8
+            siswa.sisa_pertemuan = siswa.target_pertemuan
             siswa.status_spp = StatusSPP.AKTIF
             db.add(siswa)
 

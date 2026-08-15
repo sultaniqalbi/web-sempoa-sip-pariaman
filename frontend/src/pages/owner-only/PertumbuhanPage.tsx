@@ -42,24 +42,8 @@ export const PertumbuhanPage: React.FC = () => {
       // Pass the apiRange or the selected start/end dates for a real API.
       const res = await apiClient.get(`/owner/pertumbuhan?range=${apiRange}`);
       
-      // Inject some mock growth / guru / keuangan data if the API doesn't provide it yet
-      const apiData = res.data;
-      if (!apiData.total_guru) apiData.total_guru = 12;
-      if (!apiData.total_keuangan) apiData.total_keuangan = 15500000;
-      if (!apiData.growth_murid) apiData.growth_murid = 15;
-      if (!apiData.growth_guru) apiData.growth_guru = 5;
-      if (!apiData.growth_keuangan) apiData.growth_keuangan = 25;
-      
-      if (apiData.per_bulan) {
-        apiData.per_bulan = apiData.per_bulan.map((b: any) => ({
-          ...b,
-          murid: b.kumulatif_aktif || Math.floor(Math.random() * 50) + 100,
-          guru: b.guru || Math.floor(Math.random() * 5) + 8,
-          keuangan: b.keuangan || Math.floor(Math.random() * 5000000) + 10000000,
-        }));
-      }
-      
-      return apiData;
+      // Directly return the data from API without injecting mock values
+      return res.data;
     }
   });
 

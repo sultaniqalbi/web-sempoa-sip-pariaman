@@ -47,6 +47,24 @@ export const AnakSayaPage: React.FC = () => {
     enabled: !!child?.id,
   });
 
+  // Fetch learning notes
+  const { data: catatanData } = useQuery<{
+    catatan: Array<{ id: number; tanggal: string; catatan: string; nama_guru: string; waktu: string }>;
+  }>({
+    queryKey: ['child-catatan-dashboard', child?.id],
+    queryFn: async () => {
+      if (!child?.id) return { catatan: [] };
+      try {
+        const response = await apiClient.get(`/catatan-pembelajaran/${child.id}`);
+        return response.data;
+      } catch {
+        const response = await apiClient.get(`/portal/catatan-pembelajaran/${child.id}`);
+        return response.data;
+      }
+    },
+    enabled: !!child?.id,
+  });
+
   // Form state
   const [formData, setFormData] = useState<ChildFormData>({
     nama: '',
@@ -420,18 +438,39 @@ export const AnakSayaPage: React.FC = () => {
 
           {/* Catatan Pembelajaran */}
           <div>
-            <h4 className="text-[12px] font-bold text-[#757575] uppercase tracking-wider mb-3">Catatan Pembelajaran</h4>
-            <div className="py-4 text-center">
-              <div className="w-10 h-10 mx-auto mb-2 bg-[#F5F5F5] rounded-full flex items-center justify-center">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#BDBDBD" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                  <line x1="16" y1="13" x2="8" y2="13" />
-                  <line x1="16" y1="17" x2="8" y2="17" />
-                </svg>
+            <h4 className="text-[12px] font-bold text-[#757575] uppercase tracking-wider mb-3">Catatan Pembelajaran Guru</h4>
+            {catatanData?.catatan && catatanData.catatan.length > 0 ? (
+              <div className="space-y-3">
+                {catatanData.catatan.map((item) => (
+                  <div key={item.id} className="p-3.5 bg-[#FFFDE7] border border-[#FFF59D] rounded-xl space-y-1.5">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="font-extrabold text-[#F57F17] flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#F57F17]" />
+                        {item.nama_guru}
+                      </span>
+                      <span className="text-[#8D6E63] font-bold">
+                        {item.tanggal} {item.waktu ? `• ${item.waktu}` : ''}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#3E2723] leading-relaxed font-medium">
+                      "{item.catatan}"
+                    </p>
+                  </div>
+                ))}
               </div>
-              <p className="text-[12px] text-[#BDBDBD] font-medium">Belum ada catatan pembelajaran</p>
-            </div>
+            ) : (
+              <div className="py-4 text-center">
+                <div className="w-10 h-10 mx-auto mb-2 bg-[#F5F5F5] rounded-full flex items-center justify-center">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#BDBDBD" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                  </svg>
+                </div>
+                <p className="text-[12px] text-[#BDBDBD] font-medium">Belum ada catatan pembelajaran dari guru</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

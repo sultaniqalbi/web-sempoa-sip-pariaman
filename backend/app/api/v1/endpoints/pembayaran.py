@@ -1,6 +1,6 @@
 import os
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
@@ -41,6 +41,12 @@ async def read_pembayaran_list(
         detail="Role tidak diizinkan untuk melihat tagihan pembayaran"
     )
 
+def get_spp_nominal(program: Optional[str]) -> float:
+    prog = (program or "").lower()
+    if "sempoa" in prog:
+        return 350000.00
+    return 200000.00
+
 @router.get("/reminder")
 @router.get("/reminder-spp")
 async def get_pembayaran_reminders(
@@ -48,8 +54,8 @@ async def get_pembayaran_reminders(
     current_user: User = Depends(admin_or_owner)
 ):
     """
-    Filter dan kualifikasi status SPP siswa (Lancar / Peringatan / Urgent)
-    berdasarkan persentase sisa_pertemuan (Hijau >40%, Kuning 20-40%, Merah <20%),
+    Filter dan kualifikasi status SPP siswa (Lancar / Peringatan / Urgent / Hangus)
+    berdasarkan persentase sisa_pertemuan dan batas siklus 30 hari,
     disertai draf pesan WhatsApp Peringatan & Tagihan Urgent.
     """
     all_siswa = db.query(Siswa).filter(Siswa.is_deleted == False).order_by(Siswa.sisa_pertemuan.asc()).all()
@@ -58,8 +64,7 @@ async def get_pembayaran_reminders(
     lancar_count = 0
     peringatan_count = 0
     urgent_count = 0
-
-    next_date_default = (datetime.utcnow()).strftime("%Y-%m-20")
+    today = datetime.utcnow().date()
 
     for s in all_siswa:
         bill = db.query(PembayaranPeriode).filter(
@@ -67,63 +72,102 @@ async def get_pembayaran_reminders(
             PembayaranPeriode.status.in_([StatusPembayaran.MENUNGGAK, StatusPembayaran.OVERDUE, StatusPembayaran.PENDING_VERIFIKASI])
         ).order_by(PembayaranPeriode.created_at.desc()).first()
 
-        sisa = s.sisa_pertemuan if s.sisa_pertemuan is not None else 8
+        # Ambil pembayaran lunas terakhir untuk menghitung siklus 30 hari
+        last_lunas = db.query(PembayaranPeriode).filter(
+            PembayaranPeriode.id_siswa == s.id,
+            PembayaranPeriode.status == StatusPembayaran.LUNAS
+        ).order_by(PembayaranPeriode.created_at.desc()).first()
+
+        sisa = s.sisa_pertemuan if s.sisa_pertemuan is not None else 0
+        target = s.target_pertemuan if s.target_pertemuan and s.target_pertemuan > 0 else 8
+        persen = (sisa / target) * 100 if target > 0 else 0
         wa_num = s.whatsapp_orang_tua or ""
         ortu_name = s.nama_orang_tua or "Orang Tua"
-        jumlah_tagihan = float(bill.jumlah) if bill else 150000.0
-        due_date_str = str(bill.due_date) if (bill and bill.due_date) else next_date_default
+        
+        default_spp = get_spp_nominal(s.kategori_program)
+        jumlah_tagihan = float(bill.jumlah) if bill else default_spp
 
-        # Thresholds: >40% (>3/8) = Lancar, 20-40% (2-3/8) = Peringatan, <20% (<=1/8) = Urgent
-        if sisa > 3:
+        # Hitung siklus 30 hari
+        if last_lunas and last_lunas.due_date:
+            due_date = last_lunas.due_date
+        elif last_lunas and last_lunas.created_at:
+            due_date = last_lunas.created_at.date() + timedelta(days=30)
+        elif s.created_at:
+            due_date = s.created_at.date() + timedelta(days=30)
+        else:
+            due_date = today + timedelta(days=30)
+
+        days_remaining = (due_date - today).days
+        is_expired_30_hari = days_remaining < 0
+        is_hangus = is_expired_30_hari and sisa > 0
+        due_date_str = str(due_date)
+
+        # Thresholds:
+        # Merah/Urgent: Lewat 30 hari (expired/hangus) ATAU sisa < 20%
+        # Kuning/Peringatan: Belum lewat 30 hari DAN sisa <= 40%
+        # Hijau/Lancar: Sisa > 40% dan masih dalam 30 hari
+        if is_expired_30_hari:
+            status_code = "urgent"
+            status_label = f"Hangus (Lewat {abs(days_remaining)} Hari)" if is_hangus else "Expired (Lewat 30 Hari)"
+            color = "merah"
+            urgent_count += 1
+        elif persen < 20:
+            status_code = "urgent"
+            status_label = "Urgent (< 20%)"
+            color = "merah"
+            urgent_count += 1
+        elif persen <= 40:
+            status_code = "peringatan"
+            status_label = "Peringatan (Siap Bayar)"
+            color = "kuning"
+            peringatan_count += 1
+        else:
             status_code = "lancar"
             status_label = "Lancar"
             color = "hijau"
             lancar_count += 1
-        elif sisa >= 2:
-            status_code = "peringatan"
-            status_label = "Peringatan"
-            color = "kuning"
-            peringatan_count += 1
-        else:
-            status_code = "urgent"
-            status_label = "Urgent"
-            color = "merah"
-            urgent_count += 1
 
-        # Kuning Template (Peringatan)
+        # Kuning Template (Peringatan Persiapan SPP - Tanpa Rekening)
         wa_peringatan = f"""Assalamualaikum Ibu/Pak {ortu_name},
 
-Kami ingin memberitahukan bahwa kuota pertemuan {s.nama} untuk program {s.kategori_program} tinggal sedikit.
+Kami ingin memberitahukan bahwa kuota pertemuan {s.nama} untuk program {s.kategori_program} tinggal sedikit (sisa {sisa} sesi / {int(persen)}%).
 
 👤 Nama Anak: {s.nama}
 📚 Program: {s.kategori_program}
-📊 Sisa Pertemuan: {sisa} kali
-📅 Jadwal Pembayaran Berikutnya: {due_date_str}
+📊 Sisa Pertemuan: {sisa} / {target} sesi
+📅 Batas Siklus 30 Hari: {due_date_str} (sisa {max(0, days_remaining)} hari)
 
-Silakan hubungi kami untuk informasi lebih lanjut.
+Mohon bersiap untuk melakukan pembayaran SPP periode berikutnya.
 
 ---
-Tim Sempoa SIP TC Pariaman"""
+Tim Sempoa SIP TC Pariaman
+Admin: 082385813163 | Owner: 08126784986"""
 
-        # Merah Template (Tagihan Urgent)
+        # Merah Template (Tagihan Urgent / Expired - Dilengkapi Rekening Resmi ZULHEMAWATI)
+        alasan_merah = "Masa aktif 30 hari telah berakhir (sisa pertemuan hangus)" if is_hangus else ("Masa aktif 30 hari telah berakhir" if is_expired_30_hari else f"Sisa pertemuan tinggal {sisa} sesi ({int(persen)}%)")
         wa_urgent = f"""Assalamualaikum Ibu/Pak {ortu_name},
 
-⚠️ PEMBERITAHUAN PENTING ⚠️
+⚠️ PEMBERITAHUAN TAGIHAN SPP ⚠️
 
-Kuota pertemuan {s.nama} untuk program {s.kategori_program} hampir habis!
+{alasan_merah} untuk Ananda {s.nama} pada program {s.kategori_program}.
 
 👤 Nama Anak: {s.nama}
 📚 Program: {s.kategori_program}
-📊 Sisa Pertemuan: {sisa} kali (URGENT)
+📊 Sisa Pertemuan: {sisa} / {target} sesi {'(HANGUS)' if is_hangus else ''}
 💰 Total Tagihan: Rp {int(jumlah_tagihan):,}
-📅 Jadwal Pembayaran Berikutnya: {due_date_str}
+📅 Batas Siklus: {due_date_str}
 
-🏦 INFO TRANSFER:
-Bank: BCA
-A/N: Sempoa SIP TC Pariaman
-No. Rekening: 123-456-7890
+🏦 REKENING RESMI PEMBAYARAN:
+1. Bank BRI
+   No. Rekening: 0321 0100 2859536
+   A/N: ZULHEMAWATI
+2. Bank BPD (Bank Nagari)
+   No. Rekening: 0500 0201 085065
+   A/N: ZULHEMAWATI
 
-Mohon segera lakukan pembayaran. Hubungi kami jika ada pertanyaan.
+Mohon segera lakukan pembayaran dan konfirmasi via WhatsApp ke:
+📱 Owner: 08126784986
+📱 Admin: 082385813163
 
 ---
 Tim Sempoa SIP TC Pariaman""".replace(",", ".")
@@ -135,10 +179,16 @@ Tim Sempoa SIP TC Pariaman""".replace(",", ".")
             "whatsapp_orang_tua": wa_num,
             "program": s.kategori_program,
             "sisa_pertemuan": sisa,
+            "target_pertemuan": target,
+            "paket_jadwal": s.paket_jadwal or "",
             "status_spp": s.status_spp.value if hasattr(s.status_spp, 'value') else str(s.status_spp),
             "status": status_code,
             "status_label": status_label,
             "color": color,
+            "due_date": due_date_str,
+            "days_remaining": days_remaining,
+            "is_expired_30_hari": is_expired_30_hari,
+            "is_hangus": is_hangus,
             "jadwal_pembayaran_berikutnya": due_date_str,
             "jumlah_tagihan": jumlah_tagihan,
             "wa_draft": wa_urgent if status_code == "urgent" else wa_peringatan,

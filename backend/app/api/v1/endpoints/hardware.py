@@ -5,6 +5,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.websocket import manager
 from app.core.hardware import (
     verify_api_key,
     write_last_tap,
@@ -80,6 +81,16 @@ async def post_absensi(request: Request, db: Session = Depends(get_db)):
         db.commit()
 
         write_last_tap(uid, waktu_str, "REGISTERED", nama=guru.nama)
+
+        manager.broadcast_sync("ABSENSI_UPDATE", {
+            "timestamp": datetime.now().isoformat(),
+            "source": "rfid_hardware",
+            "uid": uid,
+            "nama": guru.nama,
+            "waktu": waktu_str,
+            "status": "HADIR"
+        })
+
         return PlainTextResponse(f"OK|{guru.nama}", status_code=200)
 
     except Exception as e:

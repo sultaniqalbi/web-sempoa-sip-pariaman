@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import SearchIcon from '../assets/icons/search.svg';
+import { SearchIcon } from './SvgIcons';
 
 interface Column<T> {
   header: string | React.ReactNode;
@@ -80,7 +80,9 @@ export function DataTable<T>({
     <div className="space-y-4">
       {searchFilter && (
         <div className="flex items-center gap-2 border border-[#E2E8F0] bg-[#F1F5F9] rounded-xl px-3 w-full max-w-xs focus-within:border-[#FF7043] focus-within:ring-1 focus-within:ring-[#FF7043] transition-colors">
-          <img src={SearchIcon} alt="Search" width="20" height="20" className="opacity-50" />
+          <span className="text-slate-400 shrink-0">
+            <SearchIcon size={16} />
+          </span>
           <input
             type="text"
             value={query}
@@ -101,50 +103,52 @@ export function DataTable<T>({
       )}
 
       <div className="bg-white border border-[#E2E8F0] rounded-2xl overflow-hidden shadow-sm">
-        <table className="w-full text-left border-collapse" aria-label="Tabel Data">
-          <thead>
-            <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-xs text-[#FF7043] uppercase font-extrabold">
-              {columns.map((col, idx) => (
-                <th
-                  key={idx}
-                  onClick={() => handleSort(col.sortKey)}
-                  className={`p-4 ${col.sortKey ? 'cursor-pointer select-none hover:text-[#F4511E]' : ''} ${col.className || ''}`}
-                >
-                  <div className={`flex items-center gap-1.5 ${col.className?.includes('text-right') ? 'justify-end' : ''}`}>
-                    {col.header}
-                    {col.sortKey && (
-                      <span className="text-[10px]" aria-hidden="true">
-                        {sortKey === col.sortKey ? (sortOrder === 'asc' ? '▲' : '▼') : '⇅'}
-                      </span>
-                    )}
-                  </div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#E2E8F0] text-xs text-[#1E293B]">
-            {paginatedData.length > 0 ? (
-              paginatedData.map((row, rowIdx) => (
-                <tr
-                  key={rowIdx}
-                  className="hover:bg-[#F8FAFC] cursor-default bg-white"
-                >
-                  {columns.map((col, colIdx) => (
-                    <td key={colIdx} className={`p-4 ${col.className || ''}`}>
-                      {col.accessor(row)}
-                    </td>
-                  ))}
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={columns.length} className="p-8 text-center text-[#94A3B8] font-medium">
-                  Data tidak ditemukan.
-                </td>
+        <div className="overflow-x-auto w-full">
+          <table className="w-full min-w-[640px] text-left border-collapse" aria-label="Tabel Data">
+            <thead>
+              <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-xs text-[#FF7043] uppercase font-extrabold">
+                {columns.map((col, idx) => (
+                  <th
+                    key={idx}
+                    onClick={() => handleSort(col.sortKey)}
+                    className={`p-3.5 sm:p-4 ${col.sortKey ? 'cursor-pointer select-none hover:text-[#F4511E]' : ''} ${col.className || ''}`}
+                  >
+                    <div className={`flex items-center gap-1.5 ${col.className?.includes('text-right') ? 'justify-end' : ''}`}>
+                      {col.header}
+                      {col.sortKey && (
+                        <span className="text-[10px]" aria-hidden="true">
+                          {sortKey === col.sortKey ? (sortOrder === 'asc' ? '▲' : '▼') : '⇅'}
+                        </span>
+                      )}
+                    </div>
+                  </th>
+                ))}
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-[#E2E8F0] text-xs text-[#1E293B]">
+              {paginatedData.length > 0 ? (
+                paginatedData.map((row, rowIdx) => (
+                  <tr
+                    key={rowIdx}
+                    className="hover:bg-[#F8FAFC] cursor-default bg-white"
+                  >
+                    {columns.map((col, colIdx) => (
+                      <td key={colIdx} className={`p-3.5 sm:p-4 ${col.className || ''}`}>
+                        {col.accessor(row)}
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={columns.length} className="p-8 text-center text-[#94A3B8] font-medium">
+                    Data tidak ditemukan.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Pagination controls */}

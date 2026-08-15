@@ -49,7 +49,7 @@ async def restore_student_quota(
             detail="Data siswa tidak ditemukan"
         )
     
-    siswa.sisa_pertemuan += 8
+    siswa.sisa_pertemuan += siswa.target_pertemuan
     siswa.status_spp = StatusSPP.AKTIF
     db.add(siswa)
 

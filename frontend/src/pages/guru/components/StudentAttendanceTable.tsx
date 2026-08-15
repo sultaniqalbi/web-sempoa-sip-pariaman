@@ -8,7 +8,12 @@ export interface SiswaAbsensi {
   panggilan: string;
   pertemuan_selesai: number;
   total_pertemuan: number;
+  sisa_pertemuan?: number;
   is_disabled: boolean;
+  is_expired?: boolean;
+  is_hangus?: boolean;
+  status_keterangan?: string;
+  due_date?: string;
   foto_profil?: string;
   kelas_sekolah?: string;
   asal_sekolah?: string;
@@ -19,14 +24,16 @@ export interface SiswaAbsensi {
 
 interface StudentAttendanceTableProps {
   students: SiswaAbsensi[];
-  tanggalHariIni?: string;
+  tanggalTerpilih: string;
+  onTanggalChange: (date: string) => void;
   onSave: (attendanceData: { siswa_id: number; status: string }[], catatan?: string) => void;
   isSaving: boolean;
 }
 
 const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
   students,
-  tanggalHariIni,
+  tanggalTerpilih,
+  onTanggalChange,
   onSave,
   isSaving,
 }) => {
@@ -35,7 +42,7 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [catatanText, setCatatanText] = useState('');
 
-  // Pre-fill existing attendance for today if already marked
+  // Pre-fill existing attendance for selected date if already marked
   useEffect(() => {
     const initial: Record<number, string> = {};
     students.forEach((s) => {
@@ -43,9 +50,7 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
         initial[s.id] = s.status_hari_ini;
       }
     });
-    if (Object.keys(initial).length > 0) {
-      setAttendanceState(initial);
-    }
+    setAttendanceState(initial);
   }, [students]);
 
   const handleStatusClick = (siswaId: number, status: string, isDisabled: boolean) => {
@@ -83,17 +88,20 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
 
   return (
     <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-[#E0E0E0] flex flex-col overflow-hidden">
-      {/* Header & Date Badge */}
+      {/* Header & Date Picker */}
       <div className="p-4 sm:p-5 border-b border-[#F5F5F5] flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-sm sm:text-base font-black text-[#1E293B]">Input Absensi Siswa</h2>
-            <span className="px-2.5 py-0.5 bg-[#FFF3E0] text-[#E65100] border border-[#FFE082] rounded-full text-[10px] font-black uppercase">
-              {tanggalHariIni || 'Hari Ini'}
-            </span>
+            <input
+              type="date"
+              value={tanggalTerpilih}
+              onChange={(e) => onTanggalChange(e.target.value)}
+              className="px-2.5 py-1 bg-[#FFF3E0] text-[#E65100] border border-[#FFE082] rounded-full text-xs font-black uppercase focus:outline-none focus:border-[#FF7043]"
+            />
           </div>
-          <p className="text-[11px] text-[#64748B] mt-0.5">
-            Pilih status kehadiran siswa. Rekap disimpan otomatis dan beralih ke sesi berikutnya saat berganti hari.
+          <p className="text-[11px] text-[#64748B] mt-1">
+            Pilih tanggal di atas. Jika hari ini selesai, Anda bisa mengubah ke tanggal lain untuk hari berikutnya.
           </p>
         </div>
 
@@ -128,8 +136,8 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
               <th className="p-3.5 text-[10px] font-bold text-[#64748B] uppercase tracking-wider w-12 text-center">No</th>
               <th className="p-3.5 text-[10px] font-bold text-[#64748B] uppercase tracking-wider min-w-[200px]">Nama Siswa</th>
               <th className="p-3.5 text-[10px] font-bold text-[#64748B] uppercase tracking-wider w-24 text-center">Pertemuan</th>
-              <th className="p-3.5 text-[10px] font-bold text-[#64748B] uppercase tracking-wider min-w-[150px]">Waktu Tap / Absen</th>
-              <th className="p-3.5 text-[10px] font-bold text-[#64748B] uppercase tracking-wider min-w-[220px] text-center">Status Kehadiran</th>
+              <th className="p-3.5 text-[10px] font-bold text-[#64748B] uppercase tracking-wider min-w-[150px]">Tanggal Lengkap</th>
+              <th className="p-3.5 text-[10px] font-bold text-[#64748B] uppercase tracking-wider min-w-[220px] text-center">Status</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#F5F5F5]">
@@ -193,21 +201,32 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
                     <td className="p-3.5 text-center">
                       <span
                         className={`inline-block px-2.5 py-1 rounded-full font-mono text-[11px] font-extrabold border ${
-                          siswa.is_disabled
+                          siswa.is_hangus
+                            ? 'bg-[#FFF1F2] text-[#E11D48] border-[#FECDD3]'
+                            : siswa.is_expired
+                            ? 'bg-[#FFF8E1] text-[#E65100] border-[#FFE082]'
+                            : siswa.is_disabled
                             ? 'bg-[#FFEBEE] text-[#C62828] border-[#FFCDD2]'
                             : 'bg-[#E8F5E9] text-[#2E7D32] border-[#C8E6C9]'
                         }`}
                       >
                         {siswa.pertemuan_selesai} / {siswa.total_pertemuan}
                       </span>
+                      {siswa.is_hangus ? (
+                        <p className="text-[9px] font-extrabold text-[#E11D48] mt-0.5">Lewat 30 Hari (Hangus)</p>
+                      ) : siswa.is_expired ? (
+                        <p className="text-[9px] font-extrabold text-[#E65100] mt-0.5">SPP Expired (30 Hari)</p>
+                      ) : null}
                     </td>
                     <td className="p-3.5">
                       <p className="text-xs font-mono text-[#334155] font-bold">
-                        {siswa.jam_tap_hari_ini || siswa.tanggal_lengkap || '-'}
+                        {siswa.jam_tap_hari_ini && siswa.jam_tap_hari_ini !== '-' 
+                          ? `${siswa.tanggal_lengkap}, ${siswa.jam_tap_hari_ini}` 
+                          : siswa.tanggal_lengkap || '-'}
                       </p>
                       {siswa.status_hari_ini && (
                         <span className="inline-block mt-0.5 text-[9px] font-black uppercase text-[#2E7D32] bg-[#E8F5E9] px-1.5 py-0.5 rounded border border-[#A5D6A7]">
-                          Tercatat Hari Ini
+                          Tercatat
                         </span>
                       )}
                     </td>
@@ -250,15 +269,15 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
         </table>
       </div>
 
-      {/* Footer / Save Button */}
-      <div className="p-4 border-t border-[#F5F5F5] bg-[#FAFAFA] flex items-center justify-between">
-        <p className="text-[11px] text-[#64748B]">
-          Dipilih: <strong className="text-[#1E293B]">{allMarkedCount}</strong> dari {filteredStudents.length} siswa
+      {/* Footer / Save Button (Sticky on mobile for quick saving) */}
+      <div className="p-3 sm:p-4 border-t border-[#E2E8F0] bg-white sm:bg-[#FAFAFA] flex items-center justify-between sticky bottom-0 sm:static z-10 shadow-md sm:shadow-none">
+        <p className="text-xs text-[#64748B]">
+          Dipilih: <strong className="text-[#FF7043] font-black">{allMarkedCount}</strong> / {filteredStudents.length} siswa
         </p>
         <button
           onClick={handleOpenConfirmModal}
           disabled={isSaving || allMarkedCount === 0}
-          className="bg-[#FF7043] hover:bg-[#F4511E] disabled:bg-[#CBD5E1] disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-xl text-[13px] font-bold shadow-sm transition-all active:scale-95 flex items-center gap-2 min-h-[42px]"
+          className="bg-[#FF7043] hover:bg-[#F4511E] disabled:bg-[#CBD5E1] disabled:cursor-not-allowed text-white px-5 sm:px-6 py-2.5 rounded-xl text-xs sm:text-[13px] font-extrabold shadow-md transition-all active:scale-95 flex items-center gap-2 min-h-[44px] cursor-pointer"
         >
           {isSaving ? 'Menyimpan...' : 'Simpan Absensi'}
         </button>
@@ -269,7 +288,7 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
           <div className="bg-white rounded-2xl shadow-xl border border-[#E0E0E0] max-w-md w-full p-6 space-y-4 animate-in fade-in zoom-in duration-150">
             <div className="flex items-center justify-between border-b border-[#F5F5F5] pb-3">
-              <h3 className="text-sm font-black text-[#1E293B]">Catatan Pembelajaran Hari Ini</h3>
+              <h3 className="text-sm font-black text-[#1E293B]">Catatan Pembelajaran {tanggalTerpilih}</h3>
               <button
                 onClick={() => setIsNoteModalOpen(false)}
                 className="text-[#94A3B8] hover:text-[#1E293B] text-sm font-bold"
@@ -355,3 +374,4 @@ const StatusButton: React.FC<StatusButtonProps> = ({
 };
 
 export default StudentAttendanceTable;
+

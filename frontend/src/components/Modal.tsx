@@ -40,21 +40,21 @@ export const Modal: React.FC<ModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
-      className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
+      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto"
     >
       <div
-        className={`bg-white border border-[#E0E0E0] rounded-[16px] p-4 sm:p-6 shadow-xl relative text-[#424242] my-auto max-h-[85vh] flex flex-col ${
+        className={`bg-white border border-[#E0E0E0] rounded-t-2xl sm:rounded-2xl p-4 sm:p-6 shadow-2xl relative text-[#424242] w-full max-h-[92vh] sm:max-h-[85vh] flex flex-col ${
           sizeClasses[size] || sizeClasses.md
         }`}
       >
         {/* Header */}
         <div className="flex justify-between items-center border-b border-[#E0E0E0] pb-3 mb-4 shrink-0">
-          <h3 id="modal-title" className="text-base sm:text-lg font-bold text-[#424242]">
+          <h3 id="modal-title" className="text-base sm:text-lg font-bold text-[#1E293B] truncate pr-2">
             {title}
           </h3>
           <button
             onClick={onClose}
-            className="text-[#757575] hover:text-[#424242] font-bold text-base p-1 rounded focus:outline-none"
+            className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm flex items-center justify-center transition-colors shrink-0 focus:outline-none cursor-pointer"
             aria-label="Tutup dialog"
           >
             ✕

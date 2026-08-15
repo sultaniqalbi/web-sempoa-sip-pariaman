@@ -47,14 +47,14 @@ const KelasPage: React.FC = () => {
   const kelasList = data?.kelas || [];
 
   return (
-    <div className="w-full max-w-xl mx-auto space-y-4 px-1" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="w-full max-w-xl mx-auto space-y-4 px-4 sm:px-1 flex flex-col justify-center items-center" style={{ fontFamily: "'Inter', sans-serif" }}>
       {toastMessage && (
-        <div className="p-3 bg-[#E8F5E9] text-[#2E7D32] border border-[#A5D6A7] rounded-xl text-xs font-bold shadow-sm text-center">
+        <div className="p-3 w-full bg-[#E8F5E9] text-[#2E7D32] border border-[#A5D6A7] rounded-xl text-xs font-bold shadow-sm text-center">
           {toastMessage}
         </div>
       )}
 
-      <div className="flex items-center justify-between px-1">
+      <div className="flex items-center justify-between w-full px-1">
         <div>
           <h2 className="text-base font-black text-[#1E293B]">Kelas Bimbingan</h2>
           <p className="text-[11px] text-[#64748B]">Kelola jadwal & mode bimbingan belajar</p>
@@ -65,11 +65,11 @@ const KelasPage: React.FC = () => {
       </div>
 
       {kelasList.length === 0 ? (
-        <div className="bg-white p-8 rounded-2xl border border-[#E0E0E0] text-center shadow-xs">
+        <div className="w-full bg-white p-8 rounded-2xl border border-[#E0E0E0] text-center shadow-xs">
           <p className="text-xs text-[#94A3B8] font-medium">Belum ada kelas yang ditugaskan.</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="w-full space-y-4">
           {kelasList.map((kelas: any, idx: number) => {
             const isOnline = (kelas.mode_kelas || 'OFFLINE').toUpperCase() === 'ONLINE';
 

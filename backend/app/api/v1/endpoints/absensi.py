@@ -7,6 +7,7 @@ from sqlalchemy import func
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user, RoleChecker
+from app.core.websocket import manager
 from app.models.users import User, UserRole
 from app.models.guru import Guru
 from app.models.siswa import Siswa, StatusSPP
@@ -179,18 +180,33 @@ async def bulk_absensi_siswa(
             siswa.status_spp = StatusSPP.EXPIRED
             current_month = now.strftime("%Y-%m")
             due_date = now.date() + timedelta(days=7)
-            billing = PembayaranPeriode(
-                id_siswa=siswa.id,
-                periode_bulan=current_month,
-                jumlah=150000.00,
-                status=StatusPembayaran.MENUNGGAK,
-                due_date=due_date
-            )
-            db.add(billing)
+            existing_bill = db.query(PembayaranPeriode).filter(
+                PembayaranPeriode.id_siswa == siswa.id,
+                PembayaranPeriode.periode_bulan == current_month
+            ).first()
+            if not existing_bill:
+                billing = PembayaranPeriode(
+                    id_siswa=siswa.id,
+                    periode_bulan=current_month,
+                    jumlah=150000.00,
+                    status=StatusPembayaran.MENUNGGAK,
+                    due_date=due_date
+                )
+                db.add(billing)
+        elif siswa.sisa_pertemuan > 0 and siswa.status_spp == StatusSPP.EXPIRED:
+            siswa.status_spp = StatusSPP.AKTIF
 
         processed += 1
 
     db.commit()
+
+    manager.broadcast_sync("ABSENSI_UPDATE", {
+        "timestamp": datetime.now().isoformat(),
+        "source": "bulk_absensi",
+        "tanggal": now.strftime("%Y-%m-%d"),
+        "processed_count": processed
+    })
+
     return {"status": "success", "processed_count": processed}
 
 @router.post("/", response_model=AbsensiResponse, status_code=status.HTTP_201_CREATED)
@@ -216,6 +232,14 @@ async def create_new_absensi_log(
             )
             db.add(billing)
         db.commit()
+
+    manager.broadcast_sync("ABSENSI_UPDATE", {
+        "timestamp": datetime.now().isoformat(),
+        "source": "create_absensi",
+        "uid": absensi_in.uid,
+        "status": absensi_in.status.value if hasattr(absensi_in.status, 'value') else str(absensi_in.status),
+        "siswa_id": siswa.id if siswa else None
+    })
 
     return log
 

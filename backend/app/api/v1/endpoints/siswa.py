@@ -1,6 +1,6 @@
 import os
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 import io
 import uuid
@@ -24,6 +24,18 @@ class ResetPasswordResponse(BaseModel):
     status: str
     email: str
     new_password_plaintext: str
+
+def get_spp_nominal(program: Optional[str]) -> float:
+    prog = (program or "").lower()
+    if "sempoa" in prog:
+        return 350000.00
+    return 200000.00
+
+def calculate_age_from_dob(dob) -> Optional[int]:
+    if not dob:
+        return None
+    today = datetime.utcnow().date()
+    return today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
 
 @router.get("/", response_model=List[SiswaResponse])
 async def read_siswa_list(
@@ -82,20 +94,28 @@ async def create_new_siswa(
     hashed_password = get_password_hash(plain_password)
     normalized_wa = normalize_whatsapp_number(siswa_in.whatsapp_orang_tua or "")
 
+    # Hitung umur otomatis jika kosong
+    calculated_umur = siswa_in.umur
+    if calculated_umur is None and siswa_in.tanggal_lahir:
+        calculated_umur = calculate_age_from_dob(siswa_in.tanggal_lahir)
+
+    # Tentukan SPP dan Target Pertemuan
+    nominal_spp = get_spp_nominal(siswa_in.kategori_program)
+
     # Execute DB Transaction
     try:
         new_siswa = Siswa(
             uid=siswa_in.uid,
             nama=siswa_in.nama,
             nama_panggilan=siswa_in.nama_panggilan,
-            umur=siswa_in.umur,
+            umur=calculated_umur,
             kelas_sekolah=siswa_in.kelas_sekolah,
             kategori_program=siswa_in.kategori_program,
             paket_jadwal=siswa_in.paket_jadwal,
             hari_masuk=siswa_in.hari_masuk,
             id_guru=siswa_in.id_guru,
             target_pertemuan=siswa_in.target_pertemuan or 8,
-            sisa_pertemuan=8, # default 8 for new student
+            sisa_pertemuan=siswa_in.target_pertemuan or 8,
             status_spp=StatusSPP.AKTIF,
             nama_orang_tua=siswa_in.nama_orang_tua,
             whatsapp_orang_tua=normalized_wa,
@@ -109,13 +129,15 @@ async def create_new_siswa(
         db.add(new_siswa)
         db.flush() # get new_siswa.id
 
-        # Initial payment record (status LUNAS)
+        # Initial payment record (status LUNAS, siklus 30 hari)
         periode_now = datetime.utcnow().strftime("%Y-%m")
+        due_date_30_days = (datetime.utcnow() + timedelta(days=30)).date()
         pembayaran_awal = PembayaranPeriode(
             id_siswa=new_siswa.id,
             periode_bulan=periode_now,
-            jumlah=150000.00,
-            status=StatusPembayaran.LUNAS
+            jumlah=nominal_spp,
+            status=StatusPembayaran.LUNAS,
+            due_date=due_date_30_days
         )
         db.add(pembayaran_awal)
 

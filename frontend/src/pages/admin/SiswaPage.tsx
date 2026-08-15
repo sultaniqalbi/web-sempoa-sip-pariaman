@@ -1,6 +1,22 @@
 import React, { useState } from 'react';
 import { useGetSiswaList, useCreateSiswa, useDeleteSiswa } from '../../features/api/queries';
 
+const PROGRAM_CONFIG: Record<string, { label: string; target: number; spp: number }[]> = {
+  "Sempoa SIP": [
+    { label: "Paket 1: 8 Pertemuan, 90 Menit", target: 8, spp: 350000 },
+    { label: "Paket 2: 12 Pertemuan, 60 Menit", target: 12, spp: 350000 }
+  ],
+  "Fonem": [
+    { label: "Paket Reguler: 12 Pertemuan, 60 Menit", target: 12, spp: 200000 }
+  ],
+  "Bahasa Inggris": [
+    { label: "Paket Reguler: 2 Pertemuan, 90 Menit", target: 2, spp: 200000 }
+  ],
+  "Tahfidz": [
+    { label: "Paket Reguler: 12 Pertemuan, 60 Menit", target: 12, spp: 200000 }
+  ]
+};
+
 export const SiswaPage: React.FC = () => {
   const { data: siswaList, isLoading } = useGetSiswaList();
   const createSiswaMutation = useCreateSiswa();
@@ -10,18 +26,31 @@ export const SiswaPage: React.FC = () => {
   const [uid, setUid] = useState('');
   const [nama, setNama] = useState('');
   const [kategori, setKategori] = useState('Sempoa SIP');
+  const [paket, setPaket] = useState(PROGRAM_CONFIG["Sempoa SIP"][0].label);
   const [hari, setHari] = useState('Senin, Kamis');
+
+  // Handle auto-update of paket when kategori changes
+  const handleKategoriChange = (newKategori: string) => {
+    setKategori(newKategori);
+    const configList = PROGRAM_CONFIG[newKategori] || [{ label: "Standard 8x", target: 8 }];
+    setPaket(configList[0].label);
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const configList = PROGRAM_CONFIG[kategori] || [{ label: "Standard 8x", target: 8 }];
+      const selectedPaket = configList.find((p) => p.label === paket) || configList[0];
+      const target = selectedPaket.target;
+
       await createSiswaMutation.mutateAsync({
         uid,
         nama,
         kategori_program: kategori,
+        paket_jadwal: paket,
         hari_masuk: hari,
-        target_pertemuan: 8,
-        sisa_pertemuan: 8,
+        target_pertemuan: target,
+        sisa_pertemuan: target,
         status_spp: 'AKTIF',
         bio: '',
         foto_profil: ''
@@ -71,7 +100,7 @@ export const SiswaPage: React.FC = () => {
               <tr className="border-b border-slate-700 bg-slate-900/40 text-xs text-slate-450 uppercase font-bold">
                 <th className="p-4">Kode Siswa</th>
                 <th className="p-4">Nama Siswa</th>
-                <th className="p-4">Program Studi</th>
+                <th className="p-4">Program & Paket</th>
                 <th className="p-4">Hari Masuk</th>
                 <th className="p-4">Sisa Pertemuan</th>
                 <th className="p-4">Status SPP</th>
@@ -84,7 +113,10 @@ export const SiswaPage: React.FC = () => {
                   <tr key={siswa.id} className="hover:bg-slate-750/30">
                     <td className="p-4 font-mono text-amber-500">{siswa.uid}</td>
                     <td className="p-4 font-semibold text-white">{siswa.nama}</td>
-                    <td className="p-4 text-slate-300">{siswa.kategori_program}</td>
+                    <td className="p-4">
+                      <div className="text-slate-300 font-bold">{siswa.kategori_program}</div>
+                      <div className="text-slate-500 mt-0.5 text-[10px] uppercase">{siswa.paket_jadwal || 'Standard'}</div>
+                    </td>
                     <td className="p-4 text-slate-350">{siswa.hari_masuk}</td>
                     <td className="p-4 font-bold text-white">{siswa.sisa_pertemuan} / {siswa.target_pertemuan}</td>
                     <td className="p-4">
@@ -133,19 +165,29 @@ export const SiswaPage: React.FC = () => {
                   required
                 />
               </div>
+              <div>
+                <label className="block text-slate-400 font-bold uppercase tracking-wider mb-2">Program Studi</label>
+                <select
+                  value={kategori}
+                  onChange={(e) => handleKategoriChange(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 rounded-xl px-4 py-2 text-white mb-4"
+                >
+                  {Object.keys(PROGRAM_CONFIG).map(prog => (
+                    <option key={prog} value={prog}>{prog}</option>
+                  ))}
+                </select>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-slate-400 font-bold uppercase tracking-wider mb-2">Program Studi</label>
+                  <label className="block text-slate-400 font-bold uppercase tracking-wider mb-2">Paket & Durasi</label>
                   <select
-                    value={kategori}
-                    onChange={(e) => setKategori(e.target.value)}
+                    value={paket}
+                    onChange={(e) => setPaket(e.target.value)}
                     className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 rounded-xl px-4 py-2 text-white"
                   >
-                    <option value="Sempoa SIP">Sempoa SIP</option>
-                    <option value="English Course">English Course</option>
-                    <option value="Fonem">Fonem</option>
-                    <option value="Tahfidz Anak">Tahfidz Anak</option>
-                    <option value="Bimbel TK / SD">Bimbel TK / SD</option>
+                    {(PROGRAM_CONFIG[kategori] || PROGRAM_CONFIG["Bimbel TK / SD"]).map(p => (
+                      <option key={p.label} value={p.label}>{p.label}</option>
+                    ))}
                   </select>
                 </div>
                 <div>

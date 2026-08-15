@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import useAuth from '../../features/auth/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
@@ -6,6 +6,8 @@ import { Siswa, AbsensiLog, PembayaranPeriode } from '../../types';
 
 export const OrtuDashboardPage: React.FC = () => {
   const { user } = useAuth();
+  const [isModalDismissed, setIsModalDismissed] = useState(false);
+  const [copiedBank, setCopiedBank] = useState<string | null>(null);
 
   // Fetch the parent's child profile
   const { data: child, isLoading } = useQuery<Siswa>({
@@ -87,12 +89,21 @@ export const OrtuDashboardPage: React.FC = () => {
   const totalAbsensi = absensiLogs?.length || 0;
   const attendanceRate = totalAbsensi > 0 ? Math.round((hadirCount / totalAbsensi) * 100) : 0;
 
-  const sppStatus =
-    sisaPertemuan / totalPertemuan > 0.4
-      ? 'Lancar'
-      : sisaPertemuan / totalPertemuan > 0.2
-      ? 'Peringatan'
-      : 'Urgent';
+  const isSempoa = (child.kategori_program || '').toLowerCase().includes('sempoa');
+  const sppAmount = isSempoa ? 350000 : 200000;
+  const sisaRatio = totalPertemuan > 0 ? sisaPertemuan / totalPertemuan : 1;
+
+  // Cek siklus 30 hari
+  const regDate = child.created_at ? new Date(child.created_at) : new Date();
+  const cycleDueDate = new Date(regDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const isExpired30Hari = new Date() > cycleDueDate;
+  const isHangus = isExpired30Hari && sisaPertemuan > 0;
+
+  const sppStatus = (isExpired30Hari || sisaRatio < 0.20)
+    ? 'Urgent'
+    : sisaRatio <= 0.40
+    ? 'Peringatan'
+    : 'Lancar';
 
   const statusBadgeColors = {
     Lancar: { text: '#2E7D32', bg: '#E8F5E9', border: '#A5D6A7' },
@@ -100,8 +111,31 @@ export const OrtuDashboardPage: React.FC = () => {
     Urgent: { text: '#C62828', bg: '#FFEBEE', border: '#FFCDD2' },
   };
 
-  const adminWa = '628126784986';
+  const adminWa = '6282385813163';
   const ownerWa = '628126784986';
+
+  const bankAccounts = [
+    {
+      id: 'bri',
+      namaBank: 'Bank BRI',
+      noRekening: '0321 0100 2859536',
+      rawRekening: '032101002859536',
+      atasNama: 'ZULHEMAWATI',
+    },
+    {
+      id: 'bpd',
+      namaBank: 'Bank BPD (Bank Nagari)',
+      noRekening: '0500 0201 085065',
+      rawRekening: '05000201085065',
+      atasNama: 'ZULHEMAWATI',
+    }
+  ];
+
+  const copyToClipboard = (rawNum: string, bankId: string) => {
+    navigator.clipboard.writeText(rawNum);
+    setCopiedBank(bankId);
+    setTimeout(() => setCopiedBank(null), 3000);
+  };
 
   return (
     <div className="space-y-4" style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -348,6 +382,156 @@ export const OrtuDashboardPage: React.FC = () => {
           </div>
         </div>
       </DashboardCard>
+
+      {/* ────────────── AUTO POPUP MODAL PENGINGAT SPP (KUNING & MERAH) ────────────── */}
+      {!isModalDismissed && (sppStatus === 'Peringatan' || sppStatus === 'Urgent') && (
+        <div className="fixed inset-0 bg-black/65 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-[#E0E0E0] overflow-hidden animate-in fade-in zoom-in duration-200">
+            {/* Modal Header */}
+            {sppStatus === 'Peringatan' ? (
+              <div className="bg-gradient-to-r from-[#FFF8E1] via-[#FFF3E0] to-[#FFE082] p-5 border-b border-[#FFE082]">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-[#FF9800] text-white flex items-center justify-center flex-shrink-0 shadow-md font-bold text-xl">
+                    🔔
+                  </div>
+                  <div>
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-[#FFF3E0] text-[#E65100] border border-[#FFCC80]">
+                      Status: Persiapan SPP
+                    </span>
+                    <h3 className="text-base font-extrabold text-[#E65100] mt-0.5">
+                      Pengingat Persiapan Pembayaran SPP
+                    </h3>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-gradient-to-r from-[#FFEBEE] via-[#FFCDD2] to-[#EF9A9A] p-5 border-b border-[#EF9A9A]">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-[#D32F2F] text-white flex items-center justify-center flex-shrink-0 shadow-md font-bold text-xl">
+                    ⚠️
+                  </div>
+                  <div>
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-[#FFEBEE] text-[#C62828] border border-[#FFCDD2]">
+                      Status: Tagihan Mendesak
+                    </span>
+                    <h3 className="text-base font-extrabold text-[#C62828] mt-0.5">
+                      Pemberitahuan Tagihan SPP
+                    </h3>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-4 text-xs">
+              {/* Student info box */}
+              <div className="p-3.5 bg-[#F8FAFC] rounded-2xl border border-[#E2E8F0] flex items-center justify-between">
+                <div>
+                  <p className="font-bold text-[#1E293B] text-sm">{child.nama}</p>
+                  <p className="text-[11px] text-[#64748B]">{child.kategori_program} {child.paket_jadwal ? `• ${child.paket_jadwal}` : ''}</p>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] text-[#64748B] font-medium">Sisa Pertemuan:</span>
+                  <p className={`text-[13px] font-mono font-extrabold ${sppStatus === 'Urgent' ? 'text-[#D32F2F]' : 'text-[#E65100]'}`}>
+                    {sisaPertemuan} / {totalPertemuan} Sesi
+                  </p>
+                </div>
+              </div>
+
+              {/* Message */}
+              {sppStatus === 'Peringatan' ? (
+                <div className="space-y-3">
+                  <p className="text-[#334155] leading-relaxed">
+                    Halo Ayah/Bunda dari <strong>{child.nama}</strong>, kami menginformasikan bahwa sisa kuota bimbingan ananda saat ini tersisa <strong>{sisaPertemuan} pertemuan ({Math.round(sisaRatio * 100)}%)</strong>. Mohon bersiap untuk melakukan pembayaran SPP periode berikutnya.
+                  </p>
+
+                  {/* Cara bayar ditutup sesuai instruksi */}
+                  <div className="p-3.5 bg-[#FFFDE7] border border-[#FFF59D] rounded-2xl text-[#78350F] flex items-start gap-2.5">
+                    <span className="text-base">🔒</span>
+                    <p className="text-[11px] leading-relaxed font-medium">
+                      <strong>Metode & Cara Pembayaran Belum Dibuka:</strong> Tata cara dan nomor rekening resmi pembayaran akan ditampilkan otomatis saat kuota berada di bawah 20% atau siklus 30 hari jatuh tempo.
+                    </p>
+                  </div>
+
+                  <div className="pt-2">
+                    <button
+                      onClick={() => setIsModalDismissed(true)}
+                      className="w-full py-3 bg-[#FF9800] hover:bg-[#F57C00] text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-[0.99] cursor-pointer"
+                    >
+                      Saya Mengerti & Bersiap
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3.5">
+                  <div className="p-3 bg-[#FFEBEE] border border-[#FFCDD2] rounded-xl text-[#C62828] text-[11px] font-medium leading-relaxed">
+                    {isHangus
+                      ? '⚠️ Masa bimbingan 30 hari ananda telah berakhir. Sisa pertemuan dinyatakan hangus. Mohon segera melunasi SPP agar ananda dapat kembali aktif bimbingan.'
+                      : isExpired30Hari
+                      ? '⚠️ Masa bimbingan 30 hari ananda telah berakhir. Mohon segera melunasi SPP agar ananda dapat melanjutkan sesi belajar.'
+                      : `⚠️ Sisa kuota bimbingan Ananda ${child.nama} hampir habis (tinggal ${sisaPertemuan} sesi / < 20%). Mohon segera lakukan pembayaran SPP.`}
+                  </div>
+
+                  <div className="flex items-center justify-between px-3 py-2 bg-[#F1F8E9] rounded-xl border border-[#C8E6C9]">
+                    <span className="text-[11px] font-bold text-[#2E7D32]">Nominal SPP ({child.kategori_program}):</span>
+                    <span className="text-sm font-extrabold text-[#1E293B]">Rp {sppAmount.toLocaleString('id-ID')}</span>
+                  </div>
+
+                  {/* Rekening Resmi ZULHEMAWATI */}
+                  <div className="space-y-2 pt-1">
+                    <p className="font-extrabold text-[#1E293B] text-[11px]">Rekening Resmi Pembayaran:</p>
+                    {bankAccounts.map((b) => (
+                      <div key={b.id} className="p-3 bg-white rounded-xl border border-[#FFE082] shadow-2xs flex items-center justify-between">
+                        <div>
+                          <p className="font-extrabold text-[#E65100] text-[11px]">{b.namaBank}</p>
+                          <p className="font-mono font-black text-[#1E293B] text-[13px] tracking-wider">{b.noRekening}</p>
+                          <p className="text-[10px] text-[#64748B]">a.n <strong className="text-[#1E293B]">{b.atasNama}</strong></p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => copyToClipboard(b.rawRekening, b.id)}
+                          className="px-3 py-1.5 bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#E65100] border border-[#FFCC80] rounded-lg text-[10px] font-extrabold transition-all active:scale-95 cursor-pointer shadow-2xs"
+                        >
+                          {copiedBank === b.id ? '✓ Tersalin' : 'Salin Rek'}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
+                    <a
+                      href={`https://wa.me/${ownerWa}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center justify-center gap-2 py-2.5 bg-[#25D366] hover:bg-[#1EBE5D] text-white font-extrabold text-[11px] rounded-xl shadow-md transition-all active:scale-[0.98]"
+                    >
+                      <span>Konfirmasi Owner</span>
+                    </a>
+                    <a
+                      href={`https://wa.me/${adminWa}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center justify-center gap-2 py-2.5 bg-[#1976D2] hover:bg-[#1565C0] text-white font-extrabold text-[11px] rounded-xl shadow-md transition-all active:scale-[0.98]"
+                    >
+                      <span>Bantuan Admin</span>
+                    </a>
+                  </div>
+
+                  <div className="pt-1 text-center">
+                    <button
+                      onClick={() => setIsModalDismissed(true)}
+                      className="text-[11px] font-bold text-[#64748B] hover:text-[#1E293B] py-1 cursor-pointer"
+                    >
+                      Tutup Pengingat
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -35,7 +35,7 @@ const GuruDashboardPage: React.FC = () => {
     );
   }
 
-  const adminWa = '628126784986';
+  const adminWa = '6282385813163';
   const ownerWa = '628126784986';
 
   const quickTiles = [

@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { AuthProvider } from './features/auth/AuthContext';
+import { RealtimeProvider } from './features/realtime/RealtimeContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -43,7 +44,8 @@ import PembayaranOrtuPage from './pages/ortu/PembayaranOrtuPage';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: false,
+      refetchOnWindowFocus: true,
+      staleTime: 3000,
       retry: 1,
     },
   },
@@ -53,9 +55,10 @@ export function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <AuthProvider>
-            <Routes>
+        <RealtimeProvider>
+          <BrowserRouter>
+            <AuthProvider>
+              <Routes>
               {/* Public Routes (Auto-Redirect ke Portal jika sudah Login) */}
               <Route path="/" element={<PublicRoute><HomePage /></PublicRoute>} />
               <Route path="/programs" element={<PublicRoute><ProgramsPage /></PublicRoute>} />
@@ -138,6 +141,7 @@ export function App() {
             </Routes>
           </AuthProvider>
         </BrowserRouter>
+        </RealtimeProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );

@@ -1,5 +1,5 @@
 from typing import List, Dict, Any, Optional
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_
@@ -7,12 +7,14 @@ from pydantic import BaseModel
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user, RoleChecker
+from app.core.websocket import manager
 from app.models.users import User, UserRole
 from app.models.guru import Guru
 from app.models.siswa import Siswa, StatusSPP
 from app.models.absensi_log import AbsensiLog, StatusAbsensi, ModeAbsensi
 from app.models.jadwal import Jadwal
 from app.models.catatan_pembelajaran import CatatanPembelajaran
+from app.models.pembayaran_periode import PembayaranPeriode, StatusPembayaran
 
 router = APIRouter()
 teacher_only = RoleChecker([UserRole.guru])
@@ -164,6 +166,13 @@ async def update_mode_kelas(
     db.commit()
     db.refresh(guru)
 
+    manager.broadcast_sync("MODE_KELAS_UPDATE", {
+        "guru_id": guru.id,
+        "guru_nama": guru.nama,
+        "program": guru.kategori_program or "Sempoa SIP",
+        "mode_kelas": guru.mode_kelas
+    })
+
     return {"status": "success", "mode_kelas": guru.mode_kelas}
 
 @router.get("/kelas-bimbingan")
@@ -227,6 +236,7 @@ async def get_absensi_list(
 
 @router.get("/siswa-absensi")
 async def get_siswa_absensi(
+    tanggal: Optional[str] = Query(None, description="Format YYYY-MM-DD"),
     db: Session = Depends(get_db),
     current_user: User = Depends(teacher_only)
 ):
@@ -242,8 +252,15 @@ async def get_siswa_absensi(
         Siswa.is_deleted == False
     ).order_by(Siswa.nama).all()
 
-    today = datetime.now().date()
-    now_str = datetime.now().strftime("%d %b %Y, %H:%M WIB")
+    if tanggal:
+        try:
+            target_date = datetime.strptime(tanggal, "%Y-%m-%d").date()
+        except ValueError:
+            target_date = datetime.now().date()
+    else:
+        target_date = datetime.now().date()
+        
+    now_str = target_date.strftime("%d %b %Y")
     
     # Query today's logs for these students
     uids = [s.uid for s in students]
@@ -251,7 +268,7 @@ async def get_siswa_absensi(
     if uids:
         today_logs = db.query(AbsensiLog).filter(
             AbsensiLog.uid.in_(uids),
-            func.date(AbsensiLog.waktu) == today
+            func.date(AbsensiLog.waktu) == target_date
         ).order_by(AbsensiLog.waktu.desc()).all()
         for l in today_logs:
             if l.uid not in logs_map:
@@ -264,8 +281,38 @@ async def get_siswa_absensi(
     result = []
     for i, s in enumerate(students, 1):
         panggilan = s.nama_panggilan if s.nama_panggilan else (s.nama.split()[0] if s.nama else "")
-        pertemuan_selesai = s.target_pertemuan - s.sisa_pertemuan
+        
+        # Cek siklus 30 hari
+        last_lunas = db.query(PembayaranPeriode).filter(
+            PembayaranPeriode.id_siswa == s.id,
+            PembayaranPeriode.status == StatusPembayaran.LUNAS
+        ).order_by(PembayaranPeriode.created_at.desc()).first()
+
+        if last_lunas and last_lunas.due_date:
+            due_date = last_lunas.due_date
+        elif last_lunas and last_lunas.created_at:
+            due_date = last_lunas.created_at.date() + timedelta(days=30)
+        elif s.created_at:
+            due_date = s.created_at.date() + timedelta(days=30)
+        else:
+            due_date = target_date + timedelta(days=30)
+
+        is_expired = target_date > due_date
+        is_hangus = is_expired and s.sisa_pertemuan > 0
+        is_disabled = s.sisa_pertemuan <= 0 or is_expired
+        
+        # Jika expired, tampilkan pertemuan selesai penuh
+        pertemuan_selesai = s.target_pertemuan if is_expired else (s.target_pertemuan - s.sisa_pertemuan)
         today_log = logs_map.get(s.uid)
+        
+        status_keterangan = "Normal"
+        if is_hangus:
+            status_keterangan = "Lewat 30 Hari (Sisa Pertemuan Hangus)"
+        elif is_expired:
+            status_keterangan = "Masa Aktif 30 Hari Habis (SPP Expired)"
+        elif s.sisa_pertemuan <= 0:
+            status_keterangan = "Kuota Pertemuan Habis"
+
         result.append({
             "no": i,
             "id": s.id,
@@ -274,7 +321,12 @@ async def get_siswa_absensi(
             "panggilan": panggilan,
             "pertemuan_selesai": pertemuan_selesai,
             "total_pertemuan": s.target_pertemuan,
-            "is_disabled": s.sisa_pertemuan <= 0,
+            "sisa_pertemuan": s.sisa_pertemuan,
+            "is_disabled": is_disabled,
+            "is_expired": is_expired,
+            "is_hangus": is_hangus,
+            "status_keterangan": status_keterangan,
+            "due_date": str(due_date),
             "foto_profil": s.foto_profil,
             "kelas_sekolah": s.kelas_sekolah,
             "asal_sekolah": s.asal_sekolah,
@@ -284,7 +336,7 @@ async def get_siswa_absensi(
         })
         
     return {
-        "tanggal_hari_ini": datetime.now().strftime("%A, %d %B %Y"),
+        "tanggal_hari_ini": target_date.strftime("%A, %d %B %Y"),
         "siswa": result
     }
 
@@ -322,6 +374,7 @@ async def save_siswa_absensi(
             pass
 
     saved_count = 0
+    updated_students_data = []
 
     for item in data.siswa_absensi:
         siswa = db.query(Siswa).filter(
@@ -334,12 +387,9 @@ async def save_siswa_absensi(
         ).first()
         if not siswa:
             continue
-            
-        if siswa.sisa_pertemuan <= 0:
-            continue
-            
+
         status_enum = status_map.get(item.status.lower(), StatusAbsensi.HADIR)
-        
+
         # Check if already marked on this date to update rather than duplicate
         existing_log = db.query(AbsensiLog).filter(
             AbsensiLog.uid == siswa.uid,
@@ -351,11 +401,18 @@ async def save_siswa_absensi(
             existing_log.status = status_enum
             existing_log.waktu = now
 
+            # If changed from IZIN to HADIR or ALFA: deduct remaining sessions
             if prev_status == StatusAbsensi.IZIN and status_enum in [StatusAbsensi.HADIR, StatusAbsensi.ALFA]:
                 siswa.sisa_pertemuan = max(0, siswa.sisa_pertemuan - 1)
+            # If changed from HADIR or ALFA to IZIN: restore 1 session
             elif prev_status in [StatusAbsensi.HADIR, StatusAbsensi.ALFA] and status_enum == StatusAbsensi.IZIN:
                 siswa.sisa_pertemuan = min(siswa.target_pertemuan, siswa.sisa_pertemuan + 1)
+            # If changed between HADIR <-> ALFA: both count as 1 session used, so sisa_pertemuan remains unchanged!
         else:
+            # Student has no sessions left and no log exists today: skip unless marked IZIN
+            if siswa.sisa_pertemuan <= 0 and status_enum in [StatusAbsensi.HADIR, StatusAbsensi.ALFA]:
+                continue
+
             log = AbsensiLog(
                 uid=siswa.uid,
                 waktu=now,
@@ -366,22 +423,42 @@ async def save_siswa_absensi(
             if status_enum in [StatusAbsensi.HADIR, StatusAbsensi.ALFA]:
                 siswa.sisa_pertemuan = max(0, siswa.sisa_pertemuan - 1)
 
+        # Update SPP status based on remaining meetings
         if siswa.sisa_pertemuan == 0 and siswa.status_spp != StatusSPP.EXPIRED:
             siswa.status_spp = StatusSPP.EXPIRED
             current_month = now.strftime("%Y-%m")
             due_date = now.date() + timedelta(days=7)
-            billing = PembayaranPeriode(
-                id_siswa=siswa.id,
-                periode_bulan=current_month,
-                jumlah=150000.00,
-                status=StatusPembayaran.MENUNGGAK,
-                due_date=due_date
-            )
-            db.add(billing)
+            existing_bill = db.query(PembayaranPeriode).filter(
+                PembayaranPeriode.id_siswa == siswa.id,
+                PembayaranPeriode.periode_bulan == current_month
+            ).first()
+            if not existing_bill:
+                billing = PembayaranPeriode(
+                    id_siswa=siswa.id,
+                    periode_bulan=current_month,
+                    jumlah=150000.00,
+                    status=StatusPembayaran.MENUNGGAK,
+                    due_date=due_date
+                )
+                db.add(billing)
+        elif siswa.sisa_pertemuan > 0 and siswa.status_spp == StatusSPP.EXPIRED:
+            siswa.status_spp = StatusSPP.AKTIF
 
         saved_count += 1
+        updated_students_data.append({
+            "siswa_id": siswa.id,
+            "uid": siswa.uid,
+            "nama": siswa.nama,
+            "status": status_enum.value,
+            "sisa_pertemuan": siswa.sisa_pertemuan,
+            "target_pertemuan": siswa.target_pertemuan,
+            "status_spp": siswa.status_spp.value if hasattr(siswa.status_spp, 'value') else str(siswa.status_spp),
+            "waktu": now.strftime("%H:%M WIB"),
+            "tanggal": now.strftime("%Y-%m-%d")
+        })
 
     # Save catatan pembelajaran if provided
+    catatan_saved = None
     if data.catatan_pembelajaran and data.catatan_pembelajaran.strip():
         catatan_entry = CatatanPembelajaran(
             id_guru=guru.id,
@@ -390,9 +467,32 @@ async def save_siswa_absensi(
             catatan=data.catatan_pembelajaran.strip()
         )
         db.add(catatan_entry)
-        
+        catatan_saved = data.catatan_pembelajaran.strip()
+
     db.commit()
-    
+
+    # Realtime broadcast to all connected portals (Ortu, Admin, Owner, Guru)
+    manager.broadcast_sync("ABSENSI_UPDATE", {
+        "timestamp": datetime.now().isoformat(),
+        "guru_id": guru.id,
+        "guru_nama": guru.nama,
+        "program": guru.kategori_program or "Sempoa SIP",
+        "tanggal": now.strftime("%Y-%m-%d"),
+        "tanggal_formatted": now.strftime("%A, %d %B %Y"),
+        "catatan": catatan_saved,
+        "updated_students": updated_students_data
+    })
+
+    if catatan_saved:
+        manager.broadcast_sync("CATATAN_UPDATE", {
+            "guru_id": guru.id,
+            "guru_nama": guru.nama,
+            "program": guru.kategori_program or "Sempoa SIP",
+            "tanggal": now.strftime("%d %B %Y"),
+            "catatan": catatan_saved,
+            "waktu": now.strftime("%H:%M WIB")
+        })
+
     return {
         "status": "success",
         "message": f"Berhasil menyimpan absensi untuk {saved_count} siswa"

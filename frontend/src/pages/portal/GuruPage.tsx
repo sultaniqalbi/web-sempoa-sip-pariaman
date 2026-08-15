@@ -6,6 +6,7 @@ import Modal from '../../components/Modal';
 import PageHeader from '../../components/PageHeader';
 import EmptyState from '../../components/EmptyState';
 import DayPicker from '../../components/DayPicker';
+import { PhotoModal } from '../../components/PhotoModal';
 import { PengajarIcon, TrashIcon } from '../../components/SvgIcons';
 
 interface Guru {
@@ -19,6 +20,7 @@ interface Guru {
   asal_sekolah?: string;
   kategori_program: string;
   hari_wajib: string;
+  mode_kelas?: string;
   target_kehadiran?: number;
   whatsapp_guru?: string;
   alamat?: string;
@@ -38,6 +40,7 @@ export const GuruPage: React.FC = () => {
   const [isCredentialModalOpen, setIsCredentialModalOpen] = useState(false);
   const [isWAFallbackModalOpen, setIsWAFallbackModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [photoModalData, setPhotoModalData] = useState<{ url: string; name: string; subtitle: string } | null>(null);
 
   const [createdCredential, setCreatedCredential] = useState<{ email: string; pwd: string; wa?: string; name: string } | null>(null);
   const [waFallbackData, setWAFallbackData] = useState<{ message: string; number: string } | null>(null);
@@ -308,35 +311,50 @@ export const GuruPage: React.FC = () => {
 
   const columns = [
     {
-      header: 'UID RFID',
+      header: 'Foto Guru',
       accessor: (row: Guru) => {
         const photoSrc = row.foto_profil
-          ? row.foto_profil.startsWith('http')
-            ? row.foto_profil
-            : (import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1').replace('/api/v1', '') + row.foto_profil
+          ? (import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1').replace('/api/v1', '') + row.foto_profil
           : null;
-
         return (
-          <div className="flex items-center gap-3">
+          <div
+            onClick={() => {
+              if (photoSrc) {
+                setPhotoModalData({
+                  url: photoSrc,
+                  name: `${row.nama} (${row.uid})`,
+                  subtitle: `${row.kategori_program} • ${row.asal_sekolah || '-'}`
+                });
+              }
+            }}
+            className={`w-10 h-10 rounded-xl overflow-hidden border border-[#E2E8F0] shadow-xs flex items-center justify-center ${photoSrc ? 'cursor-pointer hover:ring-2 hover:ring-[#FF7043] transition-all hover:scale-105' : 'bg-[#F1F5F9]'}`}
+            title={photoSrc ? "Klik untuk melihat & download foto 1:1" : "Tidak ada foto"}
+          >
             {photoSrc ? (
               <img
                 src={photoSrc}
-                alt="Foto"
-                className="w-9 h-12 object-cover rounded shadow-sm border border-[#E2E8F0] bg-white"
+                alt={row.nama}
+                className="w-full h-full object-cover"
                 onError={(e) => {
                   (e.target as HTMLElement).style.display = 'none';
                 }}
               />
             ) : (
-              <div className="w-9 h-12 bg-[#F1F5F9] border border-[#E2E8F0] rounded flex items-center justify-center">
-                <span className="text-[#94A3B8] text-[10px]">3x4</span>
-              </div>
+              <span className="text-[#94A3B8] text-[10px] font-bold">Foto</span>
             )}
-            <span className="font-mono text-[#FF7043] font-bold">{row.uid}</span>
           </div>
         );
       },
-      className: 'w-[180px]',
+      className: 'w-[70px] text-center',
+    },
+    {
+      header: 'UID RFID',
+      accessor: (row: Guru) => (
+        <span className="font-mono text-[#FF7043] font-bold text-xs bg-[#FFF3E0] px-2.5 py-1 rounded-md border border-[#FFCC80] inline-block">
+          {row.uid}
+        </span>
+      ),
+      className: 'w-[120px]',
     },
     {
       header: 'NAMA GURU',
@@ -362,21 +380,28 @@ export const GuruPage: React.FC = () => {
           {row.kategori_program}
         </span>
       ),
-      className: 'w-[140px]',
+      className: 'w-[130px]',
     },
     {
       header: 'JADWAL',
       accessor: (row: Guru) => (
-        <span className="text-xs text-[#475569] font-medium leading-relaxed">
-          {formatJadwalDisplay(row.hari_wajib)}
-        </span>
+        <div>
+          <span className="text-xs text-[#475569] font-medium leading-relaxed block">
+            {formatJadwalDisplay(row.hari_wajib)}
+          </span>
+          {row.mode_kelas && (
+            <span className="text-[10px] font-bold text-[#64748B] uppercase">
+              Mode: {row.mode_kelas}
+            </span>
+          )}
+        </div>
       ),
-      className: 'w-[220px]',
+      className: 'w-[200px]',
     },
     {
       header: 'Aksi',
       accessor: (row: Guru) => (
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex items-center justify-end gap-1.5 flex-wrap">
           <button
             onClick={() => openEditModal(row)}
             className="px-2.5 py-1 bg-[#FAFAFA] hover:bg-[#E2E8F0] text-[#334155] text-xs font-bold rounded-lg border border-[#CBD5E1] transition-colors"
@@ -530,20 +555,34 @@ export const GuruPage: React.FC = () => {
             </div>
             <div>
               <label className="block text-[#1E293B] font-bold mb-1">Tanggal Lahir</label>
-              <input
-                type="date"
-                value={formData.tanggal_lahir}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  const calculated = calculateAge(val);
-                  setFormData({
-                    ...formData,
-                    tanggal_lahir: val,
-                    umur: calculated !== null ? calculated.toString() : formData.umur,
-                  });
-                }}
-                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
-              />
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="date"
+                  value={formData.tanggal_lahir}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const calculated = calculateAge(val);
+                    setFormData({
+                      ...formData,
+                      tanggal_lahir: val,
+                      umur: calculated !== null ? calculated.toString() : formData.umur,
+                    });
+                  }}
+                  className="flex-1 bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (formData.tanggal_lahir) {
+                      showToast('Tanggal lahir terkonfirmasi: ' + formData.tanggal_lahir);
+                    }
+                  }}
+                  className="px-3 py-2.5 bg-[#E8F5E9] hover:bg-[#C8E6C9] text-[#2E7D32] border border-[#A5D6A7] rounded-lg text-xs font-extrabold transition-all cursor-pointer"
+                  title="Konfirmasi Tanggal Lahir"
+                >
+                  OK
+                </button>
+              </div>
             </div>
             <div>
               <label className="block text-[#1E293B] font-bold mb-1">Umur (Tahun)</label>
@@ -797,6 +836,15 @@ export const GuruPage: React.FC = () => {
           </div>
         )}
       </Modal>
+
+      {/* Modal 1:1 Photo Viewer with Download Button */}
+      <PhotoModal
+        isOpen={!!photoModalData}
+        onClose={() => setPhotoModalData(null)}
+        photoUrl={photoModalData?.url || null}
+        name={photoModalData?.name || 'Foto Guru'}
+        subtitle={photoModalData?.subtitle}
+      />
     </div>
   );
 };

@@ -15,7 +15,14 @@ interface ReminderItem {
   whatsapp_orang_tua: string;
   program: string;
   sisa_pertemuan: number;
+  target_pertemuan: number;
+  paket_jadwal?: string;
   status: 'lancar' | 'peringatan' | 'urgent';
+  status_label?: string;
+  due_date?: string;
+  days_remaining?: number;
+  is_expired_30_hari?: boolean;
+  is_hangus?: boolean;
   wa_draft: string;
   wa_draft_peringatan?: string;
   wa_draft_urgent?: string;
@@ -176,31 +183,60 @@ export const PembayaranPage: React.FC = () => {
               : 'bg-[#E8F5E9] text-[#388E3C] border border-[#A5D6A7]'
           }`}
         >
-          {row.sisa_pertemuan} / 8 kali
+          {row.sisa_pertemuan} / {row.target_pertemuan || 8} kali
         </span>
       ),
     },
     {
-      header: 'Status SPP',
+      header: 'Status SPP & Siklus 30 Hari',
       accessor: (row: ReminderItem) => {
+        if (row.is_hangus) {
+          return (
+            <div>
+              <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-[#FFE4E6] text-[#E11D48] border border-[#FECDD3] inline-flex items-center gap-1">
+                Hangus (Lewat 30 Hari)
+              </span>
+              <p className="text-[10px] text-[#E11D48] font-bold mt-0.5">Sisa {row.sisa_pertemuan} sesi hangus</p>
+            </div>
+          );
+        }
+        if (row.is_expired_30_hari) {
+          return (
+            <div>
+              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#FFEBEE] text-[#D32F2F] border border-[#FFCDD2] inline-flex items-center gap-1">
+                Expired (Lewat 30 Hari)
+              </span>
+              <p className="text-[10px] text-[#94A3B8] mt-0.5">Jatuh tempo: {row.due_date}</p>
+            </div>
+          );
+        }
         if (row.status === 'urgent') {
           return (
-            <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#FFEBEE] text-[#D32F2F] border border-[#FFCDD2] inline-flex items-center gap-1">
-              Urgent
-            </span>
+            <div>
+              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#FFEBEE] text-[#D32F2F] border border-[#FFCDD2] inline-flex items-center gap-1">
+                Urgent (&lt; 20%)
+              </span>
+              <p className="text-[10px] text-[#94A3B8] mt-0.5">Jatuh tempo: {row.due_date}</p>
+            </div>
           );
         }
         if (row.status === 'peringatan') {
           return (
-            <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#FFF8E1] text-[#E65100] border border-[#FFE082] inline-flex items-center gap-1">
-              Peringatan
-            </span>
+            <div>
+              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#FFF8E1] text-[#E65100] border border-[#FFE082] inline-flex items-center gap-1">
+                Peringatan (Siap Bayar)
+              </span>
+              <p className="text-[10px] text-[#94A3B8] mt-0.5">Sisa {row.days_remaining} hari</p>
+            </div>
           );
         }
         return (
-          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#E8F5E9] text-[#388E3C] border border-[#A5D6A7] inline-block">
-            Lancar
-          </span>
+          <div>
+            <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#E8F5E9] text-[#388E3C] border border-[#A5D6A7] inline-block">
+              Lancar
+            </span>
+            {row.due_date && <p className="text-[10px] text-[#94A3B8] mt-0.5">Siklus: {row.due_date}</p>}
+          </div>
         );
       },
     },
