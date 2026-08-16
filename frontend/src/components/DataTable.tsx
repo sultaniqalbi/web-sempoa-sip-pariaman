@@ -29,8 +29,9 @@ export function DataTable<T>({
   const itemsPerPage = 10;
 
   const filteredData = useMemo(() => {
-    if (!query || !searchFilter) return data;
-    return data.filter((row) => searchFilter(row, query));
+    const safeData = Array.isArray(data) ? data : [];
+    if (!query || !searchFilter) return safeData;
+    return safeData.filter((row) => searchFilter(row, query));
   }, [data, query, searchFilter]);
 
   const sortedData = useMemo(() => {
