@@ -8,10 +8,10 @@ Guide to deploying the Sempoa SIP TC Pariaman application to a Linux Ubuntu VPS 
 1. Log in to your domain registrar (e.g. Niagahoster, GoDaddy).
 2. Set DNS Records:
    - Type `A`, Host `@`, Value `<VPS-IP-ADDRESS>`
-   - Type `CNAME`, Host `www`, Value `sempoasipariaman.com.`
+   - Type `CNAME`, Host `www`, Value `sempoasippariaman.com.`
 3. Verify DNS resolution:
    ```bash
-   ping sempoasipariaman.com
+   ping sempoasippariaman.com
    ```
 
 ---
@@ -62,12 +62,12 @@ sudo usermod -aG docker $USER
 ## 5. SSL & Nginx Reverse Proxy Setup
 1. Request Let's Encrypt SSL certificates:
    ```bash
-   sudo certbot --nginx -d sempoasipariaman.com -d www.sempoasipariaman.com
+   sudo certbot --nginx -d sempoasippariaman.com -d www.sempoasippariaman.com
    ```
 2. Configure Nginx virtual host at `/etc/nginx/sites-available/sempoa_sip`:
    ```nginx
    server {
-       server_name sempoasipariaman.com www.sempoasipariaman.com;
+       server_name sempoasippariaman.com www.sempoasippariaman.com;
 
        location / {
            proxy_pass http://localhost:80; # Frontend Docker port

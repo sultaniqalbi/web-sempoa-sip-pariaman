@@ -26,7 +26,7 @@ services:
       - FASTAPI_ENV=production
       - SECRET_KEY=${SECRET_KEY}
       - ESP32_API_KEY=${ESP32_API_KEY:-SempoaPariaman_ESP32_SecureKey_2026!}
-      - ALLOWED_ORIGINS=https://sempoasipariaman.com,https://www.sempoasipariaman.com,http://202.155.157.22,https://202.155.157.22
+      - ALLOWED_ORIGINS=https://sempoasippariaman.com,https://www.sempoasippariaman.com,http://202.155.157.22,https://202.155.157.22
     volumes:
       - ./backend/app/uploads:/app/app/uploads
       - ./backend/backups:/app/backups

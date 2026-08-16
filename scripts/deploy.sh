@@ -47,7 +47,7 @@ NGINX_CONF="/etc/nginx/sites-available/sempoa_sip"
 cat << 'EOF' > "$NGINX_CONF"
 server {
     listen 80;
-    server_name sempoasipariaman.com www.sempoasipariaman.com;
+    server_name sempoasippariaman.com www.sempoasippariaman.com;
 
     location / {
         proxy_pass http://localhost:80;
@@ -77,6 +77,6 @@ nginx -t
 systemctl reload nginx
 
 echo "=== 8. Obtaining SSL Certificate (Let's Encrypt) ==="
-echo "Please run: certbot --nginx -d sempoasipariaman.com -d www.sempoasipariaman.com to enable HTTPS."
+echo "Please run: certbot --nginx -d sempoasippariaman.com -d www.sempoasippariaman.com to enable HTTPS."
 
 echo "=== Setup Completed ==="

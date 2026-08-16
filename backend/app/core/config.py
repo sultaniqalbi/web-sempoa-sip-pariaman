@@ -28,8 +28,8 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5174",
         "http://localhost:3000",
         "http://127.0.0.1:3000",
-        "https://sempoasipariaman.com",
-        "https://www.sempoasipariaman.com",
+        "https://sempoasippariaman.com",
+        "https://www.sempoasippariaman.com",
         "http://202.155.157.22",
         "https://202.155.157.22",
     ]

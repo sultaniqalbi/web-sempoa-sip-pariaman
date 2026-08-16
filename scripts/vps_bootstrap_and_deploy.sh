@@ -52,7 +52,7 @@ POSTGRES_PORT=5432
 
 FASTAPI_ENV=production
 SECRET_KEY=${JWT_SEC}
-ALLOWED_ORIGINS=["https://sempoasipariaman.com"]
+ALLOWED_ORIGINS=["https://sempoasippariaman.com"]
 
 ESP32_API_KEY=SempoaPariaman_ESP32_SecureKey_2026!
 EOF
@@ -70,7 +70,7 @@ NGINX_CONF="/etc/nginx/sites-available/sempoa_sip"
 cat << 'EOF' > "$NGINX_CONF"
 server {
     listen 80;
-    server_name sempoasipariaman.com www.sempoasipariaman.com;
+    server_name sempoasippariaman.com www.sempoasippariaman.com;
 
     location / {
         proxy_pass http://localhost:80;
@@ -99,7 +99,7 @@ nginx -t
 systemctl reload nginx
 
 echo "=== 8. Obtaining SSL (Let's Encrypt) ==="
-certbot --nginx -d sempoasipariaman.com -d www.sempoasipariaman.com --non-interactive --agree-tos -m admin@sempoasipariaman.com
+certbot --nginx -d sempoasippariaman.com -d www.sempoasippariaman.com --non-interactive --agree-tos -m admin@sempoasippariaman.com
 
 echo "=== 9. Endpoints Verification ==="
 sleep 5

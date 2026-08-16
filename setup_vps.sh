@@ -5,9 +5,9 @@ echo "=========================================================="
 echo "🚀 SEMPOA SIP PARIAMAN - AUTOMATED VPS PRODUCTION DEPLOY"
 echo "=========================================================="
 
-DOMAIN="sempoasipariaman.com"
-WWW_DOMAIN="www.sempoasipariaman.com"
-EMAIL="admin@sempoasipariaman.com"
+DOMAIN="sempoasippariaman.com"
+WWW_DOMAIN="www.sempoasippariaman.com"
+EMAIL="admin@sempoasippariaman.com"
 
 # 1. Update and install prerequisites
 echo "📦 Updating system packages..."
