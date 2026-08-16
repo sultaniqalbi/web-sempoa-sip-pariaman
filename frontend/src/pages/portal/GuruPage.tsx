@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
+import { useAuth } from '../../features/auth/useAuth';
 import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
 import PageHeader from '../../components/PageHeader';
@@ -32,6 +33,7 @@ interface Guru {
 }
 
 export const GuruPage: React.FC = () => {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingGuru, setEditingGuru] = useState<Guru | null>(null);
@@ -97,6 +99,7 @@ export const GuruPage: React.FC = () => {
       const res = await apiClient.get('/guru/');
       return res.data;
     },
+    refetchInterval: 10000
   });
 
   const createMutation = useMutation({
@@ -427,15 +430,27 @@ export const GuruPage: React.FC = () => {
           </button>
           <button
             onClick={() => {
-              if (confirm(`Hapus data guru ${row.nama}?`)) {
-                deleteMutation.mutate(row.id);
-              }
+              const url = `https://wa.me/${row.whatsapp_guru}`;
+              window.open(url, '_blank');
             }}
-            className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center"
-            title="Hapus Guru"
+            className="px-2 py-1 bg-[#E8F5E9] hover:bg-[#C8E6C9] text-[#2E7D32] text-xs font-bold rounded-lg border border-[#A5D6A7] transition-colors"
+            title="Chat WhatsApp Guru"
           >
-            <TrashIcon size={14} />
+            Chat WA
           </button>
+          {user?.role !== 'admin' && (
+            <button
+              onClick={() => {
+                if (confirm(`Hapus data guru ${row.nama}?`)) {
+                  deleteMutation.mutate(row.id);
+                }
+              }}
+              className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center"
+              title="Hapus Guru"
+            >
+              <TrashIcon size={14} />
+            </button>
+          )}
         </div>
       ),
       className: 'w-[200px] text-right',
@@ -516,7 +531,7 @@ export const GuruPage: React.FC = () => {
           </div>
 
           {/* Nama Lengkap & Nama Panggilan */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label className="block text-[#1E293B] font-bold mb-1">Nama Lengkap Guru*</label>
               <input
@@ -542,7 +557,7 @@ export const GuruPage: React.FC = () => {
           </div>
 
           {/* Tempat Lahir, Tanggal Lahir, Umur */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
               <label className="block text-[#1E293B] font-bold mb-1">Tempat Lahir</label>
               <input

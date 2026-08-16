@@ -119,7 +119,7 @@ async def create_galeri(
 async def delete_galeri(
     id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(admin_or_owner)
+    current_user: User = Depends(owner_only)
 ):
     item = db.query(Galeri).filter(Galeri.id == id).first()
     if not item:

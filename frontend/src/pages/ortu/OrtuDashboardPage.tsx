@@ -18,6 +18,7 @@ export const OrtuDashboardPage: React.FC = () => {
       return response.data;
     },
     enabled: !!user?.uid_terhubung,
+    refetchInterval: 10000,
   });
 
   // Fetch attendance logs
@@ -29,6 +30,7 @@ export const OrtuDashboardPage: React.FC = () => {
       return response.data;
     },
     enabled: !!child?.id,
+    refetchInterval: 10000,
   });
 
   // Fetch payments
@@ -40,6 +42,7 @@ export const OrtuDashboardPage: React.FC = () => {
       return response.data;
     },
     enabled: !!child?.id,
+    refetchInterval: 10000,
   });
 
   // Fetch learning notes from teacher

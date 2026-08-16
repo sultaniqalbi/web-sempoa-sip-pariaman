@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
+import { useAuth } from '../../features/auth/useAuth';
 import Modal from '../../components/Modal';
 import PageHeader from '../../components/PageHeader';
 import EmptyState from '../../components/EmptyState';
@@ -17,6 +18,7 @@ interface GaleriItem {
 type AspectRatioType = '1:1' | '4:3' | '16:9' | '3:4';
 
 export const GaleriPage: React.FC = () => {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -420,18 +422,20 @@ export const GaleriPage: React.FC = () => {
                     >
                       Lihat Full
                     </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (confirm(`Hapus foto "${item.judul}"?`)) {
-                          deleteMutation.mutate(item.id);
-                        }
-                      }}
-                      className="p-2 bg-[#D32F2F] text-white rounded-lg hover:bg-[#B71C1C] transition-colors shadow-md text-xs font-bold"
-                      title="Hapus Foto"
-                    >
-                      <TrashIcon size={16} />
-                    </button>
+                    {user?.role !== 'admin' && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm(`Hapus foto "${item.judul}"?`)) {
+                            deleteMutation.mutate(item.id);
+                          }
+                        }}
+                        className="p-2 bg-[#D32F2F] text-white rounded-lg hover:bg-[#B71C1C] transition-colors shadow-md text-xs font-bold"
+                        title="Hapus Foto"
+                      >
+                        <TrashIcon size={16} />
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -448,17 +452,19 @@ export const GaleriPage: React.FC = () => {
 
                   <div className="flex justify-between items-center pt-2 border-t border-[#F5F5F5] text-[11px] text-[#94A3B8]">
                     <span>{new Date(item.created_at).toLocaleDateString('id-ID')}</span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (confirm(`Hapus foto "${item.judul}"?`)) {
-                          deleteMutation.mutate(item.id);
-                        }
-                      }}
-                      className="text-[#D32F2F] hover:underline font-bold"
-                    >
-                      Hapus
-                    </button>
+                    {user?.role !== 'admin' && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm(`Hapus foto "${item.judul}"?`)) {
+                            deleteMutation.mutate(item.id);
+                          }
+                        }}
+                        className="text-[#D32F2F] hover:underline font-bold"
+                      >
+                        Hapus
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

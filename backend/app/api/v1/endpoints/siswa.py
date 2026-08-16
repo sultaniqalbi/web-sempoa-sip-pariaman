@@ -202,10 +202,10 @@ async def update_existing_siswa(
     return db_siswa
 
 @router.delete("/{id}")
-async def delete_existing_siswa(
+async def delete_siswa(
     id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(admin_or_owner)
+    current_user: User = Depends(owner_only)
 ):
     db_siswa = db.query(Siswa).filter(Siswa.id == id).first()
     if not db_siswa:

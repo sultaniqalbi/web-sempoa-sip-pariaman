@@ -84,10 +84,10 @@ async def update_existing_jadwal(
     return crud_jadwal.update_jadwal(db, db_jadwal=db_jadwal, update_data=jadwal_in)
 
 @router.delete("/{id}")
-async def delete_existing_jadwal(
+async def delete_jadwal(
     id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(admin_or_owner)
+    current_user: User = Depends(owner_only)
 ):
     db_jadwal = crud_jadwal.get_jadwal(db, jadwal_id=id)
     if not db_jadwal:

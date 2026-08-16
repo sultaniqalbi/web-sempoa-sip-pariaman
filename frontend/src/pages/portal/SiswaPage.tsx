@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
+import { useAuth } from '../../features/auth/useAuth';
 import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
 import PageHeader from '../../components/PageHeader';
@@ -61,6 +62,7 @@ export const PROGRAM_CONFIG = {
 };
 
 export const SiswaPage: React.FC = () => {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingSiswa, setEditingSiswa] = useState<Siswa | null>(null);
@@ -151,7 +153,8 @@ export const SiswaPage: React.FC = () => {
     queryFn: async () => {
       const res = await apiClient.get('/siswa/');
       return res.data;
-    }
+    },
+    refetchInterval: 10000
   });
 
   // Create Mutation
@@ -481,17 +484,19 @@ export const SiswaPage: React.FC = () => {
           >
             Reset
           </button>
-          <button
-            onClick={() => {
-              if (confirm(`Hapus data siswa ${row.nama}?`)) {
-                deleteMutation.mutate(row.id);
-              }
-            }}
-            className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center"
-            title="Hapus Siswa"
-          >
-            <TrashIcon size={14} />
-          </button>
+          {user?.role !== 'admin' && (
+            <button
+              onClick={() => {
+                if (confirm(`Hapus data siswa ${row.nama}?`)) {
+                  deleteMutation.mutate(row.id);
+                }
+              }}
+              className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center"
+              title="Hapus Siswa"
+            >
+              <TrashIcon size={14} />
+            </button>
+          )}
         </div>
       )
     }
@@ -579,7 +584,7 @@ export const SiswaPage: React.FC = () => {
           </div>
 
           {/* Tempat Lahir, Tanggal Lahir, Umur Otomatis */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
               <label className="block text-[#1E293B] font-bold mb-1">Tempat Lahir</label>
               <input
@@ -639,7 +644,7 @@ export const SiswaPage: React.FC = () => {
           </div>
 
           {/* Asal Sekolah & Kelas di Sekolah */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label className="block text-[#1E293B] font-bold mb-1">Asal Sekolah</label>
               <input
@@ -762,7 +767,7 @@ export const SiswaPage: React.FC = () => {
           />
 
           {/* 6 & 7. Nama Orang Tua & No. WhatsApp */}
-          <div className="border-t border-[#E2E8F0] pt-3 grid grid-cols-2 gap-3">
+          <div className="border-t border-[#E2E8F0] pt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label className="block text-[#1E293B] font-bold mb-1">Nama Orang Tua*</label>
               <input

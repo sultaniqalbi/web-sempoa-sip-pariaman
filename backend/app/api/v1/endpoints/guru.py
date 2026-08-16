@@ -193,10 +193,10 @@ async def update_existing_guru(
     return db_guru
 
 @router.delete("/{id}")
-async def delete_existing_guru(
+async def delete_guru(
     id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(admin_or_owner)
+    current_user: User = Depends(owner_only)
 ):
     db_guru = db.query(Guru).filter(Guru.id == id).first()
     if not db_guru:

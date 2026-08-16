@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
+import { useAuth } from '../../features/auth/useAuth';
 import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
 import PageHeader from '../../components/PageHeader';
@@ -41,6 +42,7 @@ interface GuruAbsensiItem {
 }
 
 export const JadwalPage: React.FC = () => {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'jadwal' | 'absensi'>('jadwal');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -305,17 +307,19 @@ export const JadwalPage: React.FC = () => {
           >
             Edit
           </button>
-          <button
-            onClick={() => {
-              if (confirm(`Hapus jadwal hari ${row.hari} jam ${row.jam_mulai}?`)) {
-                deleteMutation.mutate(row.id);
-              }
-            }}
-            className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center"
-            title="Hapus Jadwal"
-          >
-            <TrashIcon size={14} />
-          </button>
+          {user?.role !== 'admin' && (
+            <button
+              onClick={() => {
+                if (confirm(`Hapus jadwal hari ${row.hari} jam ${row.jam_mulai}?`)) {
+                  deleteMutation.mutate(row.id);
+                }
+              }}
+              className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center"
+              title="Hapus Jadwal"
+            >
+              <TrashIcon size={14} />
+            </button>
+          )}
         </div>
       ),
       className: 'w-[140px] text-right',

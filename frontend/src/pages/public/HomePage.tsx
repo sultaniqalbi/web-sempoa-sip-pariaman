@@ -871,31 +871,55 @@ export const HomePage: React.FC = () => {
           </div>
 
           {isMobile ? (
-            /* MOBILE: 2x2 Category Cards */
-            <div className="mobile-gallery-grid">
-              <Link to="/galeri" className="mobile-gallery-card" style={{ borderColor: '#f97316' }}>
-                <div className="mgc-icon" style={{ color: '#f97316' }}><i className="fas fa-graduation-cap"></i></div>
-                <h4 className="mgc-title">Foto Kegiatan Belajar Sempoa</h4>
-                <span className="mgc-badge" style={{ color: '#f97316', background: '#fff7ed' }}>Sesi Kelas</span>
-                <p className="mgc-status">Siap Diunggah Admin</p>
+            /* MOBILE: 2x2 Category Cards with Real Background Images */
+            <div className="mobile-gallery-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', padding: '0 1rem' }}>
+              <Link to="/galeri" className="mobile-gallery-card" style={{ 
+                position: 'relative', overflow: 'hidden', borderRadius: '1rem', border: '2px dashed #f97316', 
+                aspectRatio: '3/4', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '1rem',
+                textDecoration: 'none'
+              }}>
+                <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/assets/image/kegiatan-1.webp)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.85 }}></div>
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0) 100%)' }}></div>
+                <div style={{ position: 'relative', zIndex: 1, textAlign: 'left' }}>
+                  <h4 style={{ color: 'white', fontWeight: 800, fontSize: '0.85rem', marginBottom: '0.25rem' }}>Foto Kegiatan Belajar</h4>
+                  <span style={{ fontSize: '0.65rem', background: '#f97316', color: 'white', padding: '0.15rem 0.5rem', borderRadius: '1rem', fontWeight: 700 }}>Sesi Kelas</span>
+                </div>
               </Link>
-              <Link to="/galeri" className="mobile-gallery-card" style={{ borderColor: '#0891b2' }}>
-                <div className="mgc-icon" style={{ color: '#0891b2' }}><i className="fas fa-book-open"></i></div>
-                <h4 className="mgc-title">Foto Latihan PeSO Fonem</h4>
-                <span className="mgc-badge" style={{ color: '#0891b2', background: '#ecfeff' }}>Membaca Cepat</span>
-                <p className="mgc-status">Siap Diunggah Admin</p>
+              <Link to="/galeri" className="mobile-gallery-card" style={{ 
+                position: 'relative', overflow: 'hidden', borderRadius: '1rem', border: '2px dashed #0891b2', 
+                aspectRatio: '3/4', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '1rem',
+                textDecoration: 'none'
+              }}>
+                <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/assets/image/kegiatan-2.webp)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.85 }}></div>
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0) 100%)' }}></div>
+                <div style={{ position: 'relative', zIndex: 1, textAlign: 'left' }}>
+                  <h4 style={{ color: 'white', fontWeight: 800, fontSize: '0.85rem', marginBottom: '0.25rem' }}>Latihan PeSO</h4>
+                  <span style={{ fontSize: '0.65rem', background: '#0891b2', color: 'white', padding: '0.15rem 0.5rem', borderRadius: '1rem', fontWeight: 700 }}>Membaca Cepat</span>
+                </div>
               </Link>
-              <Link to="/galeri" className="mobile-gallery-card" style={{ borderColor: '#16a34a' }}>
-                <div className="mgc-icon" style={{ color: '#16a34a' }}><i className="fas fa-trophy"></i></div>
-                <h4 className="mgc-title">Foto Kejuaraan &amp; Prestasi</h4>
-                <span className="mgc-badge" style={{ color: '#16a34a', background: '#f0fdf4' }}>Olimpiade &amp; Lomba</span>
-                <p className="mgc-status">Siap Diunggah Admin</p>
+              <Link to="/galeri" className="mobile-gallery-card" style={{ 
+                position: 'relative', overflow: 'hidden', borderRadius: '1rem', border: '2px dashed #16a34a', 
+                aspectRatio: '3/4', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '1rem',
+                textDecoration: 'none'
+              }}>
+                <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/assets/image/kegiatan-3.webp)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.85 }}></div>
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0) 100%)' }}></div>
+                <div style={{ position: 'relative', zIndex: 1, textAlign: 'left' }}>
+                  <h4 style={{ color: 'white', fontWeight: 800, fontSize: '0.85rem', marginBottom: '0.25rem' }}>Kejuaraan Prestasi</h4>
+                  <span style={{ fontSize: '0.65rem', background: '#16a34a', color: 'white', padding: '0.15rem 0.5rem', borderRadius: '1rem', fontWeight: 700 }}>Olimpiade</span>
+                </div>
               </Link>
-              <Link to="/galeri" className="mobile-gallery-card" style={{ borderColor: '#e11d48' }}>
-                <div className="mgc-icon" style={{ color: '#e11d48' }}><i className="fas fa-heart"></i></div>
-                <h4 className="mgc-title">Foto Pembinaan Karakter &amp; Ibadah</h4>
-                <span className="mgc-badge" style={{ color: '#e11d48', background: '#fff1f2' }}>Aktivitas Santri</span>
-                <p className="mgc-status">Siap Diunggah Admin</p>
+              <Link to="/galeri" className="mobile-gallery-card" style={{ 
+                position: 'relative', overflow: 'hidden', borderRadius: '1rem', border: '2px dashed #e11d48', 
+                aspectRatio: '3/4', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '1rem',
+                textDecoration: 'none'
+              }}>
+                <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/assets/image/kegiatan-1.webp)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.85 }}></div>
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0) 100%)' }}></div>
+                <div style={{ position: 'relative', zIndex: 1, textAlign: 'left' }}>
+                  <h4 style={{ color: 'white', fontWeight: 800, fontSize: '0.85rem', marginBottom: '0.25rem' }}>Pembinaan Karakter</h4>
+                  <span style={{ fontSize: '0.65rem', background: '#e11d48', color: 'white', padding: '0.15rem 0.5rem', borderRadius: '1rem', fontWeight: 700 }}>Aktivitas Santri</span>
+                </div>
               </Link>
             </div>
           ) : (
