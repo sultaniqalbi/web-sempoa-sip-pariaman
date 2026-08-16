@@ -33,6 +33,7 @@ class RekapBulananRequest(BaseModel):
 
 class ResetDataRequest(BaseModel):
     confirmation_phrase: str
+    password: str
 
 ALLOWED_RESET_PHRASES = [
     "HAPUS SEMUA DATA SELAMANYA",
@@ -253,6 +254,13 @@ async def reset_semua_data(
     """
     Owner Exclusive: Dual-Factor Safe Reset All Operational Data with Auto-Backup
     """
+    # 0. Check password
+    if req.password != "z@vx736S23V@Gvybd27#@gsh":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Password reset data tidak valid."
+        )
+
     # 1. Phrase verification
     phrase = req.confirmation_phrase.strip()
     if phrase not in ALLOWED_RESET_PHRASES:
@@ -335,9 +343,19 @@ async def reset_semua_data(
         db.add(audit)
         db.commit()
 
+        # Bersihkan Google Sheets
+        try:
+            from app.services.google_sheets import send_to_google_sheet
+            tabs_to_reset = ["Data Siswa", "Data Guru", "Data Kelas", "Data Keuangan", "Data Pertumbuhan", "Data Absensi"]
+            reset_row = [[f"DATABASE TELAH DI-RESET TOTAL PADA {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}"]]
+            for tab in tabs_to_reset:
+                send_to_google_sheet(tab_name=tab, rows=reset_row, title="RESET DATABASE")
+        except Exception as e:
+            print(f"Failed to reset Google Sheets: {e}")
+
         return {
             "status": "success",
-            "message": f"Data operasional berhasil dihapus. Backup disimpan di: {backup_filename}",
+            "message": f"Data operasional berhasil dihapus dan Google Sheets dibersihkan. Backup disimpan di: {backup_filename}",
             "backup_file": backup_filename,
             "executed_at": datetime.utcnow().isoformat(),
             "executed_by": current_user.email

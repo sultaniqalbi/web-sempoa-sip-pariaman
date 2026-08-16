@@ -5,6 +5,7 @@ import Modal from '../../components/Modal';
 
 export const ResetDataPage: React.FC = () => {
   const [selectedPhrase, setSelectedPhrase] = useState('');
+  const [password, setPassword] = useState('');
   const [isChecked, setIsChecked] = useState(false);
   const [resetResult, setResetResult] = useState<any>(null);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
@@ -17,7 +18,7 @@ export const ResetDataPage: React.FC = () => {
 
   const resetMutation = useMutation({
     mutationFn: async (phrase: string) => {
-      const res = await apiClient.post('/owner/reset-data', { confirmation_phrase: phrase });
+      const res = await apiClient.post('/owner/reset-data', { confirmation_phrase: phrase, password });
       return res.data;
     },
     onSuccess: (data) => {
@@ -30,7 +31,7 @@ export const ResetDataPage: React.FC = () => {
     }
   });
 
-  const isButtonEnabled = selectedPhrase.trim() !== '' && isChecked;
+  const isButtonEnabled = selectedPhrase.trim() !== '' && password.trim() !== '' && isChecked;
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -81,7 +82,18 @@ export const ResetDataPage: React.FC = () => {
             </select>
           </div>
 
-          <div className="flex items-center gap-3 p-3 bg-slate-900 rounded-xl border border-slate-800">
+          <div>
+            <label className="block text-slate-300 font-bold mb-2">2. Masukkan Sandi Keamanan Tingkat Tinggi*</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Masukkan sandi khusus owner..."
+              className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white font-mono focus:border-rose-500 focus:outline-none"
+            />
+          </div>
+
+          <div className="flex items-center gap-3 p-3 bg-slate-900 rounded-xl border border-slate-800 mt-4">
             <input
               type="checkbox"
               id="confirm-checkbox"
