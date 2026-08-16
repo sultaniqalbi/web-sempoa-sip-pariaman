@@ -27,6 +27,7 @@ services:
       - SECRET_KEY=${SECRET_KEY}
       - ESP32_API_KEY=${ESP32_API_KEY:-SempoaPariaman_ESP32_SecureKey_2026!}
       - ALLOWED_ORIGINS=https://sempoasippariaman.com,https://www.sempoasippariaman.com,http://202.155.157.22,https://202.155.157.22
+      - GOOGLE_WEBHOOK_URL=https://script.google.com/macros/s/AKfycbxvnOx98V0kyz_ifxqM_Dp_i3m3TPrqdKCo9DBJcubP9qKGG_AM9ewVap0RpUxEVJw4/exec
     volumes:
       - ./backend/app/uploads:/app/app/uploads
       - ./backend/backups:/app/backups
