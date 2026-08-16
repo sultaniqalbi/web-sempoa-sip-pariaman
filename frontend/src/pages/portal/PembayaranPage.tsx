@@ -60,10 +60,10 @@ export const PembayaranPage: React.FC = () => {
     queryFn: async () => {
       try {
         const res = await apiClient.get('/pembayaran/reminder-spp');
-        return res.data;
+        return res.data.siswa || res.data;
       } catch {
         const res = await apiClient.get('/quota/reminders');
-        return res.data;
+        return res.data.siswa || res.data;
       }
     },
   });
