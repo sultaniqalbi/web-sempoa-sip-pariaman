@@ -213,7 +213,7 @@ async def generate_rekap_bulanan(
         rows.append([prog, count])
 
     from app.services.google_sheets import send_to_google_sheet
-    tab_name = f"Rekap-{bulan}"
+    tab_name = "Data Pertumbuhan"
     return send_to_google_sheet(tab_name=tab_name, rows=rows, title=f"Rekap Bulanan {bulan}")
 
 

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
 import DateRangePicker, { RangeOption } from '../../components/DateRangePicker';
+import PageHeader from '../../components/PageHeader';
 import { UangIcon, KalenderIcon } from '../../components/SvgIcons';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -30,6 +31,23 @@ export const KeuanganPage: React.FC = () => {
     }
   });
 
+  const exportMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiClient.post('/pembayaran/export-sheets');
+      return res.data;
+    },
+    onSuccess: (data) => {
+      if (data.status === 'success') {
+        alert('Data Keuangan berhasil dikirim ke Google Sheets!');
+      } else {
+        alert(`Gagal: ${data.message}`);
+      }
+    },
+    onError: (err: any) => {
+      alert(`Gagal export: ${err.message}`);
+    }
+  });
+
   const handleCustomDateChange = (start: string, end: string) => {
     setCustomStartDate(start);
     setCustomEndDate(end);
@@ -49,19 +67,23 @@ export const KeuanganPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[#424242]">Laporan Keuangan</h1>
-          <p className="text-xs text-[#757575] mt-1">Pendapatan SPP, breakdown per program, dan analisis tren keuangan</p>
-        </div>
-        <DateRangePicker 
-          selectedRange={selectedRange}
-          onChangeRange={setSelectedRange}
-          customStartDate={customStartDate}
-          customEndDate={customEndDate}
-          onCustomDateChange={handleCustomDateChange}
-        />
-      </div>
+      <PageHeader
+        icon={<UangIcon size={24} />}
+        title="Laporan Keuangan"
+        subtitle="Pendapatan SPP, breakdown per program, dan analisis tren keuangan"
+        iconColorBg="bg-[#E8F5E9] text-[#388E3C]"
+        onExportSheets={() => exportMutation.mutate()}
+        isExporting={exportMutation.isPending}
+        filterSearch={
+          <DateRangePicker 
+            selectedRange={selectedRange}
+            onChangeRange={setSelectedRange}
+            customStartDate={customStartDate}
+            customEndDate={customEndDate}
+            onCustomDateChange={handleCustomDateChange}
+          />
+        }
+      />
 
       {/* Financial Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

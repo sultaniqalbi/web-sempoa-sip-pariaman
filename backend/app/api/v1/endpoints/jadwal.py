@@ -114,6 +114,6 @@ async def export_jadwal_sheets(
             j.lokasi or "-"
         ])
 
-    tab_name = f"Jadwal_{datetime.utcnow().strftime('%Y%m%d')}"
+    tab_name = "Data Kelas"
     return send_to_google_sheet(tab_name=tab_name, rows=rows, title="Jadwal Kelas Sempoa")
 

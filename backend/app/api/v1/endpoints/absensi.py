@@ -260,6 +260,6 @@ async def export_absensi_sheets(
         status_str = a.status.value if hasattr(a.status, 'value') else str(a.status)
         rows.append([a.id, a.uid, nama, a.waktu.strftime("%Y-%m-%d %H:%M:%S") if a.waktu else "-", mode_str, status_str])
 
-    tab_name = f"Absensi_{datetime.utcnow().strftime('%Y%m%d')}"
+    tab_name = "Data Absensi"
     return send_to_google_sheet(tab_name=tab_name, rows=rows, title="Log Absensi RFID")
 

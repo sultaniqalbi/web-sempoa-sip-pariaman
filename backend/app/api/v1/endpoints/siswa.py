@@ -386,6 +386,6 @@ async def export_siswa_sheets(
             s.sisa_pertemuan, s.status_spp.value if hasattr(s.status_spp, 'value') else str(s.status_spp)
         ])
 
-    tab_name = f"Siswa_{datetime.utcnow().strftime('%Y%m%d')}"
+    tab_name = "Data Siswa"
     return send_to_google_sheet(tab_name=tab_name, rows=rows, title="Data Siswa")
 

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
 import { DateRangePicker, RangeOption } from '../../components/DateRangePicker';
+import PageHeader from '../../components/PageHeader';
 import MetricCard from '../../components/MetricCard';
 import { MuridIcon, GuruGroupIcon, UangIcon } from '../../components/SvgIcons';
 import { 
@@ -31,6 +32,8 @@ export const PertumbuhanPage: React.FC = () => {
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
 
+  const [isExporting, setIsExporting] = useState(false);
+
   // We map the DateRangePicker options to the API's expected 'range' values.
   let apiRange = '1tahun';
   if (selectedRange === '6 Bulan Terakhir' as any) apiRange = '6bulan';
@@ -44,6 +47,23 @@ export const PertumbuhanPage: React.FC = () => {
       
       // Directly return the data from API without injecting mock values
       return res.data;
+    }
+  });
+
+  const exportMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiClient.post('/owner/rekap-bulanan', { bulan: new Date().toISOString().substring(0, 7) });
+      return res.data;
+    },
+    onSuccess: (data) => {
+      if (data.status === 'success') {
+        alert('Data Pertumbuhan berhasil dikirim ke Google Sheets!');
+      } else {
+        alert(`Gagal: ${data.message}`);
+      }
+    },
+    onError: (err: any) => {
+      alert(`Gagal export: ${err.message}`);
     }
   });
 
@@ -66,19 +86,23 @@ export const PertumbuhanPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[#424242]">Pertumbuhan</h1>
-          <p className="text-xs text-[#757575] mt-1">Analisis pendaftaran murid baru, guru, dan tren keuangan</p>
-        </div>
-        <DateRangePicker 
-          selectedRange={selectedRange}
-          onChangeRange={setSelectedRange}
-          customStartDate={customStartDate}
-          customEndDate={customEndDate}
-          onCustomDateChange={handleCustomDateChange}
-        />
-      </div>
+      <PageHeader
+        icon={<MuridIcon size={24} />}
+        title="Pertumbuhan"
+        subtitle="Analisis pendaftaran murid baru, guru, dan tren keuangan"
+        iconColorBg="bg-[#E3F2FD] text-[#1976D2]"
+        onExportSheets={() => exportMutation.mutate()}
+        isExporting={exportMutation.isPending}
+        filterSearch={
+          <DateRangePicker 
+            selectedRange={selectedRange}
+            onChangeRange={setSelectedRange}
+            customStartDate={customStartDate}
+            customEndDate={customEndDate}
+            onCustomDateChange={handleCustomDateChange}
+          />
+        }
+      />
 
       {/* Metrics Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

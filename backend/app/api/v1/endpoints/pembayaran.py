@@ -288,6 +288,6 @@ async def export_pembayaran_sheets(
         status_str = p.status.value if hasattr(p.status, 'value') else str(p.status)
         rows.append([p.id, p.id_siswa, nama_siswa, p.periode_bulan, float(p.jumlah), status_str, str(p.due_date or "-")])
 
-    tab_name = f"Pembayaran_{datetime.utcnow().strftime('%Y%m%d')}"
+    tab_name = "Data Keuangan"
     return send_to_google_sheet(tab_name=tab_name, rows=rows, title="Data Pembayaran SPP")
 

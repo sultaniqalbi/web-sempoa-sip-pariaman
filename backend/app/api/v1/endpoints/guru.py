@@ -307,6 +307,6 @@ async def export_guru_sheets(
     for g in guru_list:
         rows.append([g.id, g.uid or "-", g.nama, g.kategori_program or "-", g.hari_wajib or "-", g.whatsapp_guru or "-", g.target_kehadiran])
 
-    tab_name = f"Guru_{datetime.utcnow().strftime('%Y%m%d')}"
+    tab_name = "Data Guru"
     return send_to_google_sheet(tab_name=tab_name, rows=rows, title="Data Guru")
 
