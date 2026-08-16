@@ -16,6 +16,7 @@ from app.models.galeri import Galeri
 
 router = APIRouter()
 admin_or_owner = RoleChecker([UserRole.admin, UserRole.owner])
+owner_only = RoleChecker([UserRole.owner])
 
 class GaleriCreate(BaseModel):
     judul: str

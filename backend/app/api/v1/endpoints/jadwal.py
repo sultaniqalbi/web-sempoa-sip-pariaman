@@ -34,6 +34,7 @@ SCHEDULE_CONFIG = {
 
 router = APIRouter()
 admin_or_owner = RoleChecker([UserRole.admin, UserRole.owner])
+owner_only = RoleChecker([UserRole.owner])
 
 @router.get("/", response_model=List[JadwalResponse])
 async def read_jadwal_list(

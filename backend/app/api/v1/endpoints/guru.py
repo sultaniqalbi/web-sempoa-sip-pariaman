@@ -18,6 +18,7 @@ from pydantic import BaseModel
 
 router = APIRouter()
 admin_or_owner = RoleChecker([UserRole.admin, UserRole.owner])
+owner_only = RoleChecker([UserRole.owner])
 
 class GuruResetPasswordResponse(BaseModel):
     status: str
