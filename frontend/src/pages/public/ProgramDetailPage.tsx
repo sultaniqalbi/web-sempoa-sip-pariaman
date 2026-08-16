@@ -292,7 +292,8 @@ export const ProgramDetailPage: React.FC = () => {
       <main className="content-section-prog" style={{ maxWidth: '1150px', margin: '0 auto', padding: '3.5rem 1.5rem', lineHeight: 1.8 }}>
         {/* 1. Penjelasan Program */}
         <section style={{ marginBottom: '3.5rem' }}>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--color-text-dark)', marginBottom: '1.25rem' }}>
+          <h2 style={{ fontSize: '1.65rem', fontWeight: 800, color: 'var(--color-text-dark)', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <i className="fas fa-book-open" style={{ color: data.color, fontSize: '1.3rem' }}></i>
             Penjelasan Program
           </h2>
           <div
@@ -313,19 +314,21 @@ export const ProgramDetailPage: React.FC = () => {
           </div>
         </section>
 
-        {/* 2. Keunggulan Utama (EXACTLY 4 COLUMNS SIDE-BY-SIDE) */}
+        {/* 2. Keunggulan Utama (2 ATAS 2 BAWAH ON MOBILE, 4 ON DESKTOP) */}
         <section style={{ marginBottom: '3.5rem' }}>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--color-text-dark)', marginBottom: '1.5rem' }}>
+          <h2 style={{ fontSize: '1.65rem', fontWeight: 800, color: 'var(--color-text-dark)', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <i className="fas fa-star" style={{ color: data.color, fontSize: '1.3rem' }}></i>
             Keunggulan Utama
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem' }}>
+          <div className="program-usp-grid">
             {data.usps.slice(0, 4).map((item, idx) => (
               <div
                 key={idx}
+                className="program-usp-card"
                 style={{
                   background: '#fff',
-                  borderRadius: '16px',
-                  padding: '1.5rem 1.25rem',
+                  borderRadius: '18px',
+                  padding: '1.5rem 1.1rem',
                   border: '1px solid #e2e8f0',
                   boxShadow: '0 6px 18px rgba(0,0,0,0.04)',
                   display: 'flex',
@@ -333,7 +336,6 @@ export const ProgramDetailPage: React.FC = () => {
                   alignItems: 'center',
                   textAlign: 'center',
                   justifyContent: 'flex-start',
-                  minHeight: '180px',
                 }}
               >
                 <div
@@ -354,26 +356,28 @@ export const ProgramDetailPage: React.FC = () => {
                 >
                   {idx + 1}
                 </div>
-                <p style={{ margin: 0, fontSize: '0.92rem', fontWeight: 600, color: '#1e293b', lineHeight: 1.5 }}>{item}</p>
+                <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: '#1e293b', lineHeight: 1.5 }}>{item}</p>
               </div>
             ))}
           </div>
         </section>
 
-        {/* 3. Fasilitas & Perlengkapan Siswa (CLEAN MODERN BULLET POINTS) */}
+        {/* 3. Fasilitas & Perlengkapan Siswa (MATCHING PHOTO CHECKLIST) */}
         <section style={{ marginBottom: '4rem' }}>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--color-text-dark)', marginBottom: '1.5rem' }}>
+          <h2 style={{ fontSize: '1.65rem', fontWeight: 800, color: 'var(--color-text-dark)', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <i className="fas fa-cubes" style={{ color: data.color, fontSize: '1.3rem' }}></i>
             Fasilitas & Perlengkapan Siswa
           </h2>
           <div
             style={{
-              background: '#f8fafc',
-              borderRadius: '16px',
-              padding: '2rem',
+              background: '#fff',
+              borderRadius: '22px',
+              padding: '2rem 1.75rem',
               border: '1px solid #e2e8f0',
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '1.5rem',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.04)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1.25rem',
             }}
           >
             {data.facilities.map((fac, idx) => (
@@ -382,120 +386,167 @@ export const ProgramDetailPage: React.FC = () => {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.75rem',
+                  gap: '1rem',
                 }}
               >
                 <div
                   style={{
-                    width: '10px',
-                    height: '10px',
+                    width: '24px',
+                    height: '24px',
                     borderRadius: '50%',
                     background: data.color,
-                    boxShadow: `0 0 8px ${data.color}60`,
+                    color: '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '0.75rem',
                     flexShrink: 0,
+                    boxShadow: `0 3px 8px ${data.color}45`,
                   }}
-                />
-                <span style={{ fontWeight: 600, fontSize: '0.95rem', color: '#334155', lineHeight: 1.4 }}>{fac}</span>
+                >
+                  <i className="fas fa-check"></i>
+                </div>
+                <span style={{ fontWeight: 600, fontSize: '1rem', color: '#1e293b', lineHeight: 1.4 }}>{fac}</span>
               </div>
             ))}
           </div>
         </section>
 
-        {/* 4. CLEAN BOTTOM NAV (HOME ICON + DYNAMIC THEME COLOR HOVER) */}
+        {/* 4. CLEAN BOTTOM NAV (PREV + CENTERED HOME ICON + NEXT IN ONE ROW) */}
         <nav
           className="program-bottom-nav"
           style={{
             borderTop: '2px dashed #cbd5e1',
             marginTop: '3.5rem',
-            paddingTop: '3rem',
-            display: 'grid',
-            gridTemplateColumns: '1fr auto 1fr',
+            paddingTop: '2.5rem',
+            display: 'flex',
             alignItems: 'center',
-            gap: '1rem',
+            justifyContent: 'space-between',
+            gap: '0.75rem',
+            width: '100%',
           }}
         >
           {/* PREV PROGRAM BUTTON */}
           <Link
             to={`/program/${data.prevId}`}
-            onMouseEnter={() => setHoveredBtn('prev')}
-            onMouseLeave={() => setHoveredBtn(null)}
+            className="nav-btn-prog prev"
             style={{
-              justifySelf: 'start',
-              background: hoveredBtn === 'prev' ? data.prevColor : '#fff',
-              border: `2px solid ${hoveredBtn === 'prev' ? data.prevColor : '#cbd5e1'}`,
-              width: '160px',
-              padding: '0.8rem 0',
+              flex: 1,
+              maxWidth: '180px',
+              background: '#fff',
+              border: `2px solid ${data.prevColor}`,
+              color: data.prevColor,
+              padding: '0.75rem 0.5rem',
               borderRadius: '50px',
-              color: hoveredBtn === 'prev' ? '#fff' : '#334155',
               fontWeight: 800,
-              fontSize: '0.95rem',
+              fontSize: '0.9rem',
               textDecoration: 'none',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: hoveredBtn === 'prev' ? `0 8px 20px ${data.prevColor}45` : '0 4px 12px rgba(0,0,0,0.04)',
-              transform: hoveredBtn === 'prev' ? 'translateY(-3px)' : 'none',
-              transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+              gap: '0.4rem',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
+              transition: 'all 0.3s ease',
+              whiteSpace: 'nowrap',
             }}
           >
-            {data.prevName}
+            <i className="fas fa-chevron-left" style={{ fontSize: '0.8rem' }}></i>
+            <span>{data.prevName}</span>
           </Link>
 
-          {/* HOME ICON ONLY BUTTON */}
+          {/* HOME ICON ONLY BUTTON (CENTERED) */}
           <Link
             to="/"
-            onMouseEnter={() => setHoveredBtn('home')}
-            onMouseLeave={() => setHoveredBtn(null)}
+            className="nav-btn-prog home"
             style={{
-              justifySelf: 'center',
               background: data.color,
               color: '#fff',
-              width: '56px',
-              height: '56px',
+              width: '52px',
+              height: '52px',
+              minWidth: '52px',
               borderRadius: '50%',
-              fontWeight: 700,
-              fontSize: '1.25rem',
               textDecoration: 'none',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: hoveredBtn === 'home' ? `0 10px 25px ${data.color}70` : `0 6px 15px ${data.color}40`,
-              transform: hoveredBtn === 'home' ? 'scale(1.08) translateY(-2px)' : 'scale(1)',
-              transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+              boxShadow: `0 6px 18px ${data.color}50`,
+              transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+              flexShrink: 0,
             }}
             title="Kembali ke Beranda"
           >
-            <img src="/assets/icons/home.svg" alt="Beranda" style={{ width: '26px', height: '26px', display: 'block', transition: 'all 0.3s' }} />
+            <i className="fas fa-home" style={{ fontSize: '1.25rem', color: '#fff' }}></i>
           </Link>
 
           {/* NEXT PROGRAM BUTTON */}
           <Link
             to={`/program/${data.nextId}`}
-            onMouseEnter={() => setHoveredBtn('next')}
-            onMouseLeave={() => setHoveredBtn(null)}
+            className="nav-btn-prog next"
             style={{
-              justifySelf: 'end',
-              background: hoveredBtn === 'next' ? data.nextColor : '#fff',
-              border: `2px solid ${hoveredBtn === 'next' ? data.nextColor : '#cbd5e1'}`,
-              width: '160px',
-              padding: '0.8rem 0',
+              flex: 1,
+              maxWidth: '180px',
+              background: '#fff',
+              border: `2px solid ${data.nextColor}`,
+              color: data.nextColor,
+              padding: '0.75rem 0.5rem',
               borderRadius: '50px',
-              color: hoveredBtn === 'next' ? '#fff' : '#334155',
               fontWeight: 800,
-              fontSize: '0.95rem',
+              fontSize: '0.9rem',
               textDecoration: 'none',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: hoveredBtn === 'next' ? `0 8px 20px ${data.nextColor}45` : '0 4px 12px rgba(0,0,0,0.04)',
-              transform: hoveredBtn === 'next' ? 'translateY(-3px)' : 'none',
-              transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+              gap: '0.4rem',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
+              transition: 'all 0.3s ease',
+              whiteSpace: 'nowrap',
             }}
           >
-            {data.nextName}
+            <span>{data.nextName}</span>
+            <i className="fas fa-chevron-right" style={{ fontSize: '0.8rem' }}></i>
           </Link>
         </nav>
       </main>
+
+      <style>{`
+        .program-usp-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 1.25rem;
+        }
+
+        @media (max-width: 768px) {
+          .program-hero-container {
+            padding: 4.5rem 1.25rem 3.5rem !important;
+          }
+          .program-hero-container h1 {
+            font-size: 2rem !important;
+          }
+          .program-hero-container p {
+            font-size: 1rem !important;
+          }
+          .content-section-prog {
+            padding: 2.5rem 1rem !important;
+          }
+          .program-usp-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 0.85rem !important;
+          }
+          .program-usp-card {
+            padding: 1.1rem 0.75rem !important;
+            min-height: 150px;
+          }
+          .program-bottom-nav {
+            margin-top: 2.5rem !important;
+            padding-top: 2rem !important;
+            gap: 0.5rem !important;
+          }
+          .nav-btn-prog.prev, .nav-btn-prog.next {
+            font-size: 0.82rem !important;
+            padding: 0.65rem 0.4rem !important;
+          }
+        }
+      `}</style>
 
       {/* FOOTER */}
       <footer className="footer">
