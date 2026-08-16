@@ -157,7 +157,7 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
                 const photoSrc = siswa.foto_profil
                   ? siswa.foto_profil.startsWith('http')
                     ? siswa.foto_profil
-                    : (import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1').replace('/api/v1', '') + siswa.foto_profil
+                    : '/api/v1'.replace('/api/v1', '') + siswa.foto_profil
                   : null;
 
                 return (

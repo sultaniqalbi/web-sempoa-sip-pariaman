@@ -56,31 +56,22 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       const user = await login(email, password);
       setGlobalSuccess("Login berhasil! Mengalihkan...");
       
-      // Delay for success animation before redirect
+      let portalPath = '/admin/dashboard';
+      if (user.role === 'guru') portalPath = '/guru';
+      if (user.role === 'ortu') portalPath = '/ortu';
+      if (user.role === 'owner') portalPath = '/owner/dashboard';
+      
       setTimeout(() => {
-        onClose(); // Close modal on success
-        if (user?.role === 'owner') {
-          navigate('/owner');
-        } else if (user?.role === 'admin') {
-          navigate('/admin');
-        } else if (user?.role === 'guru') {
-          navigate('/guru');
-        } else if (user?.role === 'ortu') {
-          navigate('/ortu');
-        } else {
-          navigate('/');
-        }
-      }, 1000);
-
-
+        window.location.href = portalPath;
+      }, 400);
     } catch (err: any) {
       console.error('Login failed:', err);
       if (err.response?.status === 429) {
         setGlobalError('Terlalu banyak percobaan masuk salah. Akun Anda diblokir selama 15 menit.');
-      } else if (err.response?.status === 401 || err.response?.status === 404) {
-        setGlobalError('Email atau kata sandi tidak ditemukan');
+      } else if (err.response?.status === 401) {
+        setGlobalError(err.response?.data?.detail || 'Email atau kata sandi salah');
       } else {
-        setGlobalError('Email atau kata sandi tidak ditemukan');
+        setGlobalError(err.response?.data?.detail || 'Gagal terhubung ke server');
       }
     } finally {
       setIsLoading(false);

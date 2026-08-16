@@ -31,7 +31,7 @@ export const ApaItuSempoa: React.FC = () => {
         }}>
           
           {/* Left Column: Mascot Visual */}
-          <div style={{ flex: '1 1 350px', display: 'flex', justifyContent: 'flex-start', alignItems: 'center', paddingLeft: '20px' }}>
+          <div className="desktop-only-mascot" style={{ flex: '1 1 350px', display: 'flex', justifyContent: 'flex-start', alignItems: 'center', paddingLeft: '20px' }}>
             <div style={{ transform: 'translateX(160px)' }}>
               <img 
                 src="/assets/mascot/level-5.webp" 
@@ -108,8 +108,9 @@ export const ApaItuSempoa: React.FC = () => {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-15px); }
         }
-        @media (max-width: 768px) {
+        @media (max-width: 992px) {
           .container { padding: 40px 16px !important; }
+          .desktop-only-mascot { display: none !important; }
         }
       `}</style>
     </section>

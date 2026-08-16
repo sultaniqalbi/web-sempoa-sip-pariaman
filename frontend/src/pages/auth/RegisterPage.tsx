@@ -21,7 +21,7 @@ export const RegisterPage: React.FC = () => {
 
     try {
       // Post registration data to backend API
-      await axios.post('http://localhost:8000/api/v1/pendaftaran-baru/', {
+      await axios.post(`/api/v1/pendaftaran-baru/`, {
         nama_ortu: namaOrtu,
         nama_anak: namaAnak,
         umur_anak: umurAnak,

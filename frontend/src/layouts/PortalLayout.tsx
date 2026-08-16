@@ -129,20 +129,20 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
             onClick={() => setDrawerOpen(false)}
             aria-hidden="true"
           />
-          <div className="md:hidden fixed inset-y-0 left-0 z-50 w-[280px] max-w-[85vw] bg-[#F8FAFC] border-r border-slate-200 flex flex-col justify-between overflow-y-auto animate-in slide-in-from-left duration-200 shadow-2xl">
-            <div className="p-4">
+          <div className="md:hidden fixed inset-y-0 left-0 z-50 w-[280px] max-w-[85vw] bg-[#F8FAFC] border-r border-slate-200 flex flex-col justify-between overflow-hidden animate-in slide-in-from-left duration-200 shadow-2xl">
+            <div className="flex flex-col flex-1 overflow-hidden">
               {/* Header Logo + Close Button */}
-              <div className="flex items-center justify-between pb-4 border-b border-slate-200">
-                <div className="flex items-center gap-2.5">
-                  <img src="/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa" className="h-8 w-auto" />
-                  <div>
-                    <h2 className="text-base font-bold text-[#FF7043]">{portalTitle}</h2>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase">TC PARIAMAN</p>
+              <div className="flex items-center justify-between p-4 border-b border-slate-200 shrink-0">
+                <div className="flex items-center gap-2.5 overflow-hidden">
+                  <img src="/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa" className="h-8 w-auto shrink-0" />
+                  <div className="overflow-hidden">
+                    <h2 className="text-base font-bold text-[#FF7043] truncate">{portalTitle}</h2>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase truncate">TC PARIAMAN</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setDrawerOpen(false)}
-                  className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs"
+                  className="w-8 h-8 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-700 flex items-center justify-center font-bold text-xs shrink-0 transition-colors"
                   aria-label="Tutup Menu"
                 >
                   ✕
@@ -150,7 +150,7 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
               </div>
 
               {/* Menu items in Drawer */}
-              <nav className="mt-4 space-y-1.5">
+              <nav className="flex-1 overflow-y-auto px-2 py-4 space-y-1.5">
                 {menuItems.map((item) => (
                   <NavLink
                     key={item.to}
@@ -158,7 +158,7 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
                     end={item.end}
                     onClick={() => setDrawerOpen(false)}
                     className={({ isActive }) => `
-                      flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-semibold transition-all
+                      flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-semibold transition-all whitespace-nowrap overflow-hidden
                       ${isActive
                         ? 'bg-[#FFF3E0] text-[#FF7043] border-l-4 border-[#FF7043]'
                         : 'text-slate-700 hover:bg-[#FFF3E0]/50 hover:text-[#FF7043]'}
@@ -172,7 +172,7 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
             </div>
 
             {/* Bottom User & Logout in Drawer */}
-            <div className="p-4 border-t border-slate-200 bg-[#F8FAFC] space-y-3">
+            <div className="p-4 border-t border-slate-200 bg-[#F8FAFC] space-y-3 shrink-0">
               {user && (
                 <div>
                   <p className="text-xs font-bold text-slate-800 truncate">{user.nama}</p>

@@ -18,24 +18,24 @@ export const Sidebar: React.FC = () => {
       case 'admin':
       case 'owner':
         return [
-          { to: '/admin', label: '📊 Dashboard', end: true },
-          { to: '/admin/siswa', label: '🎓 Data Siswa' },
-          { to: '/admin/guru', label: '🧑‍🏫 Data Guru' },
-          { to: '/admin/jadwal', label: '📅 Jadwal Kelas' },
-          { to: '/admin/pembayaran', label: '💰 SPP & Tagihan' },
-          { to: '/admin/absensi', label: '🗒️ Log Kehadiran' },
+          { to: '/admin', label: <><i className="fas fa-chart-bar w-5"></i> Dashboard</>, end: true },
+          { to: '/admin/siswa', label: <><i className="fas fa-user-graduate w-5"></i> Data Siswa</> },
+          { to: '/admin/guru', label: <><i className="fas fa-chalkboard-teacher w-5"></i> Data Guru</> },
+          { to: '/admin/jadwal', label: <><i className="fas fa-calendar-alt w-5"></i> Jadwal Kelas</> },
+          { to: '/admin/pembayaran', label: <><i className="fas fa-money-bill-wave w-5"></i> SPP & Tagihan</> },
+          { to: '/admin/absensi', label: <><i className="fas fa-list-alt w-5"></i> Log Kehadiran</> },
         ];
       case 'guru':
         return [
-          { to: '/guru', label: '📊 Dashboard Guru', end: true },
-          { to: '/guru/kelas', label: '🧑‍🎓 Kelas Saya' },
-          { to: '/guru/absensi-input', label: '✏️ Input Absensi' },
+          { to: '/guru', label: <><i className="fas fa-chart-bar w-5"></i> Dashboard Guru</>, end: true },
+          { to: '/guru/kelas', label: <><i className="fas fa-user-graduate w-5"></i> Kelas Saya</> },
+          { to: '/guru/absensi-input', label: <><i className="fas fa-edit w-5"></i> Input Absensi</> },
         ];
       case 'ortu':
         return [
-          { to: '/ortu', label: '📊 Dashboard Ortu', end: true },
-          { to: '/ortu/anak', label: '🧒 Detail Anak Saya' },
-          { to: '/ortu/pembayaran', label: '💳 Bayar SPP' },
+          { to: '/ortu', label: <><i className="fas fa-chart-bar w-5"></i> Dashboard Ortu</>, end: true },
+          { to: '/ortu/anak', label: <><i className="fas fa-child w-5"></i> Detail Anak Saya</> },
+          { to: '/ortu/pembayaran', label: <><i className="fas fa-credit-card w-5"></i> Bayar SPP</> },
         ];
       default:
         return [];
@@ -48,8 +48,8 @@ export const Sidebar: React.FC = () => {
     <aside className="w-64 bg-slate-800 border-r border-slate-700 flex flex-col justify-between">
       <div className="p-6">
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center text-xl font-bold shadow-md shadow-amber-500/10">
-            🧮
+          <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center text-xl font-bold shadow-md shadow-amber-500/10 text-slate-900">
+            <i className="fas fa-calculator"></i>
           </div>
           <div>
             <h1 className="font-extrabold text-sm text-white tracking-tight leading-tight">SEMPOA SIP</h1>
@@ -64,7 +64,7 @@ export const Sidebar: React.FC = () => {
               to={link.to}
               end={link.end}
               className={({ isActive }) =>
-                `flex items-center px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                `flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
                   isActive
                     ? 'bg-amber-500 text-slate-900 shadow-md shadow-amber-500/10'
                     : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
@@ -93,7 +93,7 @@ export const Sidebar: React.FC = () => {
           onClick={handleLogout}
           className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-bold rounded-xl border border-rose-500/20 transition-colors"
         >
-          🚪 Keluar Aplikasi
+          <i className="fas fa-sign-out-alt"></i> Keluar Aplikasi
         </button>
       </div>
     </aside>

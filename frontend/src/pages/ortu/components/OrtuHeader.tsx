@@ -18,7 +18,7 @@ const OrtuHeader: React.FC<OrtuHeaderProps> = ({ childName, program, noWaOrtu, f
   const avatarSrc = fotoProfil
     ? fotoProfil.startsWith('http')
       ? fotoProfil
-      : (import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1').replace('/api/v1', '') + fotoProfil
+      : '/api/v1'.replace('/api/v1', '') + fotoProfil
     : null;
 
   return (

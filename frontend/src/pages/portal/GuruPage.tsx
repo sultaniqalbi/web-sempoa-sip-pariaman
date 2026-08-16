@@ -314,7 +314,7 @@ export const GuruPage: React.FC = () => {
       header: 'Foto Guru',
       accessor: (row: Guru) => {
         const photoSrc = row.foto_profil
-          ? (import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1').replace('/api/v1', '') + row.foto_profil
+          ? '/api/v1'.replace('/api/v1', '') + row.foto_profil
           : null;
         return (
           <div

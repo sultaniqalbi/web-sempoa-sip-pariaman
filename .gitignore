@@ -35,6 +35,11 @@ logs/
 docker/postgres-data/
 
 # Legacy PHP (if cleanup not yet done)
-# sempoa-sip-web/
 vendor/
 composer.lock
+
+# Temporary & Archive files
+*.tar.gz
+*.zip
+scratch/
+test_extract/

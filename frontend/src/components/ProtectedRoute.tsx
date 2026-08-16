@@ -36,7 +36,9 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowe
           <p className="text-sm text-slate-400">
             Anda tidak memiliki hak akses (Role: <span className="font-semibold text-amber-500">{user.role}</span>) untuk membuka halaman ini.
           </p>
-          <Navigate to="/" replace />
+          <button onClick={() => window.location.href = '/'} className="mt-4 px-4 py-2 bg-amber-500 text-white rounded font-bold hover:bg-amber-600">
+            Kembali ke Beranda
+          </button>
         </div>
       </div>
     );

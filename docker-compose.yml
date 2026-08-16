@@ -55,6 +55,7 @@ services:
       - ./frontend/public:/app/public
       - ./frontend/postcss.config.js:/app/postcss.config.js
       - ./frontend/tailwind.config.js:/app/tailwind.config.js
+      - ./frontend/vite.config.ts:/app/vite.config.ts
     ports:
       - "5173:5173"
     depends_on:

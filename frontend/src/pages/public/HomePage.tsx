@@ -8,6 +8,65 @@ import { LevelPembelajaran } from '../../components/LevelPembelajaran';
 import { MengapaBelajarSempoa } from '../../components/MengapaBelajarSempoa';
 import { DiakuiInternasional } from '../../components/DiakuiInternasional';
 
+const programsData = [
+  {
+    id: 1,
+    tabName: 'SEMPOA',
+    badgeText: 'PROGRAM 1 • Pelatihan Otak Kanan & Kiri',
+    badgeColor: '#f97316',
+    badgeBg: '#fff7ed',
+    usia: 'Usia 4 - 12 Tahun',
+    title: 'Sempoa (Basic For All Learning)',
+    desc: 'Pelatihan mental aritmatika guna menyeimbangkan koordinasi sel otak kanan-kiri anak secara optimal, melatih konsentrasi, daya ingat fotografis, dan kecepatan hitung bayangan.',
+    jadwalBiasa: 'Senin - Sabtu: 09:00 - 17:00 WIB',
+    jadwalLibur: 'Senin - Sabtu: 09:00 - 15:30 WIB',
+    link: '/program/sempoa',
+    borderColor: '#f97316'
+  },
+  {
+    id: 2,
+    tabName: 'FONEM',
+    badgeText: 'PROGRAM 2 • Pembelajaran Seluruh Otak',
+    badgeColor: '#0891b2',
+    badgeBg: '#ecfeff',
+    usia: 'Usia 4 - 12 Tahun',
+    title: 'Fonem (Metode Baca Tulis Cepat)',
+    desc: 'Metode PeSO (Pembelajaran Seluruh Otak) membaca & menulis cepat tanpa mengeja dan tanpa stres, membangun pondasi literasi anak sejak usia dini secara menyenangkan.',
+    jadwalBiasa: 'Senin - Sabtu: 09:00 - 17:00 WIB',
+    jadwalLibur: 'Senin - Sabtu: 09:00 - 15:30 WIB',
+    link: '/program/fonem',
+    borderColor: '#0891b2'
+  },
+  {
+    id: 3,
+    tabName: 'TAHFIDZ',
+    badgeText: 'PROGRAM 3 • Karakter & Hafalan Qur\'an',
+    badgeColor: '#16a34a',
+    badgeBg: '#f0fdf4',
+    usia: 'Usia 4 - 12 Tahun',
+    title: 'Tahfidz Cilik (Juz 30 & Ibadah)',
+    desc: 'Bimbingan hafalan surat-surat pendek Al-Qur\'an (Juz 30) serta praktik ibadah harian dengan pendekatan kasih sayang dan menyenangkan.',
+    jadwalBiasa: 'Senin - Sabtu: 12:00 - 17:00 WIB',
+    jadwalLibur: 'Senin - Sabtu: 12:00 - 15:30 WIB',
+    link: '/program/tahfidz',
+    borderColor: '#16a34a'
+  },
+  {
+    id: 4,
+    tabName: 'INGGRIS',
+    badgeText: 'PROGRAM 4 • Percakapan Interaktif',
+    badgeColor: '#e11d48',
+    badgeBg: '#fff1f2',
+    usia: 'Usia 4 - 12 Tahun',
+    title: 'English For Kids (Interactive)',
+    desc: 'Pengenalan kosakata, pelafalan, dan percakapan interaktif guna membangun rasa percaya diri anak dalam berkomunikasi aktif berbahasa Inggris.',
+    jadwalBiasa: 'Jumat - Sabtu: 12:00 - 17:00 WIB',
+    jadwalLibur: 'Jumat - Sabtu: 12:00 - 15:30 WIB',
+    link: '/program/inggris',
+    borderColor: '#e11d48'
+  }
+];
+
 export const HomePage: React.FC = () => {
   useMascotCursor();
   const { user } = useAuth();
@@ -18,6 +77,18 @@ export const HomePage: React.FC = () => {
   const [activeAdvCard, setActiveAdvCard] = useState<number | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [lightboxImg, setLightboxImg] = useState<{ src: string; title: string } | null>(null);
+  const [mobileProgramId, setMobileProgramId] = useState<number>(1);
+  const [mobileTestiId, setMobileTestiId] = useState<number>(1);
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 992);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Counter targets ref
   const achievementsRef = useRef<HTMLDivElement>(null);
@@ -101,13 +172,25 @@ export const HomePage: React.FC = () => {
             <img src="/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa SIP TC Pariaman" />
           </Link>
 
-          <button
-            className="mobile-menu-btn"
-            id="mobileMenuBtn"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            <i className={`fas ${isMobileMenuOpen ? 'fa-times' : 'fa-bars'}`}></i>
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            {/* Mobile-only Daftar Sekarang button */}
+            <a
+              href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak."
+              target="_blank"
+              rel="noreferrer"
+              className="btn btn-yellow mobile-only-daftar"
+            >
+              Daftar Sekarang
+            </a>
+            
+            <button
+              className="mobile-menu-btn"
+              id="mobileMenuBtn"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              <i className={`fas ${isMobileMenuOpen ? 'fa-times' : 'fa-bars'}`}></i>
+            </button>
+          </div>
 
           <ul className={`nav-links ${isMobileMenuOpen ? 'active' : ''}`} id="navLinks">
             <li><a href="#home" onClick={() => setIsMobileMenuOpen(false)}>Beranda</a></li>
@@ -116,6 +199,27 @@ export const HomePage: React.FC = () => {
             <li><a href="#achievements" onClick={() => setIsMobileMenuOpen(false)}>Prestasi</a></li>
             <li><Link to="/galeri" onClick={() => setIsMobileMenuOpen(false)}>Galeri</Link></li>
             <li><a href="#lokasi-peta" onClick={() => setIsMobileMenuOpen(false)}>Lokasi</a></li>
+            
+            {/* Mobile-only Masuk button at the bottom of the drawer */}
+            <li className="mobile-only-masuk" style={{ marginTop: 'auto', width: '100%', paddingTop: '2rem' }}>
+              {!user ? (
+                <button
+                  onClick={() => { setIsMobileMenuOpen(false); setIsLoginModalOpen(true); }}
+                  className="btn btn-primary"
+                  style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '0.8rem' }}
+                >
+                  Masuk
+                </button>
+              ) : (
+                <Link
+                  to={user.role === 'admin' || user.role === 'owner' ? '/admin' : user.role === 'guru' ? '/guru' : '/ortu'}
+                  className="btn btn-primary"
+                  style={{ width: '100%', display: 'block', textAlign: 'center' }}
+                >
+                  Dashboard
+                </Link>
+              )}
+            </li>
           </ul>
 
           <div className="nav-buttons">
@@ -225,7 +329,7 @@ export const HomePage: React.FC = () => {
         <div className="container">
           <div className="trust-card">
             <div className="trust-badge">
-              <h3>28+</h3>
+              <h3>{new Date().getFullYear() - 1998}+</h3>
               <p>Tahun Pengalaman<br />di Kota Pariaman</p>
             </div>
             <div className="trust-content">
@@ -254,131 +358,210 @@ export const HomePage: React.FC = () => {
             <p>Pilih program terbaik yang dirancang khusus untuk melatih tumbuh kembang belajar anak Anda</p>
           </div>
           
-          <div className="programs-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem', alignItems: 'stretch' }}>
-            {/* Program 1: Sempoa */}
-            <div className="program-card" style={{ background: '#fff', borderRadius: '16px', borderTop: '6px solid var(--color-primary-orange)', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', padding: '1.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'space-between' }}>
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', minHeight: '3.2rem' }}>
-                    <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.35rem', color: 'var(--color-text-dark)' }}>Sempoa</h3>
-                    <span style={{ background: '#fff8e1', color: '#e65100', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '20px', border: '1px solid #ffe0b2' }}>Usia 4 - 12 Thn</span>
+          {/* CONDITIONAL RENDERING BASED ON VIEWPORT */}
+          {isMobile ? (
+            /* MOBILE INTERACTIVE PROGRAM CARD (Exact match with design screenshot) */
+            (() => {
+              const activeProg = programsData.find(p => p.id === mobileProgramId) || programsData[0];
+              return (
+                <div className="mobile-program-layout">
+                  {/* Scrollable Tabs */}
+                  <div className="mobile-tabs-container">
+                    {programsData.map(p => (
+                      <button
+                        key={p.id}
+                        onClick={() => setMobileProgramId(p.id)}
+                        className={`mobile-tab ${mobileProgramId === p.id ? 'active' : ''}`}
+                      >
+                        <span className="mobile-tab-num">{p.id}</span>
+                        {p.tabName}
+                      </button>
+                    ))}
                   </div>
-                  <p style={{ fontSize: '0.92rem', marginBottom: '1.25rem', color: 'var(--color-text-body)', textAlign: 'left', lineHeight: 1.6, minHeight: '4.8rem' }}>
-                    Pelatihan mental aritmatika guna menyeimbangkan koordinasi sel otak kanan-kiri anak secara optimal.
-                  </p>
-                </div>
-                <div className="program-schedule-box" style={{ padding: '0.75rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', minHeight: '85px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <div style={{ fontSize: '0.8rem', color: '#e65100', fontWeight: 700, marginBottom: '0.35rem' }}>Sesi & Jadwal Kelas</div>
-                  <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
-                    <span style={{ minWidth: '60px' }}>Hari Biasa:</span>
-                    <span>Senin - Sabtu</span>
-                    <span style={{ background: '#fff3e0', color: '#e65100', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>09:00 - 17:00 WIB</span>
-                  </div>
-                  <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <span style={{ minWidth: '60px' }}>Hari Libur:</span>
-                    <span>Senin - Sabtu</span>
-                    <span style={{ background: '#fff3e0', color: '#e65100', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>09:00 - 15:30 WIB</span>
-                  </div>
-                </div>
-              </div>
-              <Link to="/program/sempoa" className="btn btn-outline" style={{ padding: '0.6rem 1.25rem', fontSize: '0.9rem', width: '100%', marginTop: 'auto', justifyContent: 'center' }}>
-                Lihat Detail Program <i className="fas fa-arrow-right" style={{ marginLeft: '0.3rem' }}></i>
-              </Link>
-            </div>
 
-            {/* Program 2: Fonem */}
-            <div className="program-card" style={{ background: '#fff', borderRadius: '16px', borderTop: '6px solid var(--color-accent-teal)', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', padding: '1.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'space-between' }}>
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', minHeight: '3.2rem' }}>
-                    <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.35rem', color: 'var(--color-text-dark)' }}>Fonem</h3>
-                    <span style={{ background: '#e0f7fa', color: '#00838f', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '20px', border: '1px solid #b2ebf2' }}>Usia 4 - 12 Thn</span>
-                  </div>
-                  <p style={{ fontSize: '0.92rem', marginBottom: '1.25rem', color: 'var(--color-text-body)', textAlign: 'left', lineHeight: 1.6, minHeight: '4.8rem' }}>
-                    Metode PeSO (Pembelajaran Seluruh Otak) membaca & menulis cepat tanpa mengeja dan tanpa stres.
-                  </p>
-                </div>
-                <div className="program-schedule-box" style={{ padding: '0.75rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', minHeight: '85px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <div style={{ fontSize: '0.8rem', color: '#00838f', fontWeight: 700, marginBottom: '0.35rem' }}>Sesi & Jadwal Kelas</div>
-                  <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
-                    <span style={{ minWidth: '60px' }}>Hari Biasa:</span>
-                    <span>Senin - Sabtu</span>
-                    <span style={{ background: '#e0f7fa', color: '#00838f', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>09:00 - 17:00 WIB</span>
-                  </div>
-                  <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <span style={{ minWidth: '60px' }}>Hari Libur:</span>
-                    <span>Senin - Sabtu</span>
-                    <span style={{ background: '#e0f7fa', color: '#00838f', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>09:00 - 15:30 WIB</span>
-                  </div>
-                </div>
-              </div>
-              <Link to="/program/fonem" className="btn btn-outline" style={{ padding: '0.6rem 1.25rem', fontSize: '0.9rem', width: '100%', marginTop: 'auto', justifyContent: 'center' }}>
-                Lihat Detail Program <i className="fas fa-arrow-right" style={{ marginLeft: '0.3rem' }}></i>
-              </Link>
-            </div>
+                  {/* Main Card */}
+                  <div className="mobile-program-card" style={{ borderColor: activeProg.borderColor }}>
+                    {/* Badges */}
+                    <div className="mobile-program-badges">
+                      <span className="mobile-prog-badge-primary" style={{ color: activeProg.badgeColor, backgroundColor: activeProg.badgeBg, borderColor: activeProg.borderColor }}>
+                        {activeProg.badgeText}
+                      </span>
+                      <span className="mobile-prog-badge-age">
+                        {activeProg.usia}
+                      </span>
+                    </div>
 
-            {/* Program 3: Tahfidz */}
-            <div className="program-card" style={{ background: '#fff', borderRadius: '16px', borderTop: '6px solid #2E7D32', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', padding: '1.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'space-between' }}>
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', minHeight: '3.2rem' }}>
-                    <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.35rem', color: 'var(--color-text-dark)' }}>Tahfidz</h3>
-                    <span style={{ background: '#e8f5e9', color: '#1b5e20', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '20px', border: '1px solid #c8e6c9' }}>Usia 4 - 12 Thn</span>
-                  </div>
-                  <p style={{ fontSize: '0.92rem', marginBottom: '1.25rem', color: 'var(--color-text-body)', textAlign: 'left', lineHeight: 1.6, minHeight: '4.8rem' }}>
-                    Bimbingan hafalan surat-surat pendek Al-Qur'an (Juz 30) serta praktik ibadah harian.
-                  </p>
-                </div>
-                <div className="program-schedule-box" style={{ padding: '0.75rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', minHeight: '85px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <div style={{ fontSize: '0.8rem', color: '#1b5e20', fontWeight: 700, marginBottom: '0.35rem' }}>Sesi & Jadwal Kelas</div>
-                  <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
-                    <span style={{ minWidth: '60px' }}>Hari Biasa:</span>
-                    <span>Senin - Sabtu</span>
-                    <span style={{ background: '#e8f5e9', color: '#1b5e20', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>12:00 - 17:00 WIB</span>
-                  </div>
-                  <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <span style={{ minWidth: '60px' }}>Hari Libur:</span>
-                    <span>Senin - Sabtu</span>
-                    <span style={{ background: '#e8f5e9', color: '#1b5e20', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>12:00 - 15:30 WIB</span>
-                  </div>
-                </div>
-              </div>
-              <Link to="/program/tahfidz" className="btn btn-outline" style={{ padding: '0.6rem 1.25rem', fontSize: '0.9rem', width: '100%', marginTop: 'auto', justifyContent: 'center' }}>
-                Lihat Detail Program <i className="fas fa-arrow-right" style={{ marginLeft: '0.3rem' }}></i>
-              </Link>
-            </div>
+                    {/* Title */}
+                    <h3 className="mobile-program-title">{activeProg.title}</h3>
 
-            {/* Program 4: Bahasa Inggris */}
-            <div className="program-card" style={{ background: '#fff', borderRadius: '16px', borderTop: '6px solid #E53935', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', padding: '1.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'space-between' }}>
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', minHeight: '3.2rem' }}>
-                    <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.35rem', color: 'var(--color-text-dark)' }}>Bahasa Inggris</h3>
-                    <span style={{ background: '#ffebee', color: '#c62828', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '20px', border: '1px solid #ffcdd2' }}>Usia 4 - 12 Thn</span>
+                    {/* Description */}
+                    <p className="mobile-program-desc">{activeProg.desc}</p>
+
+                    {/* Schedule Box */}
+                    <div className="mobile-program-schedule">
+                      <div className="sched-header">
+                        <span style={{ color: '#ea580c', marginRight: '4px' }}>🕒</span> <strong>Sesi & Jadwal Kelas:</strong>
+                      </div>
+                      <ul className="sched-list">
+                        <li>• Hari Biasa: <strong>{activeProg.jadwalBiasa}</strong></li>
+                        <li>• Hari Libur: <strong>{activeProg.jadwalLibur}</strong></li>
+                      </ul>
+                    </div>
+
+                    {/* Navigation Buttons */}
+                    <div className="mobile-program-nav">
+                      <button
+                        onClick={() => mobileProgramId > 1 && setMobileProgramId(mobileProgramId - 1)}
+                        disabled={mobileProgramId === 1}
+                        className="prog-nav-btn prev"
+                      >
+                        ← Sebelumnya
+                      </button>
+                      <button
+                        onClick={() => mobileProgramId < programsData.length && setMobileProgramId(mobileProgramId + 1)}
+                        disabled={mobileProgramId === programsData.length}
+                        className="prog-nav-btn next"
+                      >
+                        Berikutnya →
+                      </button>
+                    </div>
+
+                    {/* Main Action Button */}
+                    <Link to={activeProg.link} className="mobile-program-action-btn">
+                      <span style={{ fontSize: '1.1rem', marginRight: '6px' }}><i className="fas fa-graduation-cap"></i></span> Pelajari Kurikulum & Detail Program →
+                    </Link>
                   </div>
-                  <p style={{ fontSize: '0.92rem', marginBottom: '1.25rem', color: 'var(--color-text-body)', textAlign: 'left', lineHeight: 1.6, minHeight: '4.8rem' }}>
-                    Pengenalan kosakata, pelafalan, dan percakapan interaktif guna membangun percaya diri berbahasa asing.
-                  </p>
                 </div>
-                <div className="program-schedule-box" style={{ padding: '0.75rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', minHeight: '85px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <div style={{ fontSize: '0.8rem', color: '#c62828', fontWeight: 700, marginBottom: '0.35rem' }}>Sesi & Jadwal Kelas</div>
-                  <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
-                    <span style={{ minWidth: '60px' }}>Hari Biasa:</span>
-                    <span>Jumat - Sabtu</span>
-                    <span style={{ background: '#ffebee', color: '#c62828', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>12:00 - 17:00 WIB</span>
+              );
+            })()
+          ) : (
+            /* DESKTOP GRID LAYOUT */
+            <div className="programs-grid desktop-only-programs" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem', alignItems: 'stretch' }}>
+              {/* Program 1: Sempoa */}
+              <div className="program-card" style={{ background: '#fff', borderRadius: '16px', borderTop: '6px solid var(--color-primary-orange)', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', padding: '1.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', minHeight: '3.2rem' }}>
+                      <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.35rem', color: 'var(--color-text-dark)' }}>Sempoa</h3>
+                      <span style={{ background: '#fff8e1', color: '#e65100', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '20px', border: '1px solid #ffe0b2' }}>Usia 4 - 12 Thn</span>
+                    </div>
+                    <p style={{ fontSize: '0.92rem', marginBottom: '1.25rem', color: 'var(--color-text-body)', textAlign: 'left', lineHeight: 1.6, minHeight: '4.8rem' }}>
+                      Pelatihan mental aritmatika guna menyeimbangkan koordinasi sel otak kanan-kiri anak secara optimal.
+                    </p>
                   </div>
-                  <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <span style={{ minWidth: '60px' }}>Hari Libur:</span>
-                    <span>Jumat - Sabtu</span>
-                    <span style={{ background: '#ffebee', color: '#c62828', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>12:00 - 15:30 WIB</span>
+                  <div className="program-schedule-box" style={{ padding: '0.75rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', minHeight: '85px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <div style={{ fontSize: '0.8rem', color: '#e65100', fontWeight: 700, marginBottom: '0.35rem' }}>Sesi & Jadwal Kelas</div>
+                    <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
+                      <span style={{ minWidth: '60px' }}>Hari Biasa:</span>
+                      <span>Senin - Sabtu</span>
+                      <span style={{ background: '#fff3e0', color: '#e65100', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>09:00 - 17:00 WIB</span>
+                    </div>
+                    <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <span style={{ minWidth: '60px' }}>Hari Libur:</span>
+                      <span>Senin - Sabtu</span>
+                      <span style={{ background: '#fff3e0', color: '#e65100', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>09:00 - 15:30 WIB</span>
+                    </div>
                   </div>
                 </div>
+                <Link to="/program/sempoa" className="btn btn-outline" style={{ padding: '0.6rem 1.25rem', fontSize: '0.9rem', width: '100%', marginTop: 'auto', justifyContent: 'center' }}>
+                  Lihat Detail Program <i className="fas fa-arrow-right" style={{ marginLeft: '0.3rem' }}></i>
+                </Link>
               </div>
-              <Link to="/program/inggris" className="btn btn-outline" style={{ padding: '0.6rem 1.25rem', fontSize: '0.9rem', width: '100%', marginTop: 'auto', justifyContent: 'center' }}>
-                Lihat Detail Program <i className="fas fa-arrow-right" style={{ marginLeft: '0.3rem' }}></i>
-              </Link>
+
+              {/* Program 2: Fonem */}
+              <div className="program-card" style={{ background: '#fff', borderRadius: '16px', borderTop: '6px solid var(--color-accent-teal)', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', padding: '1.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', minHeight: '3.2rem' }}>
+                      <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.35rem', color: 'var(--color-text-dark)' }}>Fonem</h3>
+                      <span style={{ background: '#e0f7fa', color: '#00838f', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '20px', border: '1px solid #b2ebf2' }}>Usia 4 - 12 Thn</span>
+                    </div>
+                    <p style={{ fontSize: '0.92rem', marginBottom: '1.25rem', color: 'var(--color-text-body)', textAlign: 'left', lineHeight: 1.6, minHeight: '4.8rem' }}>
+                      Metode PeSO (Pembelajaran Seluruh Otak) membaca & menulis cepat tanpa mengeja dan tanpa stres.
+                    </p>
+                  </div>
+                  <div className="program-schedule-box" style={{ padding: '0.75rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', minHeight: '85px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <div style={{ fontSize: '0.8rem', color: '#00838f', fontWeight: 700, marginBottom: '0.35rem' }}>Sesi & Jadwal Kelas</div>
+                    <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
+                      <span style={{ minWidth: '60px' }}>Hari Biasa:</span>
+                      <span>Senin - Sabtu</span>
+                      <span style={{ background: '#e0f7fa', color: '#00838f', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>09:00 - 17:00 WIB</span>
+                    </div>
+                    <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <span style={{ minWidth: '60px' }}>Hari Libur:</span>
+                      <span>Senin - Sabtu</span>
+                      <span style={{ background: '#e0f7fa', color: '#00838f', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>09:00 - 15:30 WIB</span>
+                    </div>
+                  </div>
+                </div>
+                <Link to="/program/fonem" className="btn btn-outline" style={{ padding: '0.6rem 1.25rem', fontSize: '0.9rem', width: '100%', marginTop: 'auto', justifyContent: 'center' }}>
+                  Lihat Detail Program <i className="fas fa-arrow-right" style={{ marginLeft: '0.3rem' }}></i>
+                </Link>
+              </div>
+
+              {/* Program 3: Tahfidz */}
+              <div className="program-card" style={{ background: '#fff', borderRadius: '16px', borderTop: '6px solid #2E7D32', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', padding: '1.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', minHeight: '3.2rem' }}>
+                      <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.35rem', color: 'var(--color-text-dark)' }}>Tahfidz</h3>
+                      <span style={{ background: '#e8f5e9', color: '#1b5e20', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '20px', border: '1px solid #c8e6c9' }}>Usia 4 - 12 Thn</span>
+                    </div>
+                    <p style={{ fontSize: '0.92rem', marginBottom: '1.25rem', color: 'var(--color-text-body)', textAlign: 'left', lineHeight: 1.6, minHeight: '4.8rem' }}>
+                      Bimbingan hafalan surat-surat pendek Al-Qur'an (Juz 30) serta praktik ibadah harian.
+                    </p>
+                  </div>
+                  <div className="program-schedule-box" style={{ padding: '0.75rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', minHeight: '85px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <div style={{ fontSize: '0.8rem', color: '#1b5e20', fontWeight: 700, marginBottom: '0.35rem' }}>Sesi & Jadwal Kelas</div>
+                    <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
+                      <span style={{ minWidth: '60px' }}>Hari Biasa:</span>
+                      <span>Senin - Sabtu</span>
+                      <span style={{ background: '#e8f5e9', color: '#1b5e20', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>12:00 - 17:00 WIB</span>
+                    </div>
+                    <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <span style={{ minWidth: '60px' }}>Hari Libur:</span>
+                      <span>Senin - Sabtu</span>
+                      <span style={{ background: '#e8f5e9', color: '#1b5e20', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>12:00 - 15:30 WIB</span>
+                    </div>
+                  </div>
+                </div>
+                <Link to="/program/tahfidz" className="btn btn-outline" style={{ padding: '0.6rem 1.25rem', fontSize: '0.9rem', width: '100%', marginTop: 'auto', justifyContent: 'center' }}>
+                  Lihat Detail Program <i className="fas fa-arrow-right" style={{ marginLeft: '0.3rem' }}></i>
+                </Link>
+              </div>
+
+              {/* Program 4: Bahasa Inggris */}
+              <div className="program-card" style={{ background: '#fff', borderRadius: '16px', borderTop: '6px solid #E53935', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', boxShadow: '0 8px 24px rgba(0,0,0,0.06)', padding: '1.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', minHeight: '3.2rem' }}>
+                      <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.35rem', color: 'var(--color-text-dark)' }}>Bahasa Inggris</h3>
+                      <span style={{ background: '#ffebee', color: '#c62828', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '20px', border: '1px solid #ffcdd2' }}>Usia 4 - 12 Thn</span>
+                    </div>
+                    <p style={{ fontSize: '0.92rem', marginBottom: '1.25rem', color: 'var(--color-text-body)', textAlign: 'left', lineHeight: 1.6, minHeight: '4.8rem' }}>
+                      Pengenalan kosakata, pelafalan, dan percakapan interaktif guna membangun percaya diri berbahasa asing.
+                    </p>
+                  </div>
+                  <div className="program-schedule-box" style={{ padding: '0.75rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', minHeight: '85px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <div style={{ fontSize: '0.8rem', color: '#c62828', fontWeight: 700, marginBottom: '0.35rem' }}>Sesi & Jadwal Kelas</div>
+                    <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
+                      <span style={{ minWidth: '60px' }}>Hari Biasa:</span>
+                      <span>Jumat - Sabtu</span>
+                      <span style={{ background: '#ffebee', color: '#c62828', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>12:00 - 17:00 WIB</span>
+                    </div>
+                    <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <span style={{ minWidth: '60px' }}>Hari Libur:</span>
+                      <span>Jumat - Sabtu</span>
+                      <span style={{ background: '#ffebee', color: '#c62828', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>12:00 - 15:30 WIB</span>
+                    </div>
+                  </div>
+                </div>
+                <Link to="/program/inggris" className="btn btn-outline" style={{ padding: '0.6rem 1.25rem', fontSize: '0.9rem', width: '100%', marginTop: 'auto', justifyContent: 'center' }}>
+                  Lihat Detail Program <i className="fas fa-arrow-right" style={{ marginLeft: '0.3rem' }}></i>
+                </Link>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </section>
 
@@ -520,6 +703,76 @@ export const HomePage: React.FC = () => {
             <h2>Testimoni Wali Murid</h2>
             <p>Pengakuan nyata para orang tua yang melihat langsung perubahan positif buah hati mereka</p>
           </div>
+
+          {isMobile ? (() => {
+            const testiData = [
+              { id: 1, tabName: 'Ortu Hafla', initials: 'OH', color: '#f57c00', bgColor: '#fff8e1', borderColor: '#ffecb3', name: 'Orang Tua Hafla', role: 'Wali Murid Sempoa SIP', text: '"Sebelum belajar sempoa, Hafla memang anak yang cenderung pemalu dan kurang percaya diri jika harus tampil di depan banyak orang. Kami sebagai orang tua sering khawatir karena dia lebih suka menghindari situasi yang mengharuskannya berbicara di depan umum. Alhamdulillah, sejak mengikuti kelas sempoa, kami melihat perubahan yang sangat positif. Hafla menjadi lebih berani dan percaya diri. Bahkan saat ustazah di sekolah memintanya tampil di depan kelas, ataupun depan umum dia mau melakukannya tanpa menolak seperti sebelumnya. Bagi kami, manfaat sempoa bukan hanya melatih kemampuan berhitung, tetapi juga membantu membangun keberanian, kepercayaan diri, serta kesiapan anak untuk tampil di depan orang lain. Semoga Hafla terus berkembang menjadi anak yang percaya diri dan berprestasi."' },
+              { id: 2, tabName: 'Ortu Queenza', initials: 'OQ', color: '#00acc1', bgColor: '#e0f7fa', borderColor: '#b2ebf2', name: 'Orang Tua Queenza', role: 'Wali Murid Sempoa SIP', text: '"Testimoni queenza selama belajar sempoa sangat lah bagus buk .. Alhamdulillah queenza sangat menyukai pelajaran matematika .. Sangat aktif dalam semua perlombaan baik itu matematika atau pun akademik lainnya .. Selain itu alhamdulillah nya, dari kelas 1 sampai sekarang kelas 6 queenza selalu juara 1 di sekolah .. Dan selain itu queenza dapat menghitung cepat, dan bayangan saja .. Sempoa sangat sangat bagus 👍🏻 Terimakasih buat guru2 yang sudah mengajarkan dan mendidikan queenza,sehingga alhamdulillah queenza menjadi anak yg berprestasi dari dl sampai sekarang, mudah2an kedepannya akan lebih sukses lagi aamiin 🙏🏻"' },
+              { id: 3, tabName: 'Ortu Fatihah', initials: 'OF', color: '#2E7D32', bgColor: '#e8f5e9', borderColor: '#c8e6c9', name: 'Orang Tua Fatihah', role: 'Wali Murid Sempoa SIP', text: '"sejak pertama masuk sempoa fatihah sangat bersemangat b emi, sampai masuk foundation A, difoundation B sampai sekarang semangatnya agak kurang b emi, dirumah mami tanya apakah fatihah capek belajar? Fatihah bilang capek dikit mi, mungkin karna kegiatan sekolahnya fullday jd kurang fokus, mudah2an kedepannya fatihah lebih semangat lagi b emi."' },
+              { id: 4, tabName: 'Ortu Agis', initials: 'OA', color: '#E53935', bgColor: '#ffebee', borderColor: '#ffcdd2', name: 'Orang Tua Agis', role: 'Wali Murid Sempoa SIP', text: '"Allahamdulillah sejak agis mengenal sempoa dari sejak TK B, jauh sangat manfaat yang di rasakan sejak belajar, mulai dari anak yang biasa tidak fokus, atau kurang fokus, allhamdulillah sekarng dalam belajar suah terlihat fokus, dan uang paling syanag rasakan kali dampaknya, dari segi Daya Ingat Kuat terkihat sepintas dalam proses belajar apapun mendengar sekilas kata2, tidak disadari dia ingat sekali, dan sangat menyukai hitungan math, dan juga sangat Percaya Diri. Terima kasih untuk sempoa 👏🏻👍🏻👍🏻"' },
+            ];
+            const activeTesti = testiData.find(t => t.id === mobileTestiId) || testiData[0];
+            return (
+              <div className="mobile-testi-layout">
+                {/* Tabs */}
+                <div className="mobile-tabs-container">
+                  {testiData.map(t => (
+                    <button
+                      key={t.id}
+                      onClick={() => setMobileTestiId(t.id)}
+                      className={`mobile-tab ${mobileTestiId === t.id ? 'active' : ''}`}
+                    >
+                      <span className="mobile-tab-num">{t.id}</span>
+                      {t.tabName}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Card */}
+                <div className="mobile-testi-card" style={{ borderColor: activeTesti.color, background: activeTesti.bgColor }}>
+                  {/* Stars */}
+                  <div className="mobile-testi-stars">
+                    {'★★★★★'.split('').map((s, i) => (
+                      <span key={i} style={{ color: '#f59e0b', fontSize: '1.3rem' }}>{s}</span>
+                    ))}
+                  </div>
+
+                  {/* Text */}
+                  <p className="mobile-testi-text">{activeTesti.text}</p>
+
+                  {/* Author + Nav */}
+                  <div className="mobile-testi-footer">
+                    <div className="mobile-testi-author">
+                      <div className="mobile-testi-avatar" style={{ background: activeTesti.color }}>
+                        {activeTesti.initials}
+                      </div>
+                      <div>
+                        <h4 className="mobile-testi-name">{activeTesti.name}</h4>
+                        <p className="mobile-testi-role">{activeTesti.role}</p>
+                      </div>
+                    </div>
+                    <div className="mobile-testi-nav-arrows">
+                      <button
+                        onClick={() => mobileTestiId > 1 && setMobileTestiId(mobileTestiId - 1)}
+                        disabled={mobileTestiId === 1}
+                        className="testi-arrow-btn"
+                      >
+                        ‹
+                      </button>
+                      <button
+                        onClick={() => mobileTestiId < testiData.length && setMobileTestiId(mobileTestiId + 1)}
+                        disabled={mobileTestiId === testiData.length}
+                        className="testi-arrow-btn active-arrow"
+                        style={{ background: activeTesti.color }}
+                      >
+                        ›
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })() : (
           <div className="testi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem' }}>
             {/* Testimoni 1: Hafla */}
             <div className="testi-card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderRadius: '12px', background: '#fff8e1', border: '1px solid #ffecb3' }}>
@@ -605,6 +858,7 @@ export const HomePage: React.FC = () => {
               </div>
             </div>
           </div>
+          )}
         </div>
       </section>
 
@@ -612,43 +866,75 @@ export const HomePage: React.FC = () => {
       <section className="gallery section-padding" id="galeri" style={{ backgroundColor: 'var(--color-bg-light)', borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
         <div className="container" style={{ textAlign: 'center' }}>
           <div className="section-header">
-            <h2>Galeri Kegiatan Pembelajaran dan Prestasi</h2>
-            <p>Mengintip keceriaan anak-anak didik kami saat belajar, berlatih, dan berprestasi bersama</p>
+            <h2>Galeri Kegiatan &amp; Prestasi</h2>
+            <p>Dokumentasi foto kegiatan belajar dan kejuaraan murid Sempoa SIP TC Pariaman</p>
           </div>
-          <div className="gallery-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.25rem', textAlign: 'center' }}>
-            <div className="gallery-card" onClick={() => setLightboxImg({ src: '/assets/image/kegiatan-1.webp', title: 'Siswa Praktek Sholat Berjamaah' })} style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', border: '3px solid #f57c00', boxShadow: '0 6px 18px rgba(245, 124, 0, 0.15)', cursor: 'pointer' }}>
-              <div className="gallery-img-wrap" style={{ width: '100%', aspectRatio: '3 / 4', overflow: 'hidden' }}>
-                <img src="/assets/image/kegiatan-1.webp" alt="Siswa Praktek Sholat Berjamaah" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+
+          {isMobile ? (
+            /* MOBILE: 2x2 Category Cards */
+            <div className="mobile-gallery-grid">
+              <Link to="/galeri" className="mobile-gallery-card" style={{ borderColor: '#f97316' }}>
+                <div className="mgc-icon" style={{ color: '#f97316' }}><i className="fas fa-graduation-cap"></i></div>
+                <h4 className="mgc-title">Foto Kegiatan Belajar Sempoa</h4>
+                <span className="mgc-badge" style={{ color: '#f97316', background: '#fff7ed' }}>Sesi Kelas</span>
+                <p className="mgc-status">Siap Diunggah Admin</p>
+              </Link>
+              <Link to="/galeri" className="mobile-gallery-card" style={{ borderColor: '#0891b2' }}>
+                <div className="mgc-icon" style={{ color: '#0891b2' }}><i className="fas fa-book-open"></i></div>
+                <h4 className="mgc-title">Foto Latihan PeSO Fonem</h4>
+                <span className="mgc-badge" style={{ color: '#0891b2', background: '#ecfeff' }}>Membaca Cepat</span>
+                <p className="mgc-status">Siap Diunggah Admin</p>
+              </Link>
+              <Link to="/galeri" className="mobile-gallery-card" style={{ borderColor: '#16a34a' }}>
+                <div className="mgc-icon" style={{ color: '#16a34a' }}><i className="fas fa-trophy"></i></div>
+                <h4 className="mgc-title">Foto Kejuaraan &amp; Prestasi</h4>
+                <span className="mgc-badge" style={{ color: '#16a34a', background: '#f0fdf4' }}>Olimpiade &amp; Lomba</span>
+                <p className="mgc-status">Siap Diunggah Admin</p>
+              </Link>
+              <Link to="/galeri" className="mobile-gallery-card" style={{ borderColor: '#e11d48' }}>
+                <div className="mgc-icon" style={{ color: '#e11d48' }}><i className="fas fa-heart"></i></div>
+                <h4 className="mgc-title">Foto Pembinaan Karakter &amp; Ibadah</h4>
+                <span className="mgc-badge" style={{ color: '#e11d48', background: '#fff1f2' }}>Aktivitas Santri</span>
+                <p className="mgc-status">Siap Diunggah Admin</p>
+              </Link>
+            </div>
+          ) : (
+            /* DESKTOP: Photo Grid */
+            <div className="gallery-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.25rem', textAlign: 'center' }}>
+              <div className="gallery-card" onClick={() => setLightboxImg({ src: '/assets/image/kegiatan-1.webp', title: 'Siswa Praktek Sholat Berjamaah' })} style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', border: '3px solid #f57c00', boxShadow: '0 6px 18px rgba(245, 124, 0, 0.15)', cursor: 'pointer' }}>
+                <div className="gallery-img-wrap" style={{ width: '100%', aspectRatio: '3 / 4', overflow: 'hidden' }}>
+                  <img src="/assets/image/kegiatan-1.webp" alt="Siswa Praktek Sholat Berjamaah" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </div>
+                <div className="gallery-caption" style={{ padding: '0.85rem', fontWeight: 700, color: '#e65100', fontSize: '0.9rem', borderTop: '1px solid #fff3e0' }}>
+                  Siswa Praktek Sholat Berjamaah
+                </div>
               </div>
-              <div className="gallery-caption" style={{ padding: '0.85rem', fontWeight: 700, color: '#e65100', fontSize: '0.9rem', borderTop: '1px solid #fff3e0' }}>
-                Siswa Praktek Sholat Berjamaah
+              <div className="gallery-card" onClick={() => setLightboxImg({ src: '/assets/image/kegiatan-2.webp', title: 'Siswa Sedang Belajar Sempoa' })} style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', border: '3px solid #00acc1', boxShadow: '0 6px 18px rgba(0, 172, 193, 0.15)', cursor: 'pointer' }}>
+                <div className="gallery-img-wrap" style={{ width: '100%', aspectRatio: '3 / 4', overflow: 'hidden' }}>
+                  <img src="/assets/image/kegiatan-2.webp" alt="Siswa Sedang Belajar Sempoa" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </div>
+                <div className="gallery-caption" style={{ padding: '0.85rem', fontWeight: 700, color: '#00838f', fontSize: '0.9rem', borderTop: '1px solid #e0f7fa' }}>
+                  Siswa Sedang Belajar Sempoa
+                </div>
+              </div>
+              <div className="gallery-card" onClick={() => setLightboxImg({ src: '/assets/image/kegiatan-3.webp', title: 'Suasana Belajar Fonem' })} style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', border: '3px solid #2E7D32', boxShadow: '0 6px 18px rgba(46, 125, 50, 0.15)', cursor: 'pointer' }}>
+                <div className="gallery-img-wrap" style={{ width: '100%', aspectRatio: '3 / 4', overflow: 'hidden' }}>
+                  <img src="/assets/image/kegiatan-3.webp" alt="Suasana Belajar Fonem" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </div>
+                <div className="gallery-caption" style={{ padding: '0.85rem', fontWeight: 700, color: '#1b5e20', fontSize: '0.9rem', borderTop: '1px solid #e8f5e9' }}>
+                  Suasana Belajar Fonem
+                </div>
+              </div>
+              <div className="gallery-card" onClick={() => setLightboxImg({ src: '/assets/image/kegiatan-4.webp', title: 'Suasana Belajar Sempoa' })} style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', border: '3px solid #E53935', boxShadow: '0 6px 18px rgba(229, 57, 53, 0.15)', cursor: 'pointer' }}>
+                <div className="gallery-img-wrap" style={{ width: '100%', aspectRatio: '3 / 4', overflow: 'hidden' }}>
+                  <img src="/assets/image/kegiatan-4.webp" alt="Suasana Belajar Sempoa" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </div>
+                <div className="gallery-caption" style={{ padding: '0.85rem', fontWeight: 700, color: '#c62828', fontSize: '0.9rem', borderTop: '1px solid #ffebee' }}>
+                  Suasana Belajar Sempoa
+                </div>
               </div>
             </div>
-            <div className="gallery-card" onClick={() => setLightboxImg({ src: '/assets/image/kegiatan-2.webp', title: 'Siswa Sedang Belajar Sempoa' })} style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', border: '3px solid #00acc1', boxShadow: '0 6px 18px rgba(0, 172, 193, 0.15)', cursor: 'pointer' }}>
-              <div className="gallery-img-wrap" style={{ width: '100%', aspectRatio: '3 / 4', overflow: 'hidden' }}>
-                <img src="/assets/image/kegiatan-2.webp" alt="Siswa Sedang Belajar Sempoa" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </div>
-              <div className="gallery-caption" style={{ padding: '0.85rem', fontWeight: 700, color: '#00838f', fontSize: '0.9rem', borderTop: '1px solid #e0f7fa' }}>
-                Siswa Sedang Belajar Sempoa
-              </div>
-            </div>
-            <div className="gallery-card" onClick={() => setLightboxImg({ src: '/assets/image/kegiatan-3.webp', title: 'Suasana Belajar Fonem' })} style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', border: '3px solid #2E7D32', boxShadow: '0 6px 18px rgba(46, 125, 50, 0.15)', cursor: 'pointer' }}>
-              <div className="gallery-img-wrap" style={{ width: '100%', aspectRatio: '3 / 4', overflow: 'hidden' }}>
-                <img src="/assets/image/kegiatan-3.webp" alt="Suasana Belajar Fonem" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </div>
-              <div className="gallery-caption" style={{ padding: '0.85rem', fontWeight: 700, color: '#1b5e20', fontSize: '0.9rem', borderTop: '1px solid #e8f5e9' }}>
-                Suasana Belajar Fonem
-              </div>
-            </div>
-            <div className="gallery-card" onClick={() => setLightboxImg({ src: '/assets/image/kegiatan-4.webp', title: 'Suasana Belajar Sempoa' })} style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', border: '3px solid #E53935', boxShadow: '0 6px 18px rgba(229, 57, 53, 0.15)', cursor: 'pointer' }}>
-              <div className="gallery-img-wrap" style={{ width: '100%', aspectRatio: '3 / 4', overflow: 'hidden' }}>
-                <img src="/assets/image/kegiatan-4.webp" alt="Suasana Belajar Sempoa" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </div>
-              <div className="gallery-caption" style={{ padding: '0.85rem', fontWeight: 700, color: '#c62828', fontSize: '0.9rem', borderTop: '1px solid #ffebee' }}>
-                Suasana Belajar Sempoa
-              </div>
-            </div>
-          </div>
+          )}
 
           <div style={{ marginTop: '2rem' }}>
             <Link to="/galeri" className="btn btn-primary" style={{ padding: '0.75rem 1.75rem', fontSize: '0.95rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -662,7 +948,7 @@ export const HomePage: React.FC = () => {
       <section className="cta-banner" id="lokasi-peta">
         <div className="container">
           <h2>Kunjungi Tempat Kami secara Langsung</h2>
-          <p>Diskusikan kebutuhan program belajar anak Anda, lakukan uji coba gratis (trial class), dan lihat fasilitas belajar yang nyaman di Kota Pariaman.</p>
+          <p>Diskusikan kebutuhan program belajar anak Anda, ikuti <strong>uji coba gratis (Trial Class)</strong>, dan lihat langsung fasilitas kami di Kota Pariaman.</p>
 
           <div className="banner-map-large">
             <iframe
@@ -673,6 +959,20 @@ export const HomePage: React.FC = () => {
               title="Google Maps Location"
             ></iframe>
           </div>
+
+          {/* Mobile: Styled Google Maps Button */}
+          {isMobile && (
+            <div className="mobile-maps-actions">
+              <a
+                href="https://maps.google.com/?q=Sempoa+Sip+Pariaman"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mobile-gmaps-btn"
+              >
+                📍 Buka di Google Maps
+              </a>
+            </div>
+          )}
         </div>
       </section>
 
@@ -719,7 +1019,7 @@ export const HomePage: React.FC = () => {
                   <img src="/assets/icons/email.svg" alt="Email" />
                   <div>
                     <p className="contact-label">Email</p>
-                    <a href="mailto:info@sempoasip-pariaman.id">info@sempoasip-pariaman.id</a>
+                    <a href="mailto:sempoasip.prmn@gmail.com">sempoasip.prmn@gmail.com</a>
                   </div>
                 </div>
               </div>

@@ -16,10 +16,10 @@ export const GuruSidebar: React.FC<SidebarProps> = ({ onClose, isCollapsed = fal
     navigate('/');
   };
 
-  const links = [
-    { to: '/guru', label: 'Dashboard Guru', icon: '📊', end: true },
-    { to: '/guru/kelas', label: 'Kelas Bimbingan', icon: '🧑‍🎓' },
-    { to: '/guru/absensi-input', label: 'Absensi & RFID', icon: '✏️' },
+    const links = [
+    { to: '/guru', label: 'Dashboard Guru', icon: <i className="fas fa-chart-bar"></i>, end: true },
+    { to: '/guru/kelas', label: 'Kelas Bimbingan', icon: <i className="fas fa-user-graduate"></i> },
+    { to: '/guru/absensi-input', label: 'Absensi & RFID', icon: <i className="fas fa-edit"></i> },
   ];
 
   return (
@@ -94,8 +94,9 @@ export const GuruSidebar: React.FC<SidebarProps> = ({ onClose, isCollapsed = fal
           }`}
           aria-label="Keluar dari portal"
         >
-          {isCollapsed ? '🚪' : '🚪 Keluar'}
+          {isCollapsed ? <i className="fas fa-sign-out-alt"></i> : <><i className="fas fa-sign-out-alt"></i> Keluar</>}
         </button>
+
       </div>
     </aside>
   );

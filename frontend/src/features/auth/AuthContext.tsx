@@ -31,7 +31,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     if (token) {
-      axios.get('http://localhost:8000/api/v1/auth/me', {
+      axios.get(`/api/v1/auth/me`, {
         headers: { Authorization: `Bearer ${token}` }
       }).then(res => {
         if (res.data) {
@@ -51,7 +51,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (email: string, password: string): Promise<User> => {
     setIsLoading(true);
     try {
-      const response = await axios.post('http://localhost:8000/api/v1/auth/login', {
+      const response = await axios.post(`/api/v1/auth/login`, {
         email,
         password,
       });

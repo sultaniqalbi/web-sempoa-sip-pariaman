@@ -80,20 +80,9 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     let isMounted = true;
 
     const getWebSocketUrl = () => {
-      const apiUrl = import.meta.env.VITE_API_URL || '';
-      if (apiUrl.startsWith('http://') || apiUrl.startsWith('https://')) {
-        const wsBase = apiUrl.replace(/^http/, 'ws');
-        if (wsBase.endsWith('/api/v1')) {
-          return `${wsBase}/realtime/ws`;
-        }
-        return `${wsBase.replace(/\/$/, '')}/api/v1/realtime/ws`;
-      }
-      if (typeof window !== 'undefined') {
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const host = window.location.host;
-        return `${protocol}//${host}/api/v1/realtime/ws`;
-      }
-      return 'ws://localhost:8000/api/v1/realtime/ws';
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = window.location.host;
+      return `${protocol}//${host}/api/v1/realtime/ws`;
     };
 
     const connectWebSocket = () => {

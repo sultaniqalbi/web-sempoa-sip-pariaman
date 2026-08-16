@@ -103,7 +103,7 @@ export const PembayaranOrtuPage: React.FC = () => {
   const childPhotoUrl = child?.foto_profil
     ? child.foto_profil.startsWith('http')
       ? child.foto_profil
-      : (import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1').replace('/api/v1', '') + child.foto_profil
+      : '/api/v1'.replace('/api/v1', '') + child.foto_profil
     : null;
 
   if (isLoading) {

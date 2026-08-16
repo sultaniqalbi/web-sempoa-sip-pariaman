@@ -175,7 +175,7 @@ export const PembayaranPage: React.FC = () => {
                       <td className="p-4 font-semibold text-white">{getPaymentDetails(proof.id_pembayaran)}</td>
                       <td className="p-4 font-mono text-slate-400 max-w-[200px] truncate">
                         <a
-                          href={`http://localhost:8000/${proof.file_path}`}
+                          href={'/api/v1'.replace('/api/v1', '') + '/' + proof.file_path}
                           target="_blank"
                           rel="noreferrer"
                           className="text-amber-500 hover:underline"

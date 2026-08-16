@@ -343,7 +343,7 @@ export const GaleriPage: React.FC = () => {
   const getFullImageUrl = (path: string) => {
     if (!path) return '';
     if (path.startsWith('http') || path.startsWith('data:')) return path;
-    const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1').replace('/api/v1', '');
+    const baseUrl = '/api/v1'.replace('/api/v1', '');
     return baseUrl + path;
   };
 
