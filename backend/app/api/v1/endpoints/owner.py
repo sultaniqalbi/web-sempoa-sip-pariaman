@@ -207,10 +207,37 @@ async def generate_rekap_bulanan(
         ["Total Siswa Aktif", siswa_aktif],
         ["Total Pendapatan (LUNAS)", float(revenue)],
         [],
+        ["--- RINGKASAN PROGRAM ---"],
         ["Program", "Jumlah Siswa Aktif"]
     ]
     for prog, count in program_stats:
         rows.append([prog, count])
+        
+    # 1. Tambah Data Siswa
+    rows.append([])
+    rows.append(["--- DATA SISWA ---"])
+    rows.append(["UID", "Nama", "Program", "Umur", "Status SPP", "Sisa Pertemuan", "Ortu", "WA Ortu"])
+    semua_siswa = db.query(Siswa).filter(Siswa.is_deleted == False).order_by(Siswa.nama.asc()).all()
+    for s in semua_siswa:
+        status_spp_val = s.status_spp.value if hasattr(s.status_spp, 'value') else str(s.status_spp)
+        rows.append([s.uid, s.nama, s.kategori_program, s.umur, status_spp_val, s.sisa_pertemuan, s.nama_orang_tua, s.whatsapp_orang_tua])
+
+    # 2. Tambah Data Guru
+    rows.append([])
+    rows.append(["--- DATA GURU ---"])
+    rows.append(["UID", "Nama", "Program", "Hari Mengajar", "Mode Kelas", "No WA"])
+    semua_guru = db.query(Guru).order_by(Guru.nama.asc()).all()
+    for g in semua_guru:
+        rows.append([g.uid, g.nama, g.kategori_program, g.hari_wajib, g.mode_kelas, g.whatsapp_guru])
+
+    # 3. Tambah Data Keuangan (Bulan ini)
+    rows.append([])
+    rows.append([f"--- DATA KEUANGAN ({bulan}) ---"])
+    rows.append(["ID", "Siswa ID", "Periode", "Jumlah", "Status"])
+    pembayaran_bulan = db.query(PembayaranPeriode).filter(PembayaranPeriode.periode_bulan == bulan).order_by(PembayaranPeriode.created_at.asc()).all()
+    for p in pembayaran_bulan:
+        status_p = p.status.value if hasattr(p.status, 'value') else str(p.status)
+        rows.append([p.id, p.id_siswa, p.periode_bulan, float(p.jumlah), status_p])
 
     from app.services.google_sheets import send_to_google_sheet
     tab_name = "Data Pertumbuhan"

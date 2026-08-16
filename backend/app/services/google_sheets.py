@@ -17,11 +17,15 @@ def send_to_google_sheet(tab_name: str, rows: list, title: str = "Export Data"):
     # 1. Cara A: Webhook (Google Apps Script)
     if webhook_url:
         try:
+            # 1. Pad rows to ensure they have the exact same length
+            max_cols = max((len(r) for r in rows), default=1)
+            padded_rows = [list(r) + [""] * (max_cols - len(r)) for r in rows]
+
             payload = {
                 "sheet": tab_name,
                 "title": title,
                 "timestamp": datetime.utcnow().isoformat(),
-                "rows": rows
+                "rows": padded_rows
             }
             # Kirim request POST ke URL Apps Script
             resp = requests.post(webhook_url, json=payload, timeout=10)
