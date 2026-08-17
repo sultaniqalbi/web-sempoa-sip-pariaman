@@ -19,7 +19,19 @@ SEED_USERS = [
         "nama": "Admin SIP Pariaman"
     },
     {
+        "email": "admin@sempoasippariaman.com",
+        "password": ADMIN_SEED_PWD,
+        "role": UserRole.admin,
+        "nama": "Admin SIP Pariaman"
+    },
+    {
         "email": "OwNerSiP@sempoasippariaman.com",
+        "password": OWNER_SEED_PWD,
+        "role": UserRole.owner,
+        "nama": "Owner SIP Pariaman"
+    },
+    {
+        "email": "owner@sempoasippariaman.com",
         "password": OWNER_SEED_PWD,
         "role": UserRole.owner,
         "nama": "Owner SIP Pariaman"
@@ -49,13 +61,10 @@ def run_seed(db: Session = None):
             ).first()
             
             if existing_user:
-                # If explicit seed password env is set, sync password
-                if (seed_user["role"] == UserRole.admin and "ADMIN_SEED_PASSWORD" in os.environ) or \
-                   (seed_user["role"] == UserRole.owner and "OWNER_SEED_PASSWORD" in os.environ):
-                    if not verify_password(seed_user["password"], existing_user.password):
-                        existing_user.password = get_password_hash(seed_user["password"])
-                        logger.info(f"Updated seed password for: {target_email}")
-                logger.info(f"Verified existing user account: {target_email} ({seed_user['role'].value})")
+                # Sync password if existing hash is invalid or mismatched
+                if not verify_password(seed_user["password"], existing_user.password):
+                    existing_user.password = get_password_hash(seed_user["password"])
+                    logger.info(f"Synchronized seed user password for: {target_email}")
                 existing_user.email = target_email
                 existing_user.role = seed_user["role"]
                 existing_user.nama = seed_user["nama"]
