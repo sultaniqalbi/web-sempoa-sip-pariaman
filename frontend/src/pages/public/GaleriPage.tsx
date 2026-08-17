@@ -151,7 +151,7 @@ export const GaleriPage: React.FC = () => {
       {/* MAIN CONTENT */}
       <main className="content-section-prog" style={{ maxWidth: '1200px', margin: '0 auto', padding: '3.5rem 1.5rem' }}>
         <div className="gallery-grid" id="publicGalleryGrid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
-          {galleryItems.map((item, idx) => (
+          {galleryItems.map((item: any, idx: number) => (
             <div
               key={idx}
               className="gallery-item"
