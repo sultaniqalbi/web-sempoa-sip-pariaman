@@ -60,5 +60,6 @@ class SiswaResponse(SiswaBase):
 class SiswaCreateResponse(BaseModel):
     siswa: SiswaResponse
     ortu_email: str
-    ortu_password_plaintext: str
+    password_sent_via: str = "whatsapp"
+    ortu_password_plaintext: Optional[str] = None
     whatsapp_number: Optional[str] = None

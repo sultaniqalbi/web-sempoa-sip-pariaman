@@ -50,6 +50,7 @@ class GuruResponse(GuruBase):
 class GuruCreateResponse(BaseModel):
     guru: GuruResponse
     guru_email: str
-    guru_password_plaintext: str
+    password_sent_via: str = "whatsapp"
+    guru_password_plaintext: Optional[str] = None
     whatsapp_number: Optional[str] = None
 

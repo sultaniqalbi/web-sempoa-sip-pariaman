@@ -82,7 +82,9 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const getWebSocketUrl = () => {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const host = window.location.host;
-      return `${protocol}//${host}/api/v1/realtime/ws`;
+      const token = localStorage.getItem('access_token');
+      const tokenParam = token ? `?token=${encodeURIComponent(token)}` : '';
+      return `${protocol}//${host}/api/v1/realtime/ws${tokenParam}`;
     };
 
     const connectWebSocket = () => {

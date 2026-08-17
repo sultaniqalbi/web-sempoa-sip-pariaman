@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import field_validator
 from typing import List, Union
+import os
 
 class Settings(BaseSettings):
     # Database
@@ -14,11 +15,15 @@ class Settings(BaseSettings):
     fastapi_env: str = "development"
     secret_key: str = "sempoa_super_secret_jwt_key_pariaman_2026_dev"
     algorithm: str = "HS256"
-    access_token_expire_minutes: int = 30
+    access_token_expire_minutes: int = 60
     refresh_token_expire_days: int = 7
     
     # ESP32 Hardware
     esp32_api_key: str = "SempoaPariaman_ESP32_SecureKey_2026!"
+
+    # Redis (For token blacklist & persistent rate limiting)
+    redis_host: str = "redis"
+    redis_port: int = 6379
     
     # CORS
     allowed_origins: Union[List[str], str] = [
@@ -30,10 +35,20 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000",
         "https://sempoasippariaman.com",
         "https://www.sempoasippariaman.com",
-        "http://202.155.157.22",
-        "https://202.155.157.22",
     ]
     
+    @field_validator("secret_key")
+    @classmethod
+    def validate_secret_key(cls, v, info):
+        # SECURITY FIX: Validate secret key length and uniqueness in production
+        env = os.getenv("FASTAPI_ENV", "development")
+        if env == "production":
+            if not v or v == "sempoa_super_secret_jwt_key_pariaman_2026_dev":
+                raise ValueError("SECRET_KEY harus di-set dengan value unik dan random di production.")
+            if len(v) < 32:
+                raise ValueError("SECRET_KEY terlalu pendek. Minimal 32 karakter.")
+        return v
+
     @field_validator("allowed_origins", mode="before")
     @classmethod
     def parse_allowed_origins(cls, v):

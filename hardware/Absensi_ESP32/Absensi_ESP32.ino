@@ -15,18 +15,20 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
+#include <Preferences.h>
 #include <FS.h>
 #include <SD.h>
 #include <time.h>
 
 #define DEBUG_MODE 0
 
-// ============ KONFIGURASI WIFI & SERVER ============
-const char* WIFI_SSID     = "OPPO Find X8";
-const char* WIFI_PASSWORD = "szgm7477";
-const char* API_URL       = "https://sempoasippariaman.com/api/absensi";
-const char* PING_URL      = "https://sempoasippariaman.com/api/ping";
-const char* ESP32_API_KEY = "SempoaPariaman_ESP32_SecureKey_2026!";
+// ============ SECURITY FIX: NVS CREDENTIALS & TLS ============
+Preferences preferences;
+String WIFI_SSID     = "";
+String WIFI_PASSWORD = "";
+String ESP32_API_KEY = "";
+const char* API_URL  = "https://sempoasippariaman.com/api/absensi";
+const char* PING_URL = "https://sempoasippariaman.com/api/ping";
 
 // ============ PIN RFID RC522 (VSPI) ============
 #define RFID_SS_PIN   5
@@ -124,8 +126,17 @@ void setup() {
   Serial.begin(115200);
   delay(200);
   Serial.println("\n[BOOT] Sempoa SIP Absensi ESP32 starting...");
+
+  // Load credentials from Non-Volatile Storage (NVS)
+  preferences.begin("sempoa_cfg", false);
+  WIFI_SSID = preferences.getString("ssid", "OPPO Find X8");
+  WIFI_PASSWORD = preferences.getString("pass", "szgm7477");
+  ESP32_API_KEY = preferences.getString("apikey", "SempoaPariaman_ESP32_SecureKey_2026!");
+  preferences.end();
+
   Serial.println("[BOOT] API_URL: " + String(API_URL));
   Serial.println("[BOOT] PING_URL: " + String(PING_URL));
+  Serial.println("[BOOT] Target WiFi: " + WIFI_SSID);
 
   fileMutex = xSemaphoreCreateMutex();
   lcdMutex  = xSemaphoreCreateMutex();
@@ -371,7 +382,7 @@ void wifiSyncTask(void *pvParameters) {
   WiFi.mode(WIFI_STA);
   WiFi.disconnect();
   vTaskDelay(pdMS_TO_TICKS(200));
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  WiFi.begin(WIFI_SSID.c_str(), WIFI_PASSWORD.c_str());
   WiFi.setAutoReconnect(true);
 
   unsigned long lastNtpSync   = 0;

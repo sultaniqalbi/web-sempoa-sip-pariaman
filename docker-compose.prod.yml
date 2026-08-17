@@ -25,15 +25,28 @@ services:
       - POSTGRES_PORT=5432
       - FASTAPI_ENV=production
       - SECRET_KEY=${SECRET_KEY}
-      - ESP32_API_KEY=${ESP32_API_KEY:-SempoaPariaman_ESP32_SecureKey_2026!}
-      - ALLOWED_ORIGINS=https://sempoasippariaman.com,https://www.sempoasippariaman.com,http://202.155.157.22,https://202.155.157.22
+      - ESP32_API_KEY=${ESP32_API_KEY:?ESP32_API_KEY harus di-set di .env}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ALLOWED_ORIGINS=https://sempoasippariaman.com,https://www.sempoasippariaman.com
       - GOOGLE_WEBHOOK_URL=https://script.google.com/macros/s/AKfycbxvnOx98V0kyz_ifxqM_Dp_i3m3TPrqdKCo9DBJcubP9qKGG_AM9ewVap0RpUxEVJw4/exec
     volumes:
       - ./backend/app/uploads:/app/app/uploads
       - ./backend/backups:/app/backups
     depends_on:
       - db
+      - redis
     restart: unless-stopped
+    networks:
+      - sempoa-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: sempoa_redis_prod
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
     networks:
       - sempoa-network
 
@@ -69,6 +82,8 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
+  redis_data:
     driver: local
 
 networks:

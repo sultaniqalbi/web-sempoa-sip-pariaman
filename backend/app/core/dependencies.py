@@ -35,6 +35,17 @@ def get_current_user(
                 detail="Tipe token tidak valid",
                 headers={"WWW-Authenticate": "Bearer"},
             )
+        
+        # SECURITY FIX: Check if token has been revoked/blacklisted
+        from app.core.redis import is_token_blacklisted
+        jti = payload.get("jti")
+        if jti and is_token_blacklisted(jti):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Sesi token telah di-logout atau di-revoke. Silakan login kembali.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
         email: str = payload.get("sub")
         if email is None:
             raise HTTPException(

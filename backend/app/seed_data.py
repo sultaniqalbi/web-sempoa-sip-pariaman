@@ -5,18 +5,22 @@ from app.core.database import SessionLocal, engine, Base
 from app.core.security import get_password_hash
 from app.models.users import User, UserRole
 
-logger = logging.getLogger("seed_data")
+import os
+from app.core.security import generate_random_password
+
+ADMIN_SEED_PWD = os.getenv("ADMIN_SEED_PASSWORD", "Z6@s#Ax7")
+OWNER_SEED_PWD = os.getenv("OWNER_SEED_PASSWORD", "8W&x#I2m")
 
 SEED_USERS = [
     {
         "email": "AdminSip@sempoasippariaman.com",
-        "password": "Z6@s#Ax7",
+        "password": ADMIN_SEED_PWD,
         "role": UserRole.admin,
         "nama": "Admin SIP Pariaman"
     },
     {
         "email": "OwNerSiP@sempoasippariaman.com",
-        "password": "8W&x#I2m",
+        "password": OWNER_SEED_PWD,
         "role": UserRole.owner,
         "nama": "Owner SIP Pariaman"
     }
@@ -24,8 +28,8 @@ SEED_USERS = [
 
 def run_seed(db: Session = None):
     """
-    Idempotently seed Admin and Owner accounts into the database.
-    Updates existing accounts if email (case-insensitive) matches, or inserts new accounts.
+    Idempotently seed Admin and Owner accounts into the database if not exists.
+    Preserves user passwords if account already exists.
     """
     # Ensure tables exist
     Base.metadata.create_all(bind=engine)
@@ -38,7 +42,6 @@ def run_seed(db: Session = None):
     try:
         for seed_user in SEED_USERS:
             target_email = seed_user["email"]
-            hashed_pwd = get_password_hash(seed_user["password"])
             
             # Case-insensitive lookup
             existing_user = db.query(User).filter(
@@ -46,13 +49,14 @@ def run_seed(db: Session = None):
             ).first()
             
             if existing_user:
-                logger.info(f"Updating existing user: {target_email} ({seed_user['role'].value})")
-                existing_user.email = target_email  # ensure exact case
-                existing_user.password = hashed_pwd
+                # SECURITY FIX: Do not overwrite custom passwords on every restart
+                logger.info(f"Verified existing user account: {target_email} ({seed_user['role'].value})")
+                existing_user.email = target_email
                 existing_user.role = seed_user["role"]
                 existing_user.nama = seed_user["nama"]
             else:
-                logger.info(f"Creating new seed user: {target_email} ({seed_user['role'].value})")
+                hashed_pwd = get_password_hash(seed_user["password"])
+                logger.warning(f"Creating new seed user: {target_email} ({seed_user['role'].value})")
                 new_user = User(
                     email=target_email,
                     password=hashed_pwd,
@@ -62,7 +66,7 @@ def run_seed(db: Session = None):
                 db.add(new_user)
                 
         db.commit()
-        logger.info("Seed data auto-provisioning completed successfully.")
+        logger.info("Seed data verification completed successfully.")
     except Exception as e:
         db.rollback()
         logger.error(f"Error during seed_data execution: {e}")

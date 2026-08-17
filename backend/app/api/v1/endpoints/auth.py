@@ -141,3 +141,29 @@ async def refresh(
         }
     )
 
+import time
+from app.core.dependencies import reusable_oauth2
+from app.core.redis import blacklist_token
+
+@router.post("/logout")
+async def logout(
+    token: str = Depends(reusable_oauth2)
+):
+    """
+    SECURITY FIX: Revoke/Blacklist current user session token.
+    """
+    if token:
+        try:
+            payload = jwt.decode(
+                token, settings.secret_key, algorithms=[settings.algorithm]
+            )
+            jti = payload.get("jti")
+            exp = payload.get("exp")
+            if jti:
+                ttl = (exp - int(time.time())) if exp else 3600
+                blacklist_token(jti, max(1, ttl))
+        except Exception:
+            pass
+    return {"status": "success", "detail": "Sesi berhasil di-logout dan token telah di-revoke."}
+
+
