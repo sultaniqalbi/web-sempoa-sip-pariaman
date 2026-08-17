@@ -22,6 +22,43 @@
 
 #define DEBUG_MODE 0
 
+// ISRG Root X1 — Let's Encrypt Root CA (valid sampai 2035-06-04)
+const char* ISRG_ROOT_X1 = \
+  "-----BEGIN CERTIFICATE-----\n" \
+  "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\n" \
+  "j/KQRDBk27E=\n" \
+  "-----END CERTIFICATE-----\n";
+
 // ============ SECURITY FIX: NVS CREDENTIALS & TLS ============
 Preferences preferences;
 String WIFI_SSID     = "";
@@ -129,10 +166,41 @@ void setup() {
 
   // Load credentials from Non-Volatile Storage (NVS)
   preferences.begin("sempoa_cfg", false);
-  WIFI_SSID = preferences.getString("ssid", "OPPO Find X8");
-  WIFI_PASSWORD = preferences.getString("pass", "szgm7477");
-  ESP32_API_KEY = preferences.getString("apikey", "SempoaPariaman_ESP32_SecureKey_2026!");
+  WIFI_SSID = preferences.getString("ssid", "");
+  WIFI_PASSWORD = preferences.getString("pass", "");
+  ESP32_API_KEY = preferences.getString("apikey", "");
   preferences.end();
+
+  if (WIFI_SSID.isEmpty() || WIFI_PASSWORD.isEmpty() || ESP32_API_KEY.isEmpty()) {
+    Serial.println("[ERROR] Credentials belum di-provisioning di NVS!");
+    Serial.println("[INFO] Gunakan Serial Monitor untuk provisioning.");
+    Serial.println("[INFO] Format: PROV|SSID|PASSWORD|API_KEY");
+
+    while (true) {
+      if (Serial.available()) {
+        String input = Serial.readStringUntil('\n');
+        input.trim();
+        if (input.startsWith("PROV|")) {
+          input = input.substring(5);
+          int sep1 = input.indexOf('|');
+          int sep2 = input.indexOf('|', sep1 + 1);
+          if (sep1 > 0 && sep2 > sep1) {
+            preferences.begin("sempoa_cfg", false);
+            preferences.putString("ssid", input.substring(0, sep1));
+            preferences.putString("pass", input.substring(sep1 + 1, sep2));
+            preferences.putString("apikey", input.substring(sep2 + 1));
+            preferences.end();
+            Serial.println("[OK] Credentials tersimpan di NVS. Restart...");
+            delay(1000);
+            ESP.restart();
+          } else {
+            Serial.println("[ERROR] Format salah. Gunakan: PROV|SSID|PASS|APIKEY");
+          }
+        }
+      }
+      delay(100);
+    }
+  }
 
   Serial.println("[BOOT] API_URL: " + String(API_URL));
   Serial.println("[BOOT] PING_URL: " + String(PING_URL));
@@ -274,7 +342,7 @@ String kirimKeServer(const String& uid, const String& waktu, const char* mode) {
   if (!wifiConnected) return "WIFI_OFF";
 
   WiFiClientSecure client;
-  client.setInsecure(); // Enable TLS encryption for HTTPS Let's Encrypt endpoint
+  client.setCACert(ISRG_ROOT_X1); // Proper Let's Encrypt TLS CA validation
   HTTPClient http;
 
   if (!http.begin(client, API_URL)) return "KONEKSI_ERROR";
@@ -405,7 +473,7 @@ void wifiSyncTask(void *pvParameters) {
         lastPingSync = millis();
 
         WiFiClientSecure pingClient;
-        pingClient.setInsecure();
+        pingClient.setCACert(ISRG_ROOT_X1);
         HTTPClient httpPing;
 
         if (httpPing.begin(pingClient, PING_URL)) {

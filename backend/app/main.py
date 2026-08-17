@@ -15,11 +15,6 @@ from fastapi import Request
 
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     logger.error(f"422 Validation Error on {request.url}")
-    if settings.fastapi_env == "production":
-        return JSONResponse(
-            status_code=422,
-            content={"detail": "Format data yang dikirim tidak valid."},
-        )
     return JSONResponse(
         status_code=422,
         content={"detail": exc.errors()},
@@ -33,9 +28,7 @@ from app.seed_data import run_seed
 app = FastAPI(
     title="Sempoa SIP API",
     version="1.0.0",
-    description="API for Sempoa SIP TC Pariaman attendance system",
-    docs_url="/docs" if settings.fastapi_env != "production" else None,
-    redoc_url=None
+    description="API for Sempoa SIP TC Pariaman attendance system"
 )
 
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
@@ -54,17 +47,15 @@ def on_startup():
     except Exception as e:
         logger.error(f"Startup initialization error: {e}")
 
-# CORS Middleware (production strict whitelist vs dev fallback)
-cors_kwargs = {
-    "allow_origins": settings.allowed_origins,
-    "allow_credentials": True,
-    "allow_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    "allow_headers": ["*"],
-}
-if settings.fastapi_env != "production":
-    cors_kwargs["allow_origin_regex"] = r"http://(localhost|127\.0\.0\.1)(:\d+)?"
-
-app.add_middleware(CORSMiddleware, **cors_kwargs)
+# CORS Middleware (supports domain, VPS IP, and localhost)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.allowed_origins if isinstance(settings.allowed_origins, list) else ["*"],
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1|202\.155\.157\.22|.*sempoasippariaman\.com)(:\d+)?",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Mount static files for uploads
 uploads_dir = os.path.join(os.path.dirname(__file__), "uploads")

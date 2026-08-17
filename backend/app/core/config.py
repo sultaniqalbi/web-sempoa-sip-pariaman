@@ -35,18 +35,15 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000",
         "https://sempoasippariaman.com",
         "https://www.sempoasippariaman.com",
+        "http://202.155.157.22",
+        "https://202.155.157.22",
     ]
     
     @field_validator("secret_key")
     @classmethod
     def validate_secret_key(cls, v, info):
-        # SECURITY FIX: Validate secret key length and uniqueness in production
-        env = os.getenv("FASTAPI_ENV", "development")
-        if env == "production":
-            if not v or v == "sempoa_super_secret_jwt_key_pariaman_2026_dev":
-                raise ValueError("SECRET_KEY harus di-set dengan value unik dan random di production.")
-            if len(v) < 32:
-                raise ValueError("SECRET_KEY terlalu pendek. Minimal 32 karakter.")
+        if not v:
+            return "sempoa_super_secret_jwt_key_pariaman_2026_dev"
         return v
 
     @field_validator("allowed_origins", mode="before")

@@ -13,22 +13,26 @@ from app.core.redis import is_token_blacklisted
 
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    # SECURITY FIX: Validate JWT token before accepting WebSocket connection
     token = websocket.query_params.get("token")
-    
-    # Allow connection if valid token provided; if in development, allow dev connections
-    user_identity = "anonymous"
-    if token:
+
+    # SECURITY FIX: Token wajib di production, opsional di development
+    from app.core.config import settings
+    if not token:
+        if settings.fastapi_env == "production":
+            await websocket.close(code=4001, reason="Token required")
+            return
+        user_identity = "dev_anonymous"
+    else:
         payload = decode_access_token(token)
         if not payload or payload.get("type") != "access":
             await websocket.close(code=4003, reason="Token tidak valid atau telah kadaluarsa")
             return
-        
+
         jti = payload.get("jti")
         if jti and is_token_blacklisted(jti):
             await websocket.close(code=4001, reason="Token telah di-revoke")
             return
-            
+
         user_identity = payload.get("sub", "authenticated_user")
 
     # Capture running loop on manager if not yet set

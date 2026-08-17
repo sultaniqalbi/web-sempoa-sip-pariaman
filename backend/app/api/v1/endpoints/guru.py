@@ -23,7 +23,7 @@ owner_only = RoleChecker([UserRole.owner])
 class GuruResetPasswordResponse(BaseModel):
     status: str
     email: str
-    new_password_plaintext: str
+    new_password_plaintext: Optional[str] = None
 
 @router.get("/", response_model=List[GuruResponse])
 async def read_guru_list(
@@ -111,7 +111,7 @@ async def create_new_guru(
         return GuruCreateResponse(
             guru=GuruResponse.model_validate(new_guru),
             guru_email=email_candidate,
-            guru_password_plaintext=plain_password,
+            guru_password_plaintext=None,
             whatsapp_number=normalized_wa
         )
     except Exception as e:
@@ -235,7 +235,7 @@ async def reset_guru_password(
     return GuruResetPasswordResponse(
         status="success",
         email=user_guru.email,
-        new_password_plaintext=new_pwd
+        new_password_plaintext=None
     )
 
 @router.post("/{id}/push-whatsapp")

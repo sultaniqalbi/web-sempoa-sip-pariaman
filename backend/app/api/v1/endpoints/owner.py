@@ -259,8 +259,10 @@ async def reset_semua_data(
     is_valid_pwd = False
     if current_user.password and verify_password(req.password, current_user.password):
         is_valid_pwd = True
-    elif req.password == os.getenv("RESET_DATA_PASSWORD", "z@vx736S23V@Gvybd27#@gsh"):
-        is_valid_pwd = True
+    else:
+        reset_env = os.getenv("RESET_DATA_PASSWORD")
+        if reset_env and req.password == reset_env:
+            is_valid_pwd = True
         
     if not is_valid_pwd:
         raise HTTPException(

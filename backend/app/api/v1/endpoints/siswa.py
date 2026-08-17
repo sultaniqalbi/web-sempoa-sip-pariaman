@@ -24,7 +24,7 @@ owner_only = RoleChecker([UserRole.owner])
 class ResetPasswordResponse(BaseModel):
     status: str
     email: str
-    new_password_plaintext: str
+    new_password_plaintext: Optional[str] = None
 
 def get_spp_nominal(program: Optional[str]) -> float:
     prog = (program or "").lower()
@@ -158,7 +158,7 @@ async def create_new_siswa(
         return SiswaCreateResponse(
             siswa=SiswaResponse.model_validate(new_siswa),
             ortu_email=email_candidate,
-            ortu_password_plaintext=plain_password,
+            ortu_password_plaintext=None,
             whatsapp_number=normalized_wa
         )
     except Exception as e:
@@ -242,7 +242,7 @@ async def reset_siswa_password(
     return ResetPasswordResponse(
         status="success",
         email=user_ortu.email,
-        new_password_plaintext=new_pwd
+        new_password_plaintext=None
     )
 
 @router.post("/{id}/push-whatsapp")
