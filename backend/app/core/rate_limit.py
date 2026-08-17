@@ -79,5 +79,5 @@ class LoginRateLimiter:
         if key in self.in_memory_attempts:
             del self.in_memory_attempts[key]
 
-# Global instance (5 attempts per IP + email per 15 minutes)
-login_limiter = LoginRateLimiter(limit_attempts=5, window_seconds=900)
+# Global instance (10 attempts per IP + email per 10 minutes)
+login_limiter = LoginRateLimiter(limit_attempts=10, window_seconds=600)

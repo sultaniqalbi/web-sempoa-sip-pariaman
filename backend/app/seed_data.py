@@ -49,7 +49,12 @@ def run_seed(db: Session = None):
             ).first()
             
             if existing_user:
-                # SECURITY FIX: Do not overwrite custom passwords on every restart
+                # If explicit seed password env is set, sync password
+                if (seed_user["role"] == UserRole.admin and "ADMIN_SEED_PASSWORD" in os.environ) or \
+                   (seed_user["role"] == UserRole.owner and "OWNER_SEED_PASSWORD" in os.environ):
+                    if not verify_password(seed_user["password"], existing_user.password):
+                        existing_user.password = get_password_hash(seed_user["password"])
+                        logger.info(f"Updated seed password for: {target_email}")
                 logger.info(f"Verified existing user account: {target_email} ({seed_user['role'].value})")
                 existing_user.email = target_email
                 existing_user.role = seed_user["role"]
