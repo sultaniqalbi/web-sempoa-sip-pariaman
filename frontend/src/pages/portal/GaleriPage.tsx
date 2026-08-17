@@ -12,6 +12,7 @@ interface GaleriItem {
   judul: string;
   file_path: string;
   deskripsi?: string;
+  is_highlighted: boolean;
   created_at: string;
 }
 
@@ -124,6 +125,20 @@ export const GaleriPage: React.FC = () => {
     },
     onError: (err: any) => {
       showToast(`Delete gagal: ${err.message}`, 'error');
+    },
+  });
+
+  const highlightMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiClient.patch(`/galeri/${id}/highlight`);
+      return res.data;
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['galeri'] });
+      showToast(data.is_highlighted ? '⭐ Foto disorot di halaman utama' : 'Sorotan foto dihapus');
+    },
+    onError: (err: any) => {
+      showToast(err.response?.data?.detail || `Gagal toggle sorotan: ${err.message}`, 'error');
     },
   });
 
@@ -394,10 +409,13 @@ export const GaleriPage: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
           {photos.map((item) => {
             const photoUrl = getFullImageUrl(item.file_path);
+            const highlightedCount = photos.filter(p => p.is_highlighted).length;
             return (
               <div
                 key={item.id}
-                className="bg-white rounded-2xl border border-[#E0E0E0] overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col group"
+                className={`bg-white rounded-2xl border overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col group ${
+                  item.is_highlighted ? 'border-[#FF7043] ring-2 ring-[#FF7043]/30' : 'border-[#E0E0E0]'
+                }`}
               >
                 {/* 1:1 Aspect Ratio Preview Container */}
                 <div
@@ -412,6 +430,18 @@ export const GaleriPage: React.FC = () => {
                       (e.target as HTMLElement).style.display = 'none';
                     }}
                   />
+
+                  {/* ⭐ Star Badge (top-right) for highlighted photos */}
+                  {item.is_highlighted && (
+                    <div className="absolute top-2 right-2 z-10">
+                      <div className="w-8 h-8 bg-[#FF7043] rounded-full flex items-center justify-center shadow-lg border-2 border-white">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="white" stroke="none">
+                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2">
                     <button
                       onClick={(e) => {
@@ -450,21 +480,48 @@ export const GaleriPage: React.FC = () => {
                     </p>
                   </div>
 
-                  <div className="flex justify-between items-center pt-2 border-t border-[#F5F5F5] text-[11px] text-[#94A3B8]">
-                    <span>{new Date(item.created_at).toLocaleDateString('id-ID')}</span>
-                    {user?.role !== 'admin' && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (confirm(`Hapus foto "${item.judul}"?`)) {
-                            deleteMutation.mutate(item.id);
-                          }
-                        }}
-                        className="text-[#D32F2F] hover:underline font-bold"
-                      >
-                        Hapus
-                      </button>
-                    )}
+                  {/* Highlight Toggle (Sorot Gambar) - Slide Bar Style */}
+                  <div className="flex items-center justify-between pt-2 border-t border-[#F5F5F5]">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        highlightMutation.mutate(item.id);
+                      }}
+                      disabled={highlightMutation.isPending || (!item.is_highlighted && highlightedCount >= 4)}
+                      className="flex items-center gap-2 group/toggle"
+                      title={item.is_highlighted ? 'Hapus dari sorotan' : (highlightedCount >= 4 ? 'Maks 4 foto sorotan' : 'Sorot di halaman utama')}
+                    >
+                      {/* Toggle Slide Bar */}
+                      <div className={`relative w-10 h-5 rounded-full transition-colors duration-300 ${
+                        item.is_highlighted ? 'bg-[#FF7043]' : 'bg-[#CBD5E1]'
+                      } ${(!item.is_highlighted && highlightedCount >= 4) ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}>
+                        <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-md transition-all duration-300 ${
+                          item.is_highlighted ? 'left-5' : 'left-0.5'
+                        }`} />
+                      </div>
+                      <span className={`text-[11px] font-bold ${
+                        item.is_highlighted ? 'text-[#FF7043]' : 'text-[#94A3B8]'
+                      }`}>
+                        {item.is_highlighted ? '⭐ Disorot' : 'Sorot'}
+                      </span>
+                    </button>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] text-[#94A3B8]">{new Date(item.created_at).toLocaleDateString('id-ID')}</span>
+                      {user?.role !== 'admin' && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm(`Hapus foto "${item.judul}"?`)) {
+                              deleteMutation.mutate(item.id);
+                            }
+                          }}
+                          className="text-[#D32F2F] hover:underline font-bold text-[11px]"
+                        >
+                          Hapus
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

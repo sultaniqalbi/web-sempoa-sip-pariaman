@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import apiClient from '../../features/api/apiClient';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../../features/auth/useAuth';
 import useMascotCursor from '../../hooks/useMascotCursor';
@@ -80,6 +82,16 @@ export const HomePage: React.FC = () => {
   const [mobileProgramId, setMobileProgramId] = useState<number>(1);
   const [mobileTestiId, setMobileTestiId] = useState<number>(1);
   const [isMobile, setIsMobile] = useState<boolean>(false);
+
+  // Fetch highlighted gallery photos for homepage display
+  const { data: highlightedPhotos = [] } = useQuery({
+    queryKey: ['galeri', 'highlighted'],
+    queryFn: async () => {
+      const res = await apiClient.get('/galeri/highlighted');
+      return res.data;
+    },
+    staleTime: 60000,
+  });
 
   useEffect(() => {
     const handleResize = () => {
@@ -850,9 +862,6 @@ export const HomePage: React.FC = () => {
               <div className="testi-author" style={{ borderTop: '1px solid #ef9a9a', paddingTop: '0.75rem', marginTop: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <div className="author-img" style={{ background: '#E53935', color: 'white', width: '38px', height: '38px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
                   OA
-                </div>
-                <div>
-                  <h4 style={{ fontSize: '0.92rem', margin: 0, fontWeight: 700, color: 'var(--color-text-dark)' }}>Orang Tua Agis</h4>
                   <p style={{ fontSize: '0.78rem', color: 'var(--color-text-light)', margin: 0 }}>Wali Murid Sempoa SIP</p>
                 </div>
               </div>
@@ -862,7 +871,7 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* GALLERY SECTION */}
+      {/* GALLERY SECTION - Dynamic from API (highlighted/sorot photos) */}
       <section className="gallery section-padding" id="galeri" style={{ backgroundColor: 'var(--color-bg-light)', borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
         <div className="container" style={{ textAlign: 'center' }}>
           <div className="section-header">
@@ -870,95 +879,48 @@ export const HomePage: React.FC = () => {
             <p>Dokumentasi foto kegiatan belajar dan kejuaraan murid Sempoa SIP TC Pariaman</p>
           </div>
 
-          {isMobile ? (
-            /* MOBILE: 2x2 Category Cards with Real Background Images */
-            <div className="mobile-gallery-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', padding: '0 1rem' }}>
-              <Link to="/galeri" className="mobile-gallery-card" style={{ 
-                position: 'relative', overflow: 'hidden', borderRadius: '1rem', border: '2px dashed #f97316', 
-                aspectRatio: '3/4', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '1rem',
-                textDecoration: 'none'
-              }}>
-                <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/assets/image/kegiatan-1.webp)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.85 }}></div>
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0) 100%)' }}></div>
-                <div style={{ position: 'relative', zIndex: 1, textAlign: 'left' }}>
-                  <h4 style={{ color: 'white', fontWeight: 800, fontSize: '0.85rem', marginBottom: '0.25rem' }}>Foto Kegiatan Belajar</h4>
-                  <span style={{ fontSize: '0.65rem', background: '#f97316', color: 'white', padding: '0.15rem 0.5rem', borderRadius: '1rem', fontWeight: 700 }}>Sesi Kelas</span>
-                </div>
-              </Link>
-              <Link to="/galeri" className="mobile-gallery-card" style={{ 
-                position: 'relative', overflow: 'hidden', borderRadius: '1rem', border: '2px dashed #0891b2', 
-                aspectRatio: '3/4', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '1rem',
-                textDecoration: 'none'
-              }}>
-                <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/assets/image/kegiatan-2.webp)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.85 }}></div>
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0) 100%)' }}></div>
-                <div style={{ position: 'relative', zIndex: 1, textAlign: 'left' }}>
-                  <h4 style={{ color: 'white', fontWeight: 800, fontSize: '0.85rem', marginBottom: '0.25rem' }}>Latihan PeSO</h4>
-                  <span style={{ fontSize: '0.65rem', background: '#0891b2', color: 'white', padding: '0.15rem 0.5rem', borderRadius: '1rem', fontWeight: 700 }}>Membaca Cepat</span>
-                </div>
-              </Link>
-              <Link to="/galeri" className="mobile-gallery-card" style={{ 
-                position: 'relative', overflow: 'hidden', borderRadius: '1rem', border: '2px dashed #16a34a', 
-                aspectRatio: '3/4', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '1rem',
-                textDecoration: 'none'
-              }}>
-                <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/assets/image/kegiatan-3.webp)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.85 }}></div>
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0) 100%)' }}></div>
-                <div style={{ position: 'relative', zIndex: 1, textAlign: 'left' }}>
-                  <h4 style={{ color: 'white', fontWeight: 800, fontSize: '0.85rem', marginBottom: '0.25rem' }}>Kejuaraan Prestasi</h4>
-                  <span style={{ fontSize: '0.65rem', background: '#16a34a', color: 'white', padding: '0.15rem 0.5rem', borderRadius: '1rem', fontWeight: 700 }}>Olimpiade</span>
-                </div>
-              </Link>
-              <Link to="/galeri" className="mobile-gallery-card" style={{ 
-                position: 'relative', overflow: 'hidden', borderRadius: '1rem', border: '2px dashed #e11d48', 
-                aspectRatio: '3/4', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '1rem',
-                textDecoration: 'none'
-              }}>
-                <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/assets/image/kegiatan-1.webp)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.85 }}></div>
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0) 100%)' }}></div>
-                <div style={{ position: 'relative', zIndex: 1, textAlign: 'left' }}>
-                  <h4 style={{ color: 'white', fontWeight: 800, fontSize: '0.85rem', marginBottom: '0.25rem' }}>Pembinaan Karakter</h4>
-                  <span style={{ fontSize: '0.65rem', background: '#e11d48', color: 'white', padding: '0.15rem 0.5rem', borderRadius: '1rem', fontWeight: 700 }}>Aktivitas Santri</span>
-                </div>
-              </Link>
-            </div>
-          ) : (
-            /* DESKTOP: Photo Grid */
-            <div className="gallery-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.25rem', textAlign: 'center' }}>
-              <div className="gallery-card" onClick={() => setLightboxImg({ src: '/assets/image/kegiatan-1.webp', title: 'Siswa Praktek Sholat Berjamaah' })} style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', border: '3px solid #f57c00', boxShadow: '0 6px 18px rgba(245, 124, 0, 0.15)', cursor: 'pointer' }}>
-                <div className="gallery-img-wrap" style={{ width: '100%', aspectRatio: '3 / 4', overflow: 'hidden' }}>
-                  <img src="/assets/image/kegiatan-1.webp" alt="Siswa Praktek Sholat Berjamaah" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                </div>
-                <div className="gallery-caption" style={{ padding: '0.85rem', fontWeight: 700, color: '#e65100', fontSize: '0.9rem', borderTop: '1px solid #fff3e0' }}>
-                  Siswa Praktek Sholat Berjamaah
-                </div>
+          {(() => {
+            const borderColors = ['#f57c00', '#00acc1', '#2E7D32', '#E53935'];
+            const captionColors = ['#e65100', '#00838f', '#1b5e20', '#c62828'];
+            const captionBorders = ['#fff3e0', '#e0f7fa', '#e8f5e9', '#ffebee'];
+
+            const getFullUrl = (path: string) => {
+              if (!path) return '';
+              if (path.startsWith('http') || path.startsWith('data:')) return path;
+              return path;
+            };
+
+            return highlightedPhotos.length === 0 ? (
+              <div style={{ padding: '3rem 1rem', color: '#94a3b8', fontSize: '0.95rem' }}>
+                <p style={{ marginBottom: '0.5rem', fontWeight: 600 }}>Belum ada foto galeri yang disorot.</p>
+                <p style={{ fontSize: '0.85rem' }}>Upload dan sorot foto melalui Portal Owner/Admin untuk menampilkannya di sini.</p>
               </div>
-              <div className="gallery-card" onClick={() => setLightboxImg({ src: '/assets/image/kegiatan-2.webp', title: 'Siswa Sedang Belajar Sempoa' })} style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', border: '3px solid #00acc1', boxShadow: '0 6px 18px rgba(0, 172, 193, 0.15)', cursor: 'pointer' }}>
-                <div className="gallery-img-wrap" style={{ width: '100%', aspectRatio: '3 / 4', overflow: 'hidden' }}>
-                  <img src="/assets/image/kegiatan-2.webp" alt="Siswa Sedang Belajar Sempoa" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                </div>
-                <div className="gallery-caption" style={{ padding: '0.85rem', fontWeight: 700, color: '#00838f', fontSize: '0.9rem', borderTop: '1px solid #e0f7fa' }}>
-                  Siswa Sedang Belajar Sempoa
-                </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.25rem', textAlign: 'center' }}>
+                {highlightedPhotos.map((item: any, idx: number) => (
+                  <div
+                    key={item.id}
+                    className="gallery-card"
+                    onClick={() => setLightboxImg({ src: getFullUrl(item.file_path), title: item.judul })}
+                    style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', border: `3px solid ${borderColors[idx % 4]}`, boxShadow: `0 6px 18px ${borderColors[idx % 4]}25`, cursor: 'pointer', position: 'relative' }}
+                  >
+                    {/* Star Badge */}
+                    <div style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 2, width: '28px', height: '28px', background: borderColors[idx % 4], borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid white', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="white" stroke="none">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                      </svg>
+                    </div>
+                    <div className="gallery-img-wrap" style={{ width: '100%', aspectRatio: isMobile ? '1' : '3 / 4', overflow: 'hidden' }}>
+                      <img src={getFullUrl(item.file_path)} alt={item.judul} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
+                    <div className="gallery-caption" style={{ padding: '0.85rem', fontWeight: 700, color: captionColors[idx % 4], fontSize: '0.9rem', borderTop: `1px solid ${captionBorders[idx % 4]}` }}>
+                      {item.judul}
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="gallery-card" onClick={() => setLightboxImg({ src: '/assets/image/kegiatan-3.webp', title: 'Suasana Belajar Fonem' })} style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', border: '3px solid #2E7D32', boxShadow: '0 6px 18px rgba(46, 125, 50, 0.15)', cursor: 'pointer' }}>
-                <div className="gallery-img-wrap" style={{ width: '100%', aspectRatio: '3 / 4', overflow: 'hidden' }}>
-                  <img src="/assets/image/kegiatan-3.webp" alt="Suasana Belajar Fonem" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                </div>
-                <div className="gallery-caption" style={{ padding: '0.85rem', fontWeight: 700, color: '#1b5e20', fontSize: '0.9rem', borderTop: '1px solid #e8f5e9' }}>
-                  Suasana Belajar Fonem
-                </div>
-              </div>
-              <div className="gallery-card" onClick={() => setLightboxImg({ src: '/assets/image/kegiatan-4.webp', title: 'Suasana Belajar Sempoa' })} style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', border: '3px solid #E53935', boxShadow: '0 6px 18px rgba(229, 57, 53, 0.15)', cursor: 'pointer' }}>
-                <div className="gallery-img-wrap" style={{ width: '100%', aspectRatio: '3 / 4', overflow: 'hidden' }}>
-                  <img src="/assets/image/kegiatan-4.webp" alt="Suasana Belajar Sempoa" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                </div>
-                <div className="gallery-caption" style={{ padding: '0.85rem', fontWeight: 700, color: '#c62828', fontSize: '0.9rem', borderTop: '1px solid #ffebee' }}>
-                  Suasana Belajar Sempoa
-                </div>
-              </div>
-            </div>
-          )}
+            );
+          })()}
 
           <div style={{ marginTop: '2rem' }}>
             <Link to="/galeri" className="btn btn-primary" style={{ padding: '0.75rem 1.75rem', fontSize: '0.95rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>

@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import apiClient from '../../features/api/apiClient';
 import useAuth from '../../features/auth/useAuth';
 import useMascotCursor from '../../hooks/useMascotCursor';
 
@@ -26,12 +28,21 @@ export const GaleriPage: React.FC = () => {
     { border: '#E53935', color: '#c62828' },
   ];
 
-  const rawImages: any[] = [];
-  const galleryItems = rawImages.map((img, idx) => ({
-    src: `/assets/galeri/${img.name}`,
-    title: img.title,
+  const { data: rawPhotos = [] } = useQuery({
+    queryKey: ['galeri-public'],
+    queryFn: async () => {
+      const res = await apiClient.get('/galeri/');
+      return res.data;
+    },
+    staleTime: 60000,
+  });
+
+  const galleryItems = rawPhotos.map((img: any, idx: number) => ({
+    src: img.file_path,
+    title: img.judul,
     border: colors[idx % colors.length].border,
     color: colors[idx % colors.length].color,
+    is_highlighted: img.is_highlighted,
   }));
 
   const openLightbox = (item: typeof galleryItems[0]) => {
@@ -155,8 +166,17 @@ export const GaleriPage: React.FC = () => {
                 display: 'flex',
                 flexDirection: 'column',
                 transition: 'transform 0.25s ease, boxShadow 0.25s ease',
+                position: 'relative',
               }}
             >
+              {/* Star Badge for highlighted photos */}
+              {item.is_highlighted && (
+                <div style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 2, width: '30px', height: '30px', background: item.border, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid white', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="white" stroke="none">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                </div>
+              )}
               <div className="gallery-img-wrap" style={{ width: '100%', aspectRatio: '1 / 1', overflow: 'hidden', background: '#f8f9fa' }}>
                 <img src={item.src} alt={item.title} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>

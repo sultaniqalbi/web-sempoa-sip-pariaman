@@ -28,6 +28,7 @@ class GaleriResponse(BaseModel):
     judul: str
     file_path: str
     deskripsi: Optional[str] = None
+    is_highlighted: bool = False
     created_at: datetime
 
     class Config:
@@ -56,6 +57,15 @@ async def list_galeri(
     db: Session = Depends(get_db)
 ):
     return db.query(Galeri).order_by(Galeri.created_at.desc()).offset(skip).limit(limit).all()
+
+@router.get("/highlighted", response_model=List[GaleriResponse])
+async def get_highlighted_galeri(
+    db: Session = Depends(get_db)
+):
+    """
+    Public endpoint: Get up to 4 highlighted/sorot gallery photos for homepage display.
+    """
+    return db.query(Galeri).filter(Galeri.is_highlighted == True).order_by(Galeri.created_at.desc()).limit(4).all()
 
 @router.post("/upload", response_model=GaleriResponse, status_code=status.HTTP_201_CREATED)
 async def upload_galeri_multipart(
@@ -140,6 +150,36 @@ async def delete_galeri(
     db.delete(item)
     db.commit()
     return {"status": "success", "message": "Foto galeri berhasil dihapus"}
+
+@router.patch("/{id}/highlight", response_model=GaleriResponse)
+async def toggle_highlight_galeri(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(admin_or_owner)
+):
+    """
+    Toggle sorot/highlight pada foto galeri. Maksimal 4 foto yang bisa disorot.
+    """
+    item = db.query(Galeri).filter(Galeri.id == id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Foto galeri tidak ditemukan")
+
+    if not item.is_highlighted:
+        # Check current highlighted count
+        highlighted_count = db.query(Galeri).filter(Galeri.is_highlighted == True).count()
+        if highlighted_count >= 4:
+            raise HTTPException(
+                status_code=400,
+                detail="Maksimal 4 foto yang bisa disorot. Hapus sorotan foto lain terlebih dahulu."
+            )
+        item.is_highlighted = True
+    else:
+        item.is_highlighted = False
+
+    db.commit()
+    db.refresh(item)
+    return item
+
 
 @router.post("/export-sheets")
 async def export_galeri_sheets(
