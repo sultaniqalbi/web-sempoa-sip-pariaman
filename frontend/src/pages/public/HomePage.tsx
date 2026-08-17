@@ -880,9 +880,9 @@ export const HomePage: React.FC = () => {
           </div>
 
           {(() => {
-            const borderColors = ['#f57c00', '#00acc1', '#2E7D32', '#E53935'];
-            const captionColors = ['#e65100', '#00838f', '#1b5e20', '#c62828'];
-            const captionBorders = ['#fff3e0', '#e0f7fa', '#e8f5e9', '#ffebee'];
+            const borderColors = ['#f57c00', '#fbc02d', '#1976d2', '#388e3c']; // Orange, Yellow, Blue, Green
+            const captionColors = ['#e65100', '#f9a825', '#1565c0', '#2e7d32'];
+            const captionBorders = ['#fff3e0', '#fffde7', '#e3f2fd', '#e8f5e9'];
 
             const getFullUrl = (path: string) => {
               if (!path) return '';
@@ -892,8 +892,8 @@ export const HomePage: React.FC = () => {
 
             return highlightedPhotos.length === 0 ? (
               <div style={{ padding: '3rem 1rem', color: '#94a3b8', fontSize: '0.95rem' }}>
-                <p style={{ marginBottom: '0.5rem', fontWeight: 600 }}>Belum ada foto galeri yang disorot.</p>
-                <p style={{ fontSize: '0.85rem' }}>Upload dan sorot foto melalui Portal Owner/Admin untuk menampilkannya di sini.</p>
+                <p style={{ marginBottom: '0.5rem', fontWeight: 600 }}>Nantikan momen-momen seru kami!</p>
+                <p style={{ fontSize: '0.85rem' }}>Foto kegiatan dan prestasi siswa-siswi Sempoa SIP TC Pariaman akan segera hadir di sini.</p>
               </div>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
@@ -902,20 +902,19 @@ export const HomePage: React.FC = () => {
                     key={item.id}
                     className="gallery-card"
                     onClick={() => setLightboxImg({ src: getFullUrl(item.file_path), title: item.judul })}
-                    style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', border: `3px solid ${borderColors[idx % 4]}`, boxShadow: `0 6px 18px ${borderColors[idx % 4]}25`, cursor: 'pointer', position: 'relative' }}
+                    style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', border: `3px solid ${borderColors[idx % 4]}`, boxShadow: `0 6px 18px ${borderColors[idx % 4]}25`, cursor: 'pointer', position: 'relative', display: 'flex', flexDirection: 'column' }}
                   >
-                    {/* Star Badge */}
-                    <div style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 2, width: '28px', height: '28px', background: borderColors[idx % 4], borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid white', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="white" stroke="none">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                      </svg>
-                    </div>
                     <div className="gallery-img-wrap" style={{ width: '100%', aspectRatio: '1 / 1', overflow: 'hidden' }}>
                       <img src={getFullUrl(item.file_path)} alt={item.judul} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
-                    <div className="gallery-caption" style={{ padding: '0.85rem', fontWeight: 700, color: captionColors[idx % 4], fontSize: '0.9rem', borderTop: `1px solid ${captionBorders[idx % 4]}` }}>
+                    <div className="gallery-caption" style={{ padding: '0.85rem', fontWeight: 700, color: captionColors[idx % 4], fontSize: '0.95rem', borderTop: `1px solid ${captionBorders[idx % 4]}` }}>
                       {item.judul}
                     </div>
+                    {item.deskripsi && (
+                      <div className="gallery-desc" style={{ padding: '0 0.85rem 0.85rem', fontSize: '0.8rem', color: '#64748b', lineHeight: 1.4 }}>
+                        {item.deskripsi}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
