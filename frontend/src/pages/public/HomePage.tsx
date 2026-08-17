@@ -862,6 +862,9 @@ export const HomePage: React.FC = () => {
               <div className="testi-author" style={{ borderTop: '1px solid #ef9a9a', paddingTop: '0.75rem', marginTop: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <div className="author-img" style={{ background: '#E53935', color: 'white', width: '38px', height: '38px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
                   OA
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '0.92rem', margin: 0, fontWeight: 700, color: 'var(--color-text-dark)' }}>Orang Tua Agis</h4>
                   <p style={{ fontSize: '0.78rem', color: 'var(--color-text-light)', margin: 0 }}>Wali Murid Sempoa SIP</p>
                 </div>
               </div>
