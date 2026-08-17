@@ -526,9 +526,7 @@ export const SiswaPage: React.FC = () => {
       />
 
       {/* Data Table / Empty State */}
-      {isLoading ? (
-        <div className="py-16 text-center text-[#757575] text-xs">Memuat daftar siswa...</div>
-      ) : siswaList.length === 0 ? (
+      {(!isLoading && siswaList.length === 0) ? (
         <EmptyState
           icon={<DataSiswaIcon size={40} className="text-[#757575]" />}
           title="Belum ada data siswa"
@@ -540,6 +538,7 @@ export const SiswaPage: React.FC = () => {
         <DataTable
           columns={columns}
           data={siswaList}
+          isLoading={isLoading}
           searchPlaceholder="Cari nama siswa, UID, ortu, program..."
           searchFilter={(row, q) =>
             row.nama.toLowerCase().includes(q.toLowerCase()) ||

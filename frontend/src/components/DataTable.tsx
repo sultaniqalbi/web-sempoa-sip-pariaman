@@ -13,6 +13,7 @@ interface DataTableProps<T> {
   data: T[];
   searchPlaceholder?: string;
   searchFilter?: (row: T, query: string) => boolean;
+  isLoading?: boolean;
 }
 
 export function DataTable<T>({
@@ -20,6 +21,7 @@ export function DataTable<T>({
   data,
   searchPlaceholder = 'Cari...',
   searchFilter,
+  isLoading = false,
 }: DataTableProps<T>) {
   const [query, setQuery] = useState('');
   const [sortKey, setSortKey] = useState<keyof T | null>(null);
@@ -127,14 +129,24 @@ export function DataTable<T>({
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E2E8F0] text-xs text-[#1E293B]">
-              {paginatedData.length > 0 ? (
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={`skeleton-${i}`} className="animate-pulse bg-white">
+                    {columns.map((col, j) => (
+                      <td key={j} className={`p-3.5 sm:p-4 ${col.className || ''}`}>
+                        <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : paginatedData.length > 0 ? (
                 paginatedData.map((row, rowIdx) => (
                   <tr
                     key={rowIdx}
                     className="hover:bg-[#F8FAFC] cursor-default bg-white"
                   >
                     {columns.map((col, colIdx) => (
-                      <td key={colIdx} className={`p-3.5 sm:p-4 ${col.className || ''}`}>
+                      <td key={colIdx} className={`p-3.5 sm:p-4 text-xs text-[#1E293B] ${col.className || ''}`}>
                         {col.accessor(row)}
                       </td>
                     ))}
@@ -142,8 +154,8 @@ export function DataTable<T>({
                 ))
               ) : (
                 <tr>
-                  <td colSpan={columns.length} className="p-8 text-center text-[#94A3B8] font-medium">
-                    Data tidak ditemukan.
+                  <td colSpan={columns.length} className="px-5 py-8 text-center text-[#94A3B8]">
+                    Tidak ada data yang ditemukan.
                   </td>
                 </tr>
               )}
@@ -153,7 +165,7 @@ export function DataTable<T>({
       </div>
 
       {/* Pagination controls */}
-      {totalPages > 1 && (
+      {!isLoading && totalPages > 1 && (
         <nav className="flex justify-between items-center text-xs text-[#94A3B8] font-medium" aria-label="Navigasi Paginasi">
           <div>
             Menampilkan {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, sortedData.length)} dari {sortedData.length} baris
