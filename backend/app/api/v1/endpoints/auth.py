@@ -37,13 +37,17 @@ async def login(
     db: Session = Depends(get_db)
 ):
     client_ip = request.client.host if request.client else "unknown"
-    email = login_data.email.strip()
+    raw_email = login_data.email.strip()
+    clean_email = raw_email.lower()
 
     # 1. Rate limiting check
-    login_limiter.check_rate_limit(client_ip, email)
+    login_limiter.check_rate_limit(client_ip, clean_email)
 
-    # 2. Query user (case-insensitive email matching)
-    user = db.query(User).filter(func.lower(User.email) == email.lower()).first()
+    # 2. Query user (case-insensitive email & username matching)
+    user = db.query(User).filter(
+        (func.lower(User.email) == clean_email) |
+        (func.lower(User.email) == f"{clean_email}@sempoasippariaman.com")
+    ).first()
 
     
     # 3. Verify password
