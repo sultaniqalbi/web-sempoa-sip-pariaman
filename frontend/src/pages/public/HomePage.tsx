@@ -797,12 +797,12 @@ export const HomePage: React.FC = () => {
                 </p>
               </div>
               <div className="testi-author" style={{ borderTop: '1px solid #ffe082', paddingTop: '0.75rem', marginTop: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div className="author-img" style={{ background: '#f57c00', color: 'white', width: '38px', height: '38px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
+                <div className="author-img" style={{ background: '#f57c00', color: 'white', width: '38px', height: '38px', minWidth: '38px', flexShrink: 0, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
                   OH
                 </div>
-                <div>
-                  <h4 style={{ fontSize: '0.92rem', margin: 0, fontWeight: 700, color: 'var(--color-text-dark)' }}>Orang Tua Hafla</h4>
-                  <p style={{ fontSize: '0.78rem', color: 'var(--color-text-light)', margin: 0 }}>Wali Murid Sempoa SIP</p>
+                <div style={{ minWidth: 0 }}>
+                  <h4 style={{ fontSize: '0.92rem', margin: 0, fontWeight: 700, color: 'var(--color-text-dark)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Orang Tua Hafla</h4>
+                  <p style={{ fontSize: '0.78rem', color: 'var(--color-text-light)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Wali Murid Sempoa SIP</p>
                 </div>
               </div>
             </div>
@@ -818,12 +818,12 @@ export const HomePage: React.FC = () => {
                 </p>
               </div>
               <div className="testi-author" style={{ borderTop: '1px solid #80deea', paddingTop: '0.75rem', marginTop: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div className="author-img" style={{ background: '#00acc1', color: 'white', width: '38px', height: '38px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
+                <div className="author-img" style={{ background: '#00acc1', color: 'white', width: '38px', height: '38px', minWidth: '38px', flexShrink: 0, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
                   OQ
                 </div>
-                <div>
-                  <h4 style={{ fontSize: '0.92rem', margin: 0, fontWeight: 700, color: 'var(--color-text-dark)' }}>Orang Tua Queenza</h4>
-                  <p style={{ fontSize: '0.78rem', color: 'var(--color-text-light)', margin: 0 }}>Wali Murid Sempoa SIP</p>
+                <div style={{ minWidth: 0 }}>
+                  <h4 style={{ fontSize: '0.92rem', margin: 0, fontWeight: 700, color: 'var(--color-text-dark)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Orang Tua Queenza</h4>
+                  <p style={{ fontSize: '0.78rem', color: 'var(--color-text-light)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Wali Murid Sempoa SIP</p>
                 </div>
               </div>
             </div>
@@ -839,12 +839,12 @@ export const HomePage: React.FC = () => {
                 </p>
               </div>
               <div className="testi-author" style={{ borderTop: '1px solid #a5d6a7', paddingTop: '0.75rem', marginTop: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div className="author-img" style={{ background: '#2E7D32', color: 'white', width: '38px', height: '38px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
+                <div className="author-img" style={{ background: '#2E7D32', color: 'white', width: '38px', height: '38px', minWidth: '38px', flexShrink: 0, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
                   OF
                 </div>
-                <div>
-                  <h4 style={{ fontSize: '0.92rem', margin: 0, fontWeight: 700, color: 'var(--color-text-dark)' }}>Orang Tua Fatihah</h4>
-                  <p style={{ fontSize: '0.78rem', color: 'var(--color-text-light)', margin: 0 }}>Wali Murid Sempoa SIP</p>
+                <div style={{ minWidth: 0 }}>
+                  <h4 style={{ fontSize: '0.92rem', margin: 0, fontWeight: 700, color: 'var(--color-text-dark)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Orang Tua Fatihah</h4>
+                  <p style={{ fontSize: '0.78rem', color: 'var(--color-text-light)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Wali Murid Sempoa SIP</p>
                 </div>
               </div>
             </div>
@@ -860,12 +860,12 @@ export const HomePage: React.FC = () => {
                 </p>
               </div>
               <div className="testi-author" style={{ borderTop: '1px solid #ef9a9a', paddingTop: '0.75rem', marginTop: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div className="author-img" style={{ background: '#E53935', color: 'white', width: '38px', height: '38px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
+                <div className="author-img" style={{ background: '#E53935', color: 'white', width: '38px', height: '38px', minWidth: '38px', flexShrink: 0, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
                   OA
                 </div>
-                <div>
-                  <h4 style={{ fontSize: '0.92rem', margin: 0, fontWeight: 700, color: 'var(--color-text-dark)' }}>Orang Tua Agis</h4>
-                  <p style={{ fontSize: '0.78rem', color: 'var(--color-text-light)', margin: 0 }}>Wali Murid Sempoa SIP</p>
+                <div style={{ minWidth: 0 }}>
+                  <h4 style={{ fontSize: '0.92rem', margin: 0, fontWeight: 700, color: 'var(--color-text-dark)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Orang Tua Agis</h4>
+                  <p style={{ fontSize: '0.78rem', color: 'var(--color-text-light)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Wali Murid Sempoa SIP</p>
                 </div>
               </div>
             </div>
