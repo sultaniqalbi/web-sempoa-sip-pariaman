@@ -896,7 +896,7 @@ export const HomePage: React.FC = () => {
                 <p style={{ fontSize: '0.85rem' }}>Upload dan sorot foto melalui Portal Owner/Admin untuk menampilkannya di sini.</p>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.25rem', textAlign: 'center' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
                 {highlightedPhotos.map((item: any, idx: number) => (
                   <div
                     key={item.id}
@@ -910,7 +910,7 @@ export const HomePage: React.FC = () => {
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                       </svg>
                     </div>
-                    <div className="gallery-img-wrap" style={{ width: '100%', aspectRatio: isMobile ? '1' : '3 / 4', overflow: 'hidden' }}>
+                    <div className="gallery-img-wrap" style={{ width: '100%', aspectRatio: '1 / 1', overflow: 'hidden' }}>
                       <img src={getFullUrl(item.file_path)} alt={item.judul} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
                     <div className="gallery-caption" style={{ padding: '0.85rem', fontWeight: 700, color: captionColors[idx % 4], fontSize: '0.9rem', borderTop: `1px solid ${captionBorders[idx % 4]}` }}>
