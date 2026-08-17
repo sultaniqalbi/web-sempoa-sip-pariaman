@@ -64,8 +64,15 @@ async def sse_event_stream(request: Request):
         }
     )
 
+from app.core.dependencies import RoleChecker
+from app.models.users import UserRole, User
+
+admin_or_owner = RoleChecker([UserRole.admin, UserRole.owner])
+
 @router.get("/status")
-async def get_realtime_status():
+async def get_realtime_status(
+    current_user: User = Depends(admin_or_owner)
+):
     return {
         "status": "online",
         "active_websocket_connections": len(manager.active_connections)

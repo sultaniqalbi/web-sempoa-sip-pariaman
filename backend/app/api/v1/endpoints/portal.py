@@ -69,6 +69,11 @@ async def get_catatan_siswa(
     if not siswa:
         return {"catatan": []}
 
+    # IDOR Check: Parents can only access their own linked child's notes
+    if current_user.role == UserRole.ortu:
+        if current_user.uid_terhubung not in [str(siswa.id), siswa.uid]:
+            raise HTTPException(status_code=403, detail="Anda tidak memiliki hak akses untuk melihat catatan siswa ini.")
+
     notes = db.query(CatatanPembelajaran).filter(
         or_(
             CatatanPembelajaran.id_siswa == siswa.id,

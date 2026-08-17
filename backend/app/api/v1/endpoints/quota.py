@@ -22,7 +22,7 @@ async def get_student_quota(
         )
     if current_user.role in [UserRole.admin, UserRole.owner, UserRole.guru]:
         pass
-    elif current_user.role == UserRole.ortu and current_user.uid_terhubung == siswa.uid:
+    elif current_user.role == UserRole.ortu and current_user.uid_terhubung in [str(siswa.id), siswa.uid]:
         pass
     else:
         raise HTTPException(

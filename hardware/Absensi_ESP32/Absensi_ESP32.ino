@@ -262,7 +262,8 @@ void prosesTap(const RtcDateTime& now) {
 String kirimKeServer(const String& uid, const String& waktu, const char* mode) {
   if (!wifiConnected) return "WIFI_OFF";
 
-  WiFiClient client;
+  WiFiClientSecure client;
+  client.setInsecure(); // Enable TLS encryption for HTTPS Let's Encrypt endpoint
   HTTPClient http;
 
   if (!http.begin(client, API_URL)) return "KONEKSI_ERROR";
@@ -392,7 +393,8 @@ void wifiSyncTask(void *pvParameters) {
       if (millis() - lastPingSync >= 5000) {
         lastPingSync = millis();
 
-        WiFiClient pingClient;
+        WiFiClientSecure pingClient;
+        pingClient.setInsecure();
         HTTPClient httpPing;
 
         if (httpPing.begin(pingClient, PING_URL)) {

@@ -254,11 +254,18 @@ async def reset_semua_data(
     """
     Owner Exclusive: Dual-Factor Safe Reset All Operational Data with Auto-Backup
     """
-    # 0. Check password
-    if req.password != "z@vx736S23V@Gvybd27#@gsh":
+    # 0. Check password (verify owner's current password or env secret)
+    from app.core.security import verify_password
+    is_valid_pwd = False
+    if current_user.password and verify_password(req.password, current_user.password):
+        is_valid_pwd = True
+    elif req.password == os.getenv("RESET_DATA_PASSWORD", "z@vx736S23V@Gvybd27#@gsh"):
+        is_valid_pwd = True
+        
+    if not is_valid_pwd:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Password reset data tidak valid."
+            detail="Password otorisasi reset data tidak valid."
         )
 
     # 1. Phrase verification
@@ -374,8 +381,14 @@ async def seed_dummy_data(
     current_user: User = Depends(owner_only)
 ):
     """
-    Seed 5 Siswa Dummy Lengkap & 4 Guru Dummy Lengkap
+    Seed 5 Siswa Dummy Lengkap & 4 Guru Dummy Lengkap (Hanya aktif di Mode Development)
     """
+    from app.core.config import settings
+    if settings.fastapi_env == "production":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Fitur seed data dummy dinonaktifkan pada lingkungan produksi demi keamanan database."
+        )
     try:
         # 1. Seed 4 Guru
         gurus_data = [
