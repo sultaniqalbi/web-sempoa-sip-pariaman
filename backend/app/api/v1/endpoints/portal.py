@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.core.database import get_db
-from app.core.dependencies import RoleChecker
+from app.core.dependencies import RoleChecker, get_current_user
 from app.models.users import User, UserRole
 from app.models.siswa import Siswa, StatusSPP
 from app.models.guru import Guru
@@ -59,7 +59,8 @@ async def get_portal_dashboard_stats(
 @router.get("/catatan-pembelajaran/{id_siswa}")
 async def get_catatan_siswa(
     id_siswa: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     from app.models.catatan_pembelajaran import CatatanPembelajaran
     from sqlalchemy import or_

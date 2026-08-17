@@ -329,8 +329,13 @@ async def upload_foto_siswa(
         
     try:
         contents = await file.read()
+        if len(contents) > 5 * 1024 * 1024:
+            raise HTTPException(status_code=413, detail="Ukuran foto melebihi batas maksimal (5MB).")
+            
         image = Image.open(io.BytesIO(contents))
-        
+        if image.format not in ("JPEG", "JPG", "PNG", "WEBP", "MPO"):
+            raise HTTPException(status_code=400, detail="Format file tidak didukung. Harap gunakan format JPG, PNG, atau WebP.")
+            
         # Convert to RGB if needed (e.g. from PNG with alpha)
         if image.mode in ("RGBA", "P"):
             image = image.convert("RGB")

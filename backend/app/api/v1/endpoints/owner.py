@@ -370,7 +370,8 @@ async def reset_semua_data(
 @router.post("/seed-dummy")
 @router.get("/seed-dummy")
 async def seed_dummy_data(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(owner_only)
 ):
     """
     Seed 5 Siswa Dummy Lengkap & 4 Guru Dummy Lengkap

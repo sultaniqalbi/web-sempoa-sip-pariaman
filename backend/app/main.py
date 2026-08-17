@@ -15,11 +15,14 @@ from fastapi import Request
 
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     logger.error(f"422 Validation Error on {request.url}")
-    logger.error(f"Body: {exc.body}")
-    logger.error(f"Errors: {exc.errors()}")
+    if settings.fastapi_env == "production":
+        return JSONResponse(
+            status_code=422,
+            content={"detail": "Format data yang dikirim tidak valid."},
+        )
     return JSONResponse(
         status_code=422,
-        content={"detail": exc.errors(), "body": exc.body},
+        content={"detail": exc.errors()},
     )
 
 import os
@@ -30,7 +33,9 @@ from app.seed_data import run_seed
 app = FastAPI(
     title="Sempoa SIP API",
     version="1.0.0",
-    description="API for Sempoa SIP TC Pariaman attendance system"
+    description="API for Sempoa SIP TC Pariaman attendance system",
+    docs_url="/docs" if settings.fastapi_env != "production" else None,
+    redoc_url=None
 )
 
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
@@ -49,15 +54,17 @@ def on_startup():
     except Exception as e:
         logger.error(f"Startup initialization error: {e}")
 
-# CORS Middleware (supports localhost & 127.0.0.1 on all dev ports)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.allowed_origins,
-    allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# CORS Middleware (production strict whitelist vs dev fallback)
+cors_kwargs = {
+    "allow_origins": settings.allowed_origins,
+    "allow_credentials": True,
+    "allow_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    "allow_headers": ["*"],
+}
+if settings.fastapi_env != "production":
+    cors_kwargs["allow_origin_regex"] = r"http://(localhost|127\.0\.0\.1)(:\d+)?"
+
+app.add_middleware(CORSMiddleware, **cors_kwargs)
 
 # Mount static files for uploads
 uploads_dir = os.path.join(os.path.dirname(__file__), "uploads")
