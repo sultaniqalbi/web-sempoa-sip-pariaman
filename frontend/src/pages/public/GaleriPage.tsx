@@ -13,12 +13,14 @@ export const GaleriPage: React.FC = () => {
     isOpen: boolean;
     src: string;
     caption: string;
+    description?: string;
     borderColor?: string;
     captionColor?: string;
   }>({
     isOpen: false,
     src: '',
     caption: '',
+    description: '',
   });
 
   const colors = [
@@ -40,6 +42,7 @@ export const GaleriPage: React.FC = () => {
   const galleryItems = rawPhotos.map((img: any, idx: number) => ({
     src: img.file_path,
     title: img.judul,
+    description: img.deskripsi,
     border: colors[idx % colors.length].border,
     color: colors[idx % colors.length].color,
     is_highlighted: img.is_highlighted,
@@ -50,6 +53,7 @@ export const GaleriPage: React.FC = () => {
       isOpen: true,
       src: item.src,
       caption: item.title,
+      description: item.description,
       borderColor: item.border,
       captionColor: item.color,
     });
@@ -240,7 +244,7 @@ export const GaleriPage: React.FC = () => {
             style={{
               background: 'white',
               maxWidth: '850px',
-              width: '90%',
+              width: 'fit-content',
               maxHeight: '90vh',
               borderRadius: '20px',
               overflow: 'hidden',
@@ -285,16 +289,23 @@ export const GaleriPage: React.FC = () => {
               style={{
                 padding: '1.25rem',
                 textAlign: 'center',
-                fontSize: '1.05rem',
-                fontWeight: 700,
-                color: lightbox.captionColor || '#e65100',
                 background: 'white',
                 borderTop: '2px solid #f1f5f9',
                 margin: 0,
                 width: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.5rem'
               }}
             >
-              {lightbox.caption}
+              <span style={{ fontSize: '1.05rem', fontWeight: 700, color: lightbox.captionColor || '#e65100' }}>
+                {lightbox.caption}
+              </span>
+              {lightbox.description && (
+                <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 400, lineHeight: 1.4 }}>
+                  {lightbox.description}
+                </span>
+              )}
             </div>
           </div>
         </div>
