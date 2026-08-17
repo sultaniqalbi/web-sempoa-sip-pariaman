@@ -78,7 +78,7 @@ export const HomePage: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeAdvCard, setActiveAdvCard] = useState<number | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [lightboxImg, setLightboxImg] = useState<{ src: string; title: string } | null>(null);
+  const [lightboxImg, setLightboxImg] = useState<{ src: string; title: string; description?: string } | null>(null);
   const [mobileProgramId, setMobileProgramId] = useState<number>(1);
   const [mobileTestiId, setMobileTestiId] = useState<number>(1);
   const [isMobile, setIsMobile] = useState<boolean>(false);
@@ -904,7 +904,7 @@ export const HomePage: React.FC = () => {
                   <div
                     key={item.id}
                     className="gallery-card"
-                    onClick={() => setLightboxImg({ src: getFullUrl(item.file_path), title: item.judul })}
+                    onClick={() => setLightboxImg({ src: getFullUrl(item.file_path), title: item.judul, description: item.deskripsi })}
                     style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', border: `3px solid ${borderColors[idx % 4]}`, boxShadow: `0 6px 18px ${borderColors[idx % 4]}25`, cursor: 'pointer', position: 'relative', display: 'flex', flexDirection: 'column' }}
                   >
                     <div className="gallery-img-wrap" style={{ width: '100%', aspectRatio: '1 / 1', overflow: 'hidden' }}>
@@ -1087,17 +1087,22 @@ export const HomePage: React.FC = () => {
         >
           <div
             className="modal-content"
-            style={{ maxWidth: '800px', width: '90%', padding: '1rem', background: '#fff', borderRadius: '16px', border: '4px solid var(--color-primary-orange)', position: 'relative' }}
+            style={{ maxWidth: '800px', width: 'fit-content', padding: '1.2rem', background: '#fff', borderRadius: '16px', border: '4px solid var(--color-primary-orange)', position: 'relative', display: 'flex', flexDirection: 'column', margin: 'auto' }}
             onClick={(e) => e.stopPropagation()}
           >
             <button
-              style={{ position: 'absolute', top: '10px', right: '15px', background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: '36px', height: '36px', fontSize: '1.2rem', cursor: 'pointer' }}
+              style={{ position: 'absolute', top: '10px', right: '15px', background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: '36px', height: '36px', fontSize: '1.2rem', cursor: 'pointer', zIndex: 10 }}
               onClick={() => setLightboxImg(null)}
             >
               &times;
             </button>
-            <img src={lightboxImg.src} alt={lightboxImg.title} style={{ width: '100%', maxHeight: '75vh', objectFit: 'contain', borderRadius: '8px' }} />
-            <p style={{ textAlign: 'center', fontWeight: 700, marginTop: '0.8rem', color: 'var(--color-text-dark)' }}>{lightboxImg.title}</p>
+            <img src={lightboxImg.src} alt={lightboxImg.title} style={{ width: 'auto', maxWidth: '100%', maxHeight: '75vh', objectFit: 'contain', borderRadius: '8px' }} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '1rem', textAlign: 'center' }}>
+              <span style={{ fontWeight: 700, color: 'var(--color-text-dark)', fontSize: '1.05rem' }}>{lightboxImg.title}</span>
+              {lightboxImg.description && (
+                <span style={{ fontSize: '0.9rem', color: '#64748b', lineHeight: 1.4 }}>{lightboxImg.description}</span>
+              )}
+            </div>
           </div>
         </div>
       )}
