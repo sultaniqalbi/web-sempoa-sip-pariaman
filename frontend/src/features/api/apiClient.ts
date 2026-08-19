@@ -13,12 +13,13 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('access_token');
-    if (token && config.headers) {
+    if (token && token !== 'undefined' && token !== 'null') {
+      config.headers = config.headers || {};
       if (typeof config.headers.set === 'function') {
         config.headers.set('Authorization', `Bearer ${token}`);
-      } else {
-        config.headers.Authorization = `Bearer ${token}`;
       }
+      config.headers['Authorization'] = `Bearer ${token}`;
+      config.headers.Authorization = `Bearer ${token}`;
     }
     
     // Convert empty strings to null for JSON payloads to prevent FastAPI 422 errors

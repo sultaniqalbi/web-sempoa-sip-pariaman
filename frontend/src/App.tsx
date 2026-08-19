@@ -59,12 +59,12 @@ export function App() {
           <BrowserRouter>
             <AuthProvider>
               <Routes>
-              {/* Public Routes (Auto-Redirect ke Portal jika sudah Login) */}
-              <Route path="/" element={<PublicRoute><HomePage /></PublicRoute>} />
-              <Route path="/programs" element={<PublicRoute><ProgramsPage /></PublicRoute>} />
-              <Route path="/program/:programId" element={<PublicRoute><ProgramDetailPage /></PublicRoute>} />
-              <Route path="/galeri" element={<PublicRoute><PublicGaleriPage /></PublicRoute>} />
-              <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+              {/* Public Routes */}
+              <Route path="/" element={<HomePage />} />
+              <Route path="/programs" element={<ProgramsPage />} />
+              <Route path="/program/:programId" element={<ProgramDetailPage />} />
+              <Route path="/galeri" element={<PublicGaleriPage />} />
+              <Route path="/register" element={<RegisterPage />} />
 
 
               {/* Admin Portal Routes (Shared Components) */}
