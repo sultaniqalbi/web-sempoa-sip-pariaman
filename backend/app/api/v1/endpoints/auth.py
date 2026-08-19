@@ -142,7 +142,7 @@ async def refresh(
                 detail="Tipe token tidak valid"
             )
         jti = payload.get("jti")
-        if not jti or is_token_blacklisted(jti):
+        if jti and is_token_blacklisted(jti):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Refresh token telah di-revoke atau tidak valid"
@@ -159,7 +159,7 @@ async def refresh(
             detail="Refresh token tidak valid atau telah kadaluarsa"
         )
 
-    user = db.query(User).filter(User.email == email).first()
+    user = db.query(User).filter(func.lower(User.email) == email.lower()).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
