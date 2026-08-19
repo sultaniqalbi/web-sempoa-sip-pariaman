@@ -165,7 +165,7 @@ export const AbsensiInputPage: React.FC = () => {
                 <div>
                   <p className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Mode Kelas Saat Ini</p>
                   <p className="text-xs font-black text-[#1E293B] mt-0.5">
-                    {dashboardData?.guru?.mode_kelas === 'ONLINE' ? '<i className="fas fa-globe"></i> Online (Daring)' : '<i className="fas fa-school"></i> Offline (Tatap Muka)'}
+                    {dashboardData?.guru?.mode_kelas === 'ONLINE' ? <><i className="fas fa-globe"></i> Online (Daring)</> : <><i className="fas fa-school"></i> Offline (Tatap Muka)</>}
                   </p>
                 </div>
                 <div className="flex bg-slate-100 rounded-lg p-1 border border-slate-200">

@@ -43,9 +43,9 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
   if (!isOpen) return null;
 
   const statusConfig = {
-    Lancar: { color: '#4CAF50', bg: '#E8F5E9', border: '#C8E6C9', emoji: '<i className="fas fa-circle text-green-500"></i>' },
-    Peringatan: { color: '#FFA726', bg: '#FFF3E0', border: '#FFE0B2', emoji: '<i className="fas fa-circle text-yellow-500"></i>' },
-    Urgent: { color: '#D32F2F', bg: '#FFEBEE', border: '#FFCDD2', emoji: '<i className="fas fa-circle text-red-500"></i>' },
+    Lancar: { color: '#4CAF50', bg: '#E8F5E9', border: '#C8E6C9', emoji: <i className="fas fa-circle text-green-500"></i> },
+    Peringatan: { color: '#FFA726', bg: '#FFF3E0', border: '#FFE0B2', emoji: <i className="fas fa-circle text-yellow-500"></i> },
+    Urgent: { color: '#D32F2F', bg: '#FFEBEE', border: '#FFCDD2', emoji: <i className="fas fa-circle text-red-500"></i> },
   };
 
   const sc = statusConfig[status];
