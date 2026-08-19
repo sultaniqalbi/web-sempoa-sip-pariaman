@@ -512,6 +512,7 @@ export const GuruPage: React.FC = () => {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         title={editingGuru ? 'Edit Data Guru' : 'Tambah Guru Baru'}
+        size="lg"
       >
         <form onSubmit={handleFormSubmit} className="space-y-4 text-xs">
           {/* UID Kartu RFID Guru */}
@@ -531,7 +532,7 @@ export const GuruPage: React.FC = () => {
           </div>
 
           {/* Nama Lengkap & Nama Panggilan */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-[#1E293B] font-bold mb-1">Nama Lengkap Guru*</label>
               <input
@@ -556,8 +557,8 @@ export const GuruPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Tempat Lahir, Tanggal Lahir, Umur */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {/* Tempat Lahir, Tanggal Lahir & Umur */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-[#1E293B] font-bold mb-1">Tempat Lahir</label>
               <input
@@ -569,44 +570,27 @@ export const GuruPage: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-[#1E293B] font-bold mb-1">Tanggal Lahir</label>
-              <div className="flex items-center gap-1.5">
-                <input
-                  type="date"
-                  value={formData.tanggal_lahir}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    const calculated = calculateAge(val);
-                    setFormData({
-                      ...formData,
-                      tanggal_lahir: val,
-                      umur: calculated !== null ? calculated.toString() : formData.umur,
-                    });
-                  }}
-                  className="flex-1 bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (formData.tanggal_lahir) {
-                      showToast('Tanggal lahir terkonfirmasi: ' + formData.tanggal_lahir);
-                    }
-                  }}
-                  className="px-3 py-2.5 bg-[#E8F5E9] hover:bg-[#C8E6C9] text-[#2E7D32] border border-[#A5D6A7] rounded-lg text-xs font-extrabold transition-all cursor-pointer"
-                  title="Konfirmasi Tanggal Lahir"
-                >
-                  OK
-                </button>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[#1E293B] font-bold">Tanggal Lahir</label>
+                {formData.tanggal_lahir && calculateAge(formData.tanggal_lahir) !== null && (
+                  <span className="text-[11px] font-extrabold text-[#2E7D32] bg-[#E8F5E9] border border-[#A5D6A7] px-2 py-0.5 rounded-full">
+                    Umur: {calculateAge(formData.tanggal_lahir)} Tahun
+                  </span>
+                )}
               </div>
-            </div>
-            <div>
-              <label className="block text-[#1E293B] font-bold mb-1">Umur (Tahun)</label>
               <input
-                type="number"
-                value={formData.umur}
-                onChange={(e) => setFormData({ ...formData, umur: e.target.value })}
+                type="date"
+                value={formData.tanggal_lahir}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const calculated = calculateAge(val);
+                  setFormData({
+                    ...formData,
+                    tanggal_lahir: val,
+                    umur: calculated !== null ? calculated.toString() : formData.umur,
+                  });
+                }}
                 className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
-                placeholder="Contoh: 24"
               />
             </div>
           </div>

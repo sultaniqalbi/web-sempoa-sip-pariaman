@@ -554,10 +554,11 @@ export const SiswaPage: React.FC = () => {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         title={editingSiswa ? 'Edit Data Siswa' : 'Tambah Siswa Baru'}
+        size="lg"
       >
         <form onSubmit={handleFormSubmit} className="space-y-4 text-xs">
           {/* 1 & 2. Nama Lengkap & Nama Panggilan */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-[#1E293B] font-bold mb-1">Nama Lengkap Siswa*</label>
               <input
@@ -582,8 +583,8 @@ export const SiswaPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Tempat Lahir, Tanggal Lahir, Umur Otomatis */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {/* Tempat Lahir, Tanggal Lahir & Umur Otomatis */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-[#1E293B] font-bold mb-1">Tempat Lahir</label>
               <input
@@ -595,50 +596,32 @@ export const SiswaPage: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-[#1E293B] font-bold mb-1">Tanggal Lahir*</label>
-              <div className="flex items-center gap-1.5">
-                <input
-                  type="date"
-                  required
-                  value={formData.tanggal_lahir}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    const calculated = calculateAge(val);
-                    const newUmur = calculated !== null ? calculated.toString() : '';
-                    const newUid = !editingSiswa ? generateKodeSiswa(formData.kategori_program, newUmur, val) : formData.uid;
-                    setFormData({ 
-                      ...formData, 
-                      tanggal_lahir: val,
-                      umur: newUmur,
-                      uid: newUid
-                    });
-                  }}
-                  className="flex-1 bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none font-medium"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (formData.tanggal_lahir) {
-                      showToast('Tanggal lahir tersimpan: ' + formData.tanggal_lahir);
-                    }
-                  }}
-                  className="px-3 py-2.5 bg-[#E8F5E9] hover:bg-[#C8E6C9] text-[#2E7D32] border border-[#A5D6A7] rounded-lg text-xs font-extrabold transition-all cursor-pointer"
-                  title="Konfirmasi Tanggal Lahir"
-                >
-                  OK
-                </button>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[#1E293B] font-bold">Tanggal Lahir*</label>
+                {formData.tanggal_lahir && calculateAge(formData.tanggal_lahir) !== null && (
+                  <span className="text-[11px] font-extrabold text-[#2E7D32] bg-[#E8F5E9] border border-[#A5D6A7] px-2 py-0.5 rounded-full">
+                    Umur: {calculateAge(formData.tanggal_lahir)} Tahun
+                  </span>
+                )}
               </div>
-            </div>
-            <div>
-              <label className="block text-[#1E293B] font-bold mb-1">Umur (Otomatis)</label>
-              <div className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] font-bold flex items-center justify-between">
-                <span>
-                  {formData.tanggal_lahir && calculateAge(formData.tanggal_lahir) !== null
-                    ? `${calculateAge(formData.tanggal_lahir)} Tahun`
-                    : <span className="text-[#94A3B8] font-normal italic">Auto dari Tgl Lahir</span>}
-                </span>
-                <span className="text-[9px] font-bold bg-[#E2E8F0] text-[#475569] px-1.5 py-0.5 rounded">Sistem</span>
-              </div>
+              <input
+                type="date"
+                required
+                value={formData.tanggal_lahir}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const calculated = calculateAge(val);
+                  const newUmur = calculated !== null ? calculated.toString() : '';
+                  const newUid = !editingSiswa ? generateKodeSiswa(formData.kategori_program, newUmur, val) : formData.uid;
+                  setFormData({ 
+                    ...formData, 
+                    tanggal_lahir: val,
+                    umur: newUmur,
+                    uid: newUid
+                  });
+                }}
+                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none font-medium"
+              />
             </div>
           </div>
 
@@ -814,7 +797,7 @@ export const SiswaPage: React.FC = () => {
 
           {!editingSiswa && (
             <div className="p-3 bg-[#FFF3E0] border border-[#FFCC80] rounded-xl text-[11px] text-[#E65100]">
-              ℹ️ Sistem akan <strong>otomatis membuat akun login Ortu</strong> dengan email <code className="font-mono">{formData.nama_panggilan.toLowerCase().replace(/\s+/g, '') || 'nama'}@sempoasippariaman.com</code> dan password acak 10 karakter.
+              Sistem akan <strong>otomatis membuat akun login Ortu</strong> dengan email <code className="font-mono">{formData.nama_panggilan.toLowerCase().replace(/\s+/g, '') || 'nama'}@sempoasippariaman.com</code> dan password acak 10 karakter.
             </div>
           )}
 
