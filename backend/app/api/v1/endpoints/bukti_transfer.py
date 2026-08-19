@@ -1,9 +1,11 @@
 import os
+import logging
 from datetime import datetime
 from typing import List, Optional
 from fastapi import APIRouter, Depends, Form, File, UploadFile, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.dependencies import get_current_user, RoleChecker
 from app.models.users import User, UserRole
@@ -13,6 +15,7 @@ from app.models.bukti_transfer import StatusBuktiTransfer
 from app.schemas.bukti_transfer import BuktiTransferResponse
 from app.crud import bukti_transfer as crud_bukti_transfer
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 UPLOAD_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../uploads/bukti-transfer"))
@@ -47,7 +50,7 @@ async def upload_proof(
         )
     
     siswa = db.query(Siswa).filter(Siswa.id == pembayaran.id_siswa).first()
-    if not siswa or siswa.uid != current_user.uid_terhubung:
+    if not siswa or (str(siswa.id) != current_user.uid_terhubung and siswa.uid != current_user.uid_terhubung):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Anda tidak memiliki akses ke tagihan pembayaran siswa ini"
@@ -78,6 +81,12 @@ async def upload_proof(
         with open(file_path, "wb") as f:
             f.write(content)
     except Exception as e:
+        logger.error(f"Gagal menyimpan berkas bukti transfer: {e}", exc_info=True)
+        if settings.fastapi_env == "production":
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Terjadi kesalahan internal server saat menyimpan berkas."
+            )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Gagal menyimpan berkas di server: {e}"

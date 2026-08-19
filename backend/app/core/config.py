@@ -13,13 +13,13 @@ class Settings(BaseSettings):
     
     # FastAPI
     fastapi_env: str = "development"
-    secret_key: str = "sempoa_super_secret_jwt_key_pariaman_2026_dev"
+    secret_key: str = ""
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
     refresh_token_expire_days: int = 7
     
     # ESP32 Hardware
-    esp32_api_key: str = "SempoaPariaman_ESP32_SecureKey_2026!"
+    esp32_api_key: str = ""
 
     # Redis (For token blacklist & persistent rate limiting)
     redis_host: str = "redis"
@@ -42,14 +42,22 @@ class Settings(BaseSettings):
     @field_validator("secret_key")
     @classmethod
     def validate_secret_key(cls, v, info):
+        if not v or len(v) < 32:
+            raise ValueError("SECRET_KEY wajib di-set dan memiliki panjang minimal 32 karakter")
         env = os.getenv("FASTAPI_ENV", "development")
         if env == "production":
-            if not v or v == "sempoa_super_secret_jwt_key_pariaman_2026_dev":
+            if v in ("sempoa_super_secret_jwt_key_pariaman_2026_dev", "your-super-secret-key-change-in-production"):
                 raise ValueError("SECRET_KEY harus di-set dengan value unik dan random di production. Jalankan: python -c \"import secrets; print(secrets.token_hex(64))\"")
-            if len(v) < 32:
-                raise ValueError("SECRET_KEY terlalu pendek. Minimal 32 karakter.")
+        return v
+
+    @field_validator("esp32_api_key")
+    @classmethod
+    def validate_esp32_api_key(cls, v, info):
         if not v:
-            return "sempoa_super_secret_jwt_key_pariaman_2026_dev"
+            raise ValueError("ESP32_API_KEY wajib di-set dan tidak boleh kosong")
+        env = os.getenv("FASTAPI_ENV", "development")
+        if env == "production" and v == "SempoaPariaman_ESP32_SecureKey_2026!":
+            raise ValueError("ESP32_API_KEY harus di-set dengan value unik di production")
         return v
 
     @field_validator("allowed_origins", mode="before")

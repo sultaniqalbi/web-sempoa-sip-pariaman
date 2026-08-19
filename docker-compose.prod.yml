@@ -24,8 +24,8 @@ services:
       - POSTGRES_HOST=db
       - POSTGRES_PORT=5432
       - FASTAPI_ENV=production
-      - SECRET_KEY=${SECRET_KEY:-sempoa_super_secret_jwt_key_pariaman_2026_dev}
-      - ESP32_API_KEY=${ESP32_API_KEY:-SempoaPariaman_ESP32_SecureKey_2026!}
+      - SECRET_KEY=${SECRET_KEY}
+      - ESP32_API_KEY=${ESP32_API_KEY}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - ALLOWED_ORIGINS=https://sempoasippariaman.com,https://www.sempoasippariaman.com,http://202.155.157.22,https://202.155.157.22

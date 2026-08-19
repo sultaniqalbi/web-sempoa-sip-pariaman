@@ -319,6 +319,12 @@ async def reset_semua_data(
             json.dump(dump_data, f, indent=2)
 
     except Exception as e:
+        logger.error(f"Gagal membuat backup sebelum reset: {e}", exc_info=True)
+        if settings.fastapi_env == "production":
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Terjadi kesalahan internal server saat membuat backup sebelum reset."
+            )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Gagal membuat backup sebelum reset: {str(e)}"
@@ -360,7 +366,7 @@ async def reset_semua_data(
             for tab in tabs_to_reset:
                 send_to_google_sheet(tab_name=tab, rows=reset_row, title="RESET DATABASE")
         except Exception as e:
-            print(f"Failed to reset Google Sheets: {e}")
+            logger.error(f"Failed to reset Google Sheets: {e}")
 
         return {
             "status": "success",
@@ -371,6 +377,12 @@ async def reset_semua_data(
         }
     except Exception as e:
         db.rollback()
+        logger.error(f"Gagal menghapus data di database: {e}", exc_info=True)
+        if settings.fastapi_env == "production":
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Terjadi kesalahan internal server saat menghapus data."
+            )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Gagal menghapus data di database: {str(e)}"
@@ -670,6 +682,12 @@ async def seed_dummy_data(
         }
     except Exception as e:
         db.rollback()
+        logger.error(f"Gagal melakukan seed dummy: {e}", exc_info=True)
+        if settings.fastapi_env == "production":
+            raise HTTPException(
+                status_code=500,
+                detail="Terjadi kesalahan internal server saat melakukan seed data dummy."
+            )
         raise HTTPException(
             status_code=500,
             detail=f"Gagal melakukan seed dummy: {str(e)}"

@@ -2,6 +2,7 @@ import os
 import uuid
 import base64
 import io
+import logging
 from typing import List, Optional
 from datetime import datetime
 from PIL import Image
@@ -9,11 +10,13 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File,
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.dependencies import get_current_user, RoleChecker
 from app.models.users import User, UserRole
 from app.models.galeri import Galeri
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 admin_or_owner = RoleChecker([UserRole.admin, UserRole.owner])
 owner_only = RoleChecker([UserRole.owner])
@@ -111,8 +114,14 @@ async def upload_galeri_multipart(
         db.commit()
         db.refresh(new_item)
         return new_item
+    except HTTPException:
+        db.rollback()
+        raise
     except Exception as e:
         db.rollback()
+        logger.error(f"Gagal memproses file upload galeri: {e}", exc_info=True)
+        if settings.fastapi_env == "production":
+            raise HTTPException(status_code=500, detail="Terjadi kesalahan internal server saat mengunggah foto.")
         raise HTTPException(status_code=400, detail=f"Gagal memproses file upload: {str(e)}")
 
 @router.post("/", response_model=GaleriResponse, status_code=status.HTTP_201_CREATED)
@@ -124,7 +133,11 @@ async def create_galeri(
     """
     JSON creation endpoint. Supports base64 data URLs or direct file URLs.
     """
-    file_path = galeri_in.file_path
+    file_path = galeri_in.file_path.strip()
+
+    # TASK 1.9: File Path Validation - Cegah arbitrary file path
+    if not file_path.startswith("data:image/") and not file_path.startswith("/uploads/"):
+        raise HTTPException(status_code=400, detail="Path file tidak valid. Harus diawali dengan /uploads/ atau data:image/")
     
     # If client passed base64 data URL, decode and save to file disk!
     if file_path.startswith("data:image/"):
@@ -133,7 +146,12 @@ async def create_galeri(
             header, encoded = file_path.split(",", 1)
             decoded_bytes = base64.b64decode(encoded)
             file_path = save_base64_or_image_to_disk(decoded_bytes, filename_prefix="galeri")
+        except HTTPException:
+            raise
         except Exception as e:
+            logger.error(f"Gagal memproses data gambar base64 galeri: {e}", exc_info=True)
+            if settings.fastapi_env == "production":
+                raise HTTPException(status_code=400, detail="Format data gambar base64 tidak valid.")
             raise HTTPException(status_code=400, detail=f"Gagal memproses data gambar base64: {str(e)}")
 
     new_item = Galeri(

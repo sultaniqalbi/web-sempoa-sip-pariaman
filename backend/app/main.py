@@ -35,7 +35,8 @@ app = FastAPI(
     version="1.0.0",
     description="API for Sempoa SIP TC Pariaman attendance system",
     docs_url="/docs" if settings.fastapi_env != "production" else None,
-    redoc_url=None
+    redoc_url=None,
+    openapi_url="/openapi.json" if settings.fastapi_env != "production" else None
 )
 
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
@@ -75,7 +76,10 @@ cors_kwargs = {
 if settings.fastapi_env != "production":
     cors_kwargs["allow_origin_regex"] = r"http://(localhost|127\.0\.0\.1)(:\d+)?"
 
+from app.core.middleware import GlobalRateLimitMiddleware
+
 app.add_middleware(CORSMiddleware, **cors_kwargs)
+app.add_middleware(GlobalRateLimitMiddleware)
 
 # Mount static files for uploads
 uploads_dir = os.path.join(os.path.dirname(__file__), "uploads")

@@ -1,4 +1,5 @@
 import os
+import logging
 from typing import List, Optional
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
@@ -8,15 +9,18 @@ from PIL import Image
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.dependencies import get_current_user, RoleChecker
 from app.core.security import get_password_hash, generate_random_password, normalize_whatsapp_number
 from app.models.users import User, UserRole
 from app.models.siswa import Siswa, StatusSPP
 from app.models.pembayaran_periode import PembayaranPeriode, StatusPembayaran
+from app.models.audit_log import AuditLog
 from app.schemas.siswa import SiswaCreate, SiswaUpdate, SiswaResponse, SiswaCreateResponse
 from pydantic import BaseModel
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 admin_or_owner = RoleChecker([UserRole.admin, UserRole.owner])
 owner_only = RoleChecker([UserRole.owner])
@@ -162,6 +166,9 @@ async def create_new_siswa(
         )
     except Exception as e:
         db.rollback()
+        logger.error(f"Gagal menambah siswa & akun ortu: {e}", exc_info=True)
+        if settings.fastapi_env == "production":
+            raise HTTPException(status_code=500, detail="Terjadi kesalahan internal server saat memproses data siswa.")
         raise HTTPException(status_code=400, detail=f"Gagal menambah siswa & akun ortu: {str(e)}")
 
 @router.put("/{id}", response_model=SiswaResponse)
@@ -214,6 +221,19 @@ async def delete_siswa(
     db_siswa.is_deleted = True
     # Cascade delete ortu account
     db.query(User).filter(User.role == UserRole.ortu, User.uid_terhubung == str(id)).delete()
+    
+    try:
+        audit = AuditLog(
+            action="DELETE_SISWA",
+            role=current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
+            email=current_user.email,
+            details={"siswa_id": id, "siswa_nama": db_siswa.nama},
+            status="SUCCESS"
+        )
+        db.add(audit)
+    except Exception:
+        pass
+
     db.commit()
     return {"status": "success", "message": "Siswa dan akun ortu berhasil dihapus"}
 
@@ -236,6 +256,19 @@ async def reset_siswa_password(
 
     new_pwd = generate_random_password(10)
     user_ortu.password = get_password_hash(new_pwd)
+
+    try:
+        audit = AuditLog(
+            action="RESET_PASSWORD_ORTU",
+            role=current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
+            email=current_user.email,
+            details={"siswa_id": id, "ortu_email": user_ortu.email},
+            status="SUCCESS"
+        )
+        db.add(audit)
+    except Exception:
+        pass
+
     db.commit()
 
     return ResetPasswordResponse(
@@ -369,7 +402,12 @@ async def upload_foto_siswa(
         
         return {"status": "success", "file_url": file_url}
         
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.error(f"Gagal memproses gambar foto siswa: {e}", exc_info=True)
+        if settings.fastapi_env == "production":
+            raise HTTPException(status_code=500, detail="Terjadi kesalahan internal server saat memproses gambar.")
         raise HTTPException(status_code=400, detail=f"Gagal memproses gambar: {str(e)}")
 
 @router.post("/export-sheets")

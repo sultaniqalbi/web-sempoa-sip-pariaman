@@ -1,6 +1,7 @@
 import os
 import io
 import uuid
+import logging
 from typing import List, Optional
 from datetime import datetime
 from PIL import Image
@@ -8,14 +9,17 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.dependencies import get_current_user, RoleChecker
 from app.core.security import get_password_hash, generate_random_password, normalize_whatsapp_number
 from app.models.users import User, UserRole
 from app.models.guru import Guru
+from app.models.audit_log import AuditLog
 from app.schemas.guru import GuruCreate, GuruUpdate, GuruResponse, GuruCreateResponse
 from pydantic import BaseModel
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 admin_or_owner = RoleChecker([UserRole.admin, UserRole.owner])
 owner_only = RoleChecker([UserRole.owner])
@@ -116,6 +120,9 @@ async def create_new_guru(
         )
     except Exception as e:
         db.rollback()
+        logger.error(f"Gagal menambah guru: {e}", exc_info=True)
+        if settings.fastapi_env == "production":
+            raise HTTPException(status_code=500, detail="Terjadi kesalahan internal server saat memproses data guru.")
         raise HTTPException(status_code=400, detail=f"Gagal menambah guru: {str(e)}")
 
 @router.post("/{id}/upload-foto")
@@ -172,8 +179,13 @@ async def upload_foto_guru(
         db.refresh(guru)
         
         return {"status": "success", "file_url": file_url}
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
+        logger.error(f"Gagal memproses unggahan foto guru: {e}", exc_info=True)
+        if settings.fastapi_env == "production":
+            raise HTTPException(status_code=500, detail="Terjadi kesalahan internal server saat memproses gambar.")
         raise HTTPException(status_code=400, detail=f"Gagal memproses unggahan foto: {str(e)}")
 
 @router.put("/{id}", response_model=GuruResponse)
@@ -211,6 +223,19 @@ async def delete_guru(
     # Cascade delete teacher user
     db.query(User).filter(User.role == UserRole.guru, User.uid_terhubung == str(id)).delete()
     db.delete(db_guru)
+
+    try:
+        audit = AuditLog(
+            action="DELETE_GURU",
+            role=current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
+            email=current_user.email,
+            details={"guru_id": id, "guru_nama": db_guru.nama},
+            status="SUCCESS"
+        )
+        db.add(audit)
+    except Exception:
+        pass
+
     db.commit()
     return {"status": "success", "message": "Guru dan akun terhubung berhasil dihapus"}
 
@@ -230,6 +255,19 @@ async def reset_guru_password(
 
     new_pwd = generate_random_password(10)
     user_guru.password = get_password_hash(new_pwd)
+
+    try:
+        audit = AuditLog(
+            action="RESET_PASSWORD_GURU",
+            role=current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
+            email=current_user.email,
+            details={"guru_id": id, "guru_email": user_guru.email},
+            status="SUCCESS"
+        )
+        db.add(audit)
+    except Exception:
+        pass
+
     db.commit()
 
     return GuruResetPasswordResponse(

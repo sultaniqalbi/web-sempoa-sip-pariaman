@@ -13,6 +13,7 @@ from app.core.hardware import (
     get_reset_command,
     acknowledge_reset_command
 )
+from app.core.rate_limit import hardware_limiter
 from app.models.guru import Guru
 from app.models.absensi_log import AbsensiLog, StatusAbsensi, ModeAbsensi
 
@@ -20,12 +21,24 @@ router = APIRouter()
 
 @router.post("/absensi", response_class=PlainTextResponse)
 async def post_absensi(request: Request, db: Session = Depends(get_db)):
-    # 1. API Key validation
+    client_ip = request.client.host if request.client else "unknown"
+
+    # 1. Rate limiting & Brute force check
+    if hardware_limiter.is_auth_blocked(client_ip):
+        return PlainTextResponse("RATE_LIMITED", status_code=429)
+
+    if hardware_limiter.is_rate_limited(client_ip):
+        return PlainTextResponse("RATE_LIMITED", status_code=429)
+
+    # 2. API Key validation
     api_key = request.headers.get("X-API-Key") or request.headers.get("x-api-key")
     if not verify_api_key(api_key):
+        hardware_limiter.record_auth_failure(client_ip)
         return PlainTextResponse("UNAUTHORIZED", status_code=401)
 
-    # 2. Extract and validate form body manually to prevent 422 JSON errors
+    hardware_limiter.reset_auth_failures(client_ip)
+
+    # 3. Extract and validate form body manually to prevent 422 JSON errors
     try:
         form_data = await request.form()
         uid = form_data.get("uid")
@@ -100,9 +113,20 @@ async def post_absensi(request: Request, db: Session = Depends(get_db)):
 
 @router.get("/ping", response_class=PlainTextResponse)
 async def get_ping(request: Request):
+    client_ip = request.client.host if request.client else "unknown"
+
+    if hardware_limiter.is_auth_blocked(client_ip):
+        return PlainTextResponse("RATE_LIMITED", status_code=429)
+
+    if hardware_limiter.is_rate_limited(client_ip):
+        return PlainTextResponse("RATE_LIMITED", status_code=429)
+
     api_key = request.headers.get("X-API-Key") or request.headers.get("x-api-key")
     if not verify_api_key(api_key):
+        hardware_limiter.record_auth_failure(client_ip)
         return PlainTextResponse("UNAUTHORIZED", status_code=401)
+
+    hardware_limiter.reset_auth_failures(client_ip)
 
     ack = request.query_params.get("ack")
     if ack == "1":

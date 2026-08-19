@@ -9,18 +9,20 @@ from app.models.users import User, UserRole
 logger = logging.getLogger("seed_data")
 
 # Password dari env var — TIDAK ADA default hardcoded di source code
-ADMIN_SEED_PWD = os.getenv("ADMIN_SEED_PASSWORD", "Z6@s#Ax7")
-OWNER_SEED_PWD = os.getenv("OWNER_SEED_PASSWORD", "8W&x#I2m")
+ADMIN_SEED_PWD = os.getenv("ADMIN_SEED_PASSWORD")
+OWNER_SEED_PWD = os.getenv("OWNER_SEED_PASSWORD")
 
 SEED_USERS = [
     {
         "email": "AdminSip@sempoasippariaman.com",
+        "env_var": "ADMIN_SEED_PASSWORD",
         "password": ADMIN_SEED_PWD,
         "role": UserRole.admin,
         "nama": "Admin SIP Pariaman"
     },
     {
         "email": "OwNerSiP@sempoasippariaman.com",
+        "env_var": "OWNER_SEED_PASSWORD",
         "password": OWNER_SEED_PWD,
         "role": UserRole.owner,
         "nama": "Owner SIP Pariaman"
@@ -29,8 +31,8 @@ SEED_USERS = [
 
 def run_seed(db: Session = None):
     """
-    Seed Admin & Owner accounts. Password dari env var atau default fallback.
-    Mensejajarkan password akun jika belum cocok.
+    Seed Admin & Owner accounts jika belum ada di database.
+    Jika user sudah ada, tidak akan menimpa password yang sudah ada.
     """
     Base.metadata.create_all(bind=engine)
 
@@ -48,15 +50,17 @@ def run_seed(db: Session = None):
             ).first()
 
             if existing_user:
-                # Sync password jika hash tidak cocok dengan seed password
-                if not verify_password(seed_user["password"], existing_user.password):
-                    existing_user.password = get_password_hash(seed_user["password"])
-                    logger.info(f"Password synced for: {target_email}")
-                existing_user.role = seed_user["role"]
-                existing_user.nama = seed_user["nama"]
-                logger.info(f"Verified seed user: {target_email}")
+                logger.info(f"Seed user already exists, skipping password overwrite: {target_email}")
             else:
-                hashed_pwd = get_password_hash(seed_user["password"])
+                pwd = seed_user["password"]
+                if not pwd:
+                    logger.warning(
+                        f"Environment variable '{seed_user['env_var']}' tidak di-set! "
+                        f"Lewati pembuatan seed user baru untuk {target_email}."
+                    )
+                    continue
+
+                hashed_pwd = get_password_hash(pwd)
                 new_user = User(
                     email=target_email,
                     password=hashed_pwd,

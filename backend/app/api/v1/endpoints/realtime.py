@@ -69,8 +69,22 @@ async def websocket_endpoint(websocket: WebSocket):
 @router.get("/stream")
 async def sse_event_stream(request: Request):
     """
-    Server-Sent Events (SSE) fallback stream.
+    Server-Sent Events (SSE) fallback stream with token authentication.
     """
+    from app.core.config import settings
+    token = request.query_params.get("token")
+
+    if not token:
+        if settings.fastapi_env == "production":
+            return JSONResponse(status_code=401, content={"detail": "Token authentication required for realtime stream"})
+    else:
+        payload = decode_access_token(token)
+        if not payload or payload.get("type") != "access":
+            return JSONResponse(status_code=401, content={"detail": "Token tidak valid atau telah kadaluarsa"})
+        jti = payload.get("jti")
+        if jti and is_token_blacklisted(jti):
+            return JSONResponse(status_code=401, content={"detail": "Token telah di-revoke"})
+
     async def event_generator():
         yield f"data: {json.dumps({'event': 'CONNECTED', 'data': {'status': 'connected'}})}\n\n"
         while True:
