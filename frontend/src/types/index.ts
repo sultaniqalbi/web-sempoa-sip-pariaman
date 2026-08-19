@@ -67,6 +67,7 @@ export interface Jadwal {
   jam_mulai: string;
   jam_selesai: string;
   lokasi: string;
+  mode_kelas?: string;
   created_at: string;
 }
 
