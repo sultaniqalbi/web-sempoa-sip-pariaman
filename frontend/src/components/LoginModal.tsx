@@ -62,7 +62,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       if (user.role === 'owner') portalPath = '/owner/dashboard';
       
       setTimeout(() => {
-        window.location.href = portalPath;
+        onClose();
+        navigate(portalPath);
       }, 400);
     } catch (err: any) {
       console.error('Login failed:', err);
