@@ -87,8 +87,13 @@ if settings.fastapi_env != "production":
 
 from app.core.middleware import GlobalRateLimitMiddleware
 
+app.add_middleware(
+    GlobalRateLimitMiddleware,
+    auth_limit=600,
+    unauth_limit=150,
+    window_seconds=60
+)
 app.add_middleware(CORSMiddleware, **cors_kwargs)
-app.add_middleware(GlobalRateLimitMiddleware)
 
 # Mount static files for uploads
 uploads_dir = os.path.join(os.path.dirname(__file__), "uploads")

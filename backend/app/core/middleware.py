@@ -75,7 +75,18 @@ class GlobalRateLimitMiddleware(BaseHTTPMiddleware):
         ):
             return await call_next(request)
 
-        client_ip = request.client.host if request.client else "unknown"
+        # Extract real client IP (behind reverse proxy like Nginx)
+        forwarded = request.headers.get("x-forwarded-for")
+        real_ip = request.headers.get("x-real-ip")
+        if forwarded:
+            client_ip = forwarded.split(",")[0].strip()
+        elif real_ip:
+            client_ip = real_ip.strip()
+        elif request.client:
+            client_ip = request.client.host
+        else:
+            client_ip = "unknown"
+
         auth_header = request.headers.get("Authorization") or ""
         is_authenticated = bool(auth_header.startswith("Bearer ") and len(auth_header) > 10)
 

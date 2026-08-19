@@ -53,17 +53,30 @@ async def read_siswa_list(
 
 @router.get("/{id}", response_model=SiswaResponse)
 async def read_siswa(
-    id: int,
+    id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    db_siswa = db.query(Siswa).filter(Siswa.id == id, Siswa.is_deleted == False).first()
+    try:
+        int_id = int(id)
+        db_siswa = db.query(Siswa).filter(
+            (Siswa.id == int_id) | (Siswa.uid == id),
+            Siswa.is_deleted == False
+        ).first()
+    except (ValueError, TypeError):
+        db_siswa = db.query(Siswa).filter(
+            Siswa.uid == str(id),
+            Siswa.is_deleted == False
+        ).first()
+
     if not db_siswa:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data siswa tidak ditemukan")
     
     if current_user.role in [UserRole.admin, UserRole.owner, UserRole.guru]:
         return db_siswa
-    if current_user.role == UserRole.ortu and current_user.uid_terhubung == str(db_siswa.id):
+    if current_user.role == UserRole.ortu and (
+        current_user.uid_terhubung == str(db_siswa.id) or current_user.uid_terhubung == db_siswa.uid
+    ):
         return db_siswa
     
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Anda tidak memiliki akses ke data siswa ini")

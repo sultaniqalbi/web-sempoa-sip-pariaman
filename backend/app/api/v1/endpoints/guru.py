@@ -40,11 +40,16 @@ async def read_guru_list(
 
 @router.get("/{id}", response_model=GuruResponse)
 async def read_guru(
-    id: int,
+    id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    db_guru = db.query(Guru).filter(Guru.id == id).first()
+    try:
+        int_id = int(id)
+        db_guru = db.query(Guru).filter((Guru.id == int_id) | (Guru.uid == id)).first()
+    except (ValueError, TypeError):
+        db_guru = db.query(Guru).filter(Guru.uid == str(id)).first()
+
     if not db_guru:
         raise HTTPException(status_code=404, detail="Data guru tidak ditemukan")
     return db_guru
