@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
 import StudentAttendanceTable from './components/StudentAttendanceTable';
+import useAuth from '../../features/auth/useAuth';
 
 export const AbsensiInputPage: React.FC = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'input' | 'rekap' | 'log'>('input');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
@@ -46,6 +48,28 @@ export const AbsensiInputPage: React.FC = () => {
       return res.data;
     },
     enabled: activeTab === 'rekap',
+  });
+
+  // Fetch Dashboard (to get current mode_kelas)
+  const { data: dashboardData } = useQuery({
+    queryKey: ['guru-dashboard'],
+    queryFn: async () => {
+      const res = await apiClient.get('/portal-guru/dashboard');
+      return res.data;
+    },
+  });
+
+  // Mutation for Mode Kelas (Only Admin can actually click, handled in UI)
+  const modeMutation = useMutation({
+    mutationFn: async (newMode: string) => {
+      const res = await apiClient.put('/portal-guru/kelas/mode', { mode_kelas: newMode });
+      return res.data;
+    },
+    onSuccess: (resData) => {
+      queryClient.invalidateQueries({ queryKey: ['guru-dashboard'] });
+      setToast({ message: `Mode kelas berhasil diubah ke ${resData.mode_kelas}`, type: 'success' });
+      setTimeout(() => setToast(null), 3000);
+    },
   });
 
   // Save Attendance Mutation
@@ -136,13 +160,41 @@ export const AbsensiInputPage: React.FC = () => {
               <p className="text-xs text-[#64748B] font-bold animate-pulse">Memuat daftar siswa...</p>
             </div>
           ) : (
-            <StudentAttendanceTable
-              students={siswaData?.siswa || []}
-              tanggalTerpilih={inputDate}
-              onTanggalChange={setInputDate}
-              onSave={handleSaveAttendance}
-              isSaving={saveMutation.isPending}
-            />
+            <div className="space-y-4">
+              <div className="bg-white p-3 rounded-2xl border border-[#E0E0E0] shadow-sm flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Mode Kelas Saat Ini</p>
+                  <p className="text-xs font-black text-[#1E293B] mt-0.5">
+                    {dashboardData?.guru?.mode_kelas === 'ONLINE' ? '🌐 Online (Daring)' : '🏫 Offline (Tatap Muka)'}
+                  </p>
+                </div>
+                <div className="flex bg-slate-100 rounded-lg p-1 border border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => modeMutation.mutate('OFFLINE')}
+                    disabled={modeMutation.isPending || user?.role === 'guru'}
+                    className={`px-3 py-1.5 rounded-md text-[10px] font-bold transition-colors ${dashboardData?.guru?.mode_kelas !== 'ONLINE' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-500'} ${user?.role === 'guru' ? 'cursor-not-allowed opacity-80' : ''}`}
+                  >
+                    Offline
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => modeMutation.mutate('ONLINE')}
+                    disabled={modeMutation.isPending || user?.role === 'guru'}
+                    className={`px-3 py-1.5 rounded-md text-[10px] font-bold transition-colors ${dashboardData?.guru?.mode_kelas === 'ONLINE' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-500'} ${user?.role === 'guru' ? 'cursor-not-allowed opacity-80' : ''}`}
+                  >
+                    Online
+                  </button>
+                </div>
+              </div>
+              <StudentAttendanceTable
+                students={siswaData?.siswa || []}
+                tanggalTerpilih={inputDate}
+                onTanggalChange={setInputDate}
+                onSave={handleSaveAttendance}
+                isSaving={saveMutation.isPending}
+              />
+            </div>
           )}
         </div>
       )}

@@ -14,4 +14,5 @@ class Jadwal(Base):
     lokasi = Column(String(100), nullable=False, default="TC Pariaman")
     is_hari_libur = Column(Boolean, default=False, nullable=False)
     kategori_program = Column(String(50), nullable=False, default="Sempoa SIP")
+    mode_kelas = Column(String(20), nullable=False, default="OFFLINE")
     created_at = Column(DateTime(timezone=True), server_default=func.now())

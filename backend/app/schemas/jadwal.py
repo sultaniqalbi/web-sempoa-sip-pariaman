@@ -11,6 +11,7 @@ class JadwalBase(BaseModel):
     lokasi: str = "TC Pariaman"
     is_hari_libur: bool = False
     kategori_program: str = "Sempoa SIP"
+    mode_kelas: str = "OFFLINE"
 
 class JadwalCreate(JadwalBase):
     pass
@@ -24,6 +25,7 @@ class JadwalUpdate(BaseModel):
     lokasi: Optional[str] = None
     is_hari_libur: Optional[bool] = None
     kategori_program: Optional[str] = None
+    mode_kelas: Optional[str] = None
 
 class JadwalResponse(JadwalBase):
     id: int

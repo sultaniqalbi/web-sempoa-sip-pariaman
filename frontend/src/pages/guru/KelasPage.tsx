@@ -14,18 +14,7 @@ const KelasPage: React.FC = () => {
     },
   });
 
-  const modeMutation = useMutation({
-    mutationFn: async (newMode: string) => {
-      const res = await apiClient.put('/portal-guru/kelas/mode', { mode_kelas: newMode });
-      return res.data;
-    },
-    onSuccess: (resData) => {
-      queryClient.invalidateQueries({ queryKey: ['guru-kelas'] });
-      queryClient.invalidateQueries({ queryKey: ['guru-dashboard'] });
-      setToastMessage(`Mode kelas berhasil diubah ke ${resData.mode_kelas}`);
-      setTimeout(() => setToastMessage(null), 3000);
-    },
-  });
+    // Mode mutation removed from here
 
   if (isLoading) {
     return (
@@ -93,39 +82,7 @@ const KelasPage: React.FC = () => {
                   </span>
                 </div>
 
-                {/* Mode Belajar Toggle */}
-                <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div>
-                    <p className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Mode Pembelajaran</p>
-                    <p className="text-xs font-extrabold text-[#1E293B] mt-0.5">
-                      {isOnline ? '🌐 Kelas Online (Daring / Virtual)' : '🏫 Kelas Offline (Tatap Muka TC Pariaman)'}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-[#E2E8F0] shadow-2xs self-start sm:self-auto">
-                    <button
-                      onClick={() => modeMutation.mutate('OFFLINE')}
-                      disabled={modeMutation.isPending}
-                      className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${
-                        !isOnline
-                          ? 'bg-[#FF7043] text-white shadow-xs'
-                          : 'text-[#64748B] hover:bg-[#F1F5F9]'
-                      }`}
-                    >
-                      Offline
-                    </button>
-                    <button
-                      onClick={() => modeMutation.mutate('ONLINE')}
-                      disabled={modeMutation.isPending}
-                      className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${
-                        isOnline
-                          ? 'bg-[#1976D2] text-white shadow-xs'
-                          : 'text-[#64748B] hover:bg-[#F1F5F9]'
-                      }`}
-                    >
-                      Online
-                    </button>
-                  </div>
-                </div>
+                {/* Mode Belajar Toggle - Dihapus karena pindah ke admin dan absensi */}
 
                 {/* Details Grid */}
                 <div className="grid grid-cols-2 gap-3 pt-1">

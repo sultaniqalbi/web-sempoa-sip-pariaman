@@ -15,6 +15,7 @@ export const JadwalPage: React.FC = () => {
   const [hari, setHari] = useState('Senin');
   const [jamMulai, setJamMulai] = useState('14:00');
   const [jamSelesai, setJamSelesai] = useState('15:30');
+  const [modeKelas, setModeKelas] = useState('OFFLINE');
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,7 +26,8 @@ export const JadwalPage: React.FC = () => {
         hari,
         jam_mulai: jamMulai,
         jam_selesai: jamSelesai,
-        lokasi: 'TC Pariaman'
+        lokasi: 'TC Pariaman',
+        mode_kelas: modeKelas
       });
       setIsOpen(false);
       setSiswaId(0);
@@ -82,6 +84,7 @@ export const JadwalPage: React.FC = () => {
                 <th className="p-4">Jam Kelas</th>
                 <th className="p-4">Siswa</th>
                 <th className="p-4">Guru Pembina</th>
+                <th className="p-4">Mode</th>
                 <th className="p-4">Lokasi</th>
                 <th className="p-4 text-right">Aksi</th>
               </tr>
@@ -94,6 +97,11 @@ export const JadwalPage: React.FC = () => {
                     <td className="p-4 font-mono text-slate-200">{jadwal.jam_mulai} - {jadwal.jam_selesai}</td>
                     <td className="p-4 text-white font-semibold">{getSiswaName(jadwal.id_siswa)}</td>
                     <td className="p-4 text-slate-300">{getGuruName(jadwal.id_guru)}</td>
+                    <td className="p-4">
+                      <span className={`px-2 py-1 rounded text-[10px] font-bold ${jadwal.mode_kelas === 'ONLINE' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-orange-500/20 text-orange-400 border border-orange-500/30'}`}>
+                        {jadwal.mode_kelas || 'OFFLINE'}
+                      </span>
+                    </td>
                     <td className="p-4 text-slate-400">{jadwal.lokasi}</td>
                     <td className="p-4 text-right">
                       <button
@@ -167,6 +175,27 @@ export const JadwalPage: React.FC = () => {
                   <option value="Minggu">Minggu</option>
                 </select>
               </div>
+              
+              <div>
+                <label className="block text-slate-400 font-bold uppercase tracking-wider mb-2">Mode Pembelajaran</label>
+                <div className="flex bg-slate-950 border border-slate-800 rounded-xl overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setModeKelas('OFFLINE')}
+                    className={`flex-1 py-2 text-xs font-bold transition-colors ${modeKelas === 'OFFLINE' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}
+                  >
+                    Offline
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setModeKelas('ONLINE')}
+                    className={`flex-1 py-2 text-xs font-bold transition-colors ${modeKelas === 'ONLINE' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}
+                  >
+                    Online
+                  </button>
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-slate-400 font-bold uppercase tracking-wider mb-2">Jam Mulai</label>

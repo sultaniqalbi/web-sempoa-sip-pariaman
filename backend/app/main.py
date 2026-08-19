@@ -50,6 +50,17 @@ def on_startup():
     # Auto-create tables & seed admin/owner accounts
     try:
         Base.metadata.create_all(bind=engine)
+        
+        # Auto-migration for mode_kelas (add if not exists)
+        try:
+            with engine.connect() as conn:
+                conn.execute(text("ALTER TABLE jadwal ADD COLUMN mode_kelas VARCHAR(20) DEFAULT 'OFFLINE' NOT NULL;"))
+                conn.commit()
+                logger.info("Auto-migration: Added mode_kelas to jadwal")
+        except Exception as mig_e:
+            if "duplicate column name" not in str(mig_e).lower() and "already exists" not in str(mig_e).lower():
+                logger.warning(f"Auto-migration skipped or failed: {mig_e}")
+                
         run_seed()
     except Exception as e:
         logger.error(f"Startup initialization error: {e}")
