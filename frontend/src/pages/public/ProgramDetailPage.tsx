@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import useAuth from '../../features/auth/useAuth';
 import useMascotCursor from '../../hooks/useMascotCursor';
+import { MenuIcon, CloseIcon, HomeIcon, ChevronLeftIcon, ChevronRightIcon, BookOpenIcon, StarIcon, CubesIcon, CheckIcon } from '../../components/SvgIcons';
 
 interface ProgramDetail {
   id: string;
