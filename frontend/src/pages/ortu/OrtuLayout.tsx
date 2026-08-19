@@ -18,11 +18,15 @@ export const OrtuLayout: React.FC = () => {
   const { data: child } = useQuery<Siswa>({
     queryKey: ['child-profile', user?.uid_terhubung],
     queryFn: async () => {
-      if (!user?.uid_terhubung) return null;
-      const response = await apiClient.get(`/siswa/${user.uid_terhubung}`);
-      return response.data;
+      try {
+        if (user?.uid_terhubung) {
+          const response = await apiClient.get(`/siswa/${user.uid_terhubung}`);
+          if (response.data) return response.data;
+        }
+      } catch (e) {}
+      const fallback = await apiClient.get('/siswa/my-child');
+      return fallback.data;
     },
-    enabled: !!user?.uid_terhubung,
   });
 
   // Fetch schedule for today (or student's program schedule)

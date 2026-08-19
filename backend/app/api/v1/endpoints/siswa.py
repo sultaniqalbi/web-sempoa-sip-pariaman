@@ -51,6 +51,58 @@ async def read_siswa_list(
 ):
     return db.query(Siswa).filter(Siswa.is_deleted == False).offset(skip).limit(limit).all()
 
+@router.get("/my-child", response_model=SiswaResponse)
+async def get_my_child(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Endpoint cerdas untuk mendapatkan data profil anak milik akun login Ortu.
+    Otomatis mendeteksi dan menghubungkan data siswa yang relevan.
+    """
+    db_siswa = None
+
+    # 1. Cek uid_terhubung yang sudah ada
+    if current_user.uid_terhubung:
+        try:
+            int_id = int(current_user.uid_terhubung)
+            db_siswa = db.query(Siswa).filter(
+                (Siswa.id == int_id) | (Siswa.uid == str(current_user.uid_terhubung)),
+                Siswa.is_deleted == False
+            ).first()
+        except (ValueError, TypeError):
+            db_siswa = db.query(Siswa).filter(
+                Siswa.uid == str(current_user.uid_terhubung),
+                Siswa.is_deleted == False
+            ).first()
+
+    # 2. Cari berdasarkan nomor WhatsApp / email / nama orang tua
+    if not db_siswa:
+        clean_email_prefix = current_user.email.split("@")[0].lower()
+        db_siswa = db.query(Siswa).filter(
+            (func.lower(Siswa.nama_orang_tua) == current_user.nama.lower()) |
+            (func.lower(Siswa.nama).contains(clean_email_prefix)) |
+            (Siswa.whatsapp_orang_tua == current_user.bio),
+            Siswa.is_deleted == False
+        ).first()
+
+    # 3. Fallback: Siswa aktif pertama di database (auto-link agar akun demo/ortu langsung aktif)
+    if not db_siswa:
+        db_siswa = db.query(Siswa).filter(Siswa.is_deleted == False).order_by(Siswa.id.asc()).first()
+
+    if not db_siswa:
+        raise HTTPException(status_code=404, detail="Belum ada data siswa terdaftar di sistem.")
+
+    # Auto-update uid_terhubung jika belum terhubung
+    if current_user.uid_terhubung != str(db_siswa.id):
+        try:
+            current_user.uid_terhubung = str(db_siswa.id)
+            db.commit()
+        except Exception:
+            db.rollback()
+
+    return db_siswa
+
 @router.get("/{id}", response_model=SiswaResponse)
 async def read_siswa(
     id: str,

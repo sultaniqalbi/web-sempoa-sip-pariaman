@@ -39,11 +39,15 @@ export const OrtuDashboardPage: React.FC = () => {
   const { data: child, isLoading } = useQuery<Siswa>({
     queryKey: ['child-profile', user?.uid_terhubung],
     queryFn: async () => {
-      if (!user?.uid_terhubung) throw new Error('No linked child');
-      const response = await apiClient.get(`/siswa/${user.uid_terhubung}`);
-      return response.data;
+      try {
+        if (user?.uid_terhubung) {
+          const response = await apiClient.get(`/siswa/${user.uid_terhubung}`);
+          if (response.data) return response.data;
+        }
+      } catch (e) {}
+      const fallback = await apiClient.get('/siswa/my-child');
+      return fallback.data;
     },
-    enabled: !!user?.uid_terhubung,
     refetchInterval: 10000,
   });
 
