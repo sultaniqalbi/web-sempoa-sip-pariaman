@@ -952,7 +952,7 @@ export const HomePage: React.FC = () => {
           {isMobile && (
             <div className="mobile-maps-actions">
               <a
-                href="https://maps.google.com/?q=Sempoa+Sip+Pariaman"
+                href="https://www.google.com/maps/search/?api=1&query=Sempoa+Sip+Pariaman"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mobile-gmaps-btn"
