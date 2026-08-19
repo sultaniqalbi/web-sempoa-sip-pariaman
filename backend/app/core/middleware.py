@@ -63,15 +63,16 @@ class GlobalRateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next) -> Response:
         path = request.url.path
 
-        # Whitelist paths that should bypass global rate limiting
+        # Whitelist safe paths & methods that should bypass global rate limiting
         if (
-            path == "/health"
+            request.method in ("OPTIONS", "HEAD")
+            or path == "/health"
             or path.startswith("/api/absensi")
             or path.startswith("/api/ping")
             or path.endswith("/ws")
             or path.endswith("/stream")
             or path.startswith("/uploads")
-            or request.method == "OPTIONS"
+            or path.startswith("/static")
         ):
             return await call_next(request)
 
