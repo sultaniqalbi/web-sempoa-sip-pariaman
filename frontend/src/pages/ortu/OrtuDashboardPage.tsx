@@ -206,7 +206,7 @@ export const OrtuDashboardPage: React.FC = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {/* Tombol Utama: Aktifkan Semua (Notif + Kalender sekaligus) */}
             <button
               type="button"
@@ -226,7 +226,7 @@ export const OrtuDashboardPage: React.FC = () => {
                     } catch {}
                   }
                   if (pushRes.success) {
-                    setPushMsg({ type: 'success', text: '✅ Notifikasi aktif & kalender terbuka!' });
+                    setPushMsg({ type: 'success', text: 'Notifikasi aktif dan kalender terbuka!' });
                     setPermissionState('granted');
                   } else {
                     setPushMsg({ type: 'error', text: pushRes.message });
@@ -244,7 +244,7 @@ export const OrtuDashboardPage: React.FC = () => {
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
                 <path d="M13.73 21a2 2 0 0 1-3.46 0" />
               </svg>
-              {pushLoading ? 'Mengaktifkan...' : (permissionState === 'granted' ? 'Perbarui Semua' : 'Aktifkan Notif & Kalender')}
+              {pushLoading ? 'Mengaktifkan...' : (permissionState === 'granted' ? 'Perbarui Semua' : 'Aktifkan Notif dan Kalender')}
             </button>
 
             {/* Tombol Google Calendar saja */}
@@ -266,37 +266,7 @@ export const OrtuDashboardPage: React.FC = () => {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M19.5 4H18V2h-2v2H8V2H6v2H4.5C3.67 4 3 4.67 3 5.5v15c0 .83.67 1.5 1.5 1.5h15c.83 0 1.5-.67 1.5-1.5v-15c0-.83-.67-1.5-1.5-1.5zm0 16.5H4.5V9h15v11.5zM7 11h5v5H7z" />
               </svg>
-              Google Calendar
-            </button>
-
-            {/* Tombol Download ICS */}
-            <button
-              type="button"
-              onClick={async () => {
-                if (!child?.id) return;
-                setPushLoading(true);
-                try {
-                  const response = await apiClient.get(`/calendar/spp/${child.id}.ics`, { responseType: 'blob' });
-                  const blob = new Blob([response.data], { type: 'text/calendar' });
-                  const url = window.URL.createObjectURL(blob);
-                  const link = document.createElement('a');
-                  link.href = url;
-                  link.setAttribute('download', `Jadwal_SPP_${(child.nama || 'Siswa').replace(/\s+/g, '_')}.ics`);
-                  document.body.appendChild(link);
-                  link.click();
-                  link.remove();
-                  window.URL.revokeObjectURL(url);
-                } catch {} finally { setPushLoading(false); }
-              }}
-              disabled={pushLoading || !child?.id}
-              className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-[#F8FAFC] hover:bg-[#F1F5F9] text-[#334155] font-bold text-[11px] rounded-xl border border-[#CBD5E1] transition-all active:scale-[0.97] cursor-pointer disabled:opacity-50"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-              Download .ICS
+              Simpan ke Google Calendar
             </button>
           </div>
         </div>
