@@ -164,7 +164,6 @@ export const ProgramDetailPage: React.FC = () => {
   const { programId } = useParams<{ programId: string }>();
   const { user } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [hoveredBtn, setHoveredBtn] = useState<'prev' | 'home' | 'next' | null>(null);
 
   const key = programId?.toLowerCase() || 'sempoa';
   const data = programDataMap[key] || programDataMap['sempoa'];
@@ -179,7 +178,6 @@ export const ProgramDetailPage: React.FC = () => {
           </Link>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            {/* Mobile-only Daftar Sekarang button */}
             <a
               href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak."
               target="_blank"
@@ -193,9 +191,9 @@ export const ProgramDetailPage: React.FC = () => {
               className="mobile-menu-btn"
               id="mobileMenuBtn"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', outline: 'none' }}
             >
-              <i className={`fas ${isMobileMenuOpen ? 'fa-times' : 'fa-bars'}`}></i>
+              {isMobileMenuOpen ? <CloseIcon size={24} color="#000" /> : <MenuIcon size={24} color="#000" />}
             </button>
           </div>
 
@@ -290,10 +288,9 @@ export const ProgramDetailPage: React.FC = () => {
 
       {/* MAIN CONTENT */}
       <main className="content-section-prog" style={{ maxWidth: '1150px', margin: '0 auto', padding: '3.5rem 1.5rem', lineHeight: 1.8 }}>
-        {/* 1. Penjelasan Program */}
         <section style={{ marginBottom: '3.5rem' }}>
           <h2 style={{ fontSize: '1.65rem', fontWeight: 800, color: 'var(--color-text-dark)', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <i className="fas fa-book-open" style={{ color: data.color, fontSize: '1.3rem' }}></i>
+            <BookOpenIcon size={24} color={data.color} />
             Penjelasan Program
           </h2>
           <div
@@ -314,10 +311,9 @@ export const ProgramDetailPage: React.FC = () => {
           </div>
         </section>
 
-        {/* 2. Keunggulan Utama (2 ATAS 2 BAWAH ON MOBILE, 4 ON DESKTOP) */}
         <section style={{ marginBottom: '3.5rem' }}>
           <h2 style={{ fontSize: '1.65rem', fontWeight: 800, color: 'var(--color-text-dark)', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <i className="fas fa-star" style={{ color: data.color, fontSize: '1.3rem' }}></i>
+            <StarIcon size={24} color={data.color} />
             Keunggulan Utama
           </h2>
           <div className="program-usp-grid">
@@ -362,10 +358,9 @@ export const ProgramDetailPage: React.FC = () => {
           </div>
         </section>
 
-        {/* 3. Fasilitas & Perlengkapan Siswa (MATCHING PHOTO CHECKLIST) */}
         <section style={{ marginBottom: '4rem' }}>
-          <h2 style={{ fontSize: '1.65rem', fontWeight: 800, color: 'var(--color-text-dark)', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <i className="fas fa-cubes" style={{ color: data.color, fontSize: '1.3rem' }}></i>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1e293b', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <CubesIcon size={24} color={data.color} />
             Fasilitas & Perlengkapan Siswa
           </h2>
           <div
@@ -404,7 +399,7 @@ export const ProgramDetailPage: React.FC = () => {
                     boxShadow: `0 3px 8px ${data.color}45`,
                   }}
                 >
-                  <i className="fas fa-check"></i>
+                  <CheckIcon size={14} color="#fff" />
                 </div>
                 <span style={{ fontWeight: 600, fontSize: '1rem', color: '#1e293b', lineHeight: 1.4 }}>{fac}</span>
               </div>
@@ -412,7 +407,6 @@ export const ProgramDetailPage: React.FC = () => {
           </div>
         </section>
 
-        {/* 4. CLEAN BOTTOM NAV (PREV + CENTERED HOME ICON + NEXT IN ONE ROW) */}
         <nav
           className="program-bottom-nav"
           style={{
@@ -426,7 +420,6 @@ export const ProgramDetailPage: React.FC = () => {
             width: '100%',
           }}
         >
-          {/* PREV PROGRAM BUTTON */}
           <Link
             to={`/program/${data.prevId}`}
             className="nav-btn-prog prev"
@@ -450,11 +443,10 @@ export const ProgramDetailPage: React.FC = () => {
               whiteSpace: 'nowrap',
             }}
           >
-            <i className="fas fa-chevron-left" style={{ fontSize: '0.8rem' }}></i>
+            <ChevronLeftIcon size={16} />
             <span>{data.prevName}</span>
           </Link>
 
-          {/* HOME ICON ONLY BUTTON (CENTERED) */}
           <Link
             to="/"
             className="nav-btn-prog home"
@@ -475,7 +467,7 @@ export const ProgramDetailPage: React.FC = () => {
             }}
             title="Kembali ke Beranda"
           >
-            <i className="fas fa-home" style={{ fontSize: '1.25rem', color: '#fff' }}></i>
+            <HomeIcon size={20} color="#fff" />
           </Link>
 
           {/* NEXT PROGRAM BUTTON */}
@@ -503,7 +495,7 @@ export const ProgramDetailPage: React.FC = () => {
             }}
           >
             <span>{data.nextName}</span>
-            <i className="fas fa-chevron-right" style={{ fontSize: '0.8rem' }}></i>
+            <ChevronRightIcon size={16} />
           </Link>
         </nav>
       </main>

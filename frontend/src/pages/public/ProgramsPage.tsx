@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import ProgramCard from '../../components/ProgramCard';
+import { MenuIcon, CloseIcon, HomeIcon, MapPinIcon } from '../../components/SvgIcons';
 
 export const ProgramsPage: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -42,7 +43,7 @@ export const ProgramsPage: React.FC = () => {
       <header className="border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50 px-4 md:px-8 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center text-xl font-bold">
-            <i className="fas fa-calculator"></i>
+            <span className="text-slate-950 text-xl font-black">S</span>
           </div>
           <div>
             <h1 className="font-extrabold text-sm text-white tracking-tight leading-tight">SEMPOA SIP</h1>
@@ -63,13 +64,13 @@ export const ProgramsPage: React.FC = () => {
         {/* Mobile Nav Actions */}
         <div className="md:hidden flex items-center gap-3">
           <Link to="/" className="w-10 h-10 bg-slate-900 text-slate-300 rounded-xl flex items-center justify-center hover:bg-slate-800 transition-colors">
-            <i className="fas fa-home"></i>
+            <HomeIcon size={20} />
           </Link>
           <button 
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="w-10 h-10 bg-amber-500 text-slate-950 rounded-xl flex items-center justify-center font-bold hover:bg-amber-400 transition-colors"
           >
-            <i className={isMobileMenuOpen ? "fas fa-times" : "fas fa-bars"}></i>
+            {isMobileMenuOpen ? <CloseIcon size={20} /> : <MenuIcon size={20} />}
           </button>
         </div>
       </header>
@@ -139,7 +140,7 @@ export const ProgramsPage: React.FC = () => {
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 w-full px-6 py-4 bg-slate-800 text-white font-bold rounded-xl border border-slate-700 hover:bg-slate-700 transition-colors shadow-md"
             >
-              <i className="fas fa-map-marker-alt text-amber-500"></i> Buka di Google Maps
+              <MapPinIcon size={20} className="text-amber-500" /> Buka di Google Maps
             </a>
           </div>
         </div>

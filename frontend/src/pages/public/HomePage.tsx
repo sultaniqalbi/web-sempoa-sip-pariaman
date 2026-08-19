@@ -9,6 +9,7 @@ import { ApaItuSempoa } from '../../components/ApaItuSempoa';
 import { LevelPembelajaran } from '../../components/LevelPembelajaran';
 import { MengapaBelajarSempoa } from '../../components/MengapaBelajarSempoa';
 import { DiakuiInternasional } from '../../components/DiakuiInternasional';
+import { MenuIcon, CloseIcon, MapPinIcon, CheckIcon, CubesIcon } from '../../components/SvgIcons';
 
 const programsData = [
   {
@@ -200,7 +201,7 @@ export const HomePage: React.FC = () => {
               id="mobileMenuBtn"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
-              <i className={`fas ${isMobileMenuOpen ? 'fa-times' : 'fa-bars'}`}></i>
+              {isMobileMenuOpen ? <CloseIcon size={24} color="#000000" /> : <MenuIcon size={24} color="#000000" />}
             </button>
           </div>
 
@@ -957,7 +958,7 @@ export const HomePage: React.FC = () => {
                 rel="noopener noreferrer"
                 className="mobile-gmaps-btn"
               >
-                <i className="fas fa-map-marker-alt"></i> Buka di Google Maps
+                <MapPinIcon size={20} className="mr-2" /> Buka di Google Maps
               </a>
             </div>
           )}
