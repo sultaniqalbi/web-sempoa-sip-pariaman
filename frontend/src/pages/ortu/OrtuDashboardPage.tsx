@@ -488,7 +488,7 @@ export const OrtuDashboardPage: React.FC = () => {
                         <div>
                           <p className="font-extrabold text-[#E65100] text-[11px]">{b.namaBank}</p>
                           <p className="font-mono font-black text-[#1E293B] text-[13px] tracking-wider">{b.noRekening}</p>
-                          <p className="text-[10px] text-[#64748B]">a.n <strong className="text-[#1E293B]">{b.atasNama}</strong></p>
+                          <p className="text-[10px] text-[#64748B]">Atas Nama <strong className="text-[#1E293B]">{b.atasNama}</strong></p>
                         </div>
                         <button
                           type="button"

@@ -130,15 +130,14 @@ async def create_new_siswa(
         db.add(new_siswa)
         db.flush() # get new_siswa.id
 
-        # Initial payment record (status LUNAS, siklus 30 hari)
+        # Initial payment record (status LUNAS, siklus 30 hari dimulai dari absensi pertama)
         periode_now = datetime.utcnow().strftime("%Y-%m")
-        due_date_30_days = (datetime.utcnow() + timedelta(days=30)).date()
         pembayaran_awal = PembayaranPeriode(
             id_siswa=new_siswa.id,
             periode_bulan=periode_now,
             jumlah=nominal_spp,
             status=StatusPembayaran.LUNAS,
-            due_date=due_date_30_days
+            due_date=None
         )
         db.add(pembayaran_awal)
 

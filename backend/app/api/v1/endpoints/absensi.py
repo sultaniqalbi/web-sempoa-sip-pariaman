@@ -174,6 +174,14 @@ async def bulk_absensi_siswa(
             db.add(absensi_log)
 
             if item.status in [StatusAbsensi.HADIR, StatusAbsensi.ALFA]:
+                if item.status == StatusAbsensi.HADIR:
+                    initial_bill = db.query(PembayaranPeriode).filter(
+                        PembayaranPeriode.id_siswa == siswa.id,
+                        PembayaranPeriode.due_date == None
+                    ).first()
+                    if initial_bill:
+                        initial_bill.due_date = now.date() + timedelta(days=30)
+                        
                 siswa.sisa_pertemuan = max(0, siswa.sisa_pertemuan - 1)
 
         if siswa.sisa_pertemuan == 0 and siswa.status_spp != StatusSPP.EXPIRED:
@@ -219,6 +227,13 @@ async def create_new_absensi_log(
 
     siswa = db.query(Siswa).filter(Siswa.uid == absensi_in.uid.upper().strip(), Siswa.is_deleted == False).first()
     if siswa and absensi_in.status == StatusAbsensi.HADIR:
+        initial_bill = db.query(PembayaranPeriode).filter(
+            PembayaranPeriode.id_siswa == siswa.id,
+            PembayaranPeriode.due_date == None
+        ).first()
+        if initial_bill:
+            initial_bill.due_date = date.today() + timedelta(days=30)
+            
         siswa.sisa_pertemuan = max(0, siswa.sisa_pertemuan - 1)
         if siswa.sisa_pertemuan == 0:
             siswa.status_spp = StatusSPP.EXPIRED

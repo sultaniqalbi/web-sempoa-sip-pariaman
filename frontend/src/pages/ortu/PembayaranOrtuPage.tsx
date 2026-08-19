@@ -229,7 +229,7 @@ export const PembayaranOrtuPage: React.FC = () => {
             <div key={b.id} className="bg-white/95 backdrop-blur-sm rounded-xl p-3.5 border border-[#FFE082] space-y-2 shadow-2xs">
               <div className="flex justify-between items-center">
                 <span className="text-[11px] font-bold text-[#E65100] uppercase tracking-wider">{b.namaBank}</span>
-                <span className="text-[11px] text-[#78350F] font-medium">a.n <strong className="text-[#1E293B]">{b.atasNama}</strong></span>
+                <span className="text-[11px] text-[#78350F] font-medium">Atas Nama <strong className="text-[#1E293B]">{b.atasNama}</strong></span>
               </div>
               <div className="flex justify-between items-center bg-[#F8FAFC] p-2.5 rounded-lg border border-[#E2E8F0]">
                 <span className="text-[15px] font-mono font-black text-[#1E293B] tracking-wider">
