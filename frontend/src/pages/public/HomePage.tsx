@@ -948,17 +948,19 @@ export const HomePage: React.FC = () => {
             ></iframe>
           </div>
 
-          {/* Styled Google Maps Button (Fallback if iframe is blocked) */}
-          <div className="mobile-maps-actions mt-4 text-center">
-            <a
-              href="https://www.google.com/maps/search/?api=1&query=Sempoa+Sip+Pariaman"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#FF7043] text-white font-bold rounded-xl border-2 border-[#FFCC80] hover:bg-[#F4511E] transition-colors shadow-md"
-            >
-              <i className="fas fa-map-marker-alt"></i> Buka di Google Maps
-            </a>
-          </div>
+          {/* Mobile: Styled Google Maps Button */}
+          {isMobile && (
+            <div className="mobile-maps-actions">
+              <a
+                href="https://www.google.com/maps/search/?api=1&query=Sempoa+Sip+Pariaman"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mobile-gmaps-btn"
+              >
+                <i className="fas fa-map-marker-alt"></i> Buka di Google Maps
+              </a>
+            </div>
+          )}
         </div>
       </section>
 
