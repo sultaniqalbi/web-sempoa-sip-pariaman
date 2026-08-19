@@ -14,7 +14,11 @@ apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('access_token');
     if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+      if (typeof config.headers.set === 'function') {
+        config.headers.set('Authorization', `Bearer ${token}`);
+      } else {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     
     // Convert empty strings to null for JSON payloads to prevent FastAPI 422 errors
@@ -68,7 +72,11 @@ apiClient.interceptors.response.use(
           failedQueue.push({ resolve, reject });
         })
           .then((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
+            if (typeof originalRequest.headers.set === 'function') {
+              originalRequest.headers.set('Authorization', `Bearer ${token}`);
+            } else {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+            }
             return apiClient(originalRequest);
           })
           .catch((err) => Promise.reject(err));
@@ -98,7 +106,11 @@ apiClient.interceptors.response.use(
         processQueue(null, access_token);
         isRefreshing = false;
 
-        originalRequest.headers.Authorization = `Bearer ${access_token}`;
+        if (typeof originalRequest.headers.set === 'function') {
+          originalRequest.headers.set('Authorization', `Bearer ${access_token}`);
+        } else {
+          originalRequest.headers.Authorization = `Bearer ${access_token}`;
+        }
         return apiClient(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
