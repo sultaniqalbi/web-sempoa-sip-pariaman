@@ -92,3 +92,13 @@ def normalize_whatsapp_number(wa: str) -> str:
         clean = "62" + clean
     return clean
 
+PROTECTED_EMAILS = [
+    "adminsip@sempoasippariaman.com",
+    "ownersip@sempoasippariaman.com",
+]
+
+def is_protected_account(email: str) -> bool:
+    if not email:
+        return False
+    return email.lower().strip() in PROTECTED_EMAILS
+

@@ -42,6 +42,12 @@ class Settings(BaseSettings):
     @field_validator("secret_key")
     @classmethod
     def validate_secret_key(cls, v, info):
+        env = os.getenv("FASTAPI_ENV", "development")
+        if env == "production":
+            if not v or v == "sempoa_super_secret_jwt_key_pariaman_2026_dev":
+                raise ValueError("SECRET_KEY harus di-set dengan value unik dan random di production. Jalankan: python -c \"import secrets; print(secrets.token_hex(64))\"")
+            if len(v) < 32:
+                raise ValueError("SECRET_KEY terlalu pendek. Minimal 32 karakter.")
         if not v:
             return "sempoa_super_secret_jwt_key_pariaman_2026_dev"
         return v

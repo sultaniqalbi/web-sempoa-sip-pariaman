@@ -53,7 +53,7 @@ async def login(
     # 3. Verify password
     if not user or not verify_password(login_data.password, user.password):
         # Record failure
-        login_limiter.record_failure(client_ip, email)
+        login_limiter.record_failure(client_ip, clean_email)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email atau password salah",
@@ -61,7 +61,7 @@ async def login(
         )
 
     # 4. Success - Reset rate limiting
-    login_limiter.reset_attempts(client_ip, email)
+    login_limiter.reset_attempts(client_ip, clean_email)
 
     # 5. Generate tokens
     access_token = create_access_token(subject=user.email)
