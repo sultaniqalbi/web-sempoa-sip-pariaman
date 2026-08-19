@@ -92,51 +92,10 @@ export const PembayaranOrtuPage: React.FC = () => {
   ];
 
   const [copiedBank, setCopiedBank] = useState<string | null>(null);
-  const [calendarLoading, setCalendarLoading] = useState<'google' | 'ics' | null>(null);
-
   const copyToClipboard = (rawNum: string, bankId: string) => {
     navigator.clipboard.writeText(rawNum);
     setCopiedBank(bankId);
     setTimeout(() => setCopiedBank(null), 3000);
-  };
-
-  const handleOpenGoogleCalendar = async () => {
-    if (!child?.id) return;
-    setCalendarLoading('google');
-    try {
-      const res = await apiClient.get(`/calendar/spp/${child.id}/google-url`);
-      if (res.data?.google_calendar_url) {
-        window.open(res.data.google_calendar_url, '_blank');
-      }
-    } catch (err) {
-      console.error('Gagal membuka Google Calendar:', err);
-    } finally {
-      setCalendarLoading(null);
-    }
-  };
-
-  const handleDownloadIcs = async () => {
-    if (!child?.id) return;
-    setCalendarLoading('ics');
-    try {
-      const response = await apiClient.get(`/calendar/spp/${child.id}.ics`, {
-        responseType: 'blob'
-      });
-      const blob = new Blob([response.data], { type: 'text/calendar' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      const cleanName = (child.nama || 'Siswa').replace(/\s+/g, '_');
-      link.setAttribute('download', `Jadwal_SPP_${cleanName}.ics`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Gagal mendownload kalender ICS:', err);
-    } finally {
-      setCalendarLoading(null);
-    }
   };
 
   const nomorWaOwner = '628126784986';
@@ -170,7 +129,7 @@ export const PembayaranOrtuPage: React.FC = () => {
 
   return (
     <div className="space-y-4 max-w-xl mx-auto w-full" style={{ fontFamily: "'Inter', sans-serif" }}>
-      {/* 1. Ringkasan Status & Foto Profil Siswa 4x6 */}
+      {/* 1. Ringkasan Status SPP Siswa */}
       <div className="bg-white border border-[#E0E0E0] rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] overflow-hidden">
         {/* Child Info Header with 4x6 Photo */}
         <div className="p-5 border-b border-[#F5F5F5]">
@@ -211,27 +170,6 @@ export const PembayaranOrtuPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Absensi Progress */}
-        <div className="p-5 border-b border-[#F5F5F5]">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[12px] font-bold text-[#64748B] uppercase tracking-wider">Rekap Pertemuan</span>
-            <span className="text-[14px] font-extrabold text-[#1E293B]">{selesaiPertemuan} / {totalPertemuan} Pertemuan</span>
-          </div>
-          <div className="w-full h-2.5 bg-[#F1F5F9] rounded-full overflow-hidden">
-            <div
-              className="h-full rounded-full transition-all duration-1000 ease-out"
-              style={{
-                width: `${Math.min(progressPercent, 100)}%`,
-                background: progressPercent > 60 ? 'linear-gradient(90deg, #1976D2, #42A5F5)' : 'linear-gradient(90deg, #FF7043, #FF5722)',
-              }}
-            />
-          </div>
-          <div className="flex justify-between items-center mt-2 text-[11px] text-[#64748B]">
-            <span>Sisa: <strong className="text-[#E65100]">{sisaPertemuan} sesi</strong> lagi</span>
-            <span>{progressPercent}% selesai</span>
-          </div>
-        </div>
-
         {/* SPP Amount */}
         <div className="p-5 bg-[#FAFAFA]">
           <div className="flex items-center justify-between">
@@ -251,54 +189,6 @@ export const PembayaranOrtuPage: React.FC = () => {
               {sc.desc}
             </p>
           )}
-        </div>
-      </div>
-
-      {/* Card Integrasi Kalender HP (Google Calendar & Apple/Outlook ICS) */}
-      <div className="bg-white border border-[#BBDEFB] rounded-2xl shadow-[0_2px_8px_rgba(25,118,210,0.06)] p-4 sm:p-5 space-y-3">
-        <div className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#1976D2] text-white flex items-center justify-center flex-shrink-0 shadow-sm">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-              <line x1="16" y1="2" x2="16" y2="6" />
-              <line x1="8" y1="2" x2="8" y2="6" />
-              <line x1="3" y1="10" x2="21" y2="10" />
-            </svg>
-          </div>
-          <div>
-            <h3 className="text-[14px] font-bold text-[#0D47A1]">Simpan Jadwal ke Kalender HP</h3>
-            <p className="text-[11px] text-[#546E7A] mt-0.5 leading-relaxed">
-              Tambahkan pengingat jatuh tempo SPP ke aplikasi Kalender ponsel Anda agar tidak terlewat:
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-          <button
-            type="button"
-            onClick={handleOpenGoogleCalendar}
-            disabled={calendarLoading !== null}
-            className="flex items-center justify-center gap-2 py-2.5 px-3 bg-[#E3F2FD] hover:bg-[#BBDEFB] text-[#1565C0] font-bold text-xs rounded-xl border border-[#90CAF9] transition-all active:scale-[0.98] cursor-pointer"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19.5 4H18V2h-2v2H8V2H6v2H4.5C3.67 4 3 4.67 3 5.5v15c0 .83.67 1.5 1.5 1.5h15c.83 0 1.5-.67 1.5-1.5v-15c0-.83-.67-1.5-1.5-1.5zm0 16.5H4.5V9h15v11.5zM7 11h5v5H7z" />
-            </svg>
-            {calendarLoading === 'google' ? 'Membuka...' : 'Google Calendar (1-Klik)'}
-          </button>
-
-          <button
-            type="button"
-            onClick={handleDownloadIcs}
-            disabled={calendarLoading !== null}
-            className="flex items-center justify-center gap-2 py-2.5 px-3 bg-[#F8FAFC] hover:bg-[#F1F5F9] text-[#334155] font-bold text-xs rounded-xl border border-[#CBD5E1] transition-all active:scale-[0.98] cursor-pointer"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-            {calendarLoading === 'ics' ? 'Mengunduh...' : 'Download Kalender (.ICS)'}
-          </button>
         </div>
       </div>
 
