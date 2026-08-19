@@ -63,8 +63,17 @@ def on_startup():
                 logger.warning(f"Auto-migration skipped or failed: {mig_e}")
                 
         run_seed()
+        
+        # Start SPP background reminder scheduler
+        from app.services.scheduler import start_scheduler
+        start_scheduler()
     except Exception as e:
         logger.error(f"Startup initialization error: {e}")
+
+@app.on_event("shutdown")
+def on_shutdown():
+    from app.services.scheduler import shutdown_scheduler
+    shutdown_scheduler()
 
 # CORS Middleware (production strict whitelist vs dev fallback)
 cors_kwargs = {

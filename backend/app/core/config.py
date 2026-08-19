@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     # ESP32 Hardware
     esp32_api_key: str = ""
 
+    # Web Push Notification (VAPID)
+    vapid_private_key: str = ""
+    vapid_public_key: str = ""
+    vapid_subject: str = "mailto:admin@sempoasippariaman.com"
+
     # Redis (For token blacklist & persistent rate limiting)
     redis_host: str = "redis"
     redis_port: int = 6379

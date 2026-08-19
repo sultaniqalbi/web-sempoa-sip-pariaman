@@ -10,6 +10,7 @@ from app.models.bukti_transfer import BuktiTransfer, StatusBuktiTransfer
 from app.models.galeri import Galeri
 from app.models.pendaftaran_baru import PendaftaranBaru, StatusPendaftaran
 from app.models.audit_log import AuditLog
+from app.models.push_subscription import PushSubscription
 
 __all__ = [
     "Base",
@@ -32,5 +33,6 @@ __all__ = [
     "PendaftaranBaru",
     "StatusPendaftaran",
     "AuditLog",
+    "PushSubscription",
 ]
 
