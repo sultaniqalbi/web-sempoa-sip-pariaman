@@ -114,15 +114,23 @@ async def read_absensi_by_guru(
 
 @router.get("/siswa/{siswa_id}", response_model=List[AbsensiResponse])
 async def read_absensi_by_siswa(
-    siswa_id: int,
+    siswa_id: str,
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    siswa = db.query(Siswa).filter(Siswa.id == siswa_id, Siswa.is_deleted == False).first()
+    try:
+        int_id = int(siswa_id)
+        siswa = db.query(Siswa).filter(
+            (Siswa.id == int_id) | (Siswa.uid == siswa_id),
+            Siswa.is_deleted == False
+        ).first()
+    except (ValueError, TypeError):
+        siswa = db.query(Siswa).filter(Siswa.uid == str(siswa_id), Siswa.is_deleted == False).first()
+
     if not siswa:
-        raise HTTPException(status_code=404, detail="Data siswa tidak ditemukan")
+        return []
     if current_user.role in [UserRole.admin, UserRole.owner, UserRole.guru]:
         pass
     elif current_user.role == UserRole.ortu and (current_user.uid_terhubung == siswa.uid or current_user.uid_terhubung == str(siswa.id)):

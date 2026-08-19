@@ -58,14 +58,25 @@ async def get_portal_dashboard_stats(
 
 @router.get("/catatan-pembelajaran/{id_siswa}")
 async def get_catatan_siswa(
-    id_siswa: int,
+    id_siswa: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     from app.models.catatan_pembelajaran import CatatanPembelajaran
     from sqlalchemy import or_
     
-    siswa = db.query(Siswa).filter(Siswa.id == id_siswa, Siswa.is_deleted == False).first()
+    try:
+        int_id = int(id_siswa)
+        siswa = db.query(Siswa).filter(
+            (Siswa.id == int_id) | (Siswa.uid == id_siswa),
+            Siswa.is_deleted == False
+        ).first()
+    except (ValueError, TypeError):
+        siswa = db.query(Siswa).filter(
+            Siswa.uid == str(id_siswa),
+            Siswa.is_deleted == False
+        ).first()
+
     if not siswa:
         return {"catatan": []}
 

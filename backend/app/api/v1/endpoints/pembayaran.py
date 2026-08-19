@@ -236,17 +236,28 @@ async def read_pembayaran(
 
 @router.get("/siswa/{siswa_id}", response_model=List[PembayaranResponse])
 async def read_pembayaran_by_siswa(
-    siswa_id: int,
+    siswa_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    try:
+        int_id = int(siswa_id)
+        siswa = db.query(Siswa).filter(
+            (Siswa.id == int_id) | (Siswa.uid == siswa_id),
+            Siswa.is_deleted == False
+        ).first()
+    except (ValueError, TypeError):
+        siswa = db.query(Siswa).filter(Siswa.uid == str(siswa_id), Siswa.is_deleted == False).first()
+
+    if not siswa:
+        return []
+
     if current_user.role in [UserRole.admin, UserRole.owner]:
-        return crud_pembayaran.get_pembayaran_by_siswa(db, siswa_id=siswa_id)
+        return crud_pembayaran.get_pembayaran_by_siswa(db, siswa_id=siswa.id)
 
     if current_user.role == UserRole.ortu:
-        siswa = db.query(Siswa).filter(Siswa.id == siswa_id).first()
-        if siswa and (str(siswa.id) == current_user.uid_terhubung or siswa.uid == current_user.uid_terhubung):
-            return crud_pembayaran.get_pembayaran_by_siswa(db, siswa_id=siswa_id)
+        if str(siswa.id) == current_user.uid_terhubung or siswa.uid == current_user.uid_terhubung:
+            return crud_pembayaran.get_pembayaran_by_siswa(db, siswa_id=siswa.id)
 
     raise HTTPException(status_code=403, detail="Anda tidak memiliki akses ke tagihan pembayaran siswa ini")
 

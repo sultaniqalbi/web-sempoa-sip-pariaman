@@ -19,21 +19,31 @@ from app.models.pembayaran_periode import PembayaranPeriode, StatusPembayaran
 router = APIRouter()
 teacher_only = RoleChecker([UserRole.guru])
 
+def _get_current_guru(db: Session, current_user: User) -> Guru:
+    guru = None
+    if current_user.uid_terhubung:
+        try:
+            int_id = int(current_user.uid_terhubung)
+            guru = db.query(Guru).filter((Guru.id == int_id) | (Guru.uid == str(current_user.uid_terhubung))).first()
+        except (ValueError, TypeError):
+            guru = db.query(Guru).filter(Guru.uid == str(current_user.uid_terhubung)).first()
+
+    if not guru and current_user.nama:
+        guru = db.query(Guru).filter(func.lower(Guru.nama) == current_user.nama.lower()).first()
+
+    if not guru:
+        guru = db.query(Guru).first()
+
+    if not guru:
+        raise HTTPException(status_code=404, detail="Data guru tidak ditemukan")
+    return guru
+
 @router.get("/dashboard")
 async def get_guru_dashboard(
     db: Session = Depends(get_db),
     current_user: User = Depends(teacher_only)
 ):
-    if not current_user.uid_terhubung:
-        raise HTTPException(status_code=404, detail="Data guru tidak terhubung")
-
-    try:
-        guru = db.query(Guru).filter(Guru.id == int(current_user.uid_terhubung)).first()
-    except (ValueError, TypeError):
-        guru = db.query(Guru).filter(Guru.uid == str(current_user.uid_terhubung)).first()
-
-    if not guru:
-        raise HTTPException(status_code=404, detail="Data guru tidak ditemukan")
+    guru = _get_current_guru(db, current_user)
 
     # Get active students for this teacher or matching teacher's program
     active_students = db.query(Siswa).filter(
@@ -154,9 +164,7 @@ async def update_mode_kelas(
     db: Session = Depends(get_db),
     current_user: User = Depends(teacher_only)
 ):
-    guru = db.query(Guru).filter(Guru.id == int(current_user.uid_terhubung)).first()
-    if not guru:
-        raise HTTPException(status_code=404, detail="Data guru tidak ditemukan")
+    guru = _get_current_guru(db, current_user)
 
     mode = payload.mode_kelas.upper()
     if mode not in ["ONLINE", "OFFLINE"]:
@@ -180,9 +188,7 @@ async def get_kelas_bimbingan(
     db: Session = Depends(get_db),
     current_user: User = Depends(teacher_only)
 ):
-    guru = db.query(Guru).filter(Guru.id == int(current_user.uid_terhubung)).first()
-    if not guru:
-        raise HTTPException(status_code=404, detail="Data guru tidak ditemukan")
+    guru = _get_current_guru(db, current_user)
         
     total_siswa = db.query(Siswa).filter(
         or_(
@@ -213,9 +219,7 @@ async def get_absensi_list(
     db: Session = Depends(get_db),
     current_user: User = Depends(teacher_only)
 ):
-    guru = db.query(Guru).filter(Guru.id == int(current_user.uid_terhubung)).first()
-    if not guru:
-        raise HTTPException(status_code=404, detail="Data guru tidak ditemukan")
+    guru = _get_current_guru(db, current_user)
 
     logs = db.query(AbsensiLog).filter(AbsensiLog.uid == guru.uid).order_by(AbsensiLog.waktu.desc()).limit(15).all()
     
@@ -240,9 +244,7 @@ async def get_siswa_absensi(
     db: Session = Depends(get_db),
     current_user: User = Depends(teacher_only)
 ):
-    guru = db.query(Guru).filter(Guru.id == int(current_user.uid_terhubung)).first()
-    if not guru:
-        raise HTTPException(status_code=404, detail="Data guru tidak ditemukan")
+    guru = _get_current_guru(db, current_user)
 
     students = db.query(Siswa).filter(
         or_(
@@ -355,9 +357,7 @@ async def save_siswa_absensi(
     db: Session = Depends(get_db),
     current_user: User = Depends(teacher_only)
 ):
-    guru = db.query(Guru).filter(Guru.id == int(current_user.uid_terhubung)).first()
-    if not guru:
-        raise HTTPException(status_code=404, detail="Data guru tidak ditemukan")
+    guru = _get_current_guru(db, current_user)
 
     status_map = {
         "hadir": StatusAbsensi.HADIR,
@@ -504,9 +504,7 @@ async def get_rekap_absensi(
     db: Session = Depends(get_db),
     current_user: User = Depends(teacher_only)
 ):
-    guru = db.query(Guru).filter(Guru.id == int(current_user.uid_terhubung)).first()
-    if not guru:
-        raise HTTPException(status_code=404, detail="Data guru tidak ditemukan")
+    guru = _get_current_guru(db, current_user)
 
     try:
         filter_date = datetime.strptime(tanggal, "%Y-%m-%d").date()
