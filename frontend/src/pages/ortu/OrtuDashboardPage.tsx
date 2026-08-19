@@ -373,7 +373,7 @@ export const OrtuDashboardPage: React.FC = () => {
               <div className="bg-gradient-to-r from-[#FFF8E1] via-[#FFF3E0] to-[#FFE082] p-5 border-b border-[#FFE082]">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-2xl bg-[#FF9800] text-white flex items-center justify-center flex-shrink-0 shadow-md font-bold text-xl">
-                    🔔
+                    <i className="fas fa-bell"></i>
                   </div>
                   <div>
                     <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-[#FFF3E0] text-[#E65100] border border-[#FFCC80]">
@@ -428,7 +428,7 @@ export const OrtuDashboardPage: React.FC = () => {
 
                   {/* Cara bayar ditutup sesuai instruksi */}
                   <div className="p-3.5 bg-[#FFFDE7] border border-[#FFF59D] rounded-2xl text-[#78350F] flex items-start gap-2.5">
-                    <span className="text-base">🔒</span>
+                    <span className="text-base"><i className="fas fa-lock"></i></span>
                     <p className="text-[11px] leading-relaxed font-medium">
                       <strong>Metode & Cara Pembayaran Belum Dibuka:</strong> Tata cara dan nomor rekening resmi pembayaran akan ditampilkan otomatis saat kuota berada di bawah 20% atau siklus 30 hari jatuh tempo.
                     </p>

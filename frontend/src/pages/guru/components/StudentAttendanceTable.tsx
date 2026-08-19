@@ -121,7 +121,7 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
             />
             {search && (
               <button onClick={() => setSearch('')} className="text-[#94A3B8] hover:text-[#FF7043] font-bold text-xs">
-                ✕
+                <i className="fas fa-times"></i>
               </button>
             )}
           </div>
@@ -293,7 +293,7 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
                 onClick={() => setIsNoteModalOpen(false)}
                 className="text-[#94A3B8] hover:text-[#1E293B] text-sm font-bold"
               >
-                ✕
+                <i className="fas fa-times"></i>
               </button>
             </div>
 

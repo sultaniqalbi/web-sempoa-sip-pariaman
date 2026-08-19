@@ -116,7 +116,7 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
             title="Keluar dari Portal"
           >
             <span className="hidden lg:inline">Keluar</span>
-            <span className="lg:hidden text-xs">🚪</span>
+            <span className="lg:hidden text-xs"><i className="fas fa-sign-out-alt"></i></span>
           </button>
         </div>
       </aside>
@@ -145,7 +145,7 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
                   className="w-8 h-8 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-700 flex items-center justify-center font-bold text-xs shrink-0 transition-colors"
                   aria-label="Tutup Menu"
                 >
-                  ✕
+                  <i className="fas fa-times"></i>
                 </button>
               </div>
 

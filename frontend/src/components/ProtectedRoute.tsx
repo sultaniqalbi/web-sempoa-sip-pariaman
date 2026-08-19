@@ -31,7 +31,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowe
     return (
       <div className="min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-6">
         <div className="max-w-md w-full bg-slate-800 rounded-2xl p-8 border border-slate-700 shadow-2xl text-center space-y-4">
-          <div className="text-5xl">🚫</div>
+          <div className="text-5xl"><i className="fas fa-ban"></i></div>
           <h1 className="text-2xl font-bold tracking-tight text-white">Akses Ditolak</h1>
           <p className="text-sm text-slate-400">
             Anda tidak memiliki hak akses (Role: <span className="font-semibold text-amber-500">{user.role}</span>) untuk membuka halaman ini.

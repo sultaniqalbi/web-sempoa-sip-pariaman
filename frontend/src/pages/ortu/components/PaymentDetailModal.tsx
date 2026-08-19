@@ -43,9 +43,9 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
   if (!isOpen) return null;
 
   const statusConfig = {
-    Lancar: { color: '#4CAF50', bg: '#E8F5E9', border: '#C8E6C9', emoji: '🟢' },
-    Peringatan: { color: '#FFA726', bg: '#FFF3E0', border: '#FFE0B2', emoji: '🟡' },
-    Urgent: { color: '#D32F2F', bg: '#FFEBEE', border: '#FFCDD2', emoji: '🔴' },
+    Lancar: { color: '#4CAF50', bg: '#E8F5E9', border: '#C8E6C9', emoji: '<i className="fas fa-circle text-green-500"></i>' },
+    Peringatan: { color: '#FFA726', bg: '#FFF3E0', border: '#FFE0B2', emoji: '<i className="fas fa-circle text-yellow-500"></i>' },
+    Urgent: { color: '#D32F2F', bg: '#FFEBEE', border: '#FFCDD2', emoji: '<i className="fas fa-circle text-red-500"></i>' },
   };
 
   const sc = statusConfig[status];
@@ -127,7 +127,7 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
           {/* Instruction */}
           <div className="bg-[#E3F2FD] rounded-xl p-4 border border-[#BBDEFB]">
             <p className="text-[12px] text-[#1565C0] font-medium leading-relaxed">
-              💡 Silakan transfer ke rekening di atas sesuai nominal SPP. Setelah transfer, klik tombol <strong>"Selesai Pembayaran"</strong> di bawah untuk konfirmasi.
+              <i className="fas fa-lightbulb"></i> Silakan transfer ke rekening di atas sesuai nominal SPP. Setelah transfer, klik tombol <strong>"Selesai Pembayaran"</strong> di bawah untuk konfirmasi.
             </p>
           </div>
         </div>

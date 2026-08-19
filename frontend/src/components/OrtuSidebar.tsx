@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import useAuth from '../features/auth/useAuth';
+import { DashboardIcon, DataSiswaIcon, PembayaranIcon, LogoutIcon, CloseIcon } from './SvgIcons';
 
 interface SidebarProps {
   onClose?: () => void;
@@ -17,9 +18,9 @@ export const OrtuSidebar: React.FC<SidebarProps> = ({ onClose, isCollapsed = fal
   };
 
   const links = [
-    { to: '/ortu', label: 'Dashboard Ortu', icon: '📊', end: true },
-    { to: '/ortu/anak', label: 'Detail Anak Saya', icon: '🧒' },
-    { to: '/ortu/pembayaran', label: 'Bayar SPP', icon: '💳' },
+    { to: '/ortu', label: 'Dashboard Ortu', icon: <DashboardIcon size={20} />, end: true },
+    { to: '/ortu/anak', label: 'Detail Anak Saya', icon: <DataSiswaIcon size={20} /> },
+    { to: '/ortu/pembayaran', label: 'Bayar SPP', icon: <PembayaranIcon size={20} /> },
   ];
 
   return (
@@ -42,10 +43,10 @@ export const OrtuSidebar: React.FC<SidebarProps> = ({ onClose, isCollapsed = fal
           {!isCollapsed && onClose && (
             <button
               onClick={onClose}
-              className="md:hidden text-slate-400 hover:text-slate-700 font-bold text-base focus:ring-2 focus:ring-[#FF7043] focus:outline-none p-1.5 rounded-lg"
+              className="md:hidden text-slate-400 hover:text-slate-700 font-bold focus:ring-2 focus:ring-[#FF7043] focus:outline-none p-1.5 rounded-lg flex items-center justify-center"
               aria-label="Tutup menu samping"
             >
-              ✕
+              <CloseIcon size={20} />
             </button>
           )}
         </div>
@@ -68,7 +69,7 @@ export const OrtuSidebar: React.FC<SidebarProps> = ({ onClose, isCollapsed = fal
                 }`
               }
             >
-              <span className="text-lg text-[#FF7043]" aria-hidden="true">{link.icon}</span>
+              <span className="flex items-center justify-center text-[#FF7043] w-6 h-6" aria-hidden="true">{link.icon}</span>
               {!isCollapsed && <span>{link.label}</span>}
             </NavLink>
           ))}
@@ -94,7 +95,8 @@ export const OrtuSidebar: React.FC<SidebarProps> = ({ onClose, isCollapsed = fal
           }`}
           aria-label="Keluar dari portal"
         >
-          {isCollapsed ? '🚪' : '🚪 Keluar'}
+          <LogoutIcon size={16} />
+          {!isCollapsed && <span>Keluar</span>}
         </button>
       </div>
     </aside>

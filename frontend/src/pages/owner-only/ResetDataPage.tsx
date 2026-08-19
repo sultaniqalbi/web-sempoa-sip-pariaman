@@ -116,7 +116,7 @@ export const ResetDataPage: React.FC = () => {
                   : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'
               }`}
             >
-              {resetMutation.isPending ? '🔄 Sedang backup & reset database...' : '💥 RESET SEKARANG'}
+              {resetMutation.isPending ? '<i className="fas fa-sync-alt"></i> Sedang backup & reset database...' : '<i className="fas fa-bomb"></i> RESET SEKARANG'}
             </button>
           </div>
         </div>

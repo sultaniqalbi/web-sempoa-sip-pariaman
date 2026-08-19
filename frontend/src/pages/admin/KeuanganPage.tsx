@@ -72,7 +72,7 @@ export const KeuanganPage: React.FC = () => {
           <p className="text-sm text-slate-400 mt-1">Rekap data pemasukan dan pembayaran kas siswa</p>
         </div>
         <button className="px-4 py-2 bg-amber-500 text-slate-950 rounded-xl font-bold hover:bg-amber-400 transition-colors shadow-md text-sm">
-          📥 Download Laporan
+          <i className="fas fa-inbox"></i> Download Laporan
         </button>
       </div>
 

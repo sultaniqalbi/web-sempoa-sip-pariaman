@@ -284,7 +284,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               className="lg:hidden text-[#757575] hover:text-[#424242] p-1 rounded"
               aria-label="Tutup Menu"
             >
-              ✕
+              <i className="fas fa-times"></i>
             </button>
           </div>
 

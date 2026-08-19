@@ -45,7 +45,7 @@ export const GuruSidebar: React.FC<SidebarProps> = ({ onClose, isCollapsed = fal
               className="md:hidden text-slate-400 hover:text-slate-700 font-bold text-base focus:ring-2 focus:ring-[#FF7043] focus:outline-none p-1.5 rounded-lg"
               aria-label="Tutup menu samping"
             >
-              ✕
+              <i className="fas fa-times"></i>
             </button>
           )}
         </div>

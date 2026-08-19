@@ -57,7 +57,7 @@ export const Modal: React.FC<ModalProps> = ({
             className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm flex items-center justify-center transition-colors shrink-0 focus:outline-none cursor-pointer"
             aria-label="Tutup dialog"
           >
-            ✕
+            <i className="fas fa-times"></i>
           </button>
         </div>
 

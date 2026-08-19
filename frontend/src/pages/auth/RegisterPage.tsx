@@ -44,7 +44,7 @@ export const RegisterPage: React.FC = () => {
       <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl space-y-6">
         <div className="text-center space-y-2">
           <Link to="/" className="inline-flex w-12 h-12 bg-amber-500 rounded-2xl items-center justify-center text-2xl font-bold shadow-lg shadow-amber-500/10 mb-2">
-            🧮
+            <i className="fas fa-calculator"></i>
           </Link>
           <h1 className="text-2xl font-extrabold tracking-tight text-white">Pendaftaran Siswa Baru</h1>
           <p className="text-xs text-slate-400">Lengkapi formulir pendaftaran untuk bergabung</p>
@@ -52,7 +52,7 @@ export const RegisterPage: React.FC = () => {
 
         {success ? (
           <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs text-center font-semibold px-4 py-6 rounded-xl space-y-4">
-            <p className="text-xl">🎉 Pendaftaran Berhasil!</p>
+            <p className="text-xl"><i className="fas fa-glass-cheers"></i> Pendaftaran Berhasil!</p>
             <p className="text-slate-300">Data pendaftaran anak Anda telah terekam. Admin kami akan segera menghubungi Anda melalui WhatsApp.</p>
             <div className="pt-2">
               <Link to="/" className="inline-block px-4 py-2 bg-emerald-500 text-slate-950 rounded-xl font-bold hover:bg-emerald-400 transition-colors">
@@ -148,7 +148,7 @@ export const RegisterPage: React.FC = () => {
                 disabled={isLoading}
                 className="w-full py-3 bg-amber-500 text-slate-950 text-sm font-bold rounded-xl hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/5 disabled:opacity-50"
               >
-                {isLoading ? 'Mengirim Data...' : 'Kirim Pendaftaran 🚀'}
+                {isLoading ? 'Mengirim Data...' : 'Kirim Pendaftaran <i className="fas fa-rocket"></i>'}
               </button>
             </form>
 

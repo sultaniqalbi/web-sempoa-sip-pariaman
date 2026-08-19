@@ -54,7 +54,7 @@ export const PhotoModal: React.FC<PhotoModalProps> = ({
           title="Tutup"
           aria-label="Tutup"
         >
-          ✕
+          <i className="fas fa-times"></i>
         </button>
 
         {/* Header Info */}

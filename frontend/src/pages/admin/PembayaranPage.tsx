@@ -80,7 +80,7 @@ export const PembayaranPage: React.FC = () => {
             activeTab === 'tagihan' ? 'text-amber-500 border-b-2 border-amber-500' : 'text-slate-400 hover:text-white'
           }`}
         >
-          💳 Daftar Tagihan SPP
+          <i className="fas fa-credit-card"></i> Daftar Tagihan SPP
         </button>
         <button
           onClick={() => setActiveTab('bukti')}
@@ -88,7 +88,7 @@ export const PembayaranPage: React.FC = () => {
             activeTab === 'bukti' ? 'text-amber-500 border-b-2 border-amber-500' : 'text-slate-400 hover:text-white'
           }`}
         >
-          📂 Verifikasi Bukti Transfer
+          <i className="fas fa-folder-open"></i> Verifikasi Bukti Transfer
           {proofs?.filter(p => p.status === 'pending').length ? (
             <span className="bg-amber-500 text-slate-950 font-bold text-[9px] w-4.5 h-4.5 rounded-full flex items-center justify-center">
               {proofs.filter(p => p.status === 'pending').length}

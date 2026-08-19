@@ -99,7 +99,7 @@ export function DataTable<T>({
           />
           {query && (
             <button onClick={() => { setQuery(''); setCurrentPage(1); }} className="text-[#94A3B8] hover:text-[#FF7043] font-bold">
-              ✕
+              <i className="fas fa-times"></i>
             </button>
           )}
         </div>

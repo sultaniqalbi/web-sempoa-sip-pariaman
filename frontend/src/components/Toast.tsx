@@ -29,7 +29,7 @@ export const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
         className="hover:opacity-80 font-bold p-1 focus:ring-1 focus:ring-current focus:outline-none rounded"
         aria-label="Tutup notifikasi"
       >
-        ✕
+        <i className="fas fa-times"></i>
       </button>
     </div>
   );

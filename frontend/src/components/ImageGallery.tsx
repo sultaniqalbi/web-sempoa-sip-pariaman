@@ -57,7 +57,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({ items }) => {
               onClick={() => setSelectedItem(null)}
               className="absolute top-4 right-4 text-slate-400 hover:text-white font-bold text-lg"
             >
-              ✕
+              <i className="fas fa-times"></i>
             </button>
             <div className="w-24 h-24 bg-slate-800 rounded-3xl mx-auto flex items-center justify-center text-6xl shadow-inner">
               {selectedItem.emoji}
