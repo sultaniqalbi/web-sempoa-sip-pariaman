@@ -232,7 +232,7 @@ export const AnakSayaPage: React.FC = () => {
                   : 'bg-[#FFEBEE] text-[#D32F2F] border-[#FFCDD2]'
               }`}
             >
-              {saveMessage.type === 'success' ? '✓' : <i className="fas fa-times"></i>} {saveMessage.text}
+              {saveMessage.type === 'success' ? '✓ ' : '✕ '} {saveMessage.text}
             </div>
           )}
 

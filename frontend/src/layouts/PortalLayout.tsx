@@ -142,10 +142,13 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
                 </div>
                 <button
                   onClick={() => setDrawerOpen(false)}
-                  className="w-8 h-8 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-700 flex items-center justify-center font-bold text-xs shrink-0 transition-colors"
+                  className="w-8 h-8 rounded-full bg-[#F1F5F9] hover:bg-[#FEE2E2] text-[#475569] hover:text-[#DC2626] border border-[#CBD5E1] hover:border-[#FCA5A5] flex items-center justify-center font-bold text-xs shrink-0 transition-all cursor-pointer shadow-xs"
                   aria-label="Tutup Menu"
                 >
-                  <i className="fas fa-times"></i>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
                 </button>
               </div>
 

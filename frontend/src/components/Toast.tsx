@@ -26,10 +26,13 @@ export const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
       <span>{message}</span>
       <button
         onClick={onClose}
-        className="hover:opacity-80 font-bold p-1 focus:ring-1 focus:ring-current focus:outline-none rounded"
+        className="hover:opacity-80 p-1 focus:ring-1 focus:ring-current focus:outline-none rounded cursor-pointer"
         aria-label="Tutup notifikasi"
       >
-        <i className="fas fa-times"></i>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
       </button>
     </div>
   );

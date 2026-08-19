@@ -55,9 +55,13 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({ items }) => {
           >
             <button
               onClick={() => setSelectedItem(null)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white font-bold text-lg"
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-800 hover:bg-rose-900/50 text-slate-400 hover:text-rose-400 flex items-center justify-center transition-all cursor-pointer"
+              aria-label="Tutup galeri"
             >
-              <i className="fas fa-times"></i>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
             </button>
             <div className="w-24 h-24 bg-slate-800 rounded-3xl mx-auto flex items-center justify-center text-6xl shadow-inner">
               {selectedItem.emoji}

@@ -39,15 +39,16 @@ export const GuruSidebar: React.FC<SidebarProps> = ({ onClose, isCollapsed = fal
               </div>
             )}
           </div>
-          {!isCollapsed && onClose && (
             <button
               onClick={onClose}
-              className="md:hidden text-slate-400 hover:text-slate-700 font-bold text-base focus:ring-2 focus:ring-[#FF7043] focus:outline-none p-1.5 rounded-lg"
+              className="md:hidden w-8 h-8 rounded-full bg-[#F1F5F9] hover:bg-[#FEE2E2] text-[#475569] hover:text-[#DC2626] border border-[#CBD5E1] hover:border-[#FCA5A5] flex items-center justify-center font-bold text-xs shrink-0 transition-all cursor-pointer shadow-xs"
               aria-label="Tutup menu samping"
             >
-              <i className="fas fa-times"></i>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
             </button>
-          )}
         </div>
 
         <nav className="space-y-1.5" aria-label="Navigasi Utama">

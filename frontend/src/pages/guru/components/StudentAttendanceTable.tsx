@@ -120,8 +120,11 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
               className="flex-1 bg-transparent py-2 text-xs outline-none text-[#1E293B]"
             />
             {search && (
-              <button onClick={() => setSearch('')} className="text-[#94A3B8] hover:text-[#FF7043] font-bold text-xs">
-                <i className="fas fa-times"></i>
+              <button onClick={() => setSearch('')} className="text-[#94A3B8] hover:text-[#FF7043] font-bold text-xs p-1 cursor-pointer" title="Hapus pencarian">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
               </button>
             )}
           </div>
@@ -291,9 +294,13 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
               <h3 className="text-sm font-black text-[#1E293B]">Catatan Pembelajaran {tanggalTerpilih}</h3>
               <button
                 onClick={() => setIsNoteModalOpen(false)}
-                className="text-[#94A3B8] hover:text-[#1E293B] text-sm font-bold"
+                className="w-8 h-8 rounded-full bg-[#F1F5F9] hover:bg-[#FEE2E2] text-[#475569] hover:text-[#DC2626] border border-[#CBD5E1] hover:border-[#FCA5A5] flex items-center justify-center transition-all shadow-xs shrink-0 cursor-pointer"
+                aria-label="Tutup modal"
               >
-                <i className="fas fa-times"></i>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
               </button>
             </div>
 
