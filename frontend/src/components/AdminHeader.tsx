@@ -1,5 +1,6 @@
 import React from 'react';
 import useAuth from '../features/auth/useAuth';
+import { MenuIcon, ChevronRightIcon, ChevronLeftIcon, UserIcon } from './SvgIcons';
 
 interface HeaderProps {
   onToggleSidebar?: () => void;
@@ -16,19 +17,19 @@ export const AdminHeader: React.FC<HeaderProps> = ({ onToggleSidebar, onToggleCo
         {onToggleSidebar && (
           <button
             onClick={onToggleSidebar}
-            className="md:hidden text-[#1E293B] hover:text-[#FF7043] font-bold text-lg p-1.5 focus:ring-2 focus:ring-[#FF7043] focus:outline-none rounded"
+            className="md:hidden text-[#1E293B] hover:text-[#FF7043] p-1.5 focus:ring-2 focus:ring-[#FF7043] focus:outline-none rounded flex items-center justify-center"
             aria-label="Buka menu navigasi"
           >
-            ☰
+            <MenuIcon size={20} />
           </button>
         )}
         {onToggleCollapse && (
           <button
             onClick={onToggleCollapse}
-            className="hidden md:block text-[#1E293B] hover:text-[#FF7043] font-bold text-lg p-1.5 focus:ring-2 focus:ring-[#FF7043] focus:outline-none rounded"
+            className="hidden md:flex text-[#1E293B] hover:text-[#FF7043] p-1.5 focus:ring-2 focus:ring-[#FF7043] focus:outline-none rounded items-center justify-center"
             aria-label={isCollapsed ? "Buka panel samping" : "Kecilkan panel samping"}
           >
-            {isCollapsed ? '➡️' : '⬅️'}
+            {isCollapsed ? <ChevronRightIcon size={20} /> : <ChevronLeftIcon size={20} />}
           </button>
         )}
         <h2 className="text-[#1E293B] font-extrabold text-sm tracking-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
@@ -41,8 +42,8 @@ export const AdminHeader: React.FC<HeaderProps> = ({ onToggleSidebar, onToggleCo
             <span className="hidden sm:inline-block text-xs bg-[#F1F5F9] text-[#475569] font-bold px-3 py-1.5 rounded-full border border-[#E2E8F0]">
               User: <span className="text-[#1E293B] font-bold">{user.email}</span>
             </span>
-            <div className="w-8 h-8 rounded-full bg-[#FFF3E0] border border-[#FFCC80] text-[#FF7043] flex items-center justify-center font-bold text-xs">
-              🧑‍💻
+            <div className="w-8 h-8 rounded-full bg-[#FFF3E0] border border-[#FFCC80] text-[#FF7043] flex items-center justify-center">
+              <UserIcon size={16} />
             </div>
           </div>
         )}

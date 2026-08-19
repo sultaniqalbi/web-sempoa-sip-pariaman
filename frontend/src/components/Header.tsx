@@ -1,5 +1,6 @@
 import React from 'react';
 import useAuth from '../features/auth/useAuth';
+import { MenuIcon, ChevronRightIcon, ChevronLeftIcon } from './SvgIcons';
 
 interface HeaderProps {
   onToggleSidebar?: () => void;
@@ -16,19 +17,19 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar, onToggleCollaps
         {onToggleSidebar && (
           <button
             onClick={onToggleSidebar}
-            className="md:hidden text-[#1E293B] hover:text-[#FF7043] font-bold text-lg p-2 bg-[#F1F5F9] rounded-xl focus:ring-2 focus:ring-[#FF7043] focus:outline-none active:scale-95 transition-transform"
+            className="md:hidden text-[#1E293B] hover:text-[#FF7043] font-bold p-2 bg-[#F1F5F9] rounded-xl focus:ring-2 focus:ring-[#FF7043] focus:outline-none active:scale-95 transition-transform flex items-center justify-center"
             aria-label="Buka menu navigasi"
           >
-            ☰
+            <MenuIcon size={20} />
           </button>
         )}
         {onToggleCollapse && (
           <button
             onClick={onToggleCollapse}
-            className="hidden md:flex text-[#475569] hover:text-[#FF7043] font-bold text-sm p-2 bg-[#F1F5F9] hover:bg-[#E2E8F0] rounded-xl focus:ring-2 focus:ring-[#FF7043] focus:outline-none transition-colors items-center justify-center"
+            className="hidden md:flex text-[#475569] hover:text-[#FF7043] font-bold p-2 bg-[#F1F5F9] hover:bg-[#E2E8F0] rounded-xl focus:ring-2 focus:ring-[#FF7043] focus:outline-none transition-colors items-center justify-center"
             aria-label={isCollapsed ? "Buka panel samping" : "Kecilkan panel samping"}
           >
-            {isCollapsed ? '➡️' : '⬅️'}
+            {isCollapsed ? <ChevronRightIcon size={20} /> : <ChevronLeftIcon size={20} />}
           </button>
         )}
         <h2 className="text-[#1E293B] font-bold text-xs sm:text-sm tracking-tight truncate max-w-[200px] sm:max-w-none" style={{ fontFamily: "'Poppins', sans-serif" }}>
