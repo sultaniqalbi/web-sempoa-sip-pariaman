@@ -53,9 +53,5 @@ def is_token_blacklisted(jti: str) -> bool:
             return bool(redis_client.exists(f"blacklist:{jti}"))
     except Exception as e:
         logger.error(f"Redis error checking token blacklist: {e}")
-        from app.core.config import settings
-        if settings.fastapi_env == "production":
-            # Fail-closed in production to prevent using revoked tokens during Redis outages
-            return True
     
     return jti in _in_memory_blacklist

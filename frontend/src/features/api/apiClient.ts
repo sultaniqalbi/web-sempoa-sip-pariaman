@@ -115,11 +115,14 @@ apiClient.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError, null);
         isRefreshing = false;
-        // Clear auth data and force login redirect
+        // Clear auth data
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('user');
-        window.location.href = '/';
+        const path = window.location.pathname;
+        if (path.startsWith('/owner') || path.startsWith('/guru') || path.startsWith('/ortu') || path.startsWith('/admin')) {
+          window.location.href = '/';
+        }
         return Promise.reject(refreshError);
       }
     }
