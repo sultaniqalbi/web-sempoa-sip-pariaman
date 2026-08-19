@@ -1,7 +1,6 @@
 import logging
 from datetime import datetime, date, timedelta
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.jobstores.redis import RedisJobStore
+from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.memory import MemoryJobStore
 from sqlalchemy.orm import Session
 
@@ -16,25 +15,9 @@ from app.services.push_notification import send_push_to_user
 
 logger = logging.getLogger("spp_scheduler")
 
-# Configure JobStore: Redis primary, Memory fallback
-jobstores = {}
-if redis_client:
-    try:
-        jobstores["default"] = RedisJobStore(
-            host=REDIS_HOST,
-            port=REDIS_PORT,
-            db=1,
-            socket_timeout=2.0
-        )
-        logger.info(f"APScheduler using RedisJobStore at {REDIS_HOST}:{REDIS_PORT}/1")
-    except Exception as e:
-        logger.warning(f"RedisJobStore init failed ({e}), using MemoryJobStore")
-        jobstores["default"] = MemoryJobStore()
-else:
-    jobstores["default"] = MemoryJobStore()
-
-scheduler = AsyncIOScheduler(
-    jobstores=jobstores,
+# Background scheduler running in isolated daemon thread
+scheduler = BackgroundScheduler(
+    jobstores={"default": MemoryJobStore()},
     timezone="Asia/Jakarta"
 )
 
