@@ -236,74 +236,52 @@ export const OrtuDashboardPage: React.FC = () => {
         )}
       </DashboardCard>
 
-      {/* Card 1: Riwayat Kelas */}
+      {/* Card 1 & 2 (Gabungan): Riwayat Pertemuan & Absensi */}
       <DashboardCard
-        title="Riwayat Kelas"
+        title="Riwayat Pertemuan & Absensi"
         iconSvg={
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF7043" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1976D2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         }
       >
         {absensiLogs && absensiLogs.length > 0 ? (
-          <div className="space-y-2">
-            {absensiLogs.slice(0, 5).map((log) => (
-              <div key={log.id} className="flex items-center justify-between py-2.5 border-b border-[#F5F5F5] last:border-b-0">
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-[#1E293B]">
-                    {new Date(log.waktu).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-                  </p>
-                  <p className="text-[11px] text-[#64748B]">
-                    {new Date(log.waktu).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} • {log.mode}
-                  </p>
+          <div className="relative border-l-2 border-[#E2E8F0] ml-3.5 space-y-6 py-2">
+            {absensiLogs.slice(0, 7).map((log, idx) => (
+              <div key={log.id} className="relative pl-6">
+                {/* Timeline dot */}
+                <div 
+                  className="absolute w-4 h-4 rounded-full border-2 border-white -left-[9px] top-1"
+                  style={{ backgroundColor: log.status === 'HADIR' ? '#2E7D32' : log.status === 'IZIN' ? '#F57F17' : '#D32F2F' }}
+                />
+                
+                {/* Content Box */}
+                <div className="bg-[#F8FAFC] border border-[#F1F5F9] rounded-xl p-3.5 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <p className="text-[13px] font-bold text-[#1E293B]">
+                        {new Date(log.waktu).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                      </p>
+                      <p className="text-[11px] font-semibold text-[#64748B] mt-0.5 flex items-center gap-1.5">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        Pukul {new Date(log.waktu).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
+                      </p>
+                    </div>
+                    <StatusBadge status={log.status === 'HADIR' ? 'Hadir' : log.status === 'IZIN' ? 'Izin' : 'Tidak Hadir'} />
+                  </div>
+                  
+                  <div className="flex items-center gap-2 mt-2 pt-2 border-t border-[#E2E8F0]">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#94A3B8]">Metode:</span>
+                    <span className="text-[11px] font-bold text-[#475569] bg-[#E2E8F0] px-2 py-0.5 rounded-md">
+                      {log.mode}
+                    </span>
+                  </div>
                 </div>
-                <StatusBadge status={log.status === 'HADIR' ? 'Selesai' : log.status === 'IZIN' ? 'Izin' : 'Belum'} />
               </div>
             ))}
           </div>
         ) : (
-          <EmptyState text="Belum ada riwayat kelas" />
-        )}
-      </DashboardCard>
-
-      {/* Card 2: Riwayat Absensi */}
-      <DashboardCard
-        title="Riwayat Absensi"
-        iconSvg={
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1976D2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 11l3 3L22 4" />
-            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-          </svg>
-        }
-      >
-        {absensiLogs && absensiLogs.length > 0 ? (
-          <div className="overflow-x-auto -mx-4">
-            <table className="w-full min-w-[320px]">
-              <thead>
-                <tr className="border-b border-[#F5F5F5]">
-                  <th className="text-left px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-[#94A3B8]">Tanggal</th>
-                  <th className="text-left px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-[#94A3B8]">Kelas</th>
-                  <th className="text-right px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-[#94A3B8]">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {absensiLogs.slice(0, 10).map((log) => (
-                  <tr key={log.id} className="border-b border-[#F5F5F5] last:border-b-0">
-                    <td className="px-4 py-2.5 text-[12px] font-semibold text-[#334155]">
-                      {new Date(log.waktu).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
-                    </td>
-                    <td className="px-4 py-2.5 text-[12px] text-[#64748B]">{log.mode}</td>
-                    <td className="px-4 py-2.5 text-right">
-                      <StatusBadge status={log.status === 'HADIR' ? 'Hadir' : log.status === 'IZIN' ? 'Izin' : 'Tidak Hadir'} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <EmptyState text="Belum ada data absensi" />
+          <EmptyState text="Belum ada riwayat pertemuan/absensi." />
         )}
       </DashboardCard>
 
