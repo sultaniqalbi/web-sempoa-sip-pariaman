@@ -172,9 +172,10 @@ export const OrtuDashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-4" style={{ fontFamily: "'Inter', sans-serif" }}>
-      {/* Banner / Card Notifikasi Pengingat SPP */}
+      {/* Banner / Card Gabungan: Notifikasi + Kalender SPP */}
       <div className="bg-gradient-to-r from-[#FFF3E0] to-[#FFF8E1] border border-[#FFE082] rounded-xl p-4 shadow-[0_2px_6px_rgba(0,0,0,0.04)]">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex flex-col gap-3">
+          {/* Header */}
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-xl bg-[#FF9800] text-white flex items-center justify-center flex-shrink-0 shadow-sm">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -182,9 +183,9 @@ export const OrtuDashboardPage: React.FC = () => {
                 <path d="M13.73 21a2 2 0 0 1-3.46 0" />
               </svg>
             </div>
-            <div>
+            <div className="flex-1">
               <h3 className="text-[13px] font-bold text-[#E65100] flex items-center gap-2">
-                Notifikasi Pengingat SPP Real-time
+                Pengingat SPP Otomatis
                 {permissionState === 'granted' && (
                   <span className="text-[10px] bg-[#E8F5E9] text-[#2E7D32] border border-[#A5D6A7] font-semibold px-2 py-0.5 rounded-full">
                     Aktif
@@ -193,8 +194,8 @@ export const OrtuDashboardPage: React.FC = () => {
               </h3>
               <p className="text-[11px] text-[#795548] mt-0.5 leading-relaxed">
                 {permissionState === 'granted'
-                  ? 'HP Anda sudah terhubung. Anda akan otomatis menerima notifikasi saat tagihan SPP ananda mendekati jatuh tempo.'
-                  : 'Aktifkan izin notifikasi di HP Anda agar sistem dapat mengirimkan pengingat SPP secara otomatis saat mendekati jatuh tempo.'}
+                  ? 'Notifikasi & kalender sudah terhubung. Anda akan otomatis diingatkan saat tagihan SPP mendekati jatuh tempo.'
+                  : 'Aktifkan notifikasi HP & tambahkan jadwal SPP ke kalender ponsel Anda dalam 1 klik.'}
               </p>
               {pushMsg && (
                 <p className={`text-[11px] font-semibold mt-1 ${pushMsg.type === 'success' ? 'text-[#2E7D32]' : 'text-[#C62828]'}`}>
@@ -204,30 +205,99 @@ export const OrtuDashboardPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex-shrink-0 sm:self-center">
-            {permissionState === 'granted' ? (
-              <button
-                type="button"
-                onClick={handleEnablePush}
-                disabled={pushLoading}
-                className="w-full sm:w-auto text-[11px] font-bold text-[#2E7D32] bg-white px-3 py-2 rounded-lg border border-[#A5D6A7] hover:bg-[#E8F5E9] transition-all shadow-sm flex items-center justify-center gap-1.5"
-              >
-                {pushLoading ? 'Memproses...' : 'Perbarui Izin HP'}
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleEnablePush}
-                disabled={pushLoading}
-                className="w-full sm:w-auto text-[11px] font-bold text-white bg-[#E65100] hover:bg-[#D84315] px-3.5 py-2 rounded-lg shadow-sm transition-all flex items-center justify-center gap-1.5"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                </svg>
-                {pushLoading ? 'Menghubungkan...' : 'Aktifkan Notifikasi'}
-              </button>
-            )}
+          {/* Action Buttons */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {/* Tombol Utama: Aktifkan Semua (Notif + Kalender sekaligus) */}
+            <button
+              type="button"
+              onClick={async () => {
+                setPushLoading(true);
+                setPushMsg(null);
+                try {
+                  // 1. Aktifkan Notifikasi
+                  const pushRes = await requestAndSubscribePush();
+                  // 2. Buka Google Calendar (jika ada data anak)
+                  if (child?.id) {
+                    try {
+                      const calRes = await apiClient.get(`/calendar/spp/${child.id}/google-url`);
+                      if (calRes.data?.google_calendar_url) {
+                        window.open(calRes.data.google_calendar_url, '_blank');
+                      }
+                    } catch {}
+                  }
+                  if (pushRes.success) {
+                    setPushMsg({ type: 'success', text: '✅ Notifikasi aktif & kalender terbuka!' });
+                    setPermissionState('granted');
+                  } else {
+                    setPushMsg({ type: 'error', text: pushRes.message });
+                  }
+                } catch (err: any) {
+                  setPushMsg({ type: 'error', text: err.message || 'Gagal mengaktifkan.' });
+                } finally {
+                  setPushLoading(false);
+                }
+              }}
+              disabled={pushLoading}
+              className="flex items-center justify-center gap-2 py-2.5 px-3 bg-[#E65100] hover:bg-[#D84315] text-white font-bold text-[11px] rounded-xl shadow-sm transition-all active:scale-[0.97] cursor-pointer disabled:opacity-60"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+              {pushLoading ? 'Mengaktifkan...' : (permissionState === 'granted' ? 'Perbarui Semua' : 'Aktifkan Notif & Kalender')}
+            </button>
+
+            {/* Tombol Google Calendar saja */}
+            <button
+              type="button"
+              onClick={async () => {
+                if (!child?.id) return;
+                setPushLoading(true);
+                try {
+                  const res = await apiClient.get(`/calendar/spp/${child.id}/google-url`);
+                  if (res.data?.google_calendar_url) {
+                    window.open(res.data.google_calendar_url, '_blank');
+                  }
+                } catch {} finally { setPushLoading(false); }
+              }}
+              disabled={pushLoading || !child?.id}
+              className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-[#E3F2FD] hover:bg-[#BBDEFB] text-[#1565C0] font-bold text-[11px] rounded-xl border border-[#90CAF9] transition-all active:scale-[0.97] cursor-pointer disabled:opacity-50"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19.5 4H18V2h-2v2H8V2H6v2H4.5C3.67 4 3 4.67 3 5.5v15c0 .83.67 1.5 1.5 1.5h15c.83 0 1.5-.67 1.5-1.5v-15c0-.83-.67-1.5-1.5-1.5zm0 16.5H4.5V9h15v11.5zM7 11h5v5H7z" />
+              </svg>
+              Google Calendar
+            </button>
+
+            {/* Tombol Download ICS */}
+            <button
+              type="button"
+              onClick={async () => {
+                if (!child?.id) return;
+                setPushLoading(true);
+                try {
+                  const response = await apiClient.get(`/calendar/spp/${child.id}.ics`, { responseType: 'blob' });
+                  const blob = new Blob([response.data], { type: 'text/calendar' });
+                  const url = window.URL.createObjectURL(blob);
+                  const link = document.createElement('a');
+                  link.href = url;
+                  link.setAttribute('download', `Jadwal_SPP_${(child.nama || 'Siswa').replace(/\s+/g, '_')}.ics`);
+                  document.body.appendChild(link);
+                  link.click();
+                  link.remove();
+                  window.URL.revokeObjectURL(url);
+                } catch {} finally { setPushLoading(false); }
+              }}
+              disabled={pushLoading || !child?.id}
+              className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-[#F8FAFC] hover:bg-[#F1F5F9] text-[#334155] font-bold text-[11px] rounded-xl border border-[#CBD5E1] transition-all active:scale-[0.97] cursor-pointer disabled:opacity-50"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Download .ICS
+            </button>
           </div>
         </div>
       </div>
