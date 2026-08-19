@@ -37,7 +37,17 @@ async def login(
     login_data: LoginRequest,
     db: Session = Depends(get_db)
 ):
-    client_ip = request.client.host if request.client else "unknown"
+    forwarded = request.headers.get("x-forwarded-for")
+    real_ip = request.headers.get("x-real-ip")
+    if forwarded:
+        client_ip = forwarded.split(",")[0].strip()
+    elif real_ip:
+        client_ip = real_ip.strip()
+    elif request.client:
+        client_ip = request.client.host
+    else:
+        client_ip = "unknown"
+
     raw_email = login_data.email.strip()
     clean_email = raw_email.lower()
 

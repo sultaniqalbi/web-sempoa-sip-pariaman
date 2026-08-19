@@ -91,13 +91,16 @@ class GlobalRateLimitMiddleware(BaseHTTPMiddleware):
         auth_header = request.headers.get("Authorization") or ""
         is_authenticated = bool(auth_header.startswith("Bearer ") and len(auth_header) > 10)
 
-        if self._is_rate_limited(client_ip, is_authenticated):
-            return JSONResponse(
-                status_code=429,
-                content={
-                    "detail": "Terlalu banyak permintaan ke server. Silakan tunggu beberapa saat lagi."
-                },
-                headers={"Retry-After": str(self.window_seconds)}
-            )
+        try:
+            if self._is_rate_limited(client_ip, is_authenticated):
+                return JSONResponse(
+                    status_code=429,
+                    content={
+                        "detail": "Terlalu banyak permintaan ke server. Silakan tunggu beberapa saat lagi."
+                    },
+                    headers={"Retry-After": str(self.window_seconds)}
+                )
+        except Exception as e:
+            logger.error(f"Global rate limiter dispatch exception: {e}")
 
         return await call_next(request)

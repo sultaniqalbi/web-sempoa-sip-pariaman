@@ -40,6 +40,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       }).catch(err => {
         console.error('Failed to refresh user profile from /auth/me:', err);
+        if (err.response?.status === 401) {
+          logout();
+        }
       }).finally(() => {
         setIsLoading(false);
       });
