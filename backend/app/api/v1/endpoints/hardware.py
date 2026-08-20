@@ -59,52 +59,84 @@ async def post_absensi(request: Request, db: Session = Depends(get_db)):
     except ValueError:
         return PlainTextResponse("ERROR_WAKTU_FORMAT", status_code=200)
 
-    uid = uid.strip().upper()
+    uid_clean = uid.strip().upper()
+    uid_nospace = uid_clean.replace(" ", "")
 
     try:
-        # 3. Query Guru by UID (case-insensitive)
-        guru = db.query(Guru).filter(func.upper(Guru.uid) == uid).first()
+        # 1. Cek di Database Guru (Cocokkan dengan atau tanpa spasi)
+        guru = db.query(Guru).filter(
+            (func.upper(Guru.uid) == uid_clean) |
+            (func.replace(func.upper(Guru.uid), " ", "") == uid_nospace)
+        ).first()
 
+        # 2. Cek di Database Siswa jika bukan Guru
+        siswa = None
         if not guru:
-            # Save tap as unregistered card for admin auto-fill
-            save_unregistered_card(db, uid, waktu_str)
-            write_last_tap(uid, waktu_str, "UNREGISTERED")
-            return PlainTextResponse("GURU_NOT_FOUND", status_code=200)
+            siswa = db.query(Siswa).filter(
+                Siswa.is_deleted == False,
+                (func.upper(Siswa.uid) == uid_clean) |
+                (func.replace(func.upper(Siswa.uid), " ", "") == uid_nospace)
+            ).first()
 
-        # 4. Check for double tap on the same day (Idempotency)
+        # 3. Jika TIDAK DITEMUKAN di Guru maupun Siswa -> KARTU BARU
+        if not guru and not siswa:
+            save_unregistered_card(db, uid_clean, waktu_str)
+            write_last_tap(uid_clean, waktu_str, "UNREGISTERED")
+
+            manager.broadcast_sync("CARD_TAP", {
+                "timestamp": datetime.now().isoformat(),
+                "uid": uid_clean,
+                "waktu": waktu_str,
+                "status": "UNREGISTERED"
+            })
+            return PlainTextResponse(f"KARTU_BARU|{uid_clean}", status_code=200)
+
+        # 4. KARTU TERDAFTAR (Guru atau Siswa)
+        nama_orang = guru.nama if guru else siswa.nama
+        matched_uid = guru.uid if guru else siswa.uid
+
+        # Cek duplikasi tap hari ini (Idempotency)
         today_date = waktu_dt.date()
         duplicate = db.query(AbsensiLog).filter(
-            AbsensiLog.uid == uid,
+            (AbsensiLog.uid == uid_clean) | (AbsensiLog.uid == matched_uid),
             func.date(AbsensiLog.waktu) == today_date
         ).first()
 
         if duplicate:
-            write_last_tap(uid, waktu_str, "REGISTERED", nama=guru.nama)
-            return PlainTextResponse(f"OK|{guru.nama}|SUDAH_TAP", status_code=200)
+            write_last_tap(uid_clean, waktu_str, "REGISTERED", nama=nama_orang)
+            return PlainTextResponse(f"OK|{nama_orang}", status_code=200)
 
-        # 5. Insert new log to absensi_log
+        # Catat Absensi Baru
         mode = ModeAbsensi.OFFLINE if mode_str == "OFFLINE" else ModeAbsensi.ONLINE
         new_log = AbsensiLog(
-            uid=uid,
+            uid=matched_uid,
             waktu=waktu_dt,
             mode=mode,
             status=StatusAbsensi.HADIR
         )
         db.add(new_log)
+
+        # Jika siswa, kurangi sisa pertemuan jika hadir
+        if siswa and siswa.sisa_pertemuan > 0:
+            siswa.sisa_pertemuan = max(0, siswa.sisa_pertemuan - 1)
+            if siswa.sisa_pertemuan == 0 and siswa.status_spp != StatusSPP.EXPIRED:
+                siswa.status_spp = StatusSPP.EXPIRED
+
         db.commit()
 
-        write_last_tap(uid, waktu_str, "REGISTERED", nama=guru.nama)
+        write_last_tap(uid_clean, waktu_str, "REGISTERED", nama=nama_orang)
 
         manager.broadcast_sync("ABSENSI_UPDATE", {
             "timestamp": datetime.now().isoformat(),
             "source": "rfid_hardware",
-            "uid": uid,
-            "nama": guru.nama,
+            "uid": matched_uid,
+            "nama": nama_orang,
+            "role": "guru" if guru else "siswa",
             "waktu": waktu_str,
             "status": "HADIR"
         })
 
-        return PlainTextResponse(f"OK|{guru.nama}", status_code=200)
+        return PlainTextResponse(f"OK|{nama_orang}", status_code=200)
 
     except Exception as e:
         print(f"Hardware absensi DB error: {e}")

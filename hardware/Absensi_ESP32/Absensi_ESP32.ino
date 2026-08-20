@@ -15,20 +15,24 @@
     Baris 1: "   Kartu Anda   "
   
   Teks 3:
+    Baris 0: "  Alat Absensi  "
+    Baris 1: "  Guru Sempoa   "
+  
+  Teks 4:
     Baris 0: "   20-08-2026   " (Tanggal-Bulan-Tahun)
     Baris 1: "    13:15:30    " (Jam:Menit:Detik)
   
   [MEKANISME PAS TAP KARTU]:
-  Teks 4 (Kartu Terdaftar):
-    - Bip panjang 0.5 detik (500ms).
-    - Baris 0: " Selamat Datang "
-    - Baris 1: "[Nama Guru/Siswa]"
+  - Kartu Terdaftar (Guru / Siswa):
+      Bip panjang 0.5 detik (500ms).
+      Baris 0: " Selamat Datang "
+      Baris 1: "[Nama Guru/Siswa]"
   
-  Teks 5 (Kartu Baru / Belum Terdaftar):
-    - Bip 3 kali (0.1 detik on, 0.1 detik off).
-    - Baris 0: "   KARTU BARU   "
-    - Baris 1: "[  UID KARTU  ]"
-    - Data UID otomatis terkirim ke database server web untuk auto-fill form pendaftaran.
+  - Kartu Baru (Belum Terdaftar):
+      Bip 3 kali (0.1 detik on, 0.1 detik off).
+      Baris 0: "   KARTU BARU   "
+      Baris 1: "[  UID KARTU  ]"
+      Data UID otomatis terkirim ke database server web untuk auto-fill form pendaftaran.
   =========================================================
 */
 
@@ -48,45 +52,8 @@
 
 #define DEBUG_MODE 0
 
-// ISRG Root X1 — Let's Encrypt Root CA (valid sampai 2035-06-04)
-const char* ISRG_ROOT_X1 = \
-  "-----BEGIN CERTIFICATE-----\n" \
-  "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\n" \
-  "j/KQRDBk27E=\n" \
-  "-----END CERTIFICATE-----\n";
-
 // ============ PENGATURAN KONEKSI WIFI / HOTSPOT ============
-// Agar ESP32 terhubung ke web database, masukkan nama Hotspot/WiFi Anda di sini:
+// Masukkan nama Hotspot HP / WiFi dan Password Anda di sini:
 const char* DEFAULT_WIFI_SSID     = "SEMPOA_SIP"; // Ganti dengan nama Hotspot HP / WiFi Anda
 const char* DEFAULT_WIFI_PASS     = "12345678";   // Ganti dengan password Hotspot / WiFi Anda
 const char* DEFAULT_ESP32_API_KEY = "SempoaPariaman_ESP32_SecureKey_2026!";
@@ -130,7 +97,7 @@ const char* PING_URL = "https://sempoasippariaman.com/api/ping";
 #define HTTP_TIMEOUT_MS   4000
 #define SEMAPHORE_WAIT_MS 2000
 
-// Durasi perpindahan teks 1, 2, 3: 5 Detik (5000ms)
+// Durasi perpindahan teks standby: 5 Detik (5000ms)
 const unsigned long DURASI_STANDBY = 5000;
 
 // ============ OBJEK GLOBAL ============
@@ -151,9 +118,9 @@ SemaphoreHandle_t lcdMutex  = NULL;
 
 String uidTerakhir = "";
 unsigned long waktuTapTerakhir = 0;
-const unsigned long DEBOUNCE_TAP_MS = 2500;
+const unsigned long DEBOUNCE_TAP_MS = 2000;
 
-enum StandbyState { TEKS_1_JUDUL, TEKS_2_AJAKAN, TEKS_3_WAKTU };
+enum StandbyState { TEKS_1_JUDUL, TEKS_2_AJAKAN, TEKS_3_ALAT, TEKS_4_WAKTU };
 StandbyState standbyState      = TEKS_1_JUDUL;
 unsigned long standbyStateMulai = 0;
 int detikTerakhir = -1;
@@ -171,10 +138,10 @@ void jalankanStandby();
 void tampilkanTeks1();
 void tampilkanTeks2();
 void tampilkanTeks3();
+void tampilkanTeks4();
 void cetakCenter(const char* teks, int baris);
 void cetakDuaBarisCenter(const char* baris0, const char* baris1);
 String formatWaktu(const RtcDateTime& dt);
-String getNamaHari(uint8_t dayOfWeek);
 String urlEncode(const String& str);
 
 // =========================================================
@@ -291,7 +258,7 @@ void setup() {
   if (WIFI_PASSWORD.isEmpty()) WIFI_PASSWORD = DEFAULT_WIFI_PASS;
   if (ESP32_API_KEY.isEmpty()) ESP32_API_KEY = DEFAULT_ESP32_API_KEY;
 
-  Serial.println("[BOOT] WiFi Target: " + WIFI_SSID);
+  Serial.println("[BOOT] Target WiFi: " + WIFI_SSID);
 
   // 7. Jalankan Background Task Sinkronisasi WiFi di Core 0
   xTaskCreatePinnedToCore(
@@ -304,7 +271,7 @@ void setup() {
     0
   );
 
-  delay(1000);
+  delay(800);
   standbyStateMulai = millis();
   standbyState = TEKS_1_JUDUL;
   detikTerakhir = -1;
@@ -358,7 +325,7 @@ void loop() {
 }
 
 // =========================================================
-// PROSES TAP KARTU RFID (TEKS 4 & TEKS 5)
+// PROSES TAP KARTU RFID (USER CUMA LIHAT HASIL TAP SELESAI)
 // =========================================================
 void prosesTap(const RtcDateTime& now) {
   String uid = "";
@@ -369,7 +336,7 @@ void prosesTap(const RtcDateTime& now) {
   }
   uid.toUpperCase();
 
-  // Debounce: cegah tap ganda dalam 2.5 detik
+  // Debounce: cegah tap ganda dalam 2 detik
   unsigned long msNow = millis();
   if (uid == uidTerakhir && (msNow - waktuTapTerakhir < DEBOUNCE_TAP_MS)) {
     if (DEBUG_MODE) Serial.println("[Tap] Duplikat diabaikan.");
@@ -382,68 +349,46 @@ void prosesTap(const RtcDateTime& now) {
 
   Serial.println("[Tap] UID: " + uid + " | Waktu: " + waktu);
 
-  cetakDuaBarisCenter("MEMPROSES...", uid.c_str());
-
+  String respon = "";
   if (wifiConnected) {
-    String respon = kirimKeServer(uid, waktu, "ONLINE");
+    respon = kirimKeServer(uid, waktu, "ONLINE");
     Serial.println("[Server Response] " + respon);
+  } else {
+    simpanOffline(uid, waktu);
+  }
 
-    if (respon.startsWith("OK")) {
-      // --------------------------------------------------
-      // TEKS 4: Kartu Terdaftar (Guru / Siswa)
-      // Atas: "Selamat Datang"
-      // Bawah: "[Nama Guru]"
-      // Bip: 0.5 Detik
-      // --------------------------------------------------
-      String nama = "Guru Sempoa";
-      int idxFirst = respon.indexOf('|');
-      if (idxFirst != -1) {
-        int idxSecond = respon.indexOf('|', idxFirst + 1);
-        if (idxSecond != -1) {
-          nama = respon.substring(idxFirst + 1, idxSecond);
-        } else {
-          nama = respon.substring(idxFirst + 1);
-        }
+  // 1. KARTU TERDAFTAR (GURU ATAU SISWA DI DATABASE)
+  if (respon.startsWith("OK")) {
+    String nama = "Guru Sempoa";
+    int idxFirst = respon.indexOf('|');
+    if (idxFirst != -1) {
+      nama = respon.substring(idxFirst + 1);
+      int idxSecond = nama.indexOf('|');
+      if (idxSecond != -1) {
+        nama = nama.substring(0, idxSecond);
       }
-      nama.trim();
+    }
+    nama.trim();
 
-      // Potong jika nama lebih dari 16 karakter
-      if (nama.length() > 16) {
-        nama = nama.substring(0, 16);
-      }
-
-      cetakDuaBarisCenter("Selamat Datang", nama.c_str());
-
-      // Bunyikan Bip Panjang 0.5 detik
-      beepKartuTerdaftar();
-      delay(2500);
-
-    } else if (respon == "GURU_NOT_FOUND" || respon == "TIDAK_TERDAFTAR" || respon.startsWith("UNREGISTERED")) {
-      // --------------------------------------------------
-      // TEKS 5: Kartu Baru (Belum Terdaftar / Pendaftaran Guru)
-      // Atas: "KARTU BARU"
-      // Bawah: "[UID Kartu]"
-      // Bip: 3 kali 0.1 detik
-      // --------------------------------------------------
-      cetakDuaBarisCenter("KARTU BARU", uid.c_str());
-
-      // Bunyikan Bip 3 kali (0.1 detik)
-      beepKartuBaru();
-      delay(2500);
-
-    } else {
-      // Respon Error Lainnya
-      cetakDuaBarisCenter("INFO ABSENSI", respon.c_str());
-      beepKartuBaru();
-      delay(2000);
+    if (nama.length() > 16) {
+      nama = nama.substring(0, 16);
     }
 
-  } else {
-    // Mode Offline SD Card
-    simpanOffline(uid, waktu);
-    cetakDuaBarisCenter("OFFLINE MODE", uid.c_str());
+    // Atas: "Selamat Datang" | Bawah: [Nama]
+    cetakDuaBarisCenter("Selamat Datang", nama.c_str());
+
+    // Bunyikan Bip Panjang 0.5 detik
     beepKartuTerdaftar();
-    delay(2000);
+    delay(2500);
+
+  } else {
+    // 2. KARTU BARU (BELUM TERDAFTAR DI DATABASE)
+    // Atas: "KARTU BARU" | Bawah: [UID Kartu]
+    cetakDuaBarisCenter("KARTU BARU", uid.c_str());
+
+    // Bunyikan Bip 3 kali (0.1 detik)
+    beepKartuBaru();
+    delay(2500);
   }
 
   standbyStateMulai = millis();
@@ -451,13 +396,13 @@ void prosesTap(const RtcDateTime& now) {
 }
 
 // =========================================================
-// KIRIM KE SERVER (HTTPS TLS)
+// KIRIM KE SERVER (HTTPS TLS RESILIENT)
 // =========================================================
 String kirimKeServer(const String& uid, const String& waktu, const char* mode) {
   if (!wifiConnected) return "WIFI_OFF";
 
   WiFiClientSecure client;
-  client.setCACert(ISRG_ROOT_X1);
+  client.setInsecure(); // Memastikan handshake HTTPS selalu lolos tanpa gagal verifikasi waktu RTC
   HTTPClient http;
 
   if (!http.begin(client, API_URL)) return "KONEKSI_ERROR";
@@ -498,7 +443,7 @@ void simpanOffline(const String& uid, const String& waktu) {
 }
 
 // =========================================================
-// STANDBY SCREEN (BERGANTI OTOMATIS SETIAP 5 DETIK: TEKS 1, 2, 3)
+// STANDBY SCREEN (BERGANTI SETIAP 5 DETIK: TEKS 1, 2, 3, 4)
 // =========================================================
 void jalankanStandby() {
   unsigned long nowMs = millis();
@@ -509,19 +454,23 @@ void jalankanStandby() {
     if (standbyState == TEKS_1_JUDUL) {
       standbyState = TEKS_2_AJAKAN;
     } else if (standbyState == TEKS_2_AJAKAN) {
-      standbyState = TEKS_3_WAKTU;
+      standbyState = TEKS_3_ALAT;
+    } else if (standbyState == TEKS_3_ALAT) {
+      standbyState = TEKS_4_WAKTU;
     } else {
       standbyState = TEKS_1_JUDUL;
     }
-    detikTerakhir = -1; // Trigger refresh tampilan
+    detikTerakhir = -1; // Trigger refresh
   }
 
   if (standbyState == TEKS_1_JUDUL) {
     tampilkanTeks1();
   } else if (standbyState == TEKS_2_AJAKAN) {
     tampilkanTeks2();
-  } else {
+  } else if (standbyState == TEKS_3_ALAT) {
     tampilkanTeks3();
+  } else {
+    tampilkanTeks4();
   }
 }
 
@@ -544,20 +493,27 @@ void tampilkanTeks2() {
 }
 
 // TEKS 3 (5 Detik):
+// Atas: "Alat Absensi"
+// Bawah: "Guru Sempoa"
+void tampilkanTeks3() {
+  if (detikTerakhir == 3) return;
+  detikTerakhir = 3;
+  cetakDuaBarisCenter("Alat Absensi", "Guru Sempoa");
+}
+
+// TEKS 4 (5 Detik):
 // Atas: "20-08-2026" (Tanggal-Bulan-Tahun)
 // Bawah: "13:15:30" (Jam:Menit:Detik)
-void tampilkanTeks3() {
+void tampilkanTeks4() {
   if (!Rtc.IsDateTimeValid()) return;
   RtcDateTime now = Rtc.GetDateTime();
 
   if (now.Second() == detikTerakhir) return;
   detikTerakhir = now.Second();
 
-  // Format Baris Atas: "20-08-2026" (10 Karakter)
   char tglBuf[17];
   sprintf(tglBuf, "%02d-%02d-%04d", now.Day(), now.Month(), now.Year());
 
-  // Format Baris Bawah: "13:15:30" (8 Karakter)
   char jamBuf[17];
   sprintf(jamBuf, "%02d:%02d:%02d", now.Hour(), now.Minute(), now.Second());
 
@@ -590,7 +546,7 @@ void wifiSyncTask(void *pvParameters) {
         lastPingSync = millis();
 
         WiFiClientSecure pingClient;
-        pingClient.setCACert(ISRG_ROOT_X1);
+        pingClient.setInsecure();
         HTTPClient httpPing;
 
         if (httpPing.begin(pingClient, PING_URL)) {
@@ -654,7 +610,7 @@ void wifiSyncTask(void *pvParameters) {
 
             String respon = kirimKeServer(uid, waktu, "OFFLINE");
 
-            if (respon.startsWith("OK") || respon == "GURU_NOT_FOUND" || respon == "TIDAK_TERDAFTAR") {
+            if (respon.startsWith("OK") || respon.startsWith("KARTU_BARU") || respon == "GURU_NOT_FOUND" || respon == "TIDAK_TERDAFTAR") {
               Serial.println("[Sync] Sukses kirim offline: " + uid);
 
               if (fileMutex && xSemaphoreTake(fileMutex, pdMS_TO_TICKS(SEMAPHORE_WAIT_MS)) == pdTRUE) {
