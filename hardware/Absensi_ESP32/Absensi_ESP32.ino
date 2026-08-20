@@ -1,8 +1,24 @@
 /*
   =========================================================
-  SISTEM ABSENSI ESP32 BERBASIS IoT (ONLINE & OFFLINE SD CARD)
-  UPDATED FOR FASTAPI BACKEND — Port 8000
-  IP: 192.168.43.1 (Hotspot Laptop)
+  SISTEM ABSENSI RFID ESP32 BERBASIS IoT
+  SEMPOA SIP TC PARIAMAN
+  
+  Spesifikasi Hardware & Perilaku:
+  1. Boot / Nyala: Bip panjang 1 detik (1000ms).
+  2. Tap Kartu Terdaftar: Bip panjang 0.5 detik (500ms).
+     Layar menampilkan:
+     - Baris 0: "Selamat Datang" (Center)
+     - Baris 1: [Nama Guru] (Center)
+     - Baris 2: "Absensi Berhasil" / "Sudah Absen Hari Ini" (Center)
+     - Baris 3: [Jam & Tanggal] (Center)
+  3. Tap Kartu Belum Terdaftar (Kartu Baru untuk Pendaftaran Guru/Siswa):
+     - Bip 3 kali masing-masing 0.1 detik (100ms).
+     - Layar menampilkan: "KARTU BARU", "UID: [UID]", "Siap Didaftarkan".
+     - Terkirim otomatis ke backend (last_tap.json) untuk auto-fill form pendaftaran.
+  4. Semua teks di layar LCD 20x4 rata tengah (Center Aligned).
+  5. Anti-Kedip (No-Flicker): Penulisan LCD atomik 20 karakter dengan spasi padding,
+     tanpa lcd.clear() berulang, clock I2C 100kHz stabil.
+  6. Keamanan TLS HTTPS Let's Encrypt CA Root & NVS Storage.
   =========================================================
 */
 
@@ -85,7 +101,7 @@ const char* PING_URL = "https://sempoasippariaman.com/api/ping";
 // ============ PIN BUZZER ============
 #define BUZZER_PIN    15
 
-// ============ PIN I2C LCD ============
+// ============ PIN I2C LCD (20x4) ============
 #define LCD_SDA_PIN   21
 #define LCD_SCL_PIN   22
 #define LCD_ADDR      0x27
@@ -96,7 +112,7 @@ const char* PING_URL = "https://sempoasippariaman.com/api/ping";
 #define OFFLINE_FILE  "/data_absensi.txt"
 
 // ============ TIMEOUT HTTP (ms) ============
-#define HTTP_TIMEOUT_MS   3000
+#define HTTP_TIMEOUT_MS   3500
 #define SEMAPHORE_WAIT_MS 2000
 
 const unsigned long DURASI_STANDBY = 5000;
@@ -113,39 +129,48 @@ SPIClass sdSPI(HSPI);
 // ============ FLAG DAN STATE ============
 volatile bool wifiConnected = false;
 volatile bool isSyncing     = false;
-volatile bool lcdNeedClear  = false;
 
 SemaphoreHandle_t fileMutex = NULL;
 SemaphoreHandle_t lcdMutex  = NULL;
 
 String uidTerakhir = "";
+unsigned long waktuTapTerakhir = 0;
+const unsigned long DEBOUNCE_TAP_MS = 2500;
 
-enum StandbyState { TAMPIL_JAM, TAMPIL_JUDUL };
-StandbyState standbyState      = TAMPIL_JAM;
+enum StandbyState { TAMPIL_STATUS, TAMPIL_JAM };
+StandbyState standbyState      = TAMPIL_STATUS;
 unsigned long standbyStateMulai = 0;
+int detikTerakhir = -1;
 
-// Prototipe
+// Prototipe Fungsi
 void wifiSyncTask(void *pvParameters);
 String kirimKeServer(const String& uid, const String& waktu, const char* mode);
 void simpanOffline(const String& uid, const String& waktu);
 void syncNTPWaktu();
 void prosesTap(const RtcDateTime& now);
-void beepTap();
-void beepGagal();
+void beepBoot();
+void beepKartuTerdaftar();
+void beepKartuBaru();
 void jalankanStandby();
-void tampilkanJam();
-void tampilkanJudul();
+void tampilkanStatusStandby();
+void tampilkanJamStandby();
 void cetakCenter(const char* teks, int baris);
+void cetakSemuaCenter(const char* l0, const char* l1, const char* l2, const char* l3);
 String formatWaktu(const RtcDateTime& dt);
 String urlEncode(const String& str);
 
 // =========================================================
+// HELPER: Cetak Rata Tengah (Center Aligned) Anti-Flicker
+// =========================================================
 void cetakCenter(const char* teks, int baris) {
+  if (baris < 0 || baris >= LCD_ROWS) return;
+
   char buf[LCD_COLS + 1];
   int len = strlen(teks);
   if (len > LCD_COLS) len = LCD_COLS;
   int pad = (LCD_COLS - len) / 2;
   int idx = 0;
+
   for (int i = 0; i < pad && idx < LCD_COLS; i++) buf[idx++] = ' ';
   for (int i = 0; i < len && idx < LCD_COLS; i++) buf[idx++] = teks[i];
   while (idx < LCD_COLS) buf[idx++] = ' ';
@@ -158,6 +183,42 @@ void cetakCenter(const char* teks, int baris) {
   }
 }
 
+void cetakSemuaCenter(const char* l0, const char* l1, const char* l2, const char* l3) {
+  cetakCenter(l0 ? l0 : "", 0);
+  cetakCenter(l1 ? l1 : "", 1);
+  cetakCenter(l2 ? l2 : "", 2);
+  cetakCenter(l3 ? l3 : "", 3);
+}
+
+// =========================================================
+// BUZZER FUNCTIONS
+// =========================================================
+// 1. Boot / Nyala: Bip panjang 1 detik (1000ms)
+void beepBoot() {
+  digitalWrite(BUZZER_PIN, HIGH);
+  delay(1000);
+  digitalWrite(BUZZER_PIN, LOW);
+}
+
+// 2. Kartu Terdaftar: Bip panjang 0.5 detik (500ms)
+void beepKartuTerdaftar() {
+  digitalWrite(BUZZER_PIN, HIGH);
+  delay(500);
+  digitalWrite(BUZZER_PIN, LOW);
+}
+
+// 3. Kartu Belum Terdaftar / Baru: Bip 3 kali masing-masing 0.1 detik (100ms)
+void beepKartuBaru() {
+  for (int i = 0; i < 3; i++) {
+    digitalWrite(BUZZER_PIN, HIGH);
+    delay(100);
+    digitalWrite(BUZZER_PIN, LOW);
+    if (i < 2) delay(100);
+  }
+}
+
+// =========================================================
+// SETUP
 // =========================================================
 void setup() {
   Serial.begin(115200);
@@ -202,8 +263,6 @@ void setup() {
     }
   }
 
-  Serial.println("[BOOT] API_URL: " + String(API_URL));
-  Serial.println("[BOOT] PING_URL: " + String(PING_URL));
   Serial.println("[BOOT] Target WiFi: " + WIFI_SSID);
 
   fileMutex = xSemaphoreCreateMutex();
@@ -213,38 +272,47 @@ void setup() {
     ESP.restart();
   }
 
+  // Inisialisasi Buzzer
   pinMode(BUZZER_PIN, OUTPUT);
   digitalWrite(BUZZER_PIN, LOW);
 
+  // Inisialisasi I2C LCD dengan frekuensi standar 100kHz (anti noise & drop arus)
   Wire.begin(LCD_SDA_PIN, LCD_SCL_PIN);
+  Wire.setClock(100000);
   Wire.setTimeOut(50);
   lcd.init();
   lcd.backlight();
-  lcd.clear();
-  cetakCenter("SEMPOA SIP", 0);
-  cetakCenter("Sistem Absensi", 1);
-  cetakCenter("Memulai...", 2);
 
+  // Tampilan Booting Awal
+  cetakSemuaCenter("SEMPOA SIP PARIAMAN", "SISTEM ABSENSI", "Memulai Sistem...", "Mohon Tunggu");
+
+  // Bunyikan Bip Booting Panjang 1 Detik
+  beepBoot();
+
+  // Inisialisasi RFID RC522
   SPI.begin();
   rfid.PCD_Init();
-  Serial.println("[BOOT] RFID OK");
+  Serial.println("[BOOT] RFID RC522 OK");
 
+  // Inisialisasi RTC DS1302
   Rtc.Begin();
   if (!Rtc.IsDateTimeValid()) {
     RtcDateTime compiled = RtcDateTime(__DATE__, __TIME__);
     Rtc.SetDateTime(compiled);
-    Serial.println("[BOOT] RTC diset.");
+    Serial.println("[BOOT] RTC diset ke waktu compile.");
   }
   if (Rtc.GetIsWriteProtected()) Rtc.SetIsWriteProtected(false);
   if (!Rtc.GetIsRunning()) Rtc.SetIsRunning(true);
 
+  // Inisialisasi SD Card (Offline Fallback)
   sdSPI.begin(SD_SCK_PIN, SD_MISO_PIN, SD_MOSI_PIN, SD_CS_PIN);
   if (!SD.begin(SD_CS_PIN, sdSPI)) {
-    Serial.println("[BOOT] SD gagal, lanjut tanpa SD.");
+    Serial.println("[BOOT] SD Card tidak terdeteksi, berjalan mode Online.");
   } else {
-    Serial.println("[BOOT] SD OK");
+    Serial.println("[BOOT] SD Card OK.");
   }
 
+  // Jalankan Background WiFi Sync Task di Core 0
   BaseType_t taskResult = xTaskCreatePinnedToCore(
     wifiSyncTask,
     "WifiSyncTask",
@@ -256,41 +324,41 @@ void setup() {
   );
 
   if (taskResult != pdPASS) {
-    Serial.println("[ERROR] WiFi task gagal!");
-    ESP.restart();
+    Serial.println("[ERROR] WiFi task gagal dibuat!");
   }
 
-  beepTap();
   delay(500);
+  cetakSemuaCenter("SEMPOA SIP PARIAMAN", "SISTEM SIAP", "Silakan Tap Kartu", "WiFi: Menghubungkan");
+  standbyStateMulai = millis();
 
-  if (lcdMutex && xSemaphoreTake(lcdMutex, pdMS_TO_TICKS(500)) == pdTRUE) {
-    lcd.clear();
-    xSemaphoreGive(lcdMutex);
-  }
-
-  Serial.println("[BOOT] Setup OK. Siap.");
+  Serial.println("[BOOT] Setup OK. Siap digunakan.");
 }
 
 // =========================================================
+// MAIN LOOP (CORE 1)
+// =========================================================
 void loop() {
   if (!Rtc.IsDateTimeValid()) {
-    delay(1000);
+    delay(500);
     return;
   }
 
   RtcDateTime now = Rtc.GetDateTime();
 
+  // Deteksi Tap Kartu RFID
   if (rfid.PICC_IsNewCardPresent() && rfid.PICC_ReadCardSerial()) {
     prosesTap(now);
     rfid.PICC_HaltA();
     rfid.PCD_StopCrypto1();
-    delay(500);
+    delay(200);
   }
 
   jalankanStandby();
   delay(100);
 }
 
+// =========================================================
+// PROSES TAP KARTU RFID
 // =========================================================
 void prosesTap(const RtcDateTime& now) {
   String uid = "";
@@ -301,52 +369,102 @@ void prosesTap(const RtcDateTime& now) {
   }
   uid.toUpperCase();
 
-  if (uid == uidTerakhir) {
-    if (DEBUG_MODE) Serial.println("[Tap] Duplikat, skip.");
+  // Debounce check: cegah double tap instan kartu yang sama
+  unsigned long msNow = millis();
+  if (uid == uidTerakhir && (msNow - waktuTapTerakhir < DEBOUNCE_TAP_MS)) {
+    if (DEBUG_MODE) Serial.println("[Tap] Duplikat diabaikan.");
     return;
   }
 
   uidTerakhir = uid;
+  waktuTapTerakhir = msNow;
   String waktu = formatWaktu(now);
 
   Serial.println("[Tap] UID: " + uid + " | Waktu: " + waktu);
 
-  cetakCenter("Tap terdeteksi", 1);
-  delay(200);
+  cetakSemuaCenter("MEMPROSES KARTU", uid.c_str(), "Menghubungkan Server...", "");
+  delay(100);
 
   if (wifiConnected) {
     String respon = kirimKeServer(uid, waktu, "ONLINE");
+    Serial.println("[Server Response] " + respon);
 
     if (respon.startsWith("OK")) {
-      beepTap();
-      cetakCenter("BERHASIL", 2);
-      Serial.println("[Tap] SUCCESS: " + respon);
+      // Kartu Guru Terdaftar
+      // Format respon: "OK|<nama_guru>" atau "OK|<nama_guru>|SUDAH_TAP"
+      String namaGuru = "Guru Sempoa";
+      bool sudahTap = respon.indexOf("SUDAH_TAP") != -1;
+
+      int idxFirst = respon.indexOf('|');
+      if (idxFirst != -1) {
+        int idxSecond = respon.indexOf('|', idxFirst + 1);
+        if (idxSecond != -1) {
+          namaGuru = respon.substring(idxFirst + 1, idxSecond);
+        } else {
+          namaGuru = respon.substring(idxFirst + 1);
+        }
+      }
+      namaGuru.trim();
+
+      char jamBuf[10];
+      sprintf(jamBuf, "%02d:%02d:%02d WIB", now.Hour(), now.Minute(), now.Second());
+
+      cetakCenter("Selamat Datang", 0);
+      cetakCenter(namaGuru.c_str(), 1);
+      cetakCenter(sudahTap ? "Sudah Absen Hari Ini" : "Absensi Berhasil", 2);
+      cetakCenter(jamBuf, 3);
+
+      // Bip panjang 0.5 detik untuk kartu terdaftar
+      beepKartuTerdaftar();
+
+    } else if (respon == "GURU_NOT_FOUND" || respon == "TIDAK_TERDAFTAR" || respon.startsWith("UNREGISTERED")) {
+      // Kartu Baru (Belum Terdaftar) -> Bip 3x 0.1s dan tampilkan UID
+      cetakCenter("KARTU BARU", 0);
+      cetakCenter("UID:", 1);
+      cetakCenter(uid.c_str(), 2);
+      cetakCenter("Siap Didaftarkan", 3);
+
+      // Bip 3 kali (0.1 detik)
+      beepKartuBaru();
+
     } else {
-      beepGagal();
-      cetakCenter(respon.c_str(), 2);
-      Serial.println("[Tap] ERROR: " + respon);
+      // Error koneksi / Rate limit / Lainnya
+      cetakCenter("INFO ABSENSI", 0);
+      cetakCenter(respon.c_str(), 1);
+      cetakCenter(uid.c_str(), 2);
+      cetakCenter("Coba Lagi Nanti", 3);
+
+      beepKartuBaru();
     }
+
   } else {
+    // Mode Offline SD Card
     simpanOffline(uid, waktu);
-    beepTap();
-    cetakCenter("Offline - Tersimpan", 2);
-    Serial.println("[Tap] Offline saved");
+    cetakCenter("OFFLINE MODE", 0);
+    cetakCenter(uid.c_str(), 1);
+    cetakCenter("Tersimpan di SD Card", 2);
+    cetakCenter("Akan Disinkronkan", 3);
+
+    beepKartuTerdaftar();
   }
 
-  delay(1500);
-  lcdNeedClear = true;
+  delay(2000);
+  standbyStateMulai = millis();
+  detikTerakhir = -1; // Force refresh standby
 }
 
+// =========================================================
+// KIRIM KE SERVER (HTTPS TLS ISRG ROOT X1)
 // =========================================================
 String kirimKeServer(const String& uid, const String& waktu, const char* mode) {
   if (!wifiConnected) return "WIFI_OFF";
 
   WiFiClientSecure client;
-  client.setCACert(ISRG_ROOT_X1); // Proper Let's Encrypt TLS CA validation
+  client.setCACert(ISRG_ROOT_X1);
   HTTPClient http;
 
   if (!http.begin(client, API_URL)) return "KONEKSI_ERROR";
-  
+
   http.setTimeout(HTTP_TIMEOUT_MS);
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
   http.addHeader("X-API-Key", ESP32_API_KEY);
@@ -367,6 +485,8 @@ String kirimKeServer(const String& uid, const String& waktu, const char* mode) {
 }
 
 // =========================================================
+// SIMPAN OFFLINE DI SD CARD
+// =========================================================
 void simpanOffline(const String& uid, const String& waktu) {
   if (!fileMutex) return;
 
@@ -381,71 +501,67 @@ void simpanOffline(const String& uid, const String& waktu) {
 }
 
 // =========================================================
-void beepTap() {
-  digitalWrite(BUZZER_PIN, HIGH);
-  delay(150);
-  digitalWrite(BUZZER_PIN, LOW);
-  delay(100);
-}
-
-void beepGagal() {
-  for (int i = 0; i < 2; i++) {
-    digitalWrite(BUZZER_PIN, HIGH);
-    delay(100);
-    digitalWrite(BUZZER_PIN, LOW);
-    delay(100);
-  }
-}
-
+// TAMPILAN STANDBY (ANTI-KEDIP / NO-FLICKER)
 // =========================================================
 void jalankanStandby() {
-  unsigned long now = millis();
+  unsigned long nowMs = millis();
 
-  if (now - standbyStateMulai >= DURASI_STANDBY) {
-    standbyStateMulai = now;
-    standbyState = (standbyState == TAMPIL_JAM) ? TAMPIL_JUDUL : TAMPIL_JAM;
+  if (nowMs - standbyStateMulai >= DURASI_STANDBY) {
+    standbyStateMulai = nowMs;
+    standbyState = (standbyState == TAMPIL_STATUS) ? TAMPIL_JAM : TAMPIL_STATUS;
+    detikTerakhir = -1; // trigger screen update
   }
 
-  if (lcdNeedClear) {
-    if (lcdMutex && xSemaphoreTake(lcdMutex, pdMS_TO_TICKS(500)) == pdTRUE) {
-      lcd.clear();
-      xSemaphoreGive(lcdMutex);
-    }
-    lcdNeedClear = false;
-  }
-
-  if (standbyState == TAMPIL_JAM) {
-    tampilkanJam();
+  if (standbyState == TAMPIL_STATUS) {
+    tampilkanStatusStandby();
   } else {
-    tampilkanJudul();
+    tampilkanJamStandby();
   }
 }
 
-void tampilkanJam() {
+void tampilkanStatusStandby() {
   if (!Rtc.IsDateTimeValid()) return;
-
   RtcDateTime now = Rtc.GetDateTime();
-  char buf[30];
-  sprintf(buf, "%02d:%02d:%02d | %02d-%02d-%04d",
+
+  // Hanya update jika detik berubah agar tidak kedip
+  if (now.Second() == detikTerakhir) return;
+  detikTerakhir = now.Second();
+
+  char jamBuf[25];
+  sprintf(jamBuf, "%02d:%02d:%02d | %02d-%02d-%04d",
           now.Hour(), now.Minute(), now.Second(),
           now.Day(), now.Month(), now.Year());
 
-  cetakCenter(buf, 0);
-  cetakCenter("TAP KARTU GURU", 1);
-  
-  const char* wifiStatus = wifiConnected ? "WiFi: ONLINE" : "WiFi: OFFLINE";
-  cetakCenter(wifiStatus, 2);
+  cetakCenter("SEMPOA SIP PARIAMAN", 0);
+  cetakCenter("Silakan Tap Kartu", 1);
+  cetakCenter(jamBuf, 2);
+  cetakCenter(wifiConnected ? "Status: ONLINE" : "Status: OFFLINE", 3);
 }
 
-void tampilkanJudul() {
+void tampilkanJamStandby() {
+  if (!Rtc.IsDateTimeValid()) return;
+  RtcDateTime now = Rtc.GetDateTime();
+
+  if (now.Second() == detikTerakhir) return;
+  detikTerakhir = now.Second();
+
+  char jamBesar[20];
+  sprintf(jamBesar, "PUKUL %02d:%02d:%02d", now.Hour(), now.Minute(), now.Second());
+
+  char tglBuf[20];
+  sprintf(tglBuf, "%02d-%02d-%04d", now.Day(), now.Month(), now.Year());
+
   cetakCenter("SEMPOA SIP PARIAMAN", 0);
-  cetakCenter("Sistem Absensi RFID", 1);
-  cetakCenter("Menunggu tap kartu guru", 2);
+  cetakCenter(jamBesar, 1);
+  cetakCenter(tglBuf, 2);
+  cetakCenter("Siap Absensi", 3);
 }
 
 // =========================================================
+// BACKGROUND WIFI SYNC TASK (CORE 0)
+// =========================================================
 void wifiSyncTask(void *pvParameters) {
-  Serial.println("[BOOT] WiFi Task started on Core " + String(xPortGetCoreID()));
+  Serial.println("[BOOT] WiFi Task berjalan pada Core " + String(xPortGetCoreID()));
 
   WiFi.mode(WIFI_STA);
   WiFi.disconnect();
@@ -456,20 +572,14 @@ void wifiSyncTask(void *pvParameters) {
   unsigned long lastNtpSync   = 0;
   unsigned long lastWifiRetry = millis();
   unsigned long lastPingSync  = 0;
-  unsigned long lastHeapLog   = 0;
 
   while (true) {
     bool currentWifi = (WiFi.status() == WL_CONNECTED);
     wifiConnected = currentWifi;
 
-    if (millis() - lastHeapLog >= 60000) {
-      lastHeapLog = millis();
-      if (DEBUG_MODE) Serial.println("[Debug] Heap: " + String(esp_get_free_heap_size()));
-    }
-
     if (currentWifi) {
-
-      if (millis() - lastPingSync >= 5000) {
+      // Ping Heartbeat ke Server setiap 10 detik
+      if (millis() - lastPingSync >= 10000) {
         lastPingSync = millis();
 
         WiFiClientSecure pingClient;
@@ -484,10 +594,9 @@ void wifiSyncTask(void *pvParameters) {
           if (pingCode == HTTP_CODE_OK) {
             String pingRes = httpPing.getString();
             pingRes.trim();
-            if (pingRes != "OK" || DEBUG_MODE) Serial.println("[Ping] " + pingRes);
 
             if (pingRes == "FULL_RESET") {
-              Serial.println("[Ping] FULL_RESET!");
+              Serial.println("[Ping] FULL_RESET diterima dari server!");
               if (fileMutex && xSemaphoreTake(fileMutex, pdMS_TO_TICKS(3000)) == pdTRUE) {
                 SD.remove(OFFLINE_FILE);
                 SD.remove("/temp_sync.txt");
@@ -505,11 +614,13 @@ void wifiSyncTask(void *pvParameters) {
         }
       }
 
+      // Sync NTP Time sekali sehari
       if (lastNtpSync == 0 || millis() - lastNtpSync >= 24UL * 3600000UL) {
         syncNTPWaktu();
         lastNtpSync = millis();
       }
 
+      // Sinkronisasi antrean data offline SD Card ke Server
       if (!isSyncing) {
         String baris = "";
         bool hasQueue = false;
@@ -533,12 +644,11 @@ void wifiSyncTask(void *pvParameters) {
           if (pemisah != -1) {
             String uid   = baris.substring(0, pemisah);
             String waktu = baris.substring(pemisah + 1);
-            if (DEBUG_MODE) Serial.println("[Sync] Send: " + uid);
 
             String respon = kirimKeServer(uid, waktu, "OFFLINE");
 
-            if (respon.startsWith("OK") || respon == "EXPIRED" || respon == "TIDAK_TERDAFTAR") {
-              Serial.println("[Sync] Sukses: " + uid);
+            if (respon.startsWith("OK") || respon == "GURU_NOT_FOUND" || respon == "TIDAK_TERDAFTAR") {
+              Serial.println("[Sync] Sukses kirim offline: " + uid);
 
               if (fileMutex && xSemaphoreTake(fileMutex, pdMS_TO_TICKS(SEMAPHORE_WAIT_MS)) == pdTRUE) {
                 if (SD.exists(OFFLINE_FILE)) {
@@ -561,14 +671,12 @@ void wifiSyncTask(void *pvParameters) {
                   } else {
                     if (fCheck) fCheck.close();
                     SD.remove("/temp_sync.txt");
-                    Serial.println("[Sync] Queue kosong!");
                   }
                 }
                 xSemaphoreGive(fileMutex);
               }
               vTaskDelay(pdMS_TO_TICKS(300));
             } else {
-              Serial.println("[Sync] Gagal, retry 5 detik...");
               vTaskDelay(pdMS_TO_TICKS(5000));
             }
           }
@@ -577,9 +685,9 @@ void wifiSyncTask(void *pvParameters) {
       }
 
     } else {
-      if (millis() - lastWifiRetry >= 30000) {
+      if (millis() - lastWifiRetry >= 20000) {
         lastWifiRetry = millis();
-        if (DEBUG_MODE) Serial.println("[WiFi] Reconnecting...");
+        if (DEBUG_MODE) Serial.println("[WiFi] Mencoba koneksi ulang...");
         WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
       }
     }
@@ -589,8 +697,9 @@ void wifiSyncTask(void *pvParameters) {
 }
 
 // =========================================================
+// SYNC WAKTU NTP KE RTC
+// =========================================================
 void syncNTPWaktu() {
-  if (DEBUG_MODE) Serial.println("[NTP] Syncing...");
   configTime(7 * 3600, 0, "pool.ntp.org", "time.nist.gov");
   delay(1000);
 
@@ -606,10 +715,12 @@ void syncNTPWaktu() {
       timeinfo->tm_sec
     );
     Rtc.SetDateTime(newTime);
-    Serial.println("[NTP] Sync OK");
+    Serial.println("[NTP] Waktu RTC berhasil disinkronkan.");
   }
 }
 
+// =========================================================
+// HELPER WAKTU & URL ENCODE
 // =========================================================
 String formatWaktu(const RtcDateTime& dt) {
   char buf[25];
