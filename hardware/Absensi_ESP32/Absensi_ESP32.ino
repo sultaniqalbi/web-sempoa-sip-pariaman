@@ -4,21 +4,21 @@
   SEMPOA SIP TC PARIAMAN
   
   Spesifikasi Hardware & Perilaku:
-  1. Boot / Nyala: Bip panjang 1 detik (1000ms).
-  2. Tap Kartu Terdaftar: Bip panjang 0.5 detik (500ms).
+  1. Boot / Nyala: Bip panjang 1 detik (1000ms) langsung bunyi.
+  2. Layar LCD 20x4 langsung nyala dan teks rata tengah (Center).
+  3. Tap Kartu Terdaftar: Bip panjang 0.5 detik (500ms).
      Layar menampilkan:
      - Baris 0: "Selamat Datang" (Center)
      - Baris 1: [Nama Guru] (Center)
      - Baris 2: "Absensi Berhasil" / "Sudah Absen Hari Ini" (Center)
      - Baris 3: [Jam & Tanggal] (Center)
-  3. Tap Kartu Belum Terdaftar (Kartu Baru untuk Pendaftaran Guru/Siswa):
+  4. Tap Kartu Belum Terdaftar (Kartu Baru Pendaftaran Guru/Siswa):
      - Bip 3 kali masing-masing 0.1 detik (100ms).
-     - Layar menampilkan: "KARTU BARU", "UID: [UID]", "Siap Didaftarkan".
+     - Layar menampilkan: "KARTU BARU", "UID:", "[UID Kartu]", "Siap Didaftarkan".
      - Terkirim otomatis ke backend (last_tap.json) untuk auto-fill form pendaftaran.
-  4. Semua teks di layar LCD 20x4 rata tengah (Center Aligned).
   5. Anti-Kedip (No-Flicker): Penulisan LCD atomik 20 karakter dengan spasi padding,
      tanpa lcd.clear() berulang, clock I2C 100kHz stabil.
-  6. Keamanan TLS HTTPS Let's Encrypt CA Root & NVS Storage.
+  6. Non-blocking NVS: Hardware selalu langsung nyala dengan default fallback WiFi.
   =========================================================
 */
 
@@ -75,7 +75,12 @@ const char* ISRG_ROOT_X1 = \
   "j/KQRDBk27E=\n" \
   "-----END CERTIFICATE-----\n";
 
-// ============ SECURITY FIX: NVS CREDENTIALS & TLS ============
+// ============ DEFAULT / FALLBACK CREDENTIALS ============
+// Jika NVS kosong / baru di-flash, hardware akan memakai default ini
+const char* DEFAULT_WIFI_SSID     = "SEMPOA_SIP"; // Ubah sesuai hotspot / WiFi Anda
+const char* DEFAULT_WIFI_PASS     = "12345678";   // Ubah sesuai password WiFi Anda
+const char* DEFAULT_ESP32_API_KEY = "SempoaPariaman_ESP32_SecureKey_2026!";
+
 Preferences preferences;
 String WIFI_SSID     = "";
 String WIFI_PASSWORD = "";
@@ -218,83 +223,35 @@ void beepKartuBaru() {
 }
 
 // =========================================================
-// SETUP
+// SETUP — LANGSUNG NYALAKAN HARDWARE TANPA TERTANGKAP LOOP
 // =========================================================
 void setup() {
   Serial.begin(115200);
-  delay(200);
+  delay(100);
   Serial.println("\n[BOOT] Sempoa SIP Absensi ESP32 starting...");
-
-  // Load credentials from Non-Volatile Storage (NVS)
-  preferences.begin("sempoa_cfg", false);
-  WIFI_SSID = preferences.getString("ssid", "");
-  WIFI_PASSWORD = preferences.getString("pass", "");
-  ESP32_API_KEY = preferences.getString("apikey", "");
-  preferences.end();
-
-  if (WIFI_SSID.isEmpty() || WIFI_PASSWORD.isEmpty() || ESP32_API_KEY.isEmpty()) {
-    Serial.println("[ERROR] Credentials belum di-provisioning di NVS!");
-    Serial.println("[INFO] Gunakan Serial Monitor untuk provisioning.");
-    Serial.println("[INFO] Format: PROV|SSID|PASSWORD|API_KEY");
-
-    while (true) {
-      if (Serial.available()) {
-        String input = Serial.readStringUntil('\n');
-        input.trim();
-        if (input.startsWith("PROV|")) {
-          input = input.substring(5);
-          int sep1 = input.indexOf('|');
-          int sep2 = input.indexOf('|', sep1 + 1);
-          if (sep1 > 0 && sep2 > sep1) {
-            preferences.begin("sempoa_cfg", false);
-            preferences.putString("ssid", input.substring(0, sep1));
-            preferences.putString("pass", input.substring(sep1 + 1, sep2));
-            preferences.putString("apikey", input.substring(sep2 + 1));
-            preferences.end();
-            Serial.println("[OK] Credentials tersimpan di NVS. Restart...");
-            delay(1000);
-            ESP.restart();
-          } else {
-            Serial.println("[ERROR] Format salah. Gunakan: PROV|SSID|PASS|APIKEY");
-          }
-        }
-      }
-      delay(100);
-    }
-  }
-
-  Serial.println("[BOOT] Target WiFi: " + WIFI_SSID);
 
   fileMutex = xSemaphoreCreateMutex();
   lcdMutex  = xSemaphoreCreateMutex();
-  if (!fileMutex || !lcdMutex) {
-    Serial.println("[ERROR] Mutex gagal!");
-    ESP.restart();
-  }
 
-  // Inisialisasi Buzzer
+  // 1. LANGSUNG INISIALISASI BUZZER & BUNYIKAN BIP BOOT 1 DETIK
   pinMode(BUZZER_PIN, OUTPUT);
   digitalWrite(BUZZER_PIN, LOW);
+  beepBoot();
 
-  // Inisialisasi I2C LCD dengan frekuensi standar 100kHz (anti noise & drop arus)
+  // 2. LANGSUNG INISIALISASI LCD I2C & NYALAKAN LAMPU LAYAR
   Wire.begin(LCD_SDA_PIN, LCD_SCL_PIN);
   Wire.setClock(100000);
   Wire.setTimeOut(50);
   lcd.init();
   lcd.backlight();
-
-  // Tampilan Booting Awal
   cetakSemuaCenter("SEMPOA SIP PARIAMAN", "SISTEM ABSENSI", "Memulai Sistem...", "Mohon Tunggu");
 
-  // Bunyikan Bip Booting Panjang 1 Detik
-  beepBoot();
-
-  // Inisialisasi RFID RC522
+  // 3. INISIALISASI RFID RC522
   SPI.begin();
   rfid.PCD_Init();
   Serial.println("[BOOT] RFID RC522 OK");
 
-  // Inisialisasi RTC DS1302
+  // 4. INISIALISASI RTC DS1302
   Rtc.Begin();
   if (!Rtc.IsDateTimeValid()) {
     RtcDateTime compiled = RtcDateTime(__DATE__, __TIME__);
@@ -304,7 +261,7 @@ void setup() {
   if (Rtc.GetIsWriteProtected()) Rtc.SetIsWriteProtected(false);
   if (!Rtc.GetIsRunning()) Rtc.SetIsRunning(true);
 
-  // Inisialisasi SD Card (Offline Fallback)
+  // 5. INISIALISASI SD CARD
   sdSPI.begin(SD_SCK_PIN, SD_MISO_PIN, SD_MOSI_PIN, SD_CS_PIN);
   if (!SD.begin(SD_CS_PIN, sdSPI)) {
     Serial.println("[BOOT] SD Card tidak terdeteksi, berjalan mode Online.");
@@ -312,7 +269,20 @@ void setup() {
     Serial.println("[BOOT] SD Card OK.");
   }
 
-  // Jalankan Background WiFi Sync Task di Core 0
+  // 6. BACA KREDENSIAL NVS (DENGAN FALLBACK DEFAULT AGAR TIDAK FREEZE)
+  preferences.begin("sempoa_cfg", false);
+  WIFI_SSID     = preferences.getString("ssid", DEFAULT_WIFI_SSID);
+  WIFI_PASSWORD = preferences.getString("pass", DEFAULT_WIFI_PASS);
+  ESP32_API_KEY = preferences.getString("apikey", DEFAULT_ESP32_API_KEY);
+  preferences.end();
+
+  if (WIFI_SSID.isEmpty()) WIFI_SSID = DEFAULT_WIFI_SSID;
+  if (WIFI_PASSWORD.isEmpty()) WIFI_PASSWORD = DEFAULT_WIFI_PASS;
+  if (ESP32_API_KEY.isEmpty()) ESP32_API_KEY = DEFAULT_ESP32_API_KEY;
+
+  Serial.println("[BOOT] Target WiFi SSID: " + WIFI_SSID);
+
+  // 7. JALANKAN BACKGROUND WIFI SYNC TASK DI CORE 0
   BaseType_t taskResult = xTaskCreatePinnedToCore(
     wifiSyncTask,
     "WifiSyncTask",
@@ -327,17 +297,39 @@ void setup() {
     Serial.println("[ERROR] WiFi task gagal dibuat!");
   }
 
-  delay(500);
-  cetakSemuaCenter("SEMPOA SIP PARIAMAN", "SISTEM SIAP", "Silakan Tap Kartu", "WiFi: Menghubungkan");
+  delay(400);
+  cetakSemuaCenter("SEMPOA SIP PARIAMAN", "SISTEM SIAP", "Silakan Tap Kartu", "Status: Standby");
   standbyStateMulai = millis();
 
-  Serial.println("[BOOT] Setup OK. Siap digunakan.");
+  Serial.println("[BOOT] Setup OK. Sistem siap menerima tap.");
 }
 
 // =========================================================
 // MAIN LOOP (CORE 1)
 // =========================================================
 void loop() {
+  // Cek jika ada input provisioning serial dari admin (Opsional)
+  if (Serial.available()) {
+    String input = Serial.readStringUntil('\n');
+    input.trim();
+    if (input.startsWith("PROV|")) {
+      input = input.substring(5);
+      int sep1 = input.indexOf('|');
+      int sep2 = input.indexOf('|', sep1 + 1);
+      if (sep1 > 0 && sep2 > sep1) {
+        preferences.begin("sempoa_cfg", false);
+        preferences.putString("ssid", input.substring(0, sep1));
+        preferences.putString("pass", input.substring(sep1 + 1, sep2));
+        preferences.putString("apikey", input.substring(sep2 + 1));
+        preferences.end();
+        Serial.println("[OK] Kredensial baru disimpan ke NVS. Me-restart ESP32...");
+        cetakSemuaCenter("PENGATURAN WIFI", "Kredensial Disimpan", "Restarting...", "");
+        delay(1500);
+        ESP.restart();
+      }
+    }
+  }
+
   if (!Rtc.IsDateTimeValid()) {
     delay(500);
     return;
