@@ -288,14 +288,14 @@ void loop() {
     }
   }
 
-  if (!Rtc.IsDateTimeValid()) {
-    delay(100);
-    return;
+  RtcDateTime now;
+  if (Rtc.IsDateTimeValid()) {
+    now = Rtc.GetDateTime();
+  } else {
+    now = RtcDateTime(__DATE__, __TIME__);
   }
 
-  RtcDateTime now = Rtc.GetDateTime();
-
-  // DETEKSI TAP KARTU RFID DENGAN RESPON SUPER INSTAN
+  // DETEKSI TAP KARTU RFID
   if (rfid.PICC_IsNewCardPresent() && rfid.PICC_ReadCardSerial()) {
     prosesTap(now);
     rfid.PICC_HaltA();
@@ -304,7 +304,7 @@ void loop() {
   }
 
   jalankanStandby();
-  delay(15); // Loop interval 15ms agar pembacaan kartu instan tanpa jeda
+  delay(30);
 }
 
 // =========================================================
@@ -537,8 +537,12 @@ void tampilkanTeks3() {
 // Atas: "20-08-2026" (Tanggal-Bulan-Tahun)
 // Bawah: "13:15:30" (Jam:Menit:Detik)
 void tampilkanTeks4() {
-  if (!Rtc.IsDateTimeValid()) return;
-  RtcDateTime now = Rtc.GetDateTime();
+  RtcDateTime now;
+  if (Rtc.IsDateTimeValid()) {
+    now = Rtc.GetDateTime();
+  } else {
+    now = RtcDateTime(__DATE__, __TIME__);
+  }
 
   if (now.Second() == detikTerakhir) return;
   detikTerakhir = now.Second();
