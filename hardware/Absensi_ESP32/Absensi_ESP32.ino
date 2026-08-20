@@ -1,22 +1,34 @@
 /*
   =========================================================
-  SISTEM ABSENSI RFID ESP32 BERBASIS IoT
+  SISTEM ABSENSI RFID ESP32 BERBASIS IoT (LCD 16x2)
   SEMPOA SIP TC PARIAMAN
   
-  Spesifikasi Hardware (LCD 16x2 & Buzzer):
-  1. Layar LCD: 16 Kolom x 2 Baris (16x2 I2C).
-  2. Semua teks di-center otomatis dan pas 16 karakter (tanpa terpotong).
-  3. Boot / Nyala: Bip panjang 1 detik (1000ms).
-  4. Tap Kartu Terdaftar (Guru / Siswa):
-     - Bip panjang 0.5 detik (500ms).
-     - Layar Baris 0: "Selamat Datang"
-     - Layar Baris 1: [Nama Guru / Siswa]
-  5. Tap Kartu Baru (Belum Terdaftar):
-     - Bip 3 kali (0.1 detik on, 0.1 detik off).
-     - Layar Baris 0: "KARTU BARU"
-     - Layar Baris 1: [UID Kartu]
-     - Terkirim otomatis ke backend untuk auto-fill form pendaftaran guru/siswa di web.
-  6. Anti-Kedip (No-Flicker): Penulisan LCD atomik 16 karakter tanpa lcd.clear() di loop.
+  Mekanisme & Tampilan Teks (LCD 16x2 - Pas 16 Karakter):
+  ---------------------------------------------------------
+  [STANDBY MODE - Berganti Otomatis Setiap 5 Detik]:
+  Teks 1:
+    Baris 0: "   SEMPOA SIP   "
+    Baris 1: "  TC PARIAMAN   "
+  
+  Teks 2:
+    Baris 0: "  Silakan Tap   "
+    Baris 1: "   Kartu Anda   "
+  
+  Teks 3:
+    Baris 0: " Kamis, 20-08-26 " (Hari, Tanggal-Bulan-Tahun)
+    Baris 1: " Pukul 13:15:30  " (Jam:Menit:Detik)
+  
+  [MEKANISME PAS TAP KARTU]:
+  Teks 4 (Kartu Terdaftar):
+    - Bip panjang 0.5 detik (500ms).
+    - Baris 0: " Selamat Datang "
+    - Baris 1: "[Nama Guru/Siswa]"
+  
+  Teks 5 (Kartu Baru / Belum Terdaftar):
+    - Bip 3 kali (0.1 detik on, 0.1 detik off).
+    - Baris 0: "   KARTU BARU   "
+    - Baris 1: "[  UID KARTU  ]"
+    - Data UID otomatis terkirim ke database server web untuk auto-fill form pendaftaran.
   =========================================================
 */
 
@@ -73,8 +85,8 @@ const char* ISRG_ROOT_X1 = \
   "j/KQRDBk27E=\n" \
   "-----END CERTIFICATE-----\n";
 
-// ============ PENGATURAN WIFI & API KEY ============
-// Ganti nama WiFi/Hotspot dan Password Anda di sini:
+// ============ PENGATURAN KONEKSI WIFI / HOTSPOT ============
+// Agar ESP32 terhubung ke web database, masukkan nama Hotspot/WiFi Anda di sini:
 const char* DEFAULT_WIFI_SSID     = "SEMPOA_SIP"; // Ganti dengan nama Hotspot HP / WiFi Anda
 const char* DEFAULT_WIFI_PASS     = "12345678";   // Ganti dengan password Hotspot / WiFi Anda
 const char* DEFAULT_ESP32_API_KEY = "SempoaPariaman_ESP32_SecureKey_2026!";
@@ -115,10 +127,11 @@ const char* PING_URL = "https://sempoasippariaman.com/api/ping";
 #define OFFLINE_FILE  "/data_absensi.txt"
 
 // ============ TIMEOUT HTTP (ms) ============
-#define HTTP_TIMEOUT_MS   3500
+#define HTTP_TIMEOUT_MS   4000
 #define SEMAPHORE_WAIT_MS 2000
 
-const unsigned long DURASI_STANDBY = 4000;
+// Durasi perpindahan teks 1, 2, 3: 5 Detik (5000ms)
+const unsigned long DURASI_STANDBY = 5000;
 
 // ============ OBJEK GLOBAL ============
 MFRC522 rfid(RFID_SS_PIN, RFID_RST_PIN);
@@ -140,8 +153,8 @@ String uidTerakhir = "";
 unsigned long waktuTapTerakhir = 0;
 const unsigned long DEBOUNCE_TAP_MS = 2500;
 
-enum StandbyState { TAMPIL_STATUS, TAMPIL_JAM, TAMPIL_WIFI };
-StandbyState standbyState      = TAMPIL_STATUS;
+enum StandbyState { TEKS_1_JUDUL, TEKS_2_AJAKAN, TEKS_3_WAKTU };
+StandbyState standbyState      = TEKS_1_JUDUL;
 unsigned long standbyStateMulai = 0;
 int detikTerakhir = -1;
 
@@ -155,12 +168,13 @@ void beepBoot();
 void beepKartuTerdaftar();
 void beepKartuBaru();
 void jalankanStandby();
-void tampilkanStatusStandby();
-void tampilkanJamStandby();
-void tampilkanWifiStandby();
+void tampilkanTeks1();
+void tampilkanTeks2();
+void tampilkanTeks3();
 void cetakCenter(const char* teks, int baris);
 void cetakDuaBarisCenter(const char* baris0, const char* baris1);
 String formatWaktu(const RtcDateTime& dt);
+String getNamaHari(uint8_t dayOfWeek);
 String urlEncode(const String& str);
 
 // =========================================================
@@ -258,7 +272,7 @@ void setup() {
   if (Rtc.GetIsWriteProtected()) Rtc.SetIsWriteProtected(false);
   if (!Rtc.GetIsRunning()) Rtc.SetIsRunning(true);
 
-  // 5. Inisialisasi SD Card (Offline Mode)
+  // 5. Inisialisasi SD Card
   sdSPI.begin(SD_SCK_PIN, SD_MISO_PIN, SD_MOSI_PIN, SD_CS_PIN);
   if (!SD.begin(SD_CS_PIN, sdSPI)) {
     Serial.println("[BOOT] SD Card tidak terpasang.");
@@ -290,9 +304,10 @@ void setup() {
     0
   );
 
-  delay(600);
-  cetakDuaBarisCenter("SEMPOA SIP", "Silakan Tap");
+  delay(1000);
   standbyStateMulai = millis();
+  standbyState = TEKS_1_JUDUL;
+  detikTerakhir = -1;
 
   Serial.println("[BOOT] Setup OK. Siap menerima tap kartu.");
 }
@@ -301,7 +316,7 @@ void setup() {
 // MAIN LOOP (CORE 1)
 // =========================================================
 void loop() {
-  // Cek jika ada input provisioning serial dari admin (Opsional)
+  // Input provisioning serial dari admin (Opsional)
   if (Serial.available()) {
     String input = Serial.readStringUntil('\n');
     input.trim();
@@ -343,7 +358,7 @@ void loop() {
 }
 
 // =========================================================
-// PROSES TAP KARTU RFID (LCD 16x2 RATA TENGAH)
+// PROSES TAP KARTU RFID (TEKS 4 & TEKS 5)
 // =========================================================
 void prosesTap(const RtcDateTime& now) {
   String uid = "";
@@ -368,18 +383,19 @@ void prosesTap(const RtcDateTime& now) {
   Serial.println("[Tap] UID: " + uid + " | Waktu: " + waktu);
 
   cetakDuaBarisCenter("MEMPROSES...", uid.c_str());
-  delay(100);
 
   if (wifiConnected) {
     String respon = kirimKeServer(uid, waktu, "ONLINE");
     Serial.println("[Server Response] " + respon);
 
     if (respon.startsWith("OK")) {
-      // 1. KARTU TERDAFTAR (GURU / SISWA)
-      // Format respon: "OK|<nama>" atau "OK|<nama>|SUDAH_TAP"
+      // --------------------------------------------------
+      // TEKS 4: Kartu Terdaftar (Guru / Siswa)
+      // Atas: "Selamat Datang"
+      // Bawah: "[Nama Guru]"
+      // Bip: 0.5 Detik
+      // --------------------------------------------------
       String nama = "Guru Sempoa";
-      bool sudahTap = respon.indexOf("SUDAH_TAP") != -1;
-
       int idxFirst = respon.indexOf('|');
       if (idxFirst != -1) {
         int idxSecond = respon.indexOf('|', idxFirst + 1);
@@ -391,41 +407,35 @@ void prosesTap(const RtcDateTime& now) {
       }
       nama.trim();
 
-      // Potong nama jika lebih dari 16 karakter
+      // Potong jika nama lebih dari 16 karakter
       if (nama.length() > 16) {
         nama = nama.substring(0, 16);
       }
 
-      // Tampilkan "Selamat Datang" di atas dan Nama di bawah
       cetakDuaBarisCenter("Selamat Datang", nama.c_str());
 
-      // Bip panjang 0.5 detik
+      // Bunyikan Bip Panjang 0.5 detik
       beepKartuTerdaftar();
-
-      delay(1500);
-
-      // Tampilkan status absensi
-      char jamBuf[10];
-      sprintf(jamBuf, "%02d:%02d WIB", now.Hour(), now.Minute());
-      cetakDuaBarisCenter(sudahTap ? "Sudah Absen" : "Absensi Sukses", jamBuf);
-      delay(1500);
+      delay(2500);
 
     } else if (respon == "GURU_NOT_FOUND" || respon == "TIDAK_TERDAFTAR" || respon.startsWith("UNREGISTERED")) {
-      // 2. KARTU BARU (BELUM TERDAFTAR) -> Untuk Pendaftaran Guru / Siswa Baru
+      // --------------------------------------------------
+      // TEKS 5: Kartu Baru (Belum Terdaftar / Pendaftaran Guru)
+      // Atas: "KARTU BARU"
+      // Bawah: "[UID Kartu]"
+      // Bip: 3 kali 0.1 detik
+      // --------------------------------------------------
       cetakDuaBarisCenter("KARTU BARU", uid.c_str());
 
-      // Bip 3 kali (0.1 detik)
+      // Bunyikan Bip 3 kali (0.1 detik)
       beepKartuBaru();
-
-      delay(1500);
-      cetakDuaBarisCenter("UID Terkirim", "Siap Didaftar");
-      delay(1500);
+      delay(2500);
 
     } else {
-      // 3. Error lainnya
+      // Respon Error Lainnya
       cetakDuaBarisCenter("INFO ABSENSI", respon.c_str());
       beepKartuBaru();
-      delay(1500);
+      delay(2000);
     }
 
   } else {
@@ -433,9 +443,7 @@ void prosesTap(const RtcDateTime& now) {
     simpanOffline(uid, waktu);
     cetakDuaBarisCenter("OFFLINE MODE", uid.c_str());
     beepKartuTerdaftar();
-    delay(1500);
-    cetakDuaBarisCenter("Tersimpan di SD", "Akan Disinkron");
-    delay(1500);
+    delay(2000);
   }
 
   standbyStateMulai = millis();
@@ -490,62 +498,85 @@ void simpanOffline(const String& uid, const String& waktu) {
 }
 
 // =========================================================
-// STANDBY SCREEN LCD 16x2 (ANTI-KEDIP)
+// STANDBY SCREEN (BERGANTI OTOMATIS SETIAP 5 DETIK: TEKS 1, 2, 3)
 // =========================================================
 void jalankanStandby() {
   unsigned long nowMs = millis();
 
+  // Pergantian state setiap 5 detik (DURASI_STANDBY = 5000ms)
   if (nowMs - standbyStateMulai >= DURASI_STANDBY) {
     standbyStateMulai = nowMs;
-    if (standbyState == TAMPIL_STATUS) {
-      standbyState = TAMPIL_JAM;
-    } else if (standbyState == TAMPIL_JAM) {
-      standbyState = TAMPIL_WIFI;
+    if (standbyState == TEKS_1_JUDUL) {
+      standbyState = TEKS_2_AJAKAN;
+    } else if (standbyState == TEKS_2_AJAKAN) {
+      standbyState = TEKS_3_WAKTU;
     } else {
-      standbyState = TAMPIL_STATUS;
+      standbyState = TEKS_1_JUDUL;
     }
-    detikTerakhir = -1; // Trigger refresh
+    detikTerakhir = -1; // Trigger refresh tampilan
   }
 
-  if (standbyState == TAMPIL_STATUS) {
-    tampilkanStatusStandby();
-  } else if (standbyState == TAMPIL_JAM) {
-    tampilkanJamStandby();
+  if (standbyState == TEKS_1_JUDUL) {
+    tampilkanTeks1();
+  } else if (standbyState == TEKS_2_AJAKAN) {
+    tampilkanTeks2();
   } else {
-    tampilkanWifiStandby();
+    tampilkanTeks3();
   }
 }
 
-// Tampilan 1: Judul & Ajakan Tap
-void tampilkanStatusStandby() {
-  if (detikTerakhir == 0) return;
-  detikTerakhir = 0;
-  cetakDuaBarisCenter("SEMPOA SIP", "Silakan Tap");
+// TEKS 1 (5 Detik):
+// Atas: "SEMPOA SIP"
+// Bawah: "TC PARIAMAN"
+void tampilkanTeks1() {
+  if (detikTerakhir == 1) return;
+  detikTerakhir = 1;
+  cetakDuaBarisCenter("SEMPOA SIP", "TC PARIAMAN");
 }
 
-// Tampilan 2: Jam & Tanggal
-void tampilkanJamStandby() {
+// TEKS 2 (5 Detik):
+// Atas: "Silakan Tap"
+// Bawah: "Kartu Anda"
+void tampilkanTeks2() {
+  if (detikTerakhir == 2) return;
+  detikTerakhir = 2;
+  cetakDuaBarisCenter("Silakan Tap", "Kartu Anda");
+}
+
+// TEKS 3 (5 Detik):
+// Atas: "Hari, Tanggal Bulan Tahun"
+// Bawah: "Jam" (Pukul HH:MM:SS)
+void tampilkanTeks3() {
   if (!Rtc.IsDateTimeValid()) return;
   RtcDateTime now = Rtc.GetDateTime();
 
   if (now.Second() == detikTerakhir) return;
   detikTerakhir = now.Second();
 
+  // Format Baris Atas: "Kam, 20-08-2026" (15 Karakter)
+  String hari = getNamaHari(now.DayOfWeek());
+  char tglBuf[17];
+  sprintf(tglBuf, "%s, %02d-%02d-%04d", hari.c_str(), now.Day(), now.Month(), now.Year());
+
+  // Format Baris Bawah: "Pukul 13:15:30" (14 Karakter)
   char jamBuf[17];
   sprintf(jamBuf, "Pukul %02d:%02d:%02d", now.Hour(), now.Minute(), now.Second());
 
-  char tglBuf[17];
-  sprintf(tglBuf, "%02d-%02d-%04d", now.Day(), now.Month(), now.Year());
-
-  cetakDuaBarisCenter(jamBuf, tglBuf);
+  cetakDuaBarisCenter(tglBuf, jamBuf);
 }
 
-// Tampilan 3: Status WiFi
-void tampilkanWifiStandby() {
-  if (detikTerakhir == 2) return;
-  detikTerakhir = 2;
-
-  cetakDuaBarisCenter("SEMPOA SIP", wifiConnected ? "WiFi: ONLINE" : "WiFi: OFFLINE");
+// Helper Nama Hari Singkat Indonesia
+String getNamaHari(uint8_t dayOfWeek) {
+  switch (dayOfWeek) {
+    case 0: return "Min";
+    case 1: return "Sen";
+    case 2: return "Sel";
+    case 3: return "Rab";
+    case 4: return "Kam";
+    case 5: return "Jum";
+    case 6: return "Sab";
+    default: return "Hari";
+  }
 }
 
 // =========================================================
