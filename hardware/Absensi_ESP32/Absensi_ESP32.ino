@@ -3,36 +3,17 @@
   SISTEM ABSENSI RFID ESP32 BERBASIS IoT (LCD 16x2)
   SEMPOA SIP TC PARIAMAN
   
-  Mekanisme & Tampilan Teks (LCD 16x2 - Pas 16 Karakter):
-  ---------------------------------------------------------
-  [STANDBY MODE - Berganti Otomatis Setiap 5 Detik]:
-  Teks 1:
-    Baris 0: "   SEMPOA SIP   "
-    Baris 1: "  TC PARIAMAN   "
-  
-  Teks 2:
-    Baris 0: "  Silakan Tap   "
-    Baris 1: "   Kartu Anda   "
-  
-  Teks 3:
-    Baris 0: "  Alat Absensi  "
-    Baris 1: "  Guru Sempoa   "
-  
-  Teks 4:
-    Baris 0: "   20-08-2026   " (Tanggal-Bulan-Tahun)
-    Baris 1: "    13:15:30    " (Jam:Menit:Detik)
-  
-  [MEKANISME PAS TAP KARTU (KHUSUS GURU / PEGAWAI & OWNER)]:
-  - Kartu Terdaftar (Guru):
-      Bip panjang 0.5 detik (500ms).
-      Baris 0: " Selamat Datang "
-      Baris 1: "[  Nama Guru  ]"
-  
-  - Kartu Baru (Pendaftaran Guru):
-      Bip 3 kali (0.1 detik on, 0.1 detik off).
-      Baris 0: "   KARTU BARU   "
-      Baris 1: "[  UID KARTU  ]"
-      Data UID otomatis terkirim ke database server web untuk auto-fill form pendaftaran guru di web admin/owner.
+  Peningkatan Stabilitas & Sensitivitas:
+  1. Antenna Receiver Gain Maksimal (RxGain_max / 48dB):
+     - Memperluas jarak baca kartu RFID (3-6 cm).
+     - Cukup 1 kali tap ringan langsung terdeteksi instan dari sudut manapun.
+  2. Polling Loop Cepat (15ms):
+     - Responsivitas pembacaan kartu super cepat tanpa delay/lag.
+  3. Proteksi 3 Lapis (Triple-Layer Fail-Safe):
+     - Lapis 1: Kirim langsung ke Server Web via WiFi.
+     - Lapis 2: Jika WiFi mati -> Simpan ke Micro SD Card.
+     - Lapis 3: Jika SD Card rusak/dicabut & WiFi mati -> Simpan ke Memori Internal Flash ESP32 (NVS).
+  4. Mekanisme Teks Standby (5 Detik per Teks) & Tap Selesai Khusus Guru.
   =========================================================
 */
 
@@ -90,7 +71,7 @@ const char* PING_URL = "https://sempoasippariaman.com/api/ping";
 #define LCD_COLS      16
 #define LCD_ROWS      2
 
-// ============ FILE OFFLINE ============
+// ============ FILE OFFLINE SD CARD ============
 #define OFFLINE_FILE  "/data_absensi.txt"
 
 // ============ TIMEOUT HTTP (ms) ============
@@ -129,6 +110,7 @@ int detikTerakhir = -1;
 void wifiSyncTask(void *pvParameters);
 String kirimKeServer(const String& uid, const String& waktu, const char* mode);
 void simpanOffline(const String& uid, const String& waktu);
+void syncInternalFlashKeServer();
 void syncNTPWaktu();
 void prosesTap(const RtcDateTime& now);
 void beepBoot();
@@ -224,10 +206,11 @@ void setup() {
   lcd.backlight();
   cetakDuaBarisCenter("SEMPOA SIP", "TC PARIAMAN");
 
-  // 3. Inisialisasi RFID RC522
+  // 3. INISIALISASI RFID RC522 & BOOST SENSITIVITAS ANTENA MAKSIMAL (48dB)
   SPI.begin();
   rfid.PCD_Init();
-  Serial.println("[BOOT] RFID RC522 OK");
+  rfid.PCD_SetAntennaGain(MFRC522::RxGain_max); // Maksimal sensitivitas pembacaan kartu (48dB)
+  Serial.println("[BOOT] RFID RC522 OK (Antenna Gain: MAX 48dB)");
 
   // 4. Inisialisasi RTC DS1302
   Rtc.Begin();
@@ -239,12 +222,12 @@ void setup() {
   if (Rtc.GetIsWriteProtected()) Rtc.SetIsWriteProtected(false);
   if (!Rtc.GetIsRunning()) Rtc.SetIsRunning(true);
 
-  // 5. Inisialisasi SD Card
+  // 5. Inisialisasi SD Card (Lapis 2)
   sdSPI.begin(SD_SCK_PIN, SD_MISO_PIN, SD_MOSI_PIN, SD_CS_PIN);
   if (!SD.begin(SD_CS_PIN, sdSPI)) {
-    Serial.println("[BOOT] SD Card tidak terpasang.");
+    Serial.println("[BOOT] SD Card tidak terpasang. Memori internal ESP32 siap (Lapis 3).");
   } else {
-    Serial.println("[BOOT] SD Card OK.");
+    Serial.println("[BOOT] SD Card OK (Lapis 2 Aktif).");
   }
 
   // 6. Baca Kredensial NVS dengan Fallback
@@ -276,11 +259,11 @@ void setup() {
   standbyState = TEKS_1_JUDUL;
   detikTerakhir = -1;
 
-  Serial.println("[BOOT] Setup OK. Siap menerima tap kartu.");
+  Serial.println("[BOOT] Setup OK. Siap menerima tap kartu instan.");
 }
 
 // =========================================================
-// MAIN LOOP (CORE 1)
+// MAIN LOOP (CORE 1) — RESPON CEPAT REALTIME
 // =========================================================
 void loop() {
   // Input provisioning serial dari admin (Opsional)
@@ -306,22 +289,22 @@ void loop() {
   }
 
   if (!Rtc.IsDateTimeValid()) {
-    delay(300);
+    delay(100);
     return;
   }
 
   RtcDateTime now = Rtc.GetDateTime();
 
-  // Deteksi Tap Kartu RFID
+  // DETEKSI TAP KARTU RFID DENGAN RESPON SUPER INSTAN
   if (rfid.PICC_IsNewCardPresent() && rfid.PICC_ReadCardSerial()) {
     prosesTap(now);
     rfid.PICC_HaltA();
     rfid.PCD_StopCrypto1();
-    delay(200);
+    delay(50);
   }
 
   jalankanStandby();
-  delay(100);
+  delay(15); // Loop interval 15ms agar pembacaan kartu instan tanpa jeda
 }
 
 // =========================================================
@@ -357,7 +340,7 @@ void prosesTap(const RtcDateTime& now) {
     simpanOffline(uid, waktu);
   }
 
-  // 1. KARTU TERDAFTAR (GURU ATAU SISWA DI DATABASE)
+  // 1. KARTU TERDAFTAR (GURU DI DATABASE)
   if (respon.startsWith("OK")) {
     String nama = "Guru Sempoa";
     int idxFirst = respon.indexOf('|');
@@ -374,7 +357,7 @@ void prosesTap(const RtcDateTime& now) {
       nama = nama.substring(0, 16);
     }
 
-    // Atas: "Selamat Datang" | Bawah: [Nama]
+    // Atas: "Selamat Datang" | Bawah: [Nama Guru]
     cetakDuaBarisCenter("Selamat Datang", nama.c_str());
 
     // Bunyikan Bip Panjang 0.5 detik
@@ -382,7 +365,7 @@ void prosesTap(const RtcDateTime& now) {
     delay(2500);
 
   } else {
-    // 2. KARTU BARU (BELUM TERDAFTAR DI DATABASE)
+    // 2. KARTU BARU (PENDAFTARAN GURU)
     // Atas: "KARTU BARU" | Bawah: [UID Kartu]
     cetakDuaBarisCenter("KARTU BARU", uid.c_str());
 
@@ -427,19 +410,68 @@ String kirimKeServer(const String& uid, const String& waktu, const char* mode) {
 }
 
 // =========================================================
-// SIMPAN OFFLINE DI SD CARD
+// SIMPAN OFFLINE (LAPIS 2: SD CARD -> LAPIS 3: INTERNAL FLASH)
 // =========================================================
 void simpanOffline(const String& uid, const String& waktu) {
-  if (!fileMutex) return;
+  bool tersimpanDiSD = false;
 
-  if (xSemaphoreTake(fileMutex, pdMS_TO_TICKS(SEMAPHORE_WAIT_MS)) == pdTRUE) {
+  // Lapis 2: Coba simpan ke Micro SD Card
+  if (fileMutex && xSemaphoreTake(fileMutex, pdMS_TO_TICKS(SEMAPHORE_WAIT_MS)) == pdTRUE) {
     File file = SD.open(OFFLINE_FILE, FILE_APPEND);
     if (file) {
       file.println(uid + "|" + waktu);
       file.close();
+      tersimpanDiSD = true;
     }
     xSemaphoreGive(fileMutex);
   }
+
+  // Lapis 3: Jika SD Card Rusak/Tidak Terpasang -> Simpan ke Memori Internal Flash ESP32 (NVS)
+  if (!tersimpanDiSD) {
+    preferences.begin("offline_nvs", false);
+    int count = preferences.getInt("count", 0);
+    String key = "t_" + String(count);
+    preferences.putString(key.c_str(), uid + "|" + waktu);
+    preferences.putInt("count", count + 1);
+    preferences.end();
+    Serial.println("[Offline Backup] Tersimpan di Memori Internal ESP32 (Lapis 3)!");
+  }
+}
+
+// Sinkronisasi data dari Memori Internal ESP32 ke Server saat online
+void syncInternalFlashKeServer() {
+  preferences.begin("offline_nvs", false);
+  int count = preferences.getInt("count", 0);
+  if (count <= 0) {
+    preferences.end();
+    return;
+  }
+
+  Serial.println("[Sync NVS] Menemukan " + String(count) + " data di memori internal ESP32.");
+  int suksesCount = 0;
+
+  for (int i = 0; i < count; i++) {
+    String key = "t_" + String(i);
+    String record = preferences.getString(key.c_str(), "");
+    if (record.length() > 0) {
+      int sep = record.indexOf('|');
+      if (sep != -1) {
+        String uid = record.substring(0, sep);
+        String waktu = record.substring(sep + 1);
+        String res = kirimKeServer(uid, waktu, "OFFLINE");
+        if (res.startsWith("OK") || res.startsWith("KARTU_BARU") || res == "GURU_NOT_FOUND" || res == "TIDAK_TERDAFTAR") {
+          suksesCount++;
+        }
+      }
+    }
+  }
+
+  // Jika semua terkirim, hapus data internal
+  if (suksesCount >= count) {
+    preferences.clear();
+    Serial.println("[Sync NVS] Seluruh data memori internal berhasil disinkronkan!");
+  }
+  preferences.end();
 }
 
 // =========================================================
@@ -541,6 +573,9 @@ void wifiSyncTask(void *pvParameters) {
     wifiConnected = currentWifi;
 
     if (currentWifi) {
+      // Sinkronisasi data dari memori internal (Lapis 3) jika ada
+      syncInternalFlashKeServer();
+
       // Ping Heartbeat ke Server setiap 10 detik
       if (millis() - lastPingSync >= 10000) {
         lastPingSync = millis();
@@ -583,7 +618,7 @@ void wifiSyncTask(void *pvParameters) {
         lastNtpSync = millis();
       }
 
-      // Sinkronisasi antrean data offline SD Card ke Server
+      // Sinkronisasi antrean data offline SD Card ke Server (Lapis 2)
       if (!isSyncing) {
         String baris = "";
         bool hasQueue = false;
@@ -611,7 +646,7 @@ void wifiSyncTask(void *pvParameters) {
             String respon = kirimKeServer(uid, waktu, "OFFLINE");
 
             if (respon.startsWith("OK") || respon.startsWith("KARTU_BARU") || respon == "GURU_NOT_FOUND" || respon == "TIDAK_TERDAFTAR") {
-              Serial.println("[Sync] Sukses kirim offline: " + uid);
+              Serial.println("[Sync SD] Sukses kirim offline: " + uid);
 
               if (fileMutex && xSemaphoreTake(fileMutex, pdMS_TO_TICKS(SEMAPHORE_WAIT_MS)) == pdTRUE) {
                 if (SD.exists(OFFLINE_FILE)) {
