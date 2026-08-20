@@ -53,12 +53,12 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
   const portalTitle = role === 'owner' ? 'Hai Owner' : 'Admin Portal';
 
   return (
-    <div className="flex min-h-screen bg-[#FAFAFA] font-sans text-[#424242]">
+    <div className="flex h-screen overflow-hidden bg-[#FAFAFA] font-sans text-[#424242]">
       {/* 1. Desktop & Tablet Sidebar (3-mode adaptive) */}
-      <aside className="hidden md:flex flex-col w-20 lg:w-[280px] bg-[#F8FAFC] border-r border-slate-200 transition-all duration-300 shrink-0 sticky top-0 h-screen justify-between z-30">
-        <div className="flex flex-col flex-1 overflow-hidden">
+      <aside className="hidden md:flex flex-col w-20 lg:w-[260px] bg-white border-r border-slate-200 shrink-0 h-full justify-between z-30 shadow-xs">
+        <div className="flex flex-col flex-1 min-h-0">
           {/* Logo & Portal Title */}
-          <div className="flex items-center gap-2.5 px-3 lg:px-5 py-5 border-b border-slate-200 justify-center lg:justify-start shrink-0">
+          <div className="flex items-center gap-2.5 px-3 lg:px-5 py-4 border-b border-slate-200 justify-center lg:justify-start shrink-0">
             <img src="/assets/logo/logo-sempoa-sip.png" alt="Sempoa SIP" className="h-8 w-auto shrink-0" />
             <div className="hidden lg:block min-w-0">
               <h1 className="text-base font-bold text-[#FF7043] tracking-tight leading-snug truncate">
@@ -69,7 +69,7 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
           </div>
 
           {/* Nav Items */}
-          <nav className="flex-1 overflow-y-auto px-2 lg:px-3 py-4 space-y-1.5" aria-label="Main Navigation">
+          <nav className="flex-1 overflow-y-auto px-2 lg:px-3 py-3 space-y-1" aria-label="Main Navigation">
             {menuItems.map((item) => (
               <NavLink
                 key={item.to}
@@ -79,8 +79,8 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
                 className={({ isActive }) => `
                   flex items-center gap-3
                   justify-center lg:justify-start
-                  px-3 lg:px-4 py-3 rounded-xl
-                  text-[14px] font-medium leading-[1.6]
+                  px-3 lg:px-4 py-2.5 rounded-xl
+                  text-[13px] font-medium leading-[1.5]
                   transition-all duration-150
                   ${isActive
                     ? 'bg-[#FFF3E0] text-[#FF7043] font-bold shadow-xs lg:border-l-4 lg:border-[#FF7043]'
@@ -107,16 +107,20 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
               <p className="text-xs font-bold text-slate-800 truncate" title={user.nama}>
                 {user.nama}
               </p>
-              <p className="text-[10px] text-slate-500 uppercase">{user.role}</p>
+              <p className="text-[10px] text-slate-500 font-semibold uppercase">{user.role}</p>
             </div>
           )}
           <button
             onClick={handleLogout}
-            className="w-full py-2.5 px-2 bg-[#D32F2F] hover:bg-[#B71C1C] text-white text-xs lg:text-sm font-bold rounded-xl transition-colors shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+            className="w-full py-2.5 px-2 bg-[#D32F2F] hover:bg-[#B71C1C] text-white text-xs lg:text-sm font-bold rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer active:scale-95"
             title="Keluar dari Portal"
           >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
             <span className="hidden lg:inline">Keluar</span>
-            <span className="lg:hidden text-xs"><i className="fas fa-sign-out-alt"></i></span>
           </button>
         </div>
       </aside>
@@ -129,8 +133,8 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
             onClick={() => setDrawerOpen(false)}
             aria-hidden="true"
           />
-          <div className="md:hidden fixed inset-y-0 left-0 z-50 w-[280px] max-w-[85vw] bg-[#F8FAFC] border-r border-slate-200 flex flex-col justify-between overflow-hidden animate-in slide-in-from-left duration-200 shadow-2xl">
-            <div className="flex flex-col flex-1 overflow-hidden">
+          <div className="md:hidden fixed inset-y-0 left-0 z-50 w-[280px] max-w-[85vw] bg-white border-r border-slate-200 flex flex-col justify-between overflow-hidden animate-in slide-in-from-left duration-200 shadow-2xl">
+            <div className="flex flex-col flex-1 min-h-0">
               {/* Header Logo + Close Button */}
               <div className="flex items-center justify-between p-4 border-b border-slate-200 shrink-0">
                 <div className="flex items-center gap-2.5 overflow-hidden">
@@ -179,14 +183,19 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
               {user && (
                 <div>
                   <p className="text-xs font-bold text-slate-800 truncate">{user.nama}</p>
-                  <p className="text-[10px] text-slate-500 uppercase">{user.role}</p>
+                  <p className="text-[10px] text-slate-500 font-semibold uppercase">{user.role}</p>
                 </div>
               )}
               <button
                 onClick={handleLogout}
-                className="w-full py-2.5 bg-[#D32F2F] text-white text-xs font-bold rounded-xl text-center shadow-xs"
+                className="w-full py-2.5 bg-[#D32F2F] hover:bg-[#B71C1C] text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
               >
-                Keluar
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                <span>Keluar</span>
               </button>
             </div>
           </div>
@@ -194,14 +203,14 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
       )}
 
       {/* 3. Main Content Area */}
-      <main className="flex-1 min-w-0 flex flex-col bg-[#FAFAFA]">
+      <main className="flex-1 min-w-0 flex flex-col h-full overflow-hidden bg-[#FAFAFA]">
         {/* Header Bar */}
-        <header className="sticky top-0 z-20 bg-white border-b border-slate-200 px-3 sm:px-4 lg:px-8 py-3 lg:py-4 flex items-center justify-between gap-3 shadow-xs">
+        <header className="sticky top-0 z-20 bg-white border-b border-slate-200 px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between gap-3 shadow-xs shrink-0">
           {/* Left: Hamburger Button (Mobile) + Search / Title */}
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
               onClick={() => setDrawerOpen(true)}
-              className="md:hidden p-2 text-slate-700 hover:text-[#FF7043] rounded-lg focus:outline-none shrink-0"
+              className="md:hidden p-2 text-slate-700 hover:text-[#FF7043] rounded-lg focus:outline-none shrink-0 cursor-pointer"
               aria-label="Buka Menu"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -239,8 +248,8 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
         </header>
 
         {/* Content Outlet Container */}
-        <section className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 xl:p-8">
-          <div className="w-full max-w-[1400px] mx-auto min-w-0">
+        <section className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+          <div className="w-full max-w-[1400px] mx-auto min-w-0 pb-12">
             <Outlet />
           </div>
         </section>
