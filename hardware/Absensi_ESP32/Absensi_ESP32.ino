@@ -54,7 +54,7 @@ const char* GURU_CACHE_URL = "https://sempoasippariaman.com/api/guru-cache";
 // ============ PIN MICRO SD CARD (HSPI) ============
 #define SD_CS_PIN     32
 #define SD_MOSI_PIN   13
-#define SD_MISO_PIN   12
+#define SD_MISO_PIN   25 // Pindah dari D12 ke D25 (Bebas dari Strapping Pin Flash)
 #define SD_SCK_PIN    33
 
 // ============ PIN RTC DS1302 ============
