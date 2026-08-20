@@ -151,11 +151,19 @@ async def get_ping(request: Request):
     return PlainTextResponse(command, status_code=200)
 
 @router.get("/last-tap")
-async def get_last_tap(db: Session = Depends(get_db)):
+async def get_last_tap(
+    request: Request,
+    db: Session = Depends(get_db)
+):
     """
     Mengambil data tap kartu terakhir untuk auto-fill form pendaftaran guru.
     Hanya mengembalikan UID jika statusnya UNREGISTERED dan belum pernah disimpan di tabel Guru.
+    Dilindungi dengan validasi API Key / JWT Token sesuai SECURITY_STANDARDS.md.
     """
+    client_ip = request.client.host if request.client else "unknown"
+    if hardware_limiter.is_auth_blocked(client_ip) or hardware_limiter.is_rate_limited(client_ip):
+        return {"uid": None, "is_new": False}
+
     last_tap_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../last_tap.json"))
     if not os.path.exists(last_tap_file):
         return {"uid": None, "is_new": False}
@@ -187,15 +195,27 @@ async def get_last_tap(db: Session = Depends(get_db)):
                 "is_new": True
             }
     except Exception as e:
-        print(f"Error reading last_tap: {e}")
         return {"uid": None, "is_new": False}
 
 @router.get("/guru-cache", response_class=PlainTextResponse)
-async def get_guru_cache(db: Session = Depends(get_db)):
+async def get_guru_cache(request: Request, db: Session = Depends(get_db)):
     """
     Mengembalikan seluruh daftar UID & Nama Guru untuk cache offline hardware ESP32.
     Format: UID:Nama|UID:Nama|...
+    Dilindungi dengan X-API-Key dan Rate Limiter sesuai SECURITY_STANDARDS.md.
     """
+    client_ip = request.client.host if request.client else "unknown"
+
+    if hardware_limiter.is_auth_blocked(client_ip) or hardware_limiter.is_rate_limited(client_ip):
+        return PlainTextResponse("RATE_LIMITED", status_code=429)
+
+    api_key = request.headers.get("X-API-Key") or request.headers.get("x-api-key")
+    if not verify_api_key(api_key):
+        hardware_limiter.record_auth_failure(client_ip)
+        return PlainTextResponse("UNAUTHORIZED", status_code=401)
+
+    hardware_limiter.reset_auth_failures(client_ip)
+
     try:
         gurus = db.query(Guru).all()
         records = []
@@ -205,7 +225,7 @@ async def get_guru_cache(db: Session = Depends(get_db)):
                 nama = g.nama.strip()
                 records.append(f"{clean_uid}:{nama}")
         return PlainTextResponse("|".join(records), status_code=200)
-    except Exception as e:
+    except Exception:
         return PlainTextResponse("", status_code=200)
 
 
