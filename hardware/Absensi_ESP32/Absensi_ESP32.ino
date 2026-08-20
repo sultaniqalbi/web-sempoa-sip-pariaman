@@ -22,17 +22,17 @@
     Baris 0: "   20-08-2026   " (Tanggal-Bulan-Tahun)
     Baris 1: "    13:15:30    " (Jam:Menit:Detik)
   
-  [MEKANISME PAS TAP KARTU]:
-  - Kartu Terdaftar (Guru / Siswa):
+  [MEKANISME PAS TAP KARTU (KHUSUS GURU / PEGAWAI & OWNER)]:
+  - Kartu Terdaftar (Guru):
       Bip panjang 0.5 detik (500ms).
       Baris 0: " Selamat Datang "
-      Baris 1: "[Nama Guru/Siswa]"
+      Baris 1: "[  Nama Guru  ]"
   
-  - Kartu Baru (Belum Terdaftar):
+  - Kartu Baru (Pendaftaran Guru):
       Bip 3 kali (0.1 detik on, 0.1 detik off).
       Baris 0: "   KARTU BARU   "
       Baris 1: "[  UID KARTU  ]"
-      Data UID otomatis terkirim ke database server web untuk auto-fill form pendaftaran.
+      Data UID otomatis terkirim ke database server web untuk auto-fill form pendaftaran guru di web admin/owner.
   =========================================================
 */
 

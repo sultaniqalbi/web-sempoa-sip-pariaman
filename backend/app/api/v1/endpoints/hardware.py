@@ -63,23 +63,14 @@ async def post_absensi(request: Request, db: Session = Depends(get_db)):
     uid_nospace = uid_clean.replace(" ", "")
 
     try:
-        # 1. Cek di Database Guru (Cocokkan dengan atau tanpa spasi)
+        # 1. Cek Eksklusif di Database Guru (Pegawai & Owner)
         guru = db.query(Guru).filter(
             (func.upper(Guru.uid) == uid_clean) |
             (func.replace(func.upper(Guru.uid), " ", "") == uid_nospace)
         ).first()
 
-        # 2. Cek di Database Siswa jika bukan Guru
-        siswa = None
+        # 2. Jika Kartu Belum Terdaftar sebagai Guru -> KARTU BARU (untuk Pendaftaran Guru)
         if not guru:
-            siswa = db.query(Siswa).filter(
-                Siswa.is_deleted == False,
-                (func.upper(Siswa.uid) == uid_clean) |
-                (func.replace(func.upper(Siswa.uid), " ", "") == uid_nospace)
-            ).first()
-
-        # 3. Jika TIDAK DITEMUKAN di Guru maupun Siswa -> KARTU BARU
-        if not guru and not siswa:
             save_unregistered_card(db, uid_clean, waktu_str)
             write_last_tap(uid_clean, waktu_str, "UNREGISTERED")
 
@@ -91,9 +82,9 @@ async def post_absensi(request: Request, db: Session = Depends(get_db)):
             })
             return PlainTextResponse(f"KARTU_BARU|{uid_clean}", status_code=200)
 
-        # 4. KARTU TERDAFTAR (Guru atau Siswa)
-        nama_orang = guru.nama if guru else siswa.nama
-        matched_uid = guru.uid if guru else siswa.uid
+        # 3. KARTU GURU TERDAFTAR
+        nama_guru = guru.nama
+        matched_uid = guru.uid
 
         # Cek duplikasi tap hari ini (Idempotency)
         today_date = waktu_dt.date()
@@ -103,10 +94,10 @@ async def post_absensi(request: Request, db: Session = Depends(get_db)):
         ).first()
 
         if duplicate:
-            write_last_tap(uid_clean, waktu_str, "REGISTERED", nama=nama_orang)
-            return PlainTextResponse(f"OK|{nama_orang}", status_code=200)
+            write_last_tap(uid_clean, waktu_str, "REGISTERED", nama=nama_guru)
+            return PlainTextResponse(f"OK|{nama_guru}", status_code=200)
 
-        # Catat Absensi Baru
+        # Catat Log Absensi Kehadiran Guru
         mode = ModeAbsensi.OFFLINE if mode_str == "OFFLINE" else ModeAbsensi.ONLINE
         new_log = AbsensiLog(
             uid=matched_uid,
@@ -115,28 +106,21 @@ async def post_absensi(request: Request, db: Session = Depends(get_db)):
             status=StatusAbsensi.HADIR
         )
         db.add(new_log)
-
-        # Jika siswa, kurangi sisa pertemuan jika hadir
-        if siswa and siswa.sisa_pertemuan > 0:
-            siswa.sisa_pertemuan = max(0, siswa.sisa_pertemuan - 1)
-            if siswa.sisa_pertemuan == 0 and siswa.status_spp != StatusSPP.EXPIRED:
-                siswa.status_spp = StatusSPP.EXPIRED
-
         db.commit()
 
-        write_last_tap(uid_clean, waktu_str, "REGISTERED", nama=nama_orang)
+        write_last_tap(uid_clean, waktu_str, "REGISTERED", nama=nama_guru)
 
         manager.broadcast_sync("ABSENSI_UPDATE", {
             "timestamp": datetime.now().isoformat(),
             "source": "rfid_hardware",
             "uid": matched_uid,
-            "nama": nama_orang,
-            "role": "guru" if guru else "siswa",
+            "nama": nama_guru,
+            "role": "guru",
             "waktu": waktu_str,
             "status": "HADIR"
         })
 
-        return PlainTextResponse(f"OK|{nama_orang}", status_code=200)
+        return PlainTextResponse(f"OK|{nama_guru}", status_code=200)
 
     except Exception as e:
         print(f"Hardware absensi DB error: {e}")
