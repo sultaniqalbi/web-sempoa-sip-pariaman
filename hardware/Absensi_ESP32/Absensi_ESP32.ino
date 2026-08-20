@@ -567,14 +567,18 @@ void wifiSyncTask(void *pvParameters) {
   unsigned long lastNtpSync   = 0;
   unsigned long lastWifiRetry = millis();
   unsigned long lastPingSync  = 0;
+  unsigned long lastNvsSync   = 0;
 
   while (true) {
     bool currentWifi = (WiFi.status() == WL_CONNECTED);
     wifiConnected = currentWifi;
 
     if (currentWifi) {
-      // Sinkronisasi data dari memori internal (Lapis 3) jika ada
-      syncInternalFlashKeServer();
+      // Sinkronisasi data dari memori internal (Lapis 3) setiap 30 detik (agar tidak lockup CPU)
+      if (millis() - lastNvsSync >= 30000) {
+        lastNvsSync = millis();
+        syncInternalFlashKeServer();
+      }
 
       // Ping Heartbeat ke Server setiap 10 detik
       if (millis() - lastPingSync >= 10000) {
