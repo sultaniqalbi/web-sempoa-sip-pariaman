@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   MuridIcon,
   PengajarIcon,
@@ -13,6 +13,7 @@ import {
   GaleriIcon,
   SearchIcon,
 } from './SvgIcons';
+import { requestAndSubscribePush, getNotificationPermissionStatus } from '../utils/pushManager';
 
 // ==========================================
 // Types & Props
@@ -96,6 +97,31 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [pushLoading, setPushLoading] = useState(false);
+  const [pushMsg, setPushMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [permissionState, setPermissionState] = useState<string>('default');
+
+  useEffect(() => {
+    setPermissionState(getNotificationPermissionStatus());
+  }, []);
+
+  const handleEnablePush = async () => {
+    setPushLoading(true);
+    setPushMsg(null);
+    try {
+      const res = await requestAndSubscribePush();
+      if (res.success) {
+        setPushMsg({ type: 'success', text: res.message });
+        setPermissionState('granted');
+      } else {
+        setPushMsg({ type: 'error', text: res.message });
+      }
+    } catch (err: any) {
+      setPushMsg({ type: 'error', text: err.message || 'Gagal mengaktifkan notifikasi.' });
+    } finally {
+      setPushLoading(false);
+    }
+  };
 
   const menuItems = [
     { label: 'Dashboard', icon: <DashboardIcon size={20} /> },
@@ -108,10 +134,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   ];
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    if (onSearch) {
-      onSearch(e.target.value);
-    }
+    const q = e.target.value;
+    setSearchQuery(q);
+    if (onSearch) onSearch(q);
   };
 
   const renderStatIcon = (iconType: StatItem['icon']) => {
@@ -155,17 +180,77 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <WaveIcon size={24} className="text-white" />
           </div>
           <p className="text-xs text-white/90 font-normal">
-            Admin Dashboard Sempoa SIP TC Pariaman
+            Admin & Owner Dashboard Sempoa SIP TC Pariaman
           </p>
         </div>
 
         <button
           onClick={onAddStudent}
-          className="self-start sm:self-auto py-2.5 px-4 bg-white text-[#FF7043] text-xs font-bold rounded-[8px] hover:bg-[#FAFAFA] transition-colors duration-150 shadow-sm focus:outline-none shrink-0"
+          className="self-start sm:self-auto py-2.5 px-4 bg-white text-[#FF7043] text-xs font-bold rounded-[8px] hover:bg-[#FAFAFA] transition-colors duration-150 shadow-sm focus:outline-none shrink-0 cursor-pointer"
         >
           + Tambah Siswa Baru
         </button>
       </section>
+
+      {/* Banner / Card Notifikasi Operasional Admin & Owner */}
+      <div className="bg-gradient-to-r from-[#FFF3E0] to-[#FFF8E1] border border-[#FFE082] rounded-xl p-4 shadow-[0_2px_6px_rgba(0,0,0,0.04)]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#FF9800] text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-[13px] font-bold text-[#E65100] flex items-center gap-2">
+                Notifikasi Operasional & SPP Real-time
+                {permissionState === 'granted' && (
+                  <span className="text-[10px] bg-[#E8F5E9] text-[#2E7D32] border border-[#A5D6A7] font-semibold px-2 py-0.5 rounded-full">
+                    Aktif
+                  </span>
+                )}
+              </h3>
+              <p className="text-[11px] text-[#795548] mt-0.5 leading-relaxed">
+                {permissionState === 'granted'
+                  ? 'HP Anda sudah terhubung. Anda akan otomatis menerima notifikasi siswa baru, pembayaran SPP masuk/jatuh tempo, dan pendaftaran guru baru.'
+                  : 'Aktifkan notifikasi di HP Anda untuk mendapatkan info instan tagihan SPP jatuh tempo, bukti transfer baru, pendaftaran siswa, dan data guru.'}
+              </p>
+              {pushMsg && (
+                <p className={`text-[11px] font-semibold mt-1 ${pushMsg.type === 'success' ? 'text-[#2E7D32]' : 'text-[#C62828]'}`}>
+                  {pushMsg.text}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex-shrink-0 sm:self-center">
+            {permissionState === 'granted' ? (
+              <button
+                type="button"
+                onClick={handleEnablePush}
+                disabled={pushLoading}
+                className="w-full sm:w-auto text-[11px] font-bold text-[#2E7D32] bg-white px-3.5 py-2 rounded-lg border border-[#A5D6A7] hover:bg-[#E8F5E9] transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {pushLoading ? 'Memproses...' : 'Perbarui Izin HP'}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleEnablePush}
+                disabled={pushLoading}
+                className="w-full sm:w-auto text-[11px] font-bold text-white bg-[#E65100] hover:bg-[#D84315] px-3.5 py-2 rounded-lg shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                </svg>
+                {pushLoading ? 'Menghubungkan...' : 'Aktifkan Notifikasi'}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Stats Cards Row (4 cards, 100px height, 32px gray icon center-left) */}
       <section aria-label="Statistik Utama">

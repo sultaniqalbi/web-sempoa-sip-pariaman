@@ -64,7 +64,7 @@ def check_and_send_spp_reminders():
             result = send_push_to_user(
                 db=db,
                 user_id=ortu_user.id,
-                title="🔔 Pengingat SPP - Sempoa SIP Pariaman",
+                title="Pengingat SPP - Sempoa SIP Pariaman",
                 body=body_text,
                 url="/ortu/keuangan"
             )

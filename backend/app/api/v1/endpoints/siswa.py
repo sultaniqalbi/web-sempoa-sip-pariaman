@@ -372,9 +372,9 @@ async def push_whatsapp_siswa(
 
 Putra/putri Anda, {siswa.nama}, telah terdaftar di Sempoa SIP TC Pariaman.
 
-📧 Email: {ortu_email}
-🔐 Sandi: {new_sandi}
-🌐 Portal: https://sempoasippariaman.com/login
+- Email: {ortu_email}
+- Sandi: {new_sandi}
+- Portal: https://sempoasippariaman.com/login
 
 ---
 Tim Sempoa SIP TC Pariaman"""

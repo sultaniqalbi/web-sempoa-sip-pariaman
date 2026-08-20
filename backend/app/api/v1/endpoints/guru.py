@@ -307,9 +307,9 @@ async def push_whatsapp_guru(
 
 Anda telah terdaftar sebagai pengajar di Sempoa SIP TC Pariaman.
 
-📧 Email: {guru_email}
-🔐 Sandi: {new_sandi}
-🌐 Portal: https://sempoasippariaman.com/login
+- Email: {guru_email}
+- Sandi: {new_sandi}
+- Portal: https://sempoasippariaman.com/login
 
 ---
 Tim Sempoa SIP TC Pariaman"""

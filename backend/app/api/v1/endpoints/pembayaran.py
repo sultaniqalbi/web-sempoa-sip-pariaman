@@ -132,10 +132,10 @@ async def get_pembayaran_reminders(
 
 Kami ingin memberitahukan bahwa kuota pertemuan {s.nama} untuk program {s.kategori_program} tinggal sedikit (sisa {sisa} sesi / {int(persen)}%).
 
-👤 Nama Anak: {s.nama}
-📚 Program: {s.kategori_program}
-📊 Sisa Pertemuan: {sisa} / {target} sesi
-📅 Batas Siklus 30 Hari: {due_date_str} (sisa {max(0, days_remaining)} hari)
+- Nama Anak: {s.nama}
+- Program: {s.kategori_program}
+- Sisa Pertemuan: {sisa} / {target} sesi
+- Batas Siklus 30 Hari: {due_date_str} (sisa {max(0, days_remaining)} hari)
 
 Mohon bersiap untuk melakukan pembayaran SPP periode berikutnya.
 
@@ -147,17 +147,17 @@ Admin: 082385813163 | Owner: 08126784986"""
         alasan_merah = "Masa aktif 30 hari telah berakhir (sisa pertemuan hangus)" if is_hangus else ("Masa aktif 30 hari telah berakhir" if is_expired_30_hari else f"Sisa pertemuan tinggal {sisa} sesi ({int(persen)}%)")
         wa_urgent = f"""Assalamualaikum Ibu/Pak {ortu_name},
 
-⚠️ PEMBERITAHUAN TAGIHAN SPP ⚠️
+[PEMBERITAHUAN TAGIHAN SPP]
 
 {alasan_merah} untuk Ananda {s.nama} pada program {s.kategori_program}.
 
-👤 Nama Anak: {s.nama}
-📚 Program: {s.kategori_program}
-📊 Sisa Pertemuan: {sisa} / {target} sesi {'(HANGUS)' if is_hangus else ''}
-💰 Total Tagihan: Rp {int(jumlah_tagihan):,}
-📅 Batas Siklus: {due_date_str}
+- Nama Anak: {s.nama}
+- Program: {s.kategori_program}
+- Sisa Pertemuan: {sisa} / {target} sesi {'(HANGUS)' if is_hangus else ''}
+- Total Tagihan: Rp {int(jumlah_tagihan):,}
+- Batas Siklus: {due_date_str}
 
-🏦 REKENING RESMI PEMBAYARAN:
+REKENING RESMI PEMBAYARAN:
 1. Bank BRI
    No. Rekening: 0321 0100 2859536
    A/N: ZULHEMAWATI
@@ -166,8 +166,8 @@ Admin: 082385813163 | Owner: 08126784986"""
    A/N: ZULHEMAWATI
 
 Mohon segera lakukan pembayaran dan konfirmasi via WhatsApp ke:
-📱 Owner: 08126784986
-📱 Admin: 082385813163
+- Owner: 08126784986
+- Admin: 082385813163
 
 ---
 Tim Sempoa SIP TC Pariaman""".replace(",", ".")
