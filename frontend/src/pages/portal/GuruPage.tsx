@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
 import { useAuth } from '../../features/auth/useAuth';
+import { useRealtime } from '../../features/realtime/RealtimeContext';
 import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
 import PageHeader from '../../components/PageHeader';
@@ -34,6 +35,7 @@ interface Guru {
 
 export const GuruPage: React.FC = () => {
   const { user } = useAuth();
+  const { lastEvent } = useRealtime();
   const queryClient = useQueryClient();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingGuru, setEditingGuru] = useState<Guru | null>(null);
@@ -71,28 +73,6 @@ export const GuruPage: React.FC = () => {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  const validatePhone = (num: string): boolean => {
-    const clean = num.replace(/[^0-9]/g, '');
-    if (!clean || clean.length < 10 || clean.length > 13) {
-      setPhoneError('Nomor HP harus berupa angka (10-13 digit)');
-      return false;
-    }
-    setPhoneError(null);
-    return true;
-  };
-
-  const calculateAge = (birthDate: string | undefined) => {
-    if (!birthDate) return null;
-    const today = new Date();
-    const dob = new Date(birthDate);
-    let age = today.getFullYear() - dob.getFullYear();
-    const m = today.getMonth() - dob.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
-      age--;
-    }
-    return age;
-  };
-
   const { data: guruList = [], isLoading } = useQuery<Guru[]>({
     queryKey: ['guru', 'list'],
     queryFn: async () => {
@@ -101,6 +81,46 @@ export const GuruPage: React.FC = () => {
     },
     refetchInterval: 10000
   });
+
+  // Realtime card tap listener via WebSocket
+  useEffect(() => {
+    if (lastEvent?.event === 'CARD_TAP' && lastEvent.data?.uid) {
+      const tappedUid = String(lastEvent.data.uid).trim().toUpperCase();
+      
+      // Cek apakah UID sudah terdaftar di daftar guru
+      const isAlreadyRegistered = guruList.some(
+        g => g.uid.trim().toUpperCase() === tappedUid ||
+             g.uid.replace(/\s+/g, '').toUpperCase() === tappedUid.replace(/\s+/g, '')
+      );
+
+      if (!isAlreadyRegistered) {
+        setFormData(prev => ({ ...prev, uid: tappedUid }));
+        showToast(`Kartu RFID baru terdeteksi: ${tappedUid}`, 'success');
+      }
+    }
+  }, [lastEvent, guruList]);
+
+  // Cek tap kartu terakhir dari endpoint backend
+  const checkLatestUnregisteredTap = async () => {
+    try {
+      const res = await apiClient.get('/api/last-tap');
+      if (res.data?.uid && res.data?.is_new) {
+        const newUid = String(res.data.uid).trim().toUpperCase();
+        const isAlreadyRegistered = guruList.some(
+          g => g.uid.trim().toUpperCase() === newUid ||
+               g.uid.replace(/\s+/g, '').toUpperCase() === newUid.replace(/\s+/g, '')
+        );
+        if (!isAlreadyRegistered) {
+          setFormData(prev => {
+            if (!prev.uid) {
+              return { ...prev, uid: newUid };
+            }
+            return prev;
+          });
+        }
+      }
+    } catch (e) {}
+  };
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -229,10 +249,32 @@ export const GuruPage: React.FC = () => {
     },
   });
 
+  const validatePhone = (num: string): boolean => {
+    const clean = num.replace(/[^0-9]/g, '');
+    if (!clean || clean.length < 10 || clean.length > 13) {
+      setPhoneError('Nomor HP harus berupa angka (10-13 digit)');
+      return false;
+    }
+    setPhoneError(null);
+    return true;
+  };
+
+  const calculateAge = (birthDate: string | undefined) => {
+    if (!birthDate) return null;
+    const today = new Date();
+    const dob = new Date(birthDate);
+    let age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
   const openAddModal = () => {
     setEditingGuru(null);
     setFormData({
-      uid: `GR-${Math.floor(1000 + Math.random() * 9000)}`,
+      uid: '', // Default Kosong
       nama: '',
       nama_panggilan: '',
       umur: '',
@@ -249,6 +291,7 @@ export const GuruPage: React.FC = () => {
     setSelectedPhoto(null);
     setPhoneError(null);
     setIsAddModalOpen(true);
+    checkLatestUnregisteredTap();
   };
 
   const openEditModal = (guru: Guru) => {
@@ -517,17 +560,46 @@ export const GuruPage: React.FC = () => {
         <form onSubmit={handleFormSubmit} className="space-y-4 text-xs">
           {/* UID Kartu RFID Guru */}
           <div>
-            <label className="block text-[#1E293B] font-bold mb-1">UID Kartu RFID Guru*</label>
-            <input
-              type="text"
-              required
-              value={formData.uid}
-              onChange={(e) => setFormData({ ...formData, uid: e.target.value })}
-              className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] font-mono focus:border-[#FF7043] focus:outline-none"
-              placeholder="GR-3506 (Tempel kartu RFID atau ketik manual)"
-            />
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-[#1E293B] font-bold">UID Kartu RFID Guru*</label>
+              <div className="flex items-center gap-1.5">
+                <span className="relative flex h-2 w-2">
+                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${formData.uid ? 'bg-[#4CAF50]' : 'bg-[#FF7043]'}`}></span>
+                  <span className={`relative inline-flex rounded-full h-2 w-2 ${formData.uid ? 'bg-[#4CAF50]' : 'bg-[#FF7043]'}`}></span>
+                </span>
+                <span className={`text-[10px] font-bold ${formData.uid ? 'text-[#2E7D32]' : 'text-[#E65100]'}`}>
+                  {formData.uid ? 'Kartu Terdeteksi' : 'Mode Bersiap Tap Kartu'}
+                </span>
+              </div>
+            </div>
+            <div className="relative">
+              <input
+                type="text"
+                required
+                value={formData.uid}
+                onChange={(e) => setFormData({ ...formData, uid: e.target.value.toUpperCase() })}
+                className={`w-full bg-[#F1F5F9] border rounded-lg p-2.5 pr-8 text-[#1E293B] font-mono tracking-wider transition-all focus:outline-none ${
+                  formData.uid
+                    ? 'border-[#4CAF50] bg-[#E8F5E9]/40 text-[#1B5E20] font-bold ring-1 ring-[#4CAF50]'
+                    : 'border-[#E2E8F0] focus:border-[#FF7043]'
+                }`}
+                placeholder="Tempelkan kartu RFID pada alat atau ketik manual..."
+              />
+              {formData.uid && (
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, uid: '' })}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-[#757575] hover:text-[#D32F2F] px-1.5 py-0.5 rounded cursor-pointer"
+                  title="Hapus / Ganti UID"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
             <p className="text-[10px] text-[#64748B] mt-1">
-              Admin dapat menempelkan kartu RFID ke alat pembaca atau memasukkan UID secara manual.
+              {formData.uid
+                ? 'UID otomatis terisi dari hasil tap kartu di alat RFID. Anda juga dapat mengeditnya secara manual.'
+                : 'Silakan tap kartu baru di alat pembaca (ESP32) atau ketik kode UID secara manual.'}
             </p>
           </div>
 

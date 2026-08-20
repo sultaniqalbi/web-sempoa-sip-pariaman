@@ -142,8 +142,6 @@ async def get_ping(request: Request):
         hardware_limiter.record_auth_failure(client_ip)
         return PlainTextResponse("UNAUTHORIZED", status_code=401)
 
-    hardware_limiter.reset_auth_failures(client_ip)
-
     ack = request.query_params.get("ack")
     if ack == "1":
         acknowledge_reset_command()
@@ -151,3 +149,44 @@ async def get_ping(request: Request):
 
     command = get_reset_command()
     return PlainTextResponse(command, status_code=200)
+
+@router.get("/last-tap")
+async def get_last_tap(db: Session = Depends(get_db)):
+    """
+    Mengambil data tap kartu terakhir untuk auto-fill form pendaftaran guru.
+    Hanya mengembalikan UID jika statusnya UNREGISTERED dan belum pernah disimpan di tabel Guru.
+    """
+    last_tap_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../last_tap.json"))
+    if not os.path.exists(last_tap_file):
+        return {"uid": None, "is_new": False}
+
+    try:
+        with open(last_tap_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            uid = data.get("uid")
+            status = data.get("status")
+
+            if not uid or status != "UNREGISTERED":
+                return {"uid": None, "is_new": False}
+
+            uid_clean = uid.strip().upper()
+            uid_nospace = uid_clean.replace(" ", "")
+
+            # Cek apakah sudah ada guru dengan UID ini di database
+            existing = db.query(Guru).filter(
+                (func.upper(Guru.uid) == uid_clean) |
+                (func.replace(func.upper(Guru.uid), " ", "") == uid_nospace)
+            ).first()
+
+            if existing:
+                return {"uid": None, "is_new": False}
+
+            return {
+                "uid": uid_clean,
+                "waktu": data.get("waktu"),
+                "is_new": True
+            }
+    except Exception as e:
+        print(f"Error reading last_tap: {e}")
+        return {"uid": None, "is_new": False}
+
