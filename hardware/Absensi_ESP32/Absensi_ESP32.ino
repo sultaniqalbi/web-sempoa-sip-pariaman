@@ -3,17 +3,17 @@
   SISTEM ABSENSI RFID ESP32 BERBASIS IoT (LCD 16x2)
   SEMPOA SIP TC PARIAMAN
   
-  Peningkatan Stabilitas & Sensitivitas:
-  1. Antenna Receiver Gain Maksimal (RxGain_max / 48dB):
-     - Memperluas jarak baca kartu RFID (3-6 cm).
-     - Cukup 1 kali tap ringan langsung terdeteksi instan dari sudut manapun.
-  2. Polling Loop Cepat (15ms):
-     - Responsivitas pembacaan kartu super cepat tanpa delay/lag.
+  Fitur & Ketahanan Tingkat Tinggi:
+  1. Offline Intelligent Recognition (Local Guru Cache):
+     - Saat Offline (WiFi mati / sinyal hilang), ESP32 tetap mengenali
+       seluruh guru yang terdaftar dan menampilkan "Selamat Datang [Nama Guru]".
+  2. Antenna Receiver Gain Maksimal (RxGain_max / 48dB):
+     - Jarak baca kartu luas (3-6 cm) & responsivitas instan.
   3. Proteksi 3 Lapis (Triple-Layer Fail-Safe):
      - Lapis 1: Kirim langsung ke Server Web via WiFi.
      - Lapis 2: Jika WiFi mati -> Simpan ke Micro SD Card.
-     - Lapis 3: Jika SD Card rusak/dicabut & WiFi mati -> Simpan ke Memori Internal Flash ESP32 (NVS).
-  4. Mekanisme Teks Standby (5 Detik per Teks) & Tap Selesai Khusus Guru.
+     - Lapis 3: Jika SD Card rusak & WiFi mati -> Simpan ke Memori Internal Flash ESP32 (NVS).
+  4. Siklus Standby 4 Layar (5 Detik per Layar) Rata Tengah Anti-Kedip.
   =========================================================
 */
 
@@ -43,8 +43,9 @@ Preferences preferences;
 String WIFI_SSID     = "";
 String WIFI_PASSWORD = "";
 String ESP32_API_KEY = "";
-const char* API_URL  = "https://sempoasippariaman.com/api/absensi";
-const char* PING_URL = "https://sempoasippariaman.com/api/ping";
+const char* API_URL        = "https://sempoasippariaman.com/api/absensi";
+const char* PING_URL       = "https://sempoasippariaman.com/api/ping";
+const char* GURU_CACHE_URL = "https://sempoasippariaman.com/api/guru-cache";
 
 // ============ PIN RFID RC522 (VSPI) ============
 #define RFID_SS_PIN   5
@@ -111,6 +112,9 @@ void wifiSyncTask(void *pvParameters);
 String kirimKeServer(const String& uid, const String& waktu, const char* mode);
 void simpanOffline(const String& uid, const String& waktu);
 void syncInternalFlashKeServer();
+void syncGuruCacheFromServer();
+void simpanGuruCache(const String& uid, const String& nama);
+String ambilGuruCache(const String& uid);
 void syncNTPWaktu();
 void prosesTap(const RtcDateTime& now);
 void beepBoot();
@@ -183,6 +187,31 @@ void beepKartuBaru() {
 }
 
 // =========================================================
+// HELPER CACHE GURU OFFLINE (LOCAL NVS)
+// =========================================================
+void simpanGuruCache(const String& uid, const String& nama) {
+  String cleanUid = uid;
+  cleanUid.replace(" ", "");
+  cleanUid.toUpperCase();
+
+  preferences.begin("g_cache", false);
+  preferences.putString(cleanUid.c_str(), nama);
+  preferences.end();
+  Serial.println("[Cache] Guru disimpan offline: " + cleanUid + " -> " + nama);
+}
+
+String ambilGuruCache(const String& uid) {
+  String cleanUid = uid;
+  cleanUid.replace(" ", "");
+  cleanUid.toUpperCase();
+
+  preferences.begin("g_cache", true);
+  String nama = preferences.getString(cleanUid.c_str(), "");
+  preferences.end();
+  return nama;
+}
+
+// =========================================================
 // SETUP
 // =========================================================
 void setup() {
@@ -206,10 +235,11 @@ void setup() {
   lcd.backlight();
   cetakDuaBarisCenter("SEMPOA SIP", "TC PARIAMAN");
 
-  // 3. INISIALISASI RFID RC522 & BOOST SENSITIVITAS ANTENA MAKSIMAL (48dB)
+  // 3. Inisialisasi RFID RC522 & BOOST SENSITIVITAS ANTENA (48dB)
   SPI.begin();
   rfid.PCD_Init();
-  rfid.PCD_SetAntennaGain(MFRC522::RxGain_max); // Maksimal sensitivitas pembacaan kartu (48dB)
+  delay(10);
+  rfid.PCD_SetAntennaGain(MFRC522::RxGain_max);
   Serial.println("[BOOT] RFID RC522 OK (Antenna Gain: MAX 48dB)");
 
   // 4. Inisialisasi RTC DS1302
@@ -254,12 +284,12 @@ void setup() {
     0
   );
 
-  delay(800);
+  delay(500);
   standbyStateMulai = millis();
   standbyState = TEKS_1_JUDUL;
   detikTerakhir = -1;
 
-  Serial.println("[BOOT] Setup OK. Siap menerima tap kartu instan.");
+  Serial.println("[BOOT] Setup Selesai. Siap menerima tap kartu.");
 }
 
 // =========================================================
@@ -295,7 +325,7 @@ void loop() {
     now = RtcDateTime(__DATE__, __TIME__);
   }
 
-  // DETEKSI TAP KARTU RFID
+  // DETEKSI TAP KARTU RFID (Non-blocking)
   if (rfid.PICC_IsNewCardPresent() && rfid.PICC_ReadCardSerial()) {
     prosesTap(now);
     rfid.PICC_HaltA();
@@ -308,7 +338,7 @@ void loop() {
 }
 
 // =========================================================
-// PROSES TAP KARTU RFID (USER CUMA LIHAT HASIL TAP SELESAI)
+// PROSES TAP KARTU RFID (ONLINE & OFFLINE INTELLIGENT)
 // =========================================================
 void prosesTap(const RtcDateTime& now) {
   String uid = "";
@@ -336,11 +366,9 @@ void prosesTap(const RtcDateTime& now) {
   if (wifiConnected) {
     respon = kirimKeServer(uid, waktu, "ONLINE");
     Serial.println("[Server Response] " + respon);
-  } else {
-    simpanOffline(uid, waktu);
   }
 
-  // 1. KARTU TERDAFTAR (GURU DI DATABASE)
+  // 1. KONDISI ONLINE & SERVER MENJAWAB BERHASIL (OK|Nama Guru)
   if (respon.startsWith("OK")) {
     String nama = "Guru Sempoa";
     int idxFirst = respon.indexOf('|');
@@ -353,23 +381,43 @@ void prosesTap(const RtcDateTime& now) {
     }
     nama.trim();
 
+    // SIMPAN KE LOCAL CACHE AGAR SAAT OFFLINE TETAP INGAT NAMA GURU
+    simpanGuruCache(uid, nama);
+
     if (nama.length() > 16) {
       nama = nama.substring(0, 16);
     }
 
     // Atas: "Selamat Datang" | Bawah: [Nama Guru]
     cetakDuaBarisCenter("Selamat Datang", nama.c_str());
-
-    // Bunyikan Bip Panjang 0.5 detik
     beepKartuTerdaftar();
     delay(2500);
 
-  } else {
-    // 2. KARTU BARU (PENDAFTARAN GURU)
-    // Atas: "KARTU BARU" | Bawah: [UID Kartu]
-    cetakDuaBarisCenter("KARTU BARU", uid.c_str());
+  } else if (!wifiConnected || respon == "WIFI_OFF" || respon == "KONEKSI_ERROR" || respon.startsWith("HTTP_")) {
+    // 2. KONDISI OFFLINE (WiFi Mati / Sinyal Hilang / Server Tidak Terjangkau)
+    // Cek apakah guru sudah tersimpan di Cache Lokal ESP32
+    String cachedNama = ambilGuruCache(uid);
 
-    // Bunyikan Bip 3 kali (0.1 detik)
+    // Simpan data absensi offline (Lapis 2 SD Card / Lapis 3 Internal Flash)
+    simpanOffline(uid, waktu);
+
+    if (cachedNama.length() > 0) {
+      // Guru Terdaftar di Memori Cache Lokal!
+      if (cachedNama.length() > 16) {
+        cachedNama = cachedNama.substring(0, 16);
+      }
+      cetakDuaBarisCenter("Selamat Datang", cachedNama.c_str());
+      beepKartuTerdaftar();
+    } else {
+      // Kartu Baru belum ada di memori cache
+      cetakDuaBarisCenter("KARTU BARU", uid.c_str());
+      beepKartuBaru();
+    }
+    delay(2500);
+
+  } else {
+    // 3. KONDISI ONLINE TAPI KARTU BELUM TERDAFTAR DI DATABASE (KARTU BARU)
+    cetakDuaBarisCenter("KARTU BARU", uid.c_str());
     beepKartuBaru();
     delay(2500);
   }
@@ -474,6 +522,42 @@ void syncInternalFlashKeServer() {
   preferences.end();
 }
 
+// Sinkronisasi seluruh daftar guru dari server ke Memori Cache Lokal ESP32
+void syncGuruCacheFromServer() {
+  WiFiClientSecure cacheClient;
+  cacheClient.setInsecure();
+  HTTPClient http;
+
+  if (http.begin(cacheClient, GURU_CACHE_URL)) {
+    http.setTimeout(HTTP_TIMEOUT_MS);
+    http.addHeader("X-API-Key", ESP32_API_KEY);
+    int code = http.GET();
+    if (code == HTTP_CODE_OK) {
+      String payload = http.getString();
+      payload.trim();
+      if (payload.length() > 0) {
+        int start = 0;
+        int countLoaded = 0;
+        while (start < payload.length()) {
+          int end = payload.indexOf('|', start);
+          if (end == -1) end = payload.length();
+          String pair = payload.substring(start, end);
+          int sep = pair.indexOf(':');
+          if (sep != -1) {
+            String uid = pair.substring(0, sep);
+            String nama = pair.substring(sep + 1);
+            simpanGuruCache(uid, nama);
+            countLoaded++;
+          }
+          start = end + 1;
+        }
+        Serial.println("[Guru Cache] Berhasil sinkron " + String(countLoaded) + " guru ke NVS lokal!");
+      }
+    }
+    http.end();
+  }
+}
+
 // =========================================================
 // STANDBY SCREEN (BERGANTI SETIAP 5 DETIK: TEKS 1, 2, 3, 4)
 // =========================================================
@@ -572,19 +656,26 @@ void wifiSyncTask(void *pvParameters) {
   unsigned long lastWifiRetry = millis();
   unsigned long lastPingSync  = 0;
   unsigned long lastNvsSync   = 0;
+  unsigned long lastCacheSync = 0;
 
   while (true) {
     bool currentWifi = (WiFi.status() == WL_CONNECTED);
     wifiConnected = currentWifi;
 
     if (currentWifi) {
-      // Sinkronisasi data dari memori internal (Lapis 3) setiap 30 detik (agar tidak lockup CPU)
+      // 1. Sinkronisasi data dari memori internal (Lapis 3) setiap 30 detik
       if (millis() - lastNvsSync >= 30000) {
         lastNvsSync = millis();
         syncInternalFlashKeServer();
       }
 
-      // Ping Heartbeat ke Server setiap 10 detik
+      // 2. Sinkronisasi Cache Seluruh Guru Lokal setiap 30 menit
+      if (lastCacheSync == 0 || millis() - lastCacheSync >= 1800000UL) {
+        lastCacheSync = millis();
+        syncGuruCacheFromServer();
+      }
+
+      // 3. Ping Heartbeat ke Server setiap 10 detik
       if (millis() - lastPingSync >= 10000) {
         lastPingSync = millis();
 
@@ -620,13 +711,13 @@ void wifiSyncTask(void *pvParameters) {
         }
       }
 
-      // Sync NTP Time sekali sehari
+      // 4. Sync NTP Time sekali sehari
       if (lastNtpSync == 0 || millis() - lastNtpSync >= 24UL * 3600000UL) {
         syncNTPWaktu();
         lastNtpSync = millis();
       }
 
-      // Sinkronisasi antrean data offline SD Card ke Server (Lapis 2)
+      // 5. Sinkronisasi antrean data offline SD Card ke Server (Lapis 2)
       if (!isSyncing) {
         String baris = "";
         bool hasQueue = false;

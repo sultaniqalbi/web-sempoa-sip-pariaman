@@ -190,3 +190,22 @@ async def get_last_tap(db: Session = Depends(get_db)):
         print(f"Error reading last_tap: {e}")
         return {"uid": None, "is_new": False}
 
+@router.get("/guru-cache", response_class=PlainTextResponse)
+async def get_guru_cache(db: Session = Depends(get_db)):
+    """
+    Mengembalikan seluruh daftar UID & Nama Guru untuk cache offline hardware ESP32.
+    Format: UID:Nama|UID:Nama|...
+    """
+    try:
+        gurus = db.query(Guru).all()
+        records = []
+        for g in gurus:
+            if g.uid and g.uid.strip():
+                clean_uid = g.uid.strip().replace(" ", "").upper()
+                nama = g.nama.strip()
+                records.append(f"{clean_uid}:{nama}")
+        return PlainTextResponse("|".join(records), status_code=200)
+    except Exception as e:
+        return PlainTextResponse("", status_code=200)
+
+
