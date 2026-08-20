@@ -3,17 +3,17 @@
   SISTEM ABSENSI RFID ESP32 BERBASIS IoT (LCD 16x2)
   SEMPOA SIP TC PARIAMAN
   
-  Fitur & Ketahanan Tingkat Tinggi:
-  1. Offline Intelligent Recognition (Local Guru Cache):
-     - Saat Offline (WiFi mati / sinyal hilang), ESP32 tetap mengenali
-       seluruh guru yang terdaftar dan menampilkan "Selamat Datang [Nama Guru]".
-  2. Antenna Receiver Gain Maksimal (RxGain_max / 48dB):
-     - Jarak baca kartu luas (3-6 cm) & responsivitas instan.
-  3. Proteksi 3 Lapis (Triple-Layer Fail-Safe):
-     - Lapis 1: Kirim langsung ke Server Web via WiFi.
-     - Lapis 2: Jika WiFi mati -> Simpan ke Micro SD Card.
-     - Lapis 3: Jika SD Card rusak & WiFi mati -> Simpan ke Memori Internal Flash ESP32 (NVS).
-  4. Siklus Standby 4 Layar (5 Detik per Layar) Rata Tengah Anti-Kedip.
+  Peningkatan Stabilitas & Manajemen Memori:
+  1. Penghapusan & Reset Total Offline Storage:
+     - Begitu data offline selesai dikirim ke database web,
+       file SD Card (/data_absensi.txt) dan Memori Internal Flash (NVS)
+       dikosongkan & di-reset total secara permanen sehingga siap dipakai lagi.
+  2. Boot Stabilitas & Anti-Hang Setelah Flash:
+     - Pin strapping GPIO 12 diproteksi agar tidak mengunci tegangan flash chip.
+     - Alokasi RAM task dioptimalkan (8KB) agar ESP32 auto-restart mulus
+       langsung setelah proses upload di Arduino IDE tanpa harus cabut kabel.
+  3. Offline Intelligent Recognition (Cache Lokal Guru di NVS).
+  4. Penguatan Antena Maksimal (48dB) & Polling 30ms.
   =========================================================
 */
 
@@ -215,8 +215,11 @@ String ambilGuruCache(const String& uid) {
 // SETUP
 // =========================================================
 void setup() {
+  // Proteksi Pin Strapping GPIO 12 agar tidak mengubah voltase flash chip saat reset
+  pinMode(SD_MISO_PIN, INPUT_PULLDOWN);
+
   Serial.begin(115200);
-  delay(100);
+  delay(300); // Waktu stabilisasi tegangan setelah flash/upload
   Serial.println("\n[BOOT] Sempoa SIP Absensi ESP32 (LCD 16x2) Starting...");
 
   fileMutex = xSemaphoreCreateMutex();
@@ -273,18 +276,18 @@ void setup() {
 
   Serial.println("[BOOT] Target WiFi: " + WIFI_SSID);
 
-  // 7. Jalankan Background Task Sinkronisasi WiFi di Core 0
+  // 7. Jalankan Background Task Sinkronisasi WiFi di Core 0 (Stack 8KB Optimal)
   xTaskCreatePinnedToCore(
     wifiSyncTask,
     "WifiSyncTask",
-    32768,
+    8192,
     NULL,
     1,
     NULL,
     0
   );
 
-  delay(500);
+  delay(400);
   standbyStateMulai = millis();
   standbyState = TEKS_1_JUDUL;
   detikTerakhir = -1;
@@ -486,7 +489,7 @@ void simpanOffline(const String& uid, const String& waktu) {
   }
 }
 
-// Sinkronisasi data dari Memori Internal ESP32 ke Server saat online
+// Sinkronisasi data dari Memori Internal ESP32 ke Server & KOSONGKAN TOTAL SETELAHNYA
 void syncInternalFlashKeServer() {
   preferences.begin("offline_nvs", false);
   int count = preferences.getInt("count", 0);
@@ -495,7 +498,7 @@ void syncInternalFlashKeServer() {
     return;
   }
 
-  Serial.println("[Sync NVS] Menemukan " + String(count) + " data di memori internal ESP32.");
+  Serial.println("[Sync NVS] Menemukan " + String(count) + " data di memori internal ESP32. Memulai sync...");
   int suksesCount = 0;
 
   for (int i = 0; i < count; i++) {
@@ -514,10 +517,11 @@ void syncInternalFlashKeServer() {
     }
   }
 
-  // Jika semua terkirim, hapus data internal
+  // RESET TOTAL & KOSONGKAN MEMORI INTERNAL SETELAH SELURUH DATA DITERIMA SERVER
   if (suksesCount >= count) {
     preferences.clear();
-    Serial.println("[Sync NVS] Seluruh data memori internal berhasil disinkronkan!");
+    preferences.putInt("count", 0);
+    Serial.println("[Sync NVS] SELURUH DATA OFFLINE INTERNAL BERHASIL DI-PUSH DAN DI-FLASH KOSONG!");
   }
   preferences.end();
 }
@@ -663,7 +667,7 @@ void wifiSyncTask(void *pvParameters) {
     wifiConnected = currentWifi;
 
     if (currentWifi) {
-      // 1. Sinkronisasi data dari memori internal (Lapis 3) setiap 30 detik
+      // 1. Sinkronisasi data dari memori internal (Lapis 3) & FLASH KOSONG setelahnya
       if (millis() - lastNvsSync >= 30000) {
         lastNvsSync = millis();
         syncInternalFlashKeServer();
@@ -717,7 +721,7 @@ void wifiSyncTask(void *pvParameters) {
         lastNtpSync = millis();
       }
 
-      // 5. Sinkronisasi antrean data offline SD Card ke Server (Lapis 2)
+      // 5. Sinkronisasi antrean data offline SD Card ke Server & HAPUS BERSIH FILE OFFLINE SETELAHNYA
       if (!isSyncing) {
         String baris = "";
         bool hasQueue = false;
@@ -731,6 +735,12 @@ void wifiSyncTask(void *pvParameters) {
               hasQueue = (baris.length() > 0);
             }
             if (file) file.close();
+
+            // Jika file SD Card sudah kosong / 0 byte, hapus permanen agar storage bersih
+            if (!hasQueue) {
+              SD.remove(OFFLINE_FILE);
+              SD.remove("/temp_sync.txt");
+            }
           }
           xSemaphoreGive(fileMutex);
         }
@@ -768,6 +778,7 @@ void wifiSyncTask(void *pvParameters) {
                   } else {
                     if (fCheck) fCheck.close();
                     SD.remove("/temp_sync.txt");
+                    Serial.println("[Sync SD] SELURUH DATA SD CARD SELESAI DI-PUSH & FILE DIHAPUS BERSIH!");
                   }
                 }
                 xSemaphoreGive(fileMutex);
