@@ -15,8 +15,8 @@
     Baris 1: "   Kartu Anda   "
   
   Teks 3:
-    Baris 0: " Kamis, 20-08-26 " (Hari, Tanggal-Bulan-Tahun)
-    Baris 1: " Pukul 13:15:30  " (Jam:Menit:Detik)
+    Baris 0: "   20-08-2026   " (Tanggal-Bulan-Tahun)
+    Baris 1: "    13:15:30    " (Jam:Menit:Detik)
   
   [MEKANISME PAS TAP KARTU]:
   Teks 4 (Kartu Terdaftar):
@@ -544,8 +544,8 @@ void tampilkanTeks2() {
 }
 
 // TEKS 3 (5 Detik):
-// Atas: "Hari, Tanggal Bulan Tahun"
-// Bawah: "Jam" (Pukul HH:MM:SS)
+// Atas: "20-08-2026" (Tanggal-Bulan-Tahun)
+// Bawah: "13:15:30" (Jam:Menit:Detik)
 void tampilkanTeks3() {
   if (!Rtc.IsDateTimeValid()) return;
   RtcDateTime now = Rtc.GetDateTime();
@@ -553,30 +553,15 @@ void tampilkanTeks3() {
   if (now.Second() == detikTerakhir) return;
   detikTerakhir = now.Second();
 
-  // Format Baris Atas: "Kam, 20-08-2026" (15 Karakter)
-  String hari = getNamaHari(now.DayOfWeek());
+  // Format Baris Atas: "20-08-2026" (10 Karakter)
   char tglBuf[17];
-  sprintf(tglBuf, "%s, %02d-%02d-%04d", hari.c_str(), now.Day(), now.Month(), now.Year());
+  sprintf(tglBuf, "%02d-%02d-%04d", now.Day(), now.Month(), now.Year());
 
-  // Format Baris Bawah: "Pukul 13:15:30" (14 Karakter)
+  // Format Baris Bawah: "13:15:30" (8 Karakter)
   char jamBuf[17];
-  sprintf(jamBuf, "Pukul %02d:%02d:%02d", now.Hour(), now.Minute(), now.Second());
+  sprintf(jamBuf, "%02d:%02d:%02d", now.Hour(), now.Minute(), now.Second());
 
   cetakDuaBarisCenter(tglBuf, jamBuf);
-}
-
-// Helper Nama Hari Singkat Indonesia
-String getNamaHari(uint8_t dayOfWeek) {
-  switch (dayOfWeek) {
-    case 0: return "Min";
-    case 1: return "Sen";
-    case 2: return "Sel";
-    case 3: return "Rab";
-    case 4: return "Kam";
-    case 5: return "Jum";
-    case 6: return "Sab";
-    default: return "Hari";
-  }
 }
 
 // =========================================================
