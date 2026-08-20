@@ -67,7 +67,7 @@ const GuruDashboardPage: React.FC = () => {
   const quickTiles = [
     {
       label: 'Dashboard',
-      route: '/guru/dashboard',
+      route: '/guru',
       bgColor: '#E3F2FD',
       icon: (
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1976D2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

@@ -118,6 +118,7 @@ export function App() {
                 }
               >
                 <Route index element={<GuruDashboardPage />} />
+                <Route path="dashboard" element={<GuruDashboardPage />} />
                 <Route path="kelas" element={<KelasPage />} />
                 <Route path="absensi-input" element={<AbsensiInputPage />} />
               </Route>
@@ -132,6 +133,7 @@ export function App() {
                 }
               >
                 <Route index element={<OrtuDashboardPage />} />
+                <Route path="dashboard" element={<OrtuDashboardPage />} />
                 <Route path="anak" element={<AnakSayaPage />} />
                 <Route path="pembayaran" element={<PembayaranOrtuPage />} />
               </Route>

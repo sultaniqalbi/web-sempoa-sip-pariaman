@@ -17,7 +17,7 @@ const GuruBottomNav: React.FC = () => {
     {
       id: 'dashboard',
       label: 'Dashboard',
-      path: '/guru/dashboard',
+      path: '/guru',
       exact: true,
       icon: (active: boolean) => (
         <svg width="22" height="22" viewBox="0 0 24 24" fill={active ? '#FF7043' : 'none'} stroke={active ? '#FF7043' : '#9E9E9E'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -65,7 +65,7 @@ const GuruBottomNav: React.FC = () => {
   ];
 
   const isActive = (tab: typeof tabs[0]) => {
-    if (tab.exact) return location.pathname === tab.path || location.pathname === '/guru';
+    if (tab.exact) return location.pathname === '/guru' || location.pathname === '/guru/dashboard';
     if (tab.path === '#profil') return false;
     return location.pathname.startsWith(tab.path);
   };
