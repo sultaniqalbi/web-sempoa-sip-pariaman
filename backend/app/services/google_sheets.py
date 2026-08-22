@@ -13,6 +13,7 @@ def send_to_google_sheet(tab_name: str, rows: list, title: str = "Export Data"):
     webhook_url = os.getenv("GOOGLE_WEBHOOK_URL")
     service_account_json = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
     sheet_id = os.getenv("GOOGLE_SHEET_ID")
+    spreadsheet_url = os.getenv("GOOGLE_SPREADSHEET_URL")
 
     # 1. Cara A: Webhook (Google Apps Script)
     if webhook_url:
@@ -28,13 +29,30 @@ def send_to_google_sheet(tab_name: str, rows: list, title: str = "Export Data"):
                 "rows": padded_rows
             }
             # Kirim request POST ke URL Apps Script
-            resp = requests.post(webhook_url, json=payload, timeout=10)
+            resp = requests.post(webhook_url, json=payload, timeout=15)
             logger.info(f"Google Sheet Webhook status: {resp.status_code}")
+
+            # Cari URL asli Google Spreadsheet (bukan Apps Script URL)
+            target_sheet_url = None
+            try:
+                resp_json = resp.json()
+                if isinstance(resp_json, dict):
+                    target_sheet_url = resp_json.get("sheet_url") or resp_json.get("spreadsheet_url") or resp_json.get("url")
+            except Exception:
+                pass
+
+            if not target_sheet_url:
+                if spreadsheet_url:
+                    target_sheet_url = spreadsheet_url
+                elif sheet_id:
+                    target_sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/edit"
+                else:
+                    target_sheet_url = "https://docs.google.com/spreadsheets"
             
             return {
                 "status": "success",
                 "method": "webhook",
-                "sheet_url": webhook_url,
+                "sheet_url": target_sheet_url,
                 "worksheet_name": tab_name,
                 "rows_written": max(0, len(rows) - 1),
                 "message": f"Data {title} ({len(rows)-1} baris) berhasil dikirim ke Google Sheets via Webhook!",
