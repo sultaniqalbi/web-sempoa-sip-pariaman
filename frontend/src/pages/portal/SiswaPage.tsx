@@ -358,12 +358,12 @@ export const SiswaPage: React.FC = () => {
     
     // Total target pertemuan (otomatis dari paket yang dipilih atau input manual jika diedit)
     const target = formData.target_pertemuan !== undefined && formData.target_pertemuan !== null && Number(formData.target_pertemuan) > 0
-      ? parseInt(String(formData.target_pertemuan)) || matchedPkg.target
+      ? Number(formData.target_pertemuan)
       : matchedPkg.target;
 
     // Sisa pertemuan (menggunakan angka yang diinputkan user secara presisi)
-    const sisa = formData.sisa_pertemuan !== undefined && formData.sisa_pertemuan !== null && formData.sisa_pertemuan !== ''
-      ? parseInt(String(formData.sisa_pertemuan)) || 0
+    const sisa = formData.sisa_pertemuan !== undefined && formData.sisa_pertemuan !== null
+      ? Number(formData.sisa_pertemuan)
       : (editingSiswa ? (editingSiswa.sisa_pertemuan ?? 0) : 0);
 
     const payload = {
@@ -841,7 +841,7 @@ export const SiswaPage: React.FC = () => {
                           value={formData.target_pertemuan === 0 ? '' : formData.target_pertemuan}
                           onChange={(e) => {
                             const val = e.target.value.replace(/^0+(?=\d)/, '');
-                            setFormData({ ...formData, target_pertemuan: val === '' ? '' : parseInt(val) || 0 });
+                            setFormData({ ...formData, target_pertemuan: val === '' ? 0 : parseInt(val) || 0 });
                           }}
                           className="w-full bg-white border border-[#FFCC80] rounded-lg p-2 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none text-xs"
                           placeholder={String(currentSelectedPackage.target)}
