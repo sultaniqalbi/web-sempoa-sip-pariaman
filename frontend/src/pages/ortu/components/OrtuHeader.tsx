@@ -5,9 +5,10 @@ interface OrtuHeaderProps {
   program: string;
   noWaOrtu: string;
   fotoProfil?: string;
+  onStartTour?: () => void;
 }
 
-const OrtuHeader: React.FC<OrtuHeaderProps> = ({ childName, program, noWaOrtu, fotoProfil }) => {
+const OrtuHeader: React.FC<OrtuHeaderProps> = ({ childName, program, noWaOrtu, fotoProfil, onStartTour }) => {
   const initials = childName
     .split(' ')
     .slice(0, 2)
@@ -23,6 +24,7 @@ const OrtuHeader: React.FC<OrtuHeaderProps> = ({ childName, program, noWaOrtu, f
 
   return (
     <header
+      id="tour-ortu-header"
       className="relative overflow-hidden"
       style={{
         background: 'linear-gradient(135deg, #FF7043 0%, #FF5722 50%, #E64A19 100%)',
@@ -62,10 +64,24 @@ const OrtuHeader: React.FC<OrtuHeaderProps> = ({ childName, program, noWaOrtu, f
             </p>
           </div>
 
-          {/* Online Badge */}
-          <div className="flex items-center gap-1.5 bg-white/15 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20 flex-shrink-0">
-            <span className="w-2 h-2 bg-[#4CAF50] rounded-full animate-pulse shadow-[0_0_6px_rgba(76,175,80,0.6)]" />
-            <span className="text-white text-[10px] font-bold uppercase tracking-wider">Online</span>
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {onStartTour && (
+              <button
+                type="button"
+                onClick={onStartTour}
+                className="flex items-center gap-1 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-2.5 py-1.5 rounded-full text-[11px] font-bold transition-all active:scale-95 cursor-pointer border border-white/30"
+                title="Buka Panduan Portal"
+              >
+                <span>💡</span>
+                <span className="hidden sm:inline">Panduan</span>
+              </button>
+            )}
+            {/* Online Badge */}
+            <div className="flex items-center gap-1.5 bg-white/15 backdrop-blur-sm px-2.5 sm:px-3 py-1.5 rounded-full border border-white/20">
+              <span className="w-2 h-2 bg-[#4CAF50] rounded-full animate-pulse shadow-[0_0_6px_rgba(76,175,80,0.6)]" />
+              <span className="text-white text-[10px] font-bold uppercase tracking-wider">Online</span>
+            </div>
           </div>
         </div>
       </div>

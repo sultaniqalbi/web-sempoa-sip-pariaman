@@ -14,6 +14,7 @@ import ProgramsPage from './pages/public/ProgramsPage';
 import ProgramDetailPage from './pages/public/ProgramDetailPage';
 import PublicGaleriPage from './pages/public/GaleriPage';
 import RegisterPage from './pages/auth/RegisterPage';
+import PrivacySecurityPage from './pages/public/PrivacySecurityPage';
 
 // Shared Layout & Shared Pages
 import PortalLayout from './layouts/PortalLayout';
@@ -64,6 +65,7 @@ export function App() {
               <Route path="/program/:programId" element={<ProgramDetailPage />} />
               <Route path="/galeri" element={<PublicGaleriPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/privasi-keamanan" element={<PrivacySecurityPage />} />
 
 
               {/* Admin Portal Routes (Shared Components) */}

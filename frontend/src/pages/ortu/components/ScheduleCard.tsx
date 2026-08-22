@@ -19,6 +19,7 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({ schedule }) => {
   if (!schedule) {
     return (
       <div
+        id="tour-ortu-schedule"
         className="bg-white border border-[#E0E0E0] rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
         style={{ fontFamily: "'Inter', sans-serif" }}
       >
@@ -41,6 +42,7 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({ schedule }) => {
 
   return (
     <div
+      id="tour-ortu-schedule"
       className="bg-white border border-[#E0E0E0] rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] overflow-hidden"
       style={{ fontFamily: "'Inter', sans-serif" }}
     >

@@ -46,7 +46,7 @@ const FeatureTiles: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="grid grid-cols-3 gap-3" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div id="tour-ortu-features" className="grid grid-cols-3 gap-3" style={{ fontFamily: "'Inter', sans-serif" }}>
       {tiles.map((tile) => (
         <button
           key={tile.route}

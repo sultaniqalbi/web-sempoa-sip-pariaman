@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import useAuth from '../../features/auth/useAuth';
@@ -8,11 +8,74 @@ import OrtuHeader from './components/OrtuHeader';
 import ScheduleCard, { ScheduleData } from './components/ScheduleCard';
 import FeatureTiles from './components/FeatureTiles';
 import OrtuBottomNav from './components/OrtuBottomNav';
+import ProductTourModal, { TourStep } from '../../components/ProductTourModal';
+
+const TOUR_STEPS: TourStep[] = [
+  {
+    targetId: 'tour-ortu-header',
+    categoryBadge: 'PROFIL & AKUN',
+    icon: '👤',
+    title: 'Profil Ananda & Akun Orang Tua',
+    description: 'Bagian ini memuat nama lengkap ananda, foto profil, kategori program kursus yang sedang diikuti, serta nomor WhatsApp terdaftar.',
+  },
+  {
+    targetId: 'tour-ortu-schedule',
+    categoryBadge: 'JADWAL KELAS',
+    icon: '📅',
+    title: 'Jadwal Kelas Belajar Hari Ini',
+    description: 'Informasi lengkap mengenai jadwal sesi belajar hari ini, ruangan kelas (atau kelas online), jam masuk, serta kontak pengajar.',
+  },
+  {
+    targetId: 'tour-ortu-features',
+    categoryBadge: 'MENU UTAMA',
+    icon: '🧭',
+    title: 'Akses Cepat Fitur Utama',
+    description: 'Tombol navigasi cepat untuk beralih antara Dashboard Ringkasan, Detail Profil Anak Saya, dan Rincian Tagihan Pembayaran SPP.',
+  },
+  {
+    targetId: 'tour-ortu-push',
+    categoryBadge: 'NOTIFIKASI PUSH',
+    icon: '🔔',
+    title: 'Notifikasi Otomatis ke HP',
+    description: 'Aktifkan izin notifikasi di HP Anda untuk menerima pemberitahuan otomatis saat ananda tap kartu absensi RFID dan saat jatuh tempo SPP mendekat.',
+  },
+  {
+    targetId: 'tour-ortu-contact',
+    categoryBadge: 'BANTUAN & DIREKTUR',
+    icon: '💬',
+    title: 'Kontak Langsung Pengelola & Direktur',
+    description: 'Hubungi Admin untuk bantuan operasional jadwal, atau hubungi Direktur secara langsung untuk konfirmasi pembayaran SPP dan layanan pembelajaran.',
+  },
+  {
+    targetId: 'tour-ortu-attendance',
+    categoryBadge: 'ABSENSI & CATATAN',
+    icon: '📝',
+    title: 'Riwayat Absensi & Catatan Guru',
+    description: 'Pantau riwayat kehadiran ananda dari mesin RFID secara real-time dan baca catatan evaluasi perkembangan belajar langsung dari guru pengajar.',
+  },
+];
 
 export const OrtuLayout: React.FC = () => {
   const { user } = useAuth();
   const location = useLocation();
   const isHomePage = location.pathname === '/ortu';
+  const [isTourOpen, setIsTourOpen] = useState(false);
+
+  // Check if tour should auto-run on first visit
+  useEffect(() => {
+    if (isHomePage) {
+      const tourCompleted = localStorage.getItem('sempoa_ortu_tour_completed');
+      if (!tourCompleted) {
+        const timer = setTimeout(() => setIsTourOpen(true), 700);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isHomePage]);
+
+  const handleTourComplete = () => {
+    localStorage.setItem('sempoa_ortu_tour_completed', 'true');
+    setIsTourOpen(false);
+  };
 
   // Fetch child profile
   const { data: child } = useQuery<Siswa>({
@@ -95,6 +158,7 @@ export const OrtuLayout: React.FC = () => {
             : (user?.bio || '-')
         }
         fotoProfil={child?.foto_profil}
+        onStartTour={() => setIsTourOpen(true)}
       />
 
       {/* Scrollable content area */}
@@ -115,6 +179,14 @@ export const OrtuLayout: React.FC = () => {
 
       {/* Bottom Navigation */}
       <OrtuBottomNav />
+
+      {/* Interactive Product Tour Modal (Parents Only) */}
+      <ProductTourModal
+        steps={TOUR_STEPS}
+        isOpen={isTourOpen}
+        onClose={() => setIsTourOpen(false)}
+        onComplete={handleTourComplete}
+      />
     </div>
   );
 };

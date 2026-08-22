@@ -173,7 +173,7 @@ export const OrtuDashboardPage: React.FC = () => {
   return (
     <div className="space-y-4" style={{ fontFamily: "'Inter', sans-serif" }}>
       {/* Kotak 1: Notifikasi Pengingat SPP Real-time */}
-      <div className="bg-gradient-to-r from-[#FFF3E0] to-[#FFF8E1] border border-[#FFE082] rounded-xl p-4 shadow-[0_2px_6px_rgba(0,0,0,0.04)]">
+      <div id="tour-ortu-push" className="bg-gradient-to-r from-[#FFF3E0] to-[#FFF8E1] border border-[#FFE082] rounded-xl p-4 shadow-[0_2px_6px_rgba(0,0,0,0.04)]">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-xl bg-[#FF9800] text-white flex items-center justify-center flex-shrink-0 shadow-sm">
@@ -286,7 +286,7 @@ export const OrtuDashboardPage: React.FC = () => {
       </div>
 
       {/* Card Info Kontak (Admin & Owner) */}
-      <div className="bg-white border border-[#E0E0E0] rounded-xl shadow-[0_2px_6px_rgba(0,0,0,0.04)] overflow-hidden">
+      <div id="tour-ortu-contact" className="bg-white border border-[#E0E0E0] rounded-xl shadow-[0_2px_6px_rgba(0,0,0,0.04)] overflow-hidden">
         <div className="px-4 py-3 border-b border-[#F5F5F5] flex items-center gap-2.5">
           <div className="w-6 h-6 rounded-lg bg-[#E8F5E9] text-[#2E7D32] flex items-center justify-center">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
@@ -381,6 +381,7 @@ export const OrtuDashboardPage: React.FC = () => {
 
       {/* Card 1 & 2 (Gabungan): Riwayat Pertemuan & Absensi */}
       <DashboardCard
+        id="tour-ortu-attendance"
         title="Riwayat Pertemuan & Absensi"
         iconSvg={
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1976D2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -457,6 +458,7 @@ export const OrtuDashboardPage: React.FC = () => {
 
       {/* Card 4: Ringkasan Bulan Ini */}
       <DashboardCard
+        id="tour-ortu-quota"
         title="Ringkasan Bulan Ini"
         iconSvg={
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF9800" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -662,9 +664,9 @@ export const OrtuDashboardPage: React.FC = () => {
 
 /* ────────────── Sub-components ────────────── */
 
-function DashboardCard({ title, iconSvg, children }: { title: string; iconSvg: React.ReactNode; children: React.ReactNode }) {
+function DashboardCard({ id, title, iconSvg, children }: { id?: string; title: string; iconSvg: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="bg-white border border-[#E0E0E0] rounded-xl shadow-[0_2px_6px_rgba(0,0,0,0.04)] overflow-hidden">
+    <div id={id} className="bg-white border border-[#E0E0E0] rounded-xl shadow-[0_2px_6px_rgba(0,0,0,0.04)] overflow-hidden">
       <div className="px-4 py-3 border-b border-[#F5F5F5] flex items-center gap-2.5">
         <span className="flex-shrink-0">{iconSvg}</span>
         <h3 className="text-[14px] font-bold text-[#1E293B]">{title}</h3>
