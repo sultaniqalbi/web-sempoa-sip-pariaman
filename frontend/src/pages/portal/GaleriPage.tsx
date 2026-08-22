@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
 import { useAuth } from '../../features/auth/useAuth';
 import Modal from '../../components/Modal';
+import ConfirmModal from '../../components/ConfirmModal';
 import PageHeader from '../../components/PageHeader';
 import EmptyState from '../../components/EmptyState';
 import { GaleriIcon, TrashIcon } from '../../components/SvgIcons';
@@ -33,6 +34,7 @@ export const GaleriPage: React.FC = () => {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [exportResult, setExportResult] = useState<any>(null);
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: number; title: string } | null>(null);
 
   // Form Fields
   const [judul, setJudul] = useState<string>('');
@@ -456,9 +458,7 @@ export const GaleriPage: React.FC = () => {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (confirm(`Hapus foto "${item.judul}"?`)) {
-                            deleteMutation.mutate(item.id);
-                          }
+                          setDeleteConfirm({ isOpen: true, id: item.id, title: item.judul });
                         }}
                         className="p-2 bg-[#D32F2F] text-white rounded-lg hover:bg-[#B71C1C] transition-colors shadow-md text-xs font-bold"
                         title="Hapus Foto"
@@ -512,9 +512,7 @@ export const GaleriPage: React.FC = () => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (confirm(`Hapus foto "${item.judul}"?`)) {
-                              deleteMutation.mutate(item.id);
-                            }
+                            setDeleteConfirm({ isOpen: true, id: item.id, title: item.judul });
                           }}
                           className="text-[#D32F2F] hover:underline font-bold text-[11px]"
                         >
@@ -922,6 +920,24 @@ export const GaleriPage: React.FC = () => {
           </div>
         )}
       </Modal>
+
+      {/* Delete Confirmation Modal (Rich In-App Dialog) */}
+      <ConfirmModal
+        isOpen={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        onConfirm={() => {
+          if (deleteConfirm) {
+            deleteMutation.mutate(deleteConfirm.id);
+            setDeleteConfirm(null);
+          }
+        }}
+        title="Hapus Foto Galeri"
+        message={`Apakah Anda yakin ingin menghapus foto "${deleteConfirm?.title || ''}" secara permanen dari galeri?`}
+        confirmText="Ya, Hapus Foto"
+        cancelText="Batal"
+        variant="danger"
+        isLoading={deleteMutation.isPending}
+      />
     </div>
   );
 };

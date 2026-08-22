@@ -5,6 +5,7 @@ import DateRangePicker, { RangeOption } from '../../components/DateRangePicker';
 import PageHeader from '../../components/PageHeader';
 import { UangIcon, KalenderIcon } from '../../components/SvgIcons';
 import Modal from '../../components/Modal';
+import ExportStatusModal, { ExportStatusResult } from '../../components/ExportStatusModal';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface KeuanganData {
@@ -65,20 +66,21 @@ export const KeuanganPage: React.FC = () => {
     }
   });
 
+  const [exportResult, setExportResult] = useState<ExportStatusResult | null>(null);
+
   const exportMutation = useMutation({
     mutationFn: async () => {
       const res = await apiClient.post('/pembayaran/export-sheets');
       return res.data;
     },
     onSuccess: (data) => {
-      if (data.status === 'success') {
-        alert('Data Keuangan berhasil dikirim ke Google Sheets!');
-      } else {
-        alert(`Gagal: ${data.message}`);
-      }
+      setExportResult(data);
     },
     onError: (err: any) => {
-      alert(`Gagal export: ${err.message}`);
+      setExportResult({
+        status: 'error',
+        message: `Gagal export: ${err.message}`
+      });
     }
   });
 
@@ -595,6 +597,13 @@ Admin: 082385813163 | Direktur: 08126784986`;
           </div>
         )}
       </Modal>
+
+      {/* Export Status Modal (Image 3 Style) */}
+      <ExportStatusModal
+        isOpen={!!exportResult}
+        onClose={() => setExportResult(null)}
+        result={exportResult}
+      />
     </div>
   );
 };

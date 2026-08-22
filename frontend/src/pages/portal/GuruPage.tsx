@@ -5,6 +5,7 @@ import { useAuth } from '../../features/auth/useAuth';
 import { useRealtime } from '../../features/realtime/RealtimeContext';
 import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
+import ConfirmModal from '../../components/ConfirmModal';
 import PageHeader from '../../components/PageHeader';
 import EmptyState from '../../components/EmptyState';
 import DayPicker from '../../components/DayPicker';
@@ -50,6 +51,7 @@ export const GuruPage: React.FC = () => {
   const [waFallbackData, setWAFallbackData] = useState<{ message: string; number: string } | null>(null);
   const [exportResult, setExportResult] = useState<any>(null);
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: number; nama: string } | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
@@ -484,11 +486,9 @@ export const GuruPage: React.FC = () => {
           {user?.role !== 'admin' && (
             <button
               onClick={() => {
-                if (confirm(`Hapus data guru ${row.nama}?`)) {
-                  deleteMutation.mutate(row.id);
-                }
+                setDeleteConfirm({ isOpen: true, id: row.id, nama: row.nama });
               }}
-              className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center"
+              className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center cursor-pointer active:scale-95"
               title="Hapus Guru"
             >
               <TrashIcon size={14} />
@@ -915,6 +915,24 @@ export const GuruPage: React.FC = () => {
         photoUrl={photoModalData?.url || null}
         name={photoModalData?.name || 'Foto Guru'}
         subtitle={photoModalData?.subtitle}
+      />
+
+      {/* Delete Confirmation Modal (Rich In-App Dialog) */}
+      <ConfirmModal
+        isOpen={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        onConfirm={() => {
+          if (deleteConfirm) {
+            deleteMutation.mutate(deleteConfirm.id);
+            setDeleteConfirm(null);
+          }
+        }}
+        title="Hapus Data Guru"
+        message={`Apakah Anda yakin ingin menghapus data pengajar "${deleteConfirm?.nama || ''}"? Seluruh akses akun dan jadwal mengajar guru ini akan dinonaktifkan.`}
+        confirmText="Ya, Hapus Guru"
+        cancelText="Batal"
+        variant="danger"
+        isLoading={deleteMutation.isPending}
       />
     </div>
   );

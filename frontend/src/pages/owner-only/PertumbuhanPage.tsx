@@ -5,6 +5,7 @@ import { DateRangePicker, RangeOption } from '../../components/DateRangePicker';
 import PageHeader from '../../components/PageHeader';
 import MetricCard from '../../components/MetricCard';
 import { MuridIcon, GuruGroupIcon, UangIcon } from '../../components/SvgIcons';
+import ExportStatusModal, { ExportStatusResult } from '../../components/ExportStatusModal';
 import { 
   BarChart, Bar, 
   PieChart, Pie, Cell, Legend,
@@ -50,20 +51,21 @@ export const PertumbuhanPage: React.FC = () => {
     }
   });
 
+  const [exportResult, setExportResult] = useState<ExportStatusResult | null>(null);
+
   const exportMutation = useMutation({
     mutationFn: async () => {
       const res = await apiClient.post('/owner/rekap-bulanan', { bulan: new Date().toISOString().substring(0, 7) });
       return res.data;
     },
     onSuccess: (data) => {
-      if (data.status === 'success') {
-        alert('Data Pertumbuhan berhasil dikirim ke Google Sheets!');
-      } else {
-        alert(`Gagal: ${data.message}`);
-      }
+      setExportResult(data);
     },
     onError: (err: any) => {
-      alert(`Gagal export: ${err.message}`);
+      setExportResult({
+        status: 'error',
+        message: `Gagal export: ${err.message}`
+      });
     }
   });
 
@@ -199,6 +201,13 @@ export const PertumbuhanPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Export Status Modal (Image 3 Style) */}
+      <ExportStatusModal
+        isOpen={!!exportResult}
+        onClose={() => setExportResult(null)}
+        result={exportResult}
+      />
     </div>
   );
 };
