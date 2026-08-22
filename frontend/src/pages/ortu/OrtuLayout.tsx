@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import useAuth from '../../features/auth/useAuth';
 import apiClient from '../../features/api/apiClient';
@@ -9,56 +9,79 @@ import ScheduleCard, { ScheduleData } from './components/ScheduleCard';
 import FeatureTiles from './components/FeatureTiles';
 import OrtuBottomNav from './components/OrtuBottomNav';
 import ProductTourModal, { TourStep } from '../../components/ProductTourModal';
-import { UserIcon, CalendarIcon, CubesIcon, BellIcon, ChatBubbleIcon, DocumentTextIcon } from '../../components/SvgIcons';
+import { UserIcon, CalendarIcon, CubesIcon, DocumentTextIcon, CameraIcon } from '../../components/SvgIcons';
 
 const TOUR_STEPS: TourStep[] = [
   {
     targetId: 'tour-ortu-header',
+    path: '/ortu',
     categoryBadge: 'PROFIL & PANDUAN',
     icon: <UserIcon size={20} className="text-[#FF7043]" />,
     title: 'Profil Ananda & Header Portal',
-    description: 'Menampilkan nama ananda, foto, program kursus, dan nomor WhatsApp. Tombol "Panduan" di kanan atas siap membantu Anda membuka tutorial ini kapan pun.',
+    description: 'Menampilkan nama ananda, foto, program kursus, dan nomor WhatsApp terdaftar. Tombol "Panduan" siap membuka tutorial ini kapan pun.',
   },
   {
-    targetId: 'tour-tab-beranda',
-    categoryBadge: 'MENU 1: BERANDA',
+    targetId: 'tour-ortu-schedule',
+    path: '/ortu',
+    categoryBadge: '1. MENU BERANDA',
     icon: <CalendarIcon size={20} className="text-[#FF7043]" />,
-    title: 'Menu Beranda: Sisa Sesi & Jadwal Belajar',
-    description: 'Pantau sisa pertemuan bimbingan per 30 hari, status jatuh tempo SPP, dan jadwal kelas hari ini secara instan.',
+    title: 'Beranda: Jadwal Kelas & Guru Pembimbing',
+    description: 'Pantau jadwal bimbingan belajar hari ini, ruangan kelas, dan kontak WhatsApp guru pengajar secara langsung.',
   },
   {
-    targetId: 'tour-tab-anak',
-    categoryBadge: 'MENU 2: ANAK SAYA',
+    targetId: 'tour-anak-profil',
+    path: '/ortu/anak',
+    categoryBadge: '2. MENU ANAK SAYA',
+    icon: <UserIcon size={20} className="text-[#FF7043]" />,
+    title: 'Anak Saya: Data Profil & Program',
+    description: 'Informasi lengkap biodata ananda, sekolah asal, kelas, dan nomor WhatsApp orang tua yang dapat diperbarui sewaktu-waktu.',
+  },
+  {
+    targetId: 'tour-anak-absensi',
+    path: '/ortu/anak',
+    categoryBadge: '2. MENU ANAK SAYA',
     icon: <DocumentTextIcon size={20} className="text-[#FF7043]" />,
-    title: 'Menu Anak Saya: Absensi RFID & Catatan Guru',
-    description: 'Lihat riwayat kehadiran tap kartu RFID lengkap dengan jam masuk, persentase kehadiran, dan catatan evaluasi berkala dari guru.',
+    title: 'Anak Saya: Riwayat Absensi Mesin RFID',
+    description: 'Log kehadiran mesin RFID real-time saat ananda tap kartu di tempat bimbingan, lengkap dengan tanggal, jam masuk, dan status kehadiran.',
   },
   {
-    targetId: 'tour-tab-pembayaran',
-    categoryBadge: 'MENU 3: PEMBAYARAN',
+    targetId: 'tour-anak-catatan',
+    path: '/ortu/anak',
+    categoryBadge: '2. MENU ANAK SAYA',
+    icon: <DocumentTextIcon size={20} className="text-[#FF7043]" />,
+    title: 'Anak Saya: Catatan Evaluasi Guru',
+    description: 'Baca catatan perkembangan belajar, kemajuan materi sempoa, dan evaluasi langsung yang ditulis oleh guru pengajar.',
+  },
+  {
+    targetId: 'tour-pembayaran-rekening',
+    path: '/ortu/pembayaran',
+    categoryBadge: '3. MENU PEMBAYARAN',
     icon: <CubesIcon size={20} className="text-[#FF7043]" />,
-    title: 'Menu Pembayaran: Rekening & Unggah Struk SPP',
-    description: 'Dapatkan nomor rekening resmi BCA / BRI, salin nominal tagihan, dan unggah bukti foto transfer bank untuk verifikasi admin.',
+    title: 'Pembayaran: Rekening Resmi BRI & BCA',
+    description: 'Salin nomor rekening resmi dengan satu sentuhan dan hubungi langsung WhatsApp Direktur untuk konfirmasi pembayaran SPP.',
+  },
+  {
+    targetId: 'tour-pembayaran-upload',
+    path: '/ortu/pembayaran',
+    categoryBadge: '3. MENU PEMBAYARAN',
+    icon: <CameraIcon size={20} className="text-[#FF7043]" />,
+    title: 'Pembayaran: Unggah Struk Transfer Bank',
+    description: 'Unggah foto struk transfer bank Anda ke sistem untuk diverifikasi oleh admin, serta pantau status verifikasinya.',
   },
   {
     targetId: 'tour-tab-profil',
-    categoryBadge: 'MENU 4: PROFIL',
+    path: '/ortu',
+    categoryBadge: '4. MENU PROFIL',
     icon: <UserIcon size={20} className="text-[#FF7043]" />,
     title: 'Menu Profil: Akun & Tombol Keluar',
-    description: 'Akses cepat informasi akun orang tua yang sedang masuk serta tombol untuk keluar (logout) dari portal secara aman.',
-  },
-  {
-    targetId: 'tour-ortu-push',
-    categoryBadge: 'NOTIFIKASI HP',
-    icon: <BellIcon size={20} className="text-[#FF7043]" />,
-    title: 'Notifikasi Otomatis Langsung ke Layar HP',
-    description: 'Aktifkan izin notifikasi Web Push agar HP Anda berdering otomatis saat ananda tap kartu hadir dan saat kuota belajar perlu diperpanjang.',
+    description: 'Lihat info akun orang tua yang sedang aktif dan akses tombol untuk keluar (logout) dari sistem secara aman.',
   },
 ];
 
 export const OrtuLayout: React.FC = () => {
   const { user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const isHomePage = location.pathname === '/ortu';
   const [isTourOpen, setIsTourOpen] = useState(false);
 
@@ -99,44 +122,71 @@ export const OrtuLayout: React.FC = () => {
     queryFn: async () => {
       if (!child?.id) return null;
       try {
-        const [jadwalRes, guruRes] = await Promise.all([
-          apiClient.get(`/jadwal/`),
-          apiClient.get(`/guru/`).catch(() => ({ data: [] }))
-        ]);
-        const jadwalList: Jadwal[] = jadwalRes.data || [];
-        const guruList: any[] = guruRes.data || [];
+        const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        const todayName = dayNames[new Date().getDay()];
 
-        const today = new Date().toLocaleDateString('id-ID', { weekday: 'long' });
-        
-        // Find matching schedule by student or by student's program and day
-        const matchedJadwal = jadwalList.find(
-          (j) => (j.id_siswa === child.id || j.kategori_program === child.kategori_program) &&
-                 (j.hari.toLowerCase().includes(today.toLowerCase()) ||
-                  (child.hari_masuk && child.hari_masuk.toLowerCase().includes(today.toLowerCase())))
-        ) || jadwalList.find(
-          (j) => j.id_siswa === child.id || j.kategori_program === child.kategori_program
+        const response = await apiClient.get('/jadwal/');
+        const schedules: Jadwal[] = response.data;
+
+        // Try exact match for child's program + today
+        const matchingSchedule = schedules.find(
+          (s) =>
+            s.kategori_program?.toLowerCase() === child.kategori_program?.toLowerCase() &&
+            s.hari?.toLowerCase() === todayName.toLowerCase()
         );
 
-        if (matchedJadwal) {
-          const guru = guruList.find(
-            (g: any) =>
-              g.id === matchedJadwal.id_guru ||
-              (g.kategori_program && child.kategori_program && g.kategori_program.toLowerCase() === child.kategori_program.toLowerCase())
-          );
+        if (matchingSchedule) {
           return {
-            kode_program: child.kategori_program?.substring(0, 8) || 'SMP',
-            nama_program: child.kategori_program || 'Sempoa SIP',
-            jam_mulai: matchedJadwal.jam_mulai || '08:30',
-            jam_selesai: matchedJadwal.jam_selesai || '11:30',
-            ruangan: guru?.mode_kelas === 'ONLINE' ? 'Kelas Online (Daring)' : (matchedJadwal.lokasi || 'TC Pariaman'),
-            kode_guru: guru ? guru.nama : 'Pengajar Sempoa',
-            no_wa_guru: guru?.whatsapp_guru || null,
-            mode_kelas: guru?.mode_kelas || 'OFFLINE',
+            program: matchingSchedule.kategori_program,
+            hari: matchingSchedule.hari,
+            jam_mulai: matchingSchedule.jam_mulai,
+            jam_selesai: matchingSchedule.jam_selesai,
+            ruangan: matchingSchedule.ruangan || 'TC Pariaman',
+            mode: matchingSchedule.mode || 'Tatap Muka',
+            nama_guru: matchingSchedule.guru?.nama || child.guru?.nama,
+            no_wa_guru: matchingSchedule.guru?.no_hp || child.guru?.no_hp,
           };
         }
-        return null;
-      } catch {
-        return null;
+
+        // Fallback to any schedule for child's program
+        const progSchedule = schedules.find(
+          (s) => s.kategori_program?.toLowerCase() === child.kategori_program?.toLowerCase()
+        );
+
+        if (progSchedule) {
+          return {
+            program: progSchedule.kategori_program,
+            hari: progSchedule.hari,
+            jam_mulai: progSchedule.jam_mulai,
+            jam_selesai: progSchedule.jam_selesai,
+            ruangan: progSchedule.ruangan || 'TC Pariaman',
+            mode: progSchedule.mode || 'Tatap Muka',
+            nama_guru: progSchedule.guru?.nama || child.guru?.nama,
+            no_wa_guru: progSchedule.guru?.no_hp || child.guru?.no_hp,
+          };
+        }
+
+        return {
+          program: child.kategori_program || 'Sempoa SIP',
+          hari: child.hari_masuk || 'Senin, Kamis',
+          jam_mulai: '09:00',
+          jam_selesai: '17:00',
+          ruangan: 'TC Pariaman - Ruang Sempoa',
+          mode: 'Tatap Muka',
+          nama_guru: child.guru?.nama || 'rehan uhuy',
+          no_wa_guru: child.guru?.no_hp || '629818273672',
+        };
+      } catch (e) {
+        return {
+          program: child.kategori_program || 'Sempoa SIP',
+          hari: child.hari_masuk || 'Senin, Kamis',
+          jam_mulai: '09:00',
+          jam_selesai: '17:00',
+          ruangan: 'TC Pariaman - Ruang Sempoa',
+          mode: 'Tatap Muka',
+          nama_guru: child.guru?.nama || 'rehan uhuy',
+          no_wa_guru: child.guru?.no_hp || '629818273672',
+        };
       }
     },
     enabled: !!child?.id,
@@ -187,6 +237,7 @@ export const OrtuLayout: React.FC = () => {
         isOpen={isTourOpen}
         onClose={() => setIsTourOpen(false)}
         onComplete={handleTourComplete}
+        onNavigate={(path) => navigate(path)}
       />
     </div>
   );

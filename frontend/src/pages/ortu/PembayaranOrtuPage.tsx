@@ -219,6 +219,7 @@ export const PembayaranOrtuPage: React.FC = () => {
 
       {/* 1. Status Card */}
       <div
+        id="tour-pembayaran-status"
         className="rounded-2xl p-5 border transition-all shadow-[0_2px_8px_rgba(0,0,0,0.06)] space-y-4"
         style={{ backgroundColor: sc.bg, borderColor: sc.border }}
       >
@@ -278,7 +279,7 @@ export const PembayaranOrtuPage: React.FC = () => {
       </div>
 
       {/* 2. Rekening Resmi Pembayaran SPP */}
-      <div className="bg-gradient-to-br from-[#FFF8E1] to-[#FFF3E0] border border-[#FFE082] rounded-2xl p-5 shadow-[0_2px_8px_rgba(0,0,0,0.06)] space-y-4">
+      <div id="tour-pembayaran-rekening" className="bg-gradient-to-br from-[#FFF8E1] to-[#FFF3E0] border border-[#FFE082] rounded-2xl p-5 shadow-[0_2px_8px_rgba(0,0,0,0.06)] space-y-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-[#FF8F00] text-white flex items-center justify-center font-bold text-lg shadow-xs">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -339,7 +340,7 @@ export const PembayaranOrtuPage: React.FC = () => {
       </div>
 
       {/* 3. Form Upload Bukti Pembayaran */}
-      <div className="bg-white border border-[#E0E0E0] rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-5 space-y-4">
+      <div id="tour-pembayaran-upload" className="bg-white border border-[#E0E0E0] rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-5 space-y-4">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center font-black">
             <CameraIcon size={18} />

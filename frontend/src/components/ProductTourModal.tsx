@@ -3,6 +3,7 @@ import { LightbulbIcon } from './SvgIcons';
 
 export interface TourStep {
   targetId: string;
+  path?: string;
   title: string;
   description: string;
   categoryBadge?: string;
@@ -14,6 +15,7 @@ interface ProductTourModalProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete: () => void;
+  onNavigate?: (path: string) => void;
 }
 
 interface SpotlightRect {
@@ -28,6 +30,7 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
   isOpen,
   onClose,
   onComplete,
+  onNavigate,
 }) => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [rect, setRect] = useState<SpotlightRect | null>(null);
@@ -35,17 +38,23 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
 
   const currentStep = steps[currentStepIndex];
 
+  // Navigate to target route if specified for this step
+  useEffect(() => {
+    if (!isOpen || !currentStep) return;
+    if (currentStep.path && onNavigate) {
+      onNavigate(currentStep.path);
+    }
+  }, [isOpen, currentStepIndex, currentStep, onNavigate]);
+
   // Measure and scroll smoothly to the target element
   const updateSpotlight = useCallback(() => {
     if (!isOpen || !currentStep) return;
 
-    const el = document.getElementById(currentStep.targetId);
-    if (el) {
-      // Scroll into view centered
-      el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    const measureElement = () => {
+      const el = document.getElementById(currentStep.targetId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
 
-      // Calculate bounding rect after scroll movement starts/settles
-      const measure = () => {
         const bounding = el.getBoundingClientRect();
         const padding = 8;
         setRect({
@@ -54,24 +63,28 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
           width: bounding.width + padding * 2,
           height: bounding.height + padding * 2,
         });
-      };
+      } else {
+        setRect(null);
+      }
+    };
 
-      measure();
-      const timer1 = setTimeout(measure, 100);
-      const timer2 = setTimeout(measure, 300);
+    // Initial check + delayed checks to accommodate route switch and animation
+    measureElement();
+    const t1 = setTimeout(measureElement, 150);
+    const t2 = setTimeout(measureElement, 350);
+    const t3 = setTimeout(measureElement, 600);
 
-      return () => {
-        clearTimeout(timer1);
-        clearTimeout(timer2);
-      };
-    } else {
-      setRect(null);
-    }
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
   }, [isOpen, currentStep]);
 
   useEffect(() => {
     if (isOpen) {
-      updateSpotlight();
+      const cleanup = updateSpotlight();
+      return cleanup;
     } else {
       setCurrentStepIndex(0);
       setRect(null);
@@ -137,8 +150,6 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
   };
 
   // Smart Dynamic Card Placement:
-  // If target element is in bottom half (e.g. Bottom Nav tabs), place card ABOVE target with clear spacing.
-  // If target is in top half (e.g. Header), place card BELOW target with clear spacing.
   const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
   const isBottomTarget = rect ? rect.top > windowHeight * 0.45 : false;
 
@@ -149,11 +160,11 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
   if (rect) {
     if (isBottomTarget) {
       // Place above target with minimum 16px safety
-      const bottomPos = windowHeight - rect.top + 14;
+      const bottomPos = windowHeight - rect.top + 16;
       cardStyle.bottom = `${Math.min(windowHeight - 240, Math.max(16, bottomPos))}px`;
     } else {
       // Place below target with minimum 16px safety
-      const topPos = rect.top + rect.height + 14;
+      const topPos = rect.top + rect.height + 16;
       cardStyle.top = `${Math.min(windowHeight - 280, Math.max(16, topPos))}px`;
     }
   } else {
@@ -169,27 +180,69 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
       aria-label="Panduan Interaktif Portal Orang Tua"
       className="fixed inset-0 z-[99999] overflow-hidden pointer-events-auto select-none"
     >
-      {/* 1. Backdrop Overlay (Shading outside the spotlight hole) */}
-      {!rect && (
-        <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-xs transition-opacity duration-300 pointer-events-none" />
-      )}
-
-      {/* 2. Spotlight Cutout Window — Target element is 100% UNBLURRED and crystal clear */}
-      {rect && (
+      {/* 1. CINEMATIC SPOTLIGHT CUTOUT PANELS */}
+      {/* Surrounding 4 panels with real backdrop blur & dark opacity; Center hole is 100% UNBLURRED and SHARP */}
+      {!rect ? (
+        <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity duration-300 pointer-events-none" />
+      ) : (
         <>
-          {/* Giant box-shadow cutout: Outside is dark shaded, inside is 100% clear and sharp */}
+          {/* Top Panel (Blurred & Dark) */}
+          <div
+            style={{
+              top: 0,
+              left: 0,
+              right: 0,
+              height: `${rect.top}px`,
+            }}
+            className="absolute bg-slate-950/80 backdrop-blur-md pointer-events-none transition-all duration-300"
+          />
+
+          {/* Bottom Panel (Blurred & Dark) */}
+          <div
+            style={{
+              top: `${rect.top + rect.height}px`,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
+            className="absolute bg-slate-950/80 backdrop-blur-md pointer-events-none transition-all duration-300"
+          />
+
+          {/* Left Panel (Blurred & Dark) */}
+          <div
+            style={{
+              top: `${rect.top}px`,
+              left: 0,
+              width: `${rect.left}px`,
+              height: `${rect.height}px`,
+            }}
+            className="absolute bg-slate-950/80 backdrop-blur-md pointer-events-none transition-all duration-300"
+          />
+
+          {/* Right Panel (Blurred & Dark) */}
+          <div
+            style={{
+              top: `${rect.top}px`,
+              left: `${rect.left + rect.width}px`,
+              right: 0,
+              height: `${rect.height}px`,
+            }}
+            className="absolute bg-slate-950/80 backdrop-blur-md pointer-events-none transition-all duration-300"
+          />
+
+          {/* Glowing Illuminated Spotlight Frame — Steady, elegant, crystal-clear */}
           <div
             style={{
               top: `${rect.top}px`,
               left: `${rect.left}px`,
               width: `${rect.width}px`,
               height: `${rect.height}px`,
-              boxShadow: '0 0 0 9999px rgba(15, 23, 42, 0.82), 0 0 25px 5px rgba(255, 112, 67, 0.65)',
+              boxShadow: '0 0 25px 4px rgba(255, 112, 67, 0.6), inset 0 0 12px rgba(255, 112, 67, 0.25)',
             }}
-            className="absolute rounded-2xl border-[3px] border-[#FF7043] transition-all duration-300 ease-out pointer-events-none z-10 animate-pulse"
+            className="absolute rounded-2xl border-2 border-[#FF7043] transition-all duration-300 ease-out pointer-events-none z-10"
           />
 
-          {/* Glowing Beacon Pointer */}
+          {/* Sleek Stationary Indicator Badge */}
           <div
             style={{
               top: isBottomTarget ? `${rect.top - 12}px` : `${rect.top + rect.height - 8}px`,
@@ -197,13 +250,14 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
             }}
             className="absolute z-20 flex items-center justify-center pointer-events-none transition-all duration-300"
           >
-            <span className="animate-ping absolute inline-flex h-6 w-6 rounded-full bg-[#FF7043] opacity-75" />
-            <span className="relative inline-flex rounded-full h-4 w-4 bg-[#FF7043] border-2 border-white shadow-lg" />
+            <span className="h-4 w-4 rounded-full bg-[#FF7043] border-2 border-white shadow-lg flex items-center justify-center">
+              <span className="h-1.5 w-1.5 rounded-full bg-white" />
+            </span>
           </div>
         </>
       )}
 
-      {/* 3. Floating Guidance Popover Card — Dynamically repositioned without overlapping */}
+      {/* 2. Floating Guidance Popover Card — Dynamically repositioned without overlapping */}
       <div
         ref={cardRef}
         style={cardStyle}

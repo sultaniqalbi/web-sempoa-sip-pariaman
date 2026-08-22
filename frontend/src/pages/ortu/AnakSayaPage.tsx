@@ -198,7 +198,7 @@ export const AnakSayaPage: React.FC = () => {
   return (
     <div className="space-y-4" style={{ fontFamily: "'Inter', sans-serif" }}>
       {/* Section 1: Informasi Anak */}
-      <div className="bg-white border border-[#E0E0E0] rounded-xl shadow-[0_2px_6px_rgba(0,0,0,0.04)] overflow-hidden">
+      <div id="tour-anak-profil" className="bg-white border border-[#E0E0E0] rounded-xl shadow-[0_2px_6px_rgba(0,0,0,0.04)] overflow-hidden">
         <div className="px-4 py-3 border-b border-[#F5F5F5] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <span className="text-[#FF7043]">
@@ -403,7 +403,7 @@ export const AnakSayaPage: React.FC = () => {
 
         <div className="p-4 space-y-5">
           {/* Progress Absensi */}
-          <div>
+          <div id="tour-anak-absensi">
             <h4 className="text-[12px] font-bold text-[#757575] uppercase tracking-wider mb-3">Riwayat Absensi Anak</h4>
             {isLogsLoading ? (
               <div className="py-4 text-center text-[12px] text-[#BDBDBD]">Memuat data...</div>
@@ -441,7 +441,7 @@ export const AnakSayaPage: React.FC = () => {
           <div className="border-t border-[#F5F5F5]" />
 
           {/* Catatan Pembelajaran */}
-          <div>
+          <div id="tour-anak-catatan">
             <h4 className="text-[12px] font-bold text-[#757575] uppercase tracking-wider mb-3">Catatan Pembelajaran Guru</h4>
             {catatanData?.catatan && catatanData.catatan.length > 0 ? (
               <div className="space-y-3">
