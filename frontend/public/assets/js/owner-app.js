@@ -715,41 +715,6 @@ function openKeuanganModal(siswaId) {
     openModal('modalKeuangan');
 }
 
-// --- RESET DATABASE FEATURE (KHUSUS OWNER) ---
-window.triggerDatabaseReset = function() {
-    const inputElem = document.getElementById('inputResetConfirm');
-    const inputVal = inputElem ? inputElem.value.trim() : '';
-    
-    if (inputVal !== 'CONFIRM_RESET_DATABASE') {
-        alert("Konfirmasi gagal! Anda harus mengetikkan 'CONFIRM_RESET_DATABASE' dengan tepat.");
-        return;
-    }
-
-    if (!confirm("PERINGATAN TERAKHIR!\n\nApakah Anda benar-benar yakin ingin mengosongkan seluruh database?\nSemua data siswa, guru, absensi, dan keuangan akan terhapus secara permanen.")) {
-        return;
-    }
-
-    fetch('./api/reset.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ confirm: 'CONFIRM_RESET_DATABASE' })
-    })
-    .then(res => res.json())
-    .then(res => {
-        if (res.success) {
-            alert("BERHASIL! " + res.message);
-            localStorage.clear();
-            window.location.href = 'portal-owner.php';
-        } else {
-            alert("Gagal melakukan reset database: " + res.message);
-        }
-    })
-    .catch(err => {
-        console.error(err);
-        alert("Terjadi kesalahan sistem saat menghubungkan ke server reset.");
-    });
-};
-
 // --- OWNER CHART INITIALIZATION ---
 function initOwnerCharts() {
     const canvasPemasukan = document.getElementById('chartPemasukan');

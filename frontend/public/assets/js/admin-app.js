@@ -845,34 +845,6 @@ function viewKeuangan(sId) {
     document.getElementById('modalKeuangan').classList.add('active');
 }
 
-// --- FITUR RESET DATA (DEPLOYMENT) ---
-window.resetAllData = function() {
-    if (confirm("⚠️ PERINGATAN: Apakah Anda yakin ingin MENGHAPUS SEMUA DATA siswa, guru, dan log absensi? Aksi ini tidak dapat dibatalkan!")) {
-        fetch('./api/reset.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ confirm: 'CONFIRM_RESET_DATABASE' })
-        })
-            .then(res => res.json())
-            .then(data => {
-                if(data.success) {
-                    localStorage.setItem('db_siswa', JSON.stringify([]));
-                    localStorage.setItem('db_guru', JSON.stringify([]));
-                    localStorage.setItem('db_jadwal', JSON.stringify([]));
-                    localStorage.setItem('db_keuangan', JSON.stringify([]));
-                    alert("Berhasil! Semua data telah dikosongkan.");
-                    window.location.reload();
-                } else {
-                    alert("Gagal mengosongkan data di server: " + (data.message || ''));
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                alert("Terjadi kesalahan jaringan saat mencoba mereset data.");
-            });
-    }
-};
-
 // --- FITUR RIWAYAT ABSENSI & EXCEL EXPORT ---
 let globalRiwayatData = [];
 
