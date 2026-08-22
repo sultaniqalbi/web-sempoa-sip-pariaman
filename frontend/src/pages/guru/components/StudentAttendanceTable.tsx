@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import apiClient from '../../../features/api/apiClient';
 
 export interface SiswaAbsensi {
   no: number;
@@ -37,10 +39,51 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
   onSave,
   isSaving,
 }) => {
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [attendanceState, setAttendanceState] = useState<Record<number, string>>({});
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [catatanText, setCatatanText] = useState('');
+
+  // Quick Edit Pertemuan State for Guru
+  const [editingSiswa, setEditingSiswa] = useState<SiswaAbsensi | null>(null);
+  const [editForm, setEditForm] = useState({
+    sisa_pertemuan: 8,
+    target_pertemuan: 8,
+    status_spp: 'AKTIF',
+  });
+
+  const editPertemuanMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: typeof editForm }) => {
+      const res = await apiClient.put(`/siswa/${id}/pertemuan`, data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['guru-siswa-absensi'] });
+      queryClient.invalidateQueries({ queryKey: ['guru-dashboard'] });
+      setEditingSiswa(null);
+    },
+  });
+
+  const openEditModal = (siswa: SiswaAbsensi) => {
+    const sisa = siswa.sisa_pertemuan ?? (siswa.total_pertemuan - siswa.pertemuan_selesai);
+    setEditingSiswa(siswa);
+    setEditForm({
+      sisa_pertemuan: Math.max(0, sisa),
+      target_pertemuan: siswa.total_pertemuan || 8,
+      status_spp: siswa.is_disabled ? 'EXPIRED' : 'AKTIF',
+    });
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingSiswa) return;
+    editPertemuanMutation.mutate({
+      id: editingSiswa.id,
+      data: editForm,
+    });
+  };
+
 
   // Pre-fill existing attendance for selected date if already marked
   useEffect(() => {
@@ -202,19 +245,29 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
                       </div>
                     </td>
                     <td className="p-3.5 text-center">
-                      <span
-                        className={`inline-block px-2.5 py-1 rounded-full font-mono text-[11px] font-extrabold border ${
-                          siswa.is_hangus
-                            ? 'bg-[#FFF1F2] text-[#E11D48] border-[#FECDD3]'
-                            : siswa.is_expired
-                            ? 'bg-[#FFF8E1] text-[#E65100] border-[#FFE082]'
-                            : siswa.is_disabled
-                            ? 'bg-[#FFEBEE] text-[#C62828] border-[#FFCDD2]'
-                            : 'bg-[#E8F5E9] text-[#2E7D32] border-[#C8E6C9]'
-                        }`}
-                      >
-                        {siswa.pertemuan_selesai} / {siswa.total_pertemuan}
-                      </span>
+                      <div className="flex items-center justify-center gap-1.5">
+                        <span
+                          className={`inline-block px-2.5 py-1 rounded-full font-mono text-[11px] font-extrabold border ${
+                            siswa.is_hangus
+                              ? 'bg-[#FFF1F2] text-[#E11D48] border-[#FECDD3]'
+                              : siswa.is_expired
+                              ? 'bg-[#FFF8E1] text-[#E65100] border-[#FFE082]'
+                              : siswa.is_disabled
+                              ? 'bg-[#FFEBEE] text-[#C62828] border-[#FFCDD2]'
+                              : 'bg-[#E8F5E9] text-[#2E7D32] border-[#C8E6C9]'
+                          }`}
+                        >
+                          {siswa.pertemuan_selesai} / {siswa.total_pertemuan}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => openEditModal(siswa)}
+                          className="p-1 rounded-md bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#FF7043] border border-[#FFCC80] text-[10px] font-bold transition-all active:scale-95 cursor-pointer shadow-2xs"
+                          title="Edit Jumlah Pertemuan Siswa"
+                        >
+                          ✏️
+                        </button>
+                      </div>
                       {siswa.is_hangus ? (
                         <p className="text-[9px] font-extrabold text-[#E11D48] mt-0.5">Lewat 30 Hari (Hangus)</p>
                       ) : siswa.is_expired ? (
@@ -337,6 +390,74 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
                 {isSaving ? 'Menyimpan...' : 'Simpan Absensi & Catatan'}
               </button>
             </div>
+          </div>
+      {/* Quick Modal Edit Pertemuan for Guru */}
+      {editingSiswa && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl shadow-xl border border-[#E0E0E0] max-w-sm w-full p-5 space-y-4 animate-in fade-in zoom-in duration-150">
+            <div className="flex items-center justify-between border-b border-[#F5F5F5] pb-2">
+              <h3 className="text-sm font-black text-[#1E293B]">Edit Pertemuan: {editingSiswa.nama_lengkap}</h3>
+              <button
+                onClick={() => setEditingSiswa(null)}
+                className="w-7 h-7 rounded-full bg-[#F1F5F9] text-[#475569] flex items-center justify-center font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="space-y-3 text-xs">
+              <div>
+                <label className="block text-[#1E293B] font-bold mb-1">Sisa Kuota Pertemuan*</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={30}
+                  required
+                  value={editForm.sisa_pertemuan}
+                  onChange={(e) => setEditForm({ ...editForm, sisa_pertemuan: parseInt(e.target.value) || 0 })}
+                  className="w-full bg-[#F8FAFC] border border-[#CBD5E1] rounded-lg p-2 font-bold text-sm focus:border-[#FF7043] focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[#1E293B] font-bold mb-1">Total Target Pertemuan*</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={30}
+                  required
+                  value={editForm.target_pertemuan}
+                  onChange={(e) => setEditForm({ ...editForm, target_pertemuan: parseInt(e.target.value) || 8 })}
+                  className="w-full bg-[#F8FAFC] border border-[#CBD5E1] rounded-lg p-2 font-bold text-sm focus:border-[#FF7043] focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[#1E293B] font-bold mb-1">Status SPP</label>
+                <select
+                  value={editForm.status_spp}
+                  onChange={(e) => setEditForm({ ...editForm, status_spp: e.target.value })}
+                  className="w-full bg-[#F8FAFC] border border-[#CBD5E1] rounded-lg p-2 font-bold focus:border-[#FF7043] focus:outline-none"
+                >
+                  <option value="AKTIF">AKTIF</option>
+                  <option value="EXPIRED">EXPIRED</option>
+                </select>
+              </div>
+              <div className="flex justify-end gap-2 pt-2 border-t border-[#F5F5F5]">
+                <button
+                  type="button"
+                  onClick={() => setEditingSiswa(null)}
+                  className="px-3 py-1.5 bg-[#F1F5F9] text-[#475569] font-bold rounded-lg cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={editPertemuanMutation.isPending}
+                  className="px-4 py-1.5 bg-[#FF7043] hover:bg-[#F4511E] text-white font-bold rounded-lg shadow-sm cursor-pointer disabled:opacity-50"
+                >
+                  {editPertemuanMutation.isPending ? 'Menyimpan...' : 'Simpan'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -23,8 +23,9 @@ export const AdminSidebar: React.FC<SidebarProps> = ({ onClose, isCollapsed = fa
     { to: `${basePath}/dashboard`, label: 'Dashboard', icon: 'fas fa-chart-pie', end: true },
     { to: `${basePath}/siswa`, label: 'Data Siswa', icon: 'fas fa-users' },
     { to: `${basePath}/guru`, label: 'Data Guru', icon: 'fas fa-chalkboard-teacher' },
-
     { to: `${basePath}/jadwal`, label: 'Jadwal & Kelas', icon: 'fas fa-calendar-alt' },
+    { to: `${basePath}/absensi`, label: 'Absensi', icon: 'fas fa-clipboard-check' },
+    { to: `${basePath}/pembayaran`, label: 'Reminder SPP', icon: 'fas fa-receipt' },
     { to: `${basePath}/keuangan`, label: 'Keuangan', icon: 'fas fa-coins' },
     { to: `${basePath}/galeri`, label: 'Galeri Kegiatan', icon: 'fas fa-images' },
   ] : [
@@ -32,6 +33,7 @@ export const AdminSidebar: React.FC<SidebarProps> = ({ onClose, isCollapsed = fa
     { to: `${basePath}/siswa`, label: 'Data Siswa', icon: 'fas fa-users' },
     { to: `${basePath}/guru`, label: 'Data Guru', icon: 'fas fa-chalkboard-teacher' },
     { to: `${basePath}/jadwal`, label: 'Jadwal & Kelas', icon: 'fas fa-calendar-alt' },
+    { to: `${basePath}/absensi`, label: 'Absensi', icon: 'fas fa-clipboard-check' },
     { to: `${basePath}/pembayaran`, label: 'Reminder SPP', icon: 'fas fa-receipt' },
     { to: `${basePath}/galeri`, label: 'Galeri Kegiatan', icon: 'fas fa-images' },
   ];
