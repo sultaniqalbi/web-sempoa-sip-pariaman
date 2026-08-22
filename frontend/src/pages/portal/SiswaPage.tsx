@@ -80,6 +80,7 @@ export const SiswaPage: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: number; nama: string } | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [isCustomQuota, setIsCustomQuota] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -98,7 +99,7 @@ export const SiswaPage: React.FC = () => {
     tanggal_lahir: '',
     asal_sekolah: '',
     target_pertemuan: 8,
-    sisa_pertemuan: 8
+    sisa_pertemuan: 0
   });
 
   const showToast = (text: string, type: 'success' | 'error' = 'success') => {
@@ -711,129 +712,136 @@ export const SiswaPage: React.FC = () => {
           </div>
 
           {/* 4. Paket Jadwal & Detail Pertemuan */}
-          <div className="p-3 bg-[#FFF3E0] border border-[#FFCC80] rounded-xl space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="block text-[#E65100] font-bold text-xs">
-                Pilih Paket & Jumlah Pertemuan ({formData.kategori_program})*
-              </label>
-              <span className="text-[10px] text-[#BF360C] font-semibold">
-                Siklus 30 Hari
-              </span>
-            </div>
+          {(() => {
+            const currentProgConfig = (PROGRAM_CONFIG as any)[formData.kategori_program] || PROGRAM_CONFIG['Sempoa SIP'];
+            const currentSelectedPackage = currentProgConfig.packages.find((p: any) => p.label === formData.paket_jadwal) || currentProgConfig.packages[0];
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {((PROGRAM_CONFIG as any)[formData.kategori_program]?.packages || PROGRAM_CONFIG['Sempoa SIP'].packages).map((pkg: any, idx: number) => (
-                <label 
-                  key={pkg.label}
-                  className={`flex items-center gap-2.5 p-2.5 rounded-lg border cursor-pointer transition-all ${
-                    formData.paket_jadwal === pkg.label || (!formData.paket_jadwal && idx === 0)
-                      ? 'bg-white border-[#FF7043] shadow-xs ring-1 ring-[#FF7043]'
-                      : 'bg-[#FAFAFA] border-[#E0E0E0] hover:bg-white'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="paket_jadwal"
-                    value={pkg.label}
-                    checked={formData.paket_jadwal === pkg.label || (!formData.paket_jadwal && idx === 0)}
-                    onChange={(e) => setFormData({ ...formData, paket_jadwal: e.target.value })}
-                    className="accent-[#FF7043]"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <p className="font-bold text-[#1E293B] text-xs truncate">
-                        {pkg.count} ({pkg.duration})
+            return (
+              <div className="p-3 bg-[#FFF3E0] border border-[#FFCC80] rounded-xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-[#E65100] font-bold text-xs">
+                    Pilih Paket & Jumlah Pertemuan ({formData.kategori_program})*
+                  </label>
+                  <span className="text-[10px] text-[#BF360C] font-semibold">
+                    Siklus 30 Hari
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {currentProgConfig.packages.map((pkg: any, idx: number) => (
+                    <label 
+                      key={pkg.label}
+                      className={`flex items-center gap-2.5 p-2.5 rounded-lg border cursor-pointer transition-all ${
+                        formData.paket_jadwal === pkg.label || (!formData.paket_jadwal && idx === 0)
+                          ? 'bg-white border-[#FF7043] shadow-xs ring-1 ring-[#FF7043]'
+                          : 'bg-[#FAFAFA] border-[#E0E0E0] hover:bg-white'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="paket_jadwal"
+                        value={pkg.label}
+                        checked={formData.paket_jadwal === pkg.label || (!formData.paket_jadwal && idx === 0)}
+                        onChange={(e) => setFormData({ ...formData, paket_jadwal: e.target.value })}
+                        className="accent-[#FF7043]"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <p className="font-bold text-[#1E293B] text-xs truncate">
+                            {pkg.count} ({pkg.duration})
+                          </p>
+                          <span className="text-[9px] font-extrabold text-[#E65100] bg-[#FFE0B2] px-1.5 py-0.2 rounded">
+                            {pkg.target} Pertemuan
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-[#64748B] mt-0.5">{pkg.label}</p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+
+                {/* Toggle Switch: Input Siswa Lama / Migrasi Data Pertemuan Manual */}
+                <div className="pt-2.5 border-t border-[#FFE082] space-y-2.5">
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-white/95 border border-[#FFD54F] shadow-2xs">
+                    <div className="pr-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-extrabold text-xs text-[#E65100]">Atur Pertemuan Manual (Siswa Lama)</span>
+                        <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border transition-all ${
+                          isCustomQuota 
+                            ? 'bg-[#E8F5E9] text-[#2E7D32] border-[#A5D6A7]' 
+                            : 'bg-[#F1F5F9] text-[#64748B] border-[#CBD5E1]'
+                        }`}>
+                          {isCustomQuota ? 'Siswa Lama' : 'Siswa Baru'}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-[#78350F] mt-0.5 font-medium">
+                        {isCustomQuota
+                          ? 'Aktif: Masukkan sisa pertemuan & target dari buku absen fisik lama.'
+                          : `Otomatis: Sisa pertemuan diset 0 & Target ${currentSelectedPackage.target} sesi sesuai paket ${formData.kategori_program}.`}
                       </p>
-                      <span className="text-[9px] font-extrabold text-[#E65100] bg-[#FFE0B2] px-1.5 py-0.2 rounded">
-                        {pkg.target} Pertemuan
-                      </span>
                     </div>
-                    <p className="text-[10px] text-[#64748B] mt-0.5">{pkg.label}</p>
-                  </div>
-                </label>
-              ))}
-            </div>
 
-            {/* Toggle Switch: Input Siswa Lama / Migrasi Data Pertemuan Manual */}
-            <div className="pt-2.5 border-t border-[#FFE082] space-y-2.5">
-              <div className="flex items-center justify-between p-3 rounded-xl bg-white/95 border border-[#FFD54F] shadow-2xs">
-                <div className="pr-2">
-                  <div className="flex items-center gap-2">
-                    <span className="font-extrabold text-xs text-[#E65100]">Atur Pertemuan Manual (Siswa Lama)</span>
-                    <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border transition-all ${
-                      isCustomQuota 
-                        ? 'bg-[#E8F5E9] text-[#2E7D32] border-[#A5D6A7]' 
-                        : 'bg-[#F1F5F9] text-[#64748B] border-[#CBD5E1]'
-                    }`}>
-                      {isCustomQuota ? 'Siswa Lama' : 'Siswa Baru'}
-                    </span>
+                    {/* Modern Tactile Toggle Switch (Green ON / Slate OFF) */}
+                    <button
+                      type="button"
+                      onClick={() => setIsCustomQuota(!isCustomQuota)}
+                      className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none shadow-inner ${
+                        isCustomQuota ? 'bg-[#4CAF50]' : 'bg-[#CBD5E1]'
+                      }`}
+                      role="switch"
+                      aria-checked={isCustomQuota}
+                      title={isCustomQuota ? 'Nonaktifkan mode siswa lama' : 'Aktifkan mode siswa lama'}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                          isCustomQuota ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
                   </div>
-                  <p className="text-[10px] text-[#78350F] mt-0.5 font-medium">
-                    {isCustomQuota
-                      ? 'Aktif: Masukkan sisa pertemuan & target dari buku absen fisik lama.'
-                      : `Otomatis: Sisa pertemuan diset 0 & Target ${matchedPkg.target} sesi sesuai paket ${formData.kategori_program}.`}
-                  </p>
+
+                  {/* Form Input Sisa & Target Pertemuan (Hanya tampil saat toggle ON) */}
+                  {isCustomQuota && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-3 bg-white/80 rounded-xl border border-[#FFCC80]">
+                      <div>
+                        <label className="block text-[#E65100] font-bold text-xs mb-1">
+                          Sisa Pertemuan Awal (Saat Ini)*
+                        </label>
+                        <input
+                          type="number"
+                          min={0}
+                          max={30}
+                          required={isCustomQuota}
+                          value={formData.sisa_pertemuan}
+                          onChange={(e) => setFormData({ ...formData, sisa_pertemuan: parseInt(e.target.value) || 0 })}
+                          className="w-full bg-white border border-[#FFCC80] rounded-lg p-2 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none text-xs"
+                          placeholder="Contoh: 3 atau 5 (sisa buku fisik)"
+                        />
+                        <span className="text-[10px] text-[#BF360C] block mt-0.5 font-medium">Bisa diisi sisa kuota dari buku absen fisik saat ini</span>
+                      </div>
+                      <div>
+                        <label className="block text-[#E65100] font-bold text-xs mb-1">
+                          Total Target Pertemuan*
+                        </label>
+                        <input
+                          type="number"
+                          min={1}
+                          max={30}
+                          required={isCustomQuota}
+                          value={formData.target_pertemuan}
+                          onChange={(e) => setFormData({ ...formData, target_pertemuan: parseInt(e.target.value) || currentSelectedPackage.target })}
+                          className="w-full bg-white border border-[#FFCC80] rounded-lg p-2 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none text-xs"
+                          placeholder="8 atau 12"
+                        />
+                        <span className="text-[10px] text-[#BF360C] block mt-0.5 font-medium">Total sesi per siklus SPP</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
-
-                {/* Modern Tactile Toggle Switch (Green ON / Slate OFF) */}
-                <button
-                  type="button"
-                  onClick={() => setIsCustomQuota(!isCustomQuota)}
-                  className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none shadow-inner ${
-                    isCustomQuota ? 'bg-[#4CAF50]' : 'bg-[#CBD5E1]'
-                  }`}
-                  role="switch"
-                  aria-checked={isCustomQuota}
-                  title={isCustomQuota ? 'Nonaktifkan mode siswa lama' : 'Aktifkan mode siswa lama'}
-                >
-                  <span
-                    aria-hidden="true"
-                    className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-                      isCustomQuota ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
               </div>
-
-              {/* Form Input Sisa & Target Pertemuan (Hanya tampil saat toggle ON) */}
-              {isCustomQuota && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-3 bg-white/80 rounded-xl border border-[#FFCC80]">
-                  <div>
-                    <label className="block text-[#E65100] font-bold text-xs mb-1">
-                      Sisa Pertemuan Awal (Saat Ini)*
-                    </label>
-                    <input
-                      type="number"
-                      min={0}
-                      max={30}
-                      required={isCustomQuota}
-                      value={formData.sisa_pertemuan}
-                      onChange={(e) => setFormData({ ...formData, sisa_pertemuan: parseInt(e.target.value) || 0 })}
-                      className="w-full bg-white border border-[#FFCC80] rounded-lg p-2 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none text-xs"
-                      placeholder="Contoh: 3 atau 5 (sisa buku fisik)"
-                    />
-                    <span className="text-[10px] text-[#BF360C] block mt-0.5 font-medium">Bisa diisi sisa kuota dari buku absen fisik saat ini</span>
-                  </div>
-                  <div>
-                    <label className="block text-[#E65100] font-bold text-xs mb-1">
-                      Total Target Pertemuan*
-                    </label>
-                    <input
-                      type="number"
-                      min={1}
-                      max={30}
-                      required={isCustomQuota}
-                      value={formData.target_pertemuan}
-                      onChange={(e) => setFormData({ ...formData, target_pertemuan: parseInt(e.target.value) || matchedPkg.target })}
-                      className="w-full bg-white border border-[#FFCC80] rounded-lg p-2 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none text-xs"
-                      placeholder="8 atau 12"
-                    />
-                    <span className="text-[10px] text-[#BF360C] block mt-0.5 font-medium">Total sesi per siklus SPP</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+            );
+          })()}
 
           {/* 5. Hari Masuk Kelas* [DayPicker multi-select] */}
           <DayPicker
