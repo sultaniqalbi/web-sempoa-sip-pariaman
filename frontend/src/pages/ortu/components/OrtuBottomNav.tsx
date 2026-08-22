@@ -116,6 +116,7 @@ const OrtuBottomNav: React.FC = () => {
             return (
               <button
                 key={tab.id}
+                id={`tour-tab-${tab.id}`}
                 onClick={() => {
                   if (tab.path === '#profil') {
                     setShowProfileMenu(!showProfileMenu);
