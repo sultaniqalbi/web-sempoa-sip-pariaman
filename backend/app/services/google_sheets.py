@@ -47,7 +47,7 @@ def send_to_google_sheet(tab_name: str, rows: list, title: str = "Export Data"):
                 elif sheet_id:
                     target_sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/edit"
                 else:
-                    target_sheet_url = "https://docs.google.com/spreadsheets"
+                    target_sheet_url = "https://docs.google.com/spreadsheets/d/1C9m90ipD2mt_pmWK5pNQ_YxfzwRbWZOlLYAXMtzMYKA/edit"
             
             return {
                 "status": "success",
