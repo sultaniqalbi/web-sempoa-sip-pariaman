@@ -6,7 +6,7 @@ import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
 import PageHeader from '../../components/PageHeader';
 import EmptyState from '../../components/EmptyState';
-import { PembayaranIcon, EditIcon, CheckIcon, CloseIcon } from '../../components/SvgIcons';
+import { PembayaranIcon, EditIcon } from '../../components/SvgIcons';
 
 interface ReminderItem {
   id_siswa: number;

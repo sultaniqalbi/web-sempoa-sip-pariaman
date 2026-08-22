@@ -354,7 +354,7 @@ export const SiswaPage: React.FC = () => {
     const progData = (PROGRAM_CONFIG as any)[formData.kategori_program] || PROGRAM_CONFIG['Sempoa SIP'];
     const matchedPkg = progData.packages.find((p: any) => p.label === formData.paket_jadwal) || progData.packages[0];
     const target = formData.target_pertemuan ? parseInt(String(formData.target_pertemuan)) : matchedPkg.target;
-    const sisa = formData.sisa_pertemuan !== undefined && formData.sisa_pertemuan !== null && formData.sisa_pertemuan !== ''
+    const sisa = (formData.sisa_pertemuan !== undefined && formData.sisa_pertemuan !== null)
       ? parseInt(String(formData.sisa_pertemuan))
       : (editingSiswa ? editingSiswa.sisa_pertemuan : target);
 

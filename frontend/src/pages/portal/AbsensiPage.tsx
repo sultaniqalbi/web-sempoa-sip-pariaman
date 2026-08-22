@@ -5,7 +5,7 @@ import PageHeader from '../../components/PageHeader';
 import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
 import EmptyState from '../../components/EmptyState';
-import { AbsensiIcon, EditIcon, CheckIcon, PengajarIcon, DataSiswaIcon } from '../../components/SvgIcons';
+import { AbsensiIcon, EditIcon, PengajarIcon, DataSiswaIcon } from '../../components/SvgIcons';
 
 interface SiswaItem {
   id: number;
