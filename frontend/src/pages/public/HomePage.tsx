@@ -941,10 +941,10 @@ export const HomePage: React.FC = () => {
 
           <div className="banner-map-large">
             <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3989.5786439279404!2d100.13242647472359!3d-0.6280234993658309!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2fd4e384623a1503%3A0xb1ee577507310c2e!2sSempoa%20Sip%20Pariaman!5e0!3m2!1sid!2sid!4v1787150327735!5m2!1sid!2sid"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3989.789123861845!2d100.11718117496667!3d-0.6276948993655169!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2fd5373a6513ccad%3A0x633d99d14f4460f7!2sSempoa%20SIP%20TC%20Pariaman!5e0!3m2!1sen!2sid!4v1724307780000!5m2!1sen!2sid"
               allowFullScreen={true}
               loading="lazy"
-              referrerPolicy="strict-origin-when-cross-origin"
+              referrerPolicy="no-referrer-when-downgrade"
               title="Google Maps Location"
             ></iframe>
           </div>
