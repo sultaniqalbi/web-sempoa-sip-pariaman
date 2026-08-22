@@ -234,7 +234,7 @@ export const DashboardPage: React.FC = () => {
                       Worksheet: <code className="text-[#FF7043] font-bold">{rekapResult.worksheet_name}</code>
                     </p>
                     <a
-                      href={rekapResult.sheet_url}
+                      href={rekapResult.sheet_url && !rekapResult.sheet_url.includes('script.google.com') ? rekapResult.sheet_url : 'https://docs.google.com/spreadsheets/d/1C9m90ipD2mt_pmWK5pNQ_YxfzwRbWZOlLYAXMtzMYKA/edit'}
                       target="_blank"
                       rel="noreferrer"
                       className="inline-block mt-2 px-4 py-2 bg-[#388E3C] hover:bg-[#2E7D32] text-white font-bold rounded-lg text-xs shadow-sm"
