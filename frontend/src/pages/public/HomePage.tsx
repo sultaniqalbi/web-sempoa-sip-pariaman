@@ -5,7 +5,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../../features/auth/useAuth';
 import useMascotCursor from '../../hooks/useMascotCursor';
 import LoginModal from '../../components/LoginModal';
-import CookieConsentModal from '../../components/CookieConsentModal';
 import { ApaItuSempoa } from '../../components/ApaItuSempoa';
 import { LevelPembelajaran } from '../../components/LevelPembelajaran';
 import { MengapaBelajarSempoa } from '../../components/MengapaBelajarSempoa';
@@ -80,7 +79,6 @@ export const HomePage: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeAdvCard, setActiveAdvCard] = useState<number | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const [lightboxImg, setLightboxImg] = useState<{ src: string; title: string; description?: string } | null>(null);
   const [mobileProgramId, setMobileProgramId] = useState<number>(1);
   const [mobileTestiId, setMobileTestiId] = useState<number>(1);
@@ -1055,14 +1053,6 @@ export const HomePage: React.FC = () => {
                 <Link to="/privasi-keamanan" style={{ color: 'inherit', textDecoration: 'underline', transition: 'color 0.2s' }}>
                   🛡️ Privasi & Keamanan Data
                 </Link>
-                <span>•</span>
-                <button
-                  type="button"
-                  onClick={() => setIsCookieModalOpen(true)}
-                  style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', textDecoration: 'underline', font: 'inherit', padding: 0 }}
-                >
-                  🍪 Kelola Cookie
-                </button>
               </div>
             </div>
           </div>
@@ -1129,12 +1119,6 @@ export const HomePage: React.FC = () => {
       <LoginModal 
         isOpen={isLoginModalOpen} 
         onClose={() => setIsLoginModalOpen(false)} 
-      />
-
-      {/* COOKIE CONSENT & PREFERENCE MANAGER MODAL */}
-      <CookieConsentModal
-        forceOpenModal={isCookieModalOpen}
-        onCloseModal={() => setIsCookieModalOpen(false)}
       />
     </div>
   );
