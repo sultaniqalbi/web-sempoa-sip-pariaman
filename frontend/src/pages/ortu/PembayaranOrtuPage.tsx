@@ -1,12 +1,35 @@
 import React, { useState } from 'react';
 import useAuth from '../../features/auth/useAuth';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
 import { Siswa, PembayaranPeriode } from '../../types';
 
+interface ProofItem {
+  id: number;
+  id_pembayaran: number;
+  file_path: string;
+  status: string;
+  admin_note?: string;
+  created_at: string;
+  periode_bulan: string;
+  jumlah: number;
+  status_pembayaran: string;
+}
+
 export const PembayaranOrtuPage: React.FC = () => {
   const { user } = useAuth();
-  const [copied, setCopied] = useState(false);
+  const queryClient = useQueryClient();
+
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedPaymentId, setSelectedPaymentId] = useState<number | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [copiedBank, setCopiedBank] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
+  const showToast = (text: string, type: 'success' | 'error' = 'success') => {
+    setToastMessage({ text, type });
+    setTimeout(() => setToastMessage(null), 4000);
+  };
 
   // Fetch child profile
   const { data: child, isLoading } = useQuery<Siswa>({
@@ -24,7 +47,7 @@ export const PembayaranOrtuPage: React.FC = () => {
   });
 
   // Fetch payments
-  const { data: payments } = useQuery<PembayaranPeriode[]>({
+  const { data: payments = [] } = useQuery<PembayaranPeriode[]>({
     queryKey: ['child-payments', child?.id],
     queryFn: async () => {
       if (!child?.id) return [];
@@ -34,6 +57,57 @@ export const PembayaranOrtuPage: React.FC = () => {
     enabled: !!child?.id,
   });
 
+  // Fetch uploaded transfer proofs history
+  const { data: proofHistory = [], isLoading: isProofLoading } = useQuery<ProofItem[]>({
+    queryKey: ['child-proof-history'],
+    queryFn: async () => {
+      const res = await apiClient.get('/bukti-transfer/my-child');
+      return res.data;
+    },
+  });
+
+  // Upload proof mutation
+  const uploadProofMutation = useMutation({
+    mutationFn: async ({ paymentId, file }: { paymentId: number; file: File }) => {
+      const formData = new FormData();
+      formData.append('id_pembayaran', String(paymentId));
+      formData.append('file', file);
+      const res = await apiClient.post('/bukti-transfer/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['child-proof-history'] });
+      queryClient.invalidateQueries({ queryKey: ['child-payments'] });
+      setSelectedFile(null);
+      showToast('Bukti transfer berhasil diunggah! Mohon tunggu verifikasi admin.');
+    },
+    onError: (err: any) => {
+      showToast(`Gagal mengunggah: ${err.response?.data?.detail || err.message}`, 'error');
+    },
+  });
+
+  const handleUploadSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedFile) {
+      showToast('Silakan pilih foto/gambar bukti transfer terlebih dahulu', 'error');
+      return;
+    }
+
+    // Determine target payment id
+    const targetId = selectedPaymentId || (payments.length > 0 ? payments[0].id : null);
+    if (!targetId) {
+      showToast('Belum ada tagihan aktif untuk anak ini', 'error');
+      return;
+    }
+
+    uploadProofMutation.mutate({
+      paymentId: targetId,
+      file: selectedFile,
+    });
+  };
+
   // Computed values
   const totalPertemuan = child?.target_pertemuan || 8;
   const sisaPertemuan = child?.sisa_pertemuan ?? totalPertemuan;
@@ -41,7 +115,7 @@ export const PembayaranOrtuPage: React.FC = () => {
   const progressPercent = Math.round((selesaiPertemuan / totalPertemuan) * 100);
 
   const isSempoa = (child?.kategori_program || '').toLowerCase().includes('sempoa');
-  const sppAmount = isSempoa ? 350000 : 200000; // Biaya SPP sesuai program
+  const sppAmount = isSempoa ? 350000 : 200000;
   const sisaRatio = totalPertemuan > 0 ? sisaPertemuan / totalPertemuan : 1;
 
   // Cek siklus 30 hari
@@ -91,7 +165,6 @@ export const PembayaranOrtuPage: React.FC = () => {
     }
   ];
 
-  const [copiedBank, setCopiedBank] = useState<string | null>(null);
   const copyToClipboard = (rawNum: string, bankId: string) => {
     navigator.clipboard.writeText(rawNum);
     setCopiedBank(bankId);
@@ -119,84 +192,95 @@ export const PembayaranOrtuPage: React.FC = () => {
 
   if (!child) {
     return (
-      <div className="bg-white border border-[#E0E0E0] rounded-xl p-6 text-center">
-        <p className="text-[13px] font-semibold text-[#757575]">
-          Akun Orang Tua belum dihubungkan dengan data Siswa. Silakan hubungi Admin.
-        </p>
+      <div className="bg-white border border-[#E0E0E0] rounded-2xl p-8 text-center space-y-3">
+        <p className="text-sm font-bold text-[#1E293B]">Data anak belum terhubung dengan akun ini.</p>
+        <p className="text-xs text-[#64748B]">Silakan hubungi Admin atau Guru untuk menghubungkan akun Anda.</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 max-w-xl mx-auto w-full" style={{ fontFamily: "'Inter', sans-serif" }}>
-      {/* 1. Ringkasan Status SPP Siswa */}
-      <div className="bg-white border border-[#E0E0E0] rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] overflow-hidden">
-        {/* Child Info Header with 4x6 Photo */}
-        <div className="p-5 border-b border-[#F5F5F5]">
-          <div className="flex items-center gap-4">
+    <div className="space-y-6">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className={`p-4 rounded-xl text-xs sm:text-sm font-bold shadow-sm border animate-in fade-in duration-200 ${
+          toastMessage.type === 'success' ? 'bg-[#E8F5E9] text-[#388E3C] border-[#A5D6A7]' : 'bg-[#FFF1F2] text-[#e11d48] border-[#FECDD3]'
+        }`}>
+          {toastMessage.text}
+        </div>
+      )}
+
+      {/* Header */}
+      <div>
+        <h1 className="text-xl sm:text-2xl font-black text-[#1E293B] tracking-tight">Pembayaran SPP & Tagihan</h1>
+        <p className="text-xs sm:text-sm text-[#64748B] mt-0.5">Informasi status pembayaran, nomor rekening resmi, dan unggah bukti transfer</p>
+      </div>
+
+      {/* 1. Status Card */}
+      <div
+        className="rounded-2xl p-5 border transition-all shadow-[0_2px_8px_rgba(0,0,0,0.06)] space-y-4"
+        style={{ backgroundColor: sc.bg, borderColor: sc.border }}
+      >
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
             {childPhotoUrl ? (
-              <img
-                src={childPhotoUrl}
-                alt={child.nama}
-                className="w-20 h-28 rounded-xl border-2 border-[#FFCC80] object-cover flex-shrink-0 bg-white shadow-sm"
-                onError={(e) => {
-                  (e.target as HTMLElement).style.display = 'none';
-                }}
-              />
+              <img src={childPhotoUrl} alt={child.nama} className="w-12 h-12 rounded-xl object-cover border-2 border-white shadow-xs" />
             ) : (
-              <div className="w-20 h-28 rounded-xl bg-[#FFF3E0] border-2 border-[#FFCC80] flex flex-col items-center justify-center flex-shrink-0 shadow-sm">
-                <span className="text-[16px] font-extrabold text-[#FF7043]">
-                  {child.nama.substring(0, 2).toUpperCase()}
-                </span>
-                <span className="text-[10px] text-[#FF7043] font-bold mt-1">4x6</span>
+              <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center font-bold text-base text-[#FF7043] border border-[#FFCC80] shadow-xs">
+                {(child.nama_panggilan || child.nama).charAt(0).toUpperCase()}
               </div>
             )}
-
-            <div className="min-w-0 flex-1 space-y-1">
-              <span
-                className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black border uppercase tracking-wider mb-1"
-                style={{ color: sc.color, backgroundColor: sc.bg, borderColor: sc.border }}
-              >
-                SPP: {sppStatus}
-              </span>
-              <h2 className="text-[16px] font-black text-[#1E293B] leading-tight truncate">{child.nama}</h2>
-              <p className="text-[12px] text-[#64748B] font-medium">
-                {child.kategori_program || 'Sempoa SIP'}{child.paket_jadwal ? ` • ${child.paket_jadwal}` : ''}
-              </p>
-              <p className="text-[11px] text-[#94A3B8]">
-                {child.asal_sekolah ? `${child.asal_sekolah} • ` : ''}Hari: {child.hari_masuk || 'Senin, Rabu'}
-              </p>
+            <div>
+              <h2 className="text-base font-extrabold text-[#1E293B]">{child.nama}</h2>
+              <p className="text-xs text-[#64748B]">{child.kategori_program} &bull; UID: {child.uid}</p>
             </div>
           </div>
+          <span
+            className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider"
+            style={{ backgroundColor: sc.color, color: '#fff' }}
+          >
+            {sppStatus}
+          </span>
         </div>
 
-        {/* SPP Amount */}
-        <div className="p-5 bg-[#FAFAFA]">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider">Biaya SPP Bulanan</span>
-              <p className="text-[22px] font-black text-[#1E293B] tracking-tight mt-0.5">
-                Rp {sppAmount.toLocaleString('id-ID')}
-              </p>
-            </div>
-            <div className="text-right">
-              <span className="text-[11px] text-[#64748B]">Siklus Bimbingan</span>
-              <p className="text-[12px] font-bold text-[#334155]">{totalPertemuan} Sesi Pertemuan</p>
-            </div>
+        {/* Progress Bar Sisa Pertemuan */}
+        <div className="space-y-1.5 bg-white/80 rounded-xl p-3.5 border border-white">
+          <div className="flex justify-between text-xs font-bold text-[#1E293B]">
+            <span>Pertemuan Selesai: {selesaiPertemuan} / {totalPertemuan}</span>
+            <span style={{ color: sc.color }}>Sisa: {sisaPertemuan} kali</span>
           </div>
-          {sc.desc && (
-            <p className="text-[11px] font-medium mt-2 pt-2 border-t border-[#E2E8F0]" style={{ color: sc.color }}>
-              {sc.desc}
+          <div className="w-full bg-[#E0E0E0] rounded-full h-2.5 overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${Math.min(progressPercent, 100)}%`,
+                backgroundColor: sc.color,
+              }}
+            />
+          </div>
+          <p className="text-[11px] text-[#64748B] pt-0.5">{sc.desc}</p>
+        </div>
+
+        {/* Info SPP */}
+        <div className="grid grid-cols-2 gap-3 text-center">
+          <div className="bg-white/90 rounded-xl p-3 border border-white shadow-2xs">
+            <p className="text-[11px] text-[#64748B] font-bold">Biaya SPP Bulanan</p>
+            <p className="text-base font-black text-[#1E293B] mt-0.5">Rp {sppAmount.toLocaleString('id-ID')}</p>
+          </div>
+          <div className="bg-white/90 rounded-xl p-3 border border-white shadow-2xs">
+            <p className="text-[11px] text-[#64748B] font-bold">Status Kehadiran</p>
+            <p className="text-base font-black mt-0.5" style={{ color: sc.color }}>
+              {sisaPertemuan > 0 ? `${sisaPertemuan} Sesi Aktif` : 'Perlu Perpanjangan'}
             </p>
-          )}
+          </div>
         </div>
       </div>
 
-      {/* 2. Rekening Pembayaran Resmi ZULHEMAWATI (Terpampang Lengkap) */}
-      <div className="bg-gradient-to-br from-[#FFF8E1] via-[#FFF3E0] to-[#FFE0B2] border-2 border-[#FFB74D] rounded-2xl shadow-[0_4px_16px_rgba(255,152,0,0.12)] p-5 space-y-4">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-[#FF9800] text-white flex items-center justify-center font-bold text-lg shadow-sm flex-shrink-0">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      {/* 2. Rekening Resmi Pembayaran SPP */}
+      <div className="bg-gradient-to-br from-[#FFF8E1] to-[#FFF3E0] border border-[#FFE082] rounded-2xl p-5 shadow-[0_2px_8px_rgba(0,0,0,0.06)] space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#FF8F00] text-white flex items-center justify-center font-bold text-lg shadow-xs">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M3 21h18M3 10h18M5 10v11M9 10v11M15 10v11M19 10v11M12 3l10 7H2l10-7z" />
             </svg>
           </div>
@@ -230,7 +314,7 @@ export const PembayaranOrtuPage: React.FC = () => {
           ))}
         </div>
 
-        {/* 3. Tombol Lapor / Konfirmasi WA Langsung ke Direktur & Admin */}
+        {/* WhatsApp Support Buttons */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
           <a
             href={waUrlDirektur}
@@ -238,10 +322,7 @@ export const PembayaranOrtuPage: React.FC = () => {
             rel="noreferrer"
             className="flex items-center justify-center gap-2 py-3 bg-[#25D366] hover:bg-[#1EBE5D] text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-[0.98]"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
-            </svg>
-            <span>Konfirmasi ke Direktur</span>
+            <span>💬 Konfirmasi ke Direktur</span>
           </a>
           <a
             href={waUrlAdmin}
@@ -249,44 +330,119 @@ export const PembayaranOrtuPage: React.FC = () => {
             rel="noreferrer"
             className="flex items-center justify-center gap-2 py-3 bg-[#1976D2] hover:bg-[#1565C0] text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-[0.98]"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
-            </svg>
-            <span>Bantuan Admin</span>
+            <span>💬 Bantuan Admin</span>
           </a>
         </div>
       </div>
 
-      {/* 4. Riwayat Transaksi Pembayaran */}
-      <div className="bg-white border border-[#E0E0E0] rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-5 space-y-3">
-        <h3 className="text-[13px] font-bold text-[#1E293B]">Riwayat Transaksi SPP</h3>
+      {/* 3. Form Upload Bukti Pembayaran */}
+      <div className="bg-white border border-[#E0E0E0] rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-5 space-y-4">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center font-black">
+            📷
+          </div>
+          <div>
+            <h3 className="text-sm font-extrabold text-[#1E293B]">Upload Bukti Pembayaran SPP</h3>
+            <p className="text-[11px] text-[#64748B]">Unggah foto atau screenshot struk transfer bank Anda untuk diverifikasi.</p>
+          </div>
+        </div>
 
-        {payments && payments.length > 0 ? (
-          <div className="divide-y divide-[#F5F5F5]">
-            {payments.map((p) => (
-              <div key={p.id} className="py-3 flex items-center justify-between">
-                <div>
-                  <p className="text-[13px] font-bold text-[#1E293B]">Periode {p.periode_bulan}</p>
-                  <p className="text-[11px] text-[#64748B]">Rp {p.jumlah.toLocaleString('id-ID')}</p>
+        <form onSubmit={handleUploadSubmit} className="space-y-3">
+          <div>
+            <label className="block text-[#1E293B] font-bold text-xs mb-1">Pilih File Struk Pembayaran* (JPG / PNG max 5MB)</label>
+            <input
+              type="file"
+              accept="image/jpeg,image/png"
+              required
+              onChange={(e) => setSelectedFile(e.target.files ? e.target.files[0] : null)}
+              className="w-full bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl p-2.5 text-xs text-[#1E293B] focus:border-[#FF7043] focus:outline-none file:mr-4 file:py-1.5 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-[#FF7043] file:text-white hover:file:bg-[#F4511E] cursor-pointer"
+            />
+          </div>
+
+          <div className="flex items-center justify-end">
+            <button
+              type="submit"
+              disabled={uploadProofMutation.isPending || !selectedFile}
+              className="px-5 py-2.5 bg-[#FF7043] hover:bg-[#F4511E] text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+            >
+              {uploadProofMutation.isPending ? 'Mengunggah...' : 'Unggah Bukti Pembayaran'}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* 4. Riwayat Upload Bukti Transfer & Status Verifikasi */}
+      <div className="bg-white border border-[#E0E0E0] rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-5 space-y-3">
+        <h3 className="text-sm font-extrabold text-[#1E293B]">Riwayat Bukti Pembayaran Anda</h3>
+
+        {isProofLoading ? (
+          <div className="py-6 text-center text-xs text-[#94A3B8]">Memuat riwayat unggahan...</div>
+        ) : proofHistory.length > 0 ? (
+          <div className="divide-y divide-[#F1F5F9]">
+            {proofHistory.map((pr) => {
+              const fullUrl = pr.file_path.startsWith('http')
+                ? pr.file_path
+                : `/${pr.file_path.replace(/^\//, '')}`;
+
+              return (
+                <div key={pr.id} className="py-3 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={fullUrl}
+                      alt="Struk Transfer"
+                      onClick={() => setPreviewImage(fullUrl)}
+                      className="w-12 h-12 object-cover rounded-lg border border-[#CBD5E1] cursor-pointer hover:opacity-80 transition-opacity shadow-2xs shrink-0"
+                    />
+                    <div>
+                      <p className="text-xs font-bold text-[#1E293B]">
+                        Periode {pr.periode_bulan || '-'} &bull; Rp {(pr.jumlah || sppAmount).toLocaleString('id-ID')}
+                      </p>
+                      <p className="text-[10px] text-[#64748B]">
+                        Diunggah pada: {pr.created_at ? new Date(pr.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '-'}
+                      </p>
+                      {pr.admin_note && (
+                        <p className="text-[10px] text-[#DC2626] font-semibold italic mt-0.5">Catatan Admin: {pr.admin_note}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <span
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shrink-0 ${
+                      pr.status === 'approved'
+                        ? 'bg-[#E8F5E9] text-[#2E7D32] border border-[#A5D6A7]'
+                        : pr.status === 'rejected'
+                        ? 'bg-[#FFEBEE] text-[#C62828] border border-[#FFCDD2]'
+                        : 'bg-[#FFF3E0] text-[#E65100] border border-[#FFE082]'
+                    }`}
+                  >
+                    {pr.status === 'approved' ? 'Disetujui' : pr.status === 'rejected' ? 'Ditolak' : 'Menunggu'}
+                  </span>
                 </div>
-                <span
-                  className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${
-                    p.status === 'LUNAS'
-                      ? 'bg-[#E8F5E9] text-[#2E7D32] border border-[#A5D6A7]'
-                      : p.status === 'MENUNGGAK'
-                      ? 'bg-[#FFEBEE] text-[#C62828] border border-[#FFCDD2]'
-                      : 'bg-[#FFF3E0] text-[#E65100] border border-[#FFE082]'
-                  }`}
-                >
-                  {p.status}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
-          <p className="text-xs text-[#94A3B8] text-center py-4">Belum ada riwayat transaksi pembayaran.</p>
+          <p className="text-xs text-[#94A3B8] text-center py-4">Belum ada riwayat unggahan bukti transfer.</p>
         )}
       </div>
+
+      {/* Lightbox Modal for Transfer Proof Image */}
+      {previewImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-2xs animate-in fade-in"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div className="relative max-w-xl max-h-[90vh] bg-white p-2 rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setPreviewImage(null)}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black font-bold z-10 cursor-pointer"
+            >
+              ✕
+            </button>
+            <img src={previewImage} alt="Preview Bukti Transfer" className="w-auto max-h-[80vh] object-contain mx-auto rounded-xl" />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -20,14 +20,76 @@ router = APIRouter()
 
 UPLOAD_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../uploads/bukti-transfer"))
 
-@router.get("/", response_model=List[BuktiTransferResponse])
+@router.get("/")
 async def read_proofs_list(
     skip: int = 0,
-    limit: int = 10,
+    limit: int = 50,
     db: Session = Depends(get_db),
     current_user: User = Depends(RoleChecker([UserRole.admin, UserRole.owner]))
 ):
-    return crud_bukti_transfer.get_bukti_transfer_list(db, skip=skip, limit=limit)
+    from app.models.bukti_transfer import BuktiTransfer
+    proofs = db.query(BuktiTransfer).order_by(BuktiTransfer.created_at.desc()).offset(skip).limit(limit).all()
+    result = []
+    for pr in proofs:
+        pay = db.query(PembayaranPeriode).filter(PembayaranPeriode.id == pr.id_pembayaran).first()
+        siswa = db.query(Siswa).filter(Siswa.id == pay.id_siswa).first() if pay else None
+        result.append({
+            "id": pr.id,
+            "id_pembayaran": pr.id_pembayaran,
+            "file_path": pr.file_path,
+            "status": pr.status.value if hasattr(pr.status, 'value') else str(pr.status),
+            "admin_note": pr.admin_note,
+            "created_at": pr.created_at.isoformat() if pr.created_at else None,
+            "id_siswa": siswa.id if siswa else None,
+            "nama_siswa": siswa.nama if siswa else "N/A",
+            "kategori_program": siswa.kategori_program if siswa else "-",
+            "whatsapp_orang_tua": siswa.whatsapp_orang_tua if siswa else "-",
+            "nama_orang_tua": siswa.nama_orang_tua if siswa else "-",
+            "periode_bulan": pay.periode_bulan if pay else "-",
+            "jumlah": float(pay.jumlah) if pay else 0.0,
+            "status_pembayaran": pay.status.value if (pay and hasattr(pay.status, 'value')) else (str(pay.status) if pay else "-")
+        })
+    return result
+
+@router.get("/my-child")
+async def read_my_child_proofs(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role != UserRole.ortu or not current_user.uid_terhubung:
+        return []
+    
+    siswa = db.query(Siswa).filter(
+        (Siswa.uid == current_user.uid_terhubung) | (Siswa.id == (int(current_user.uid_terhubung) if current_user.uid_terhubung.isdigit() else -1)),
+        Siswa.is_deleted == False
+    ).first()
+    if not siswa:
+        return []
+    
+    payments = db.query(PembayaranPeriode).filter(PembayaranPeriode.id_siswa == siswa.id).all()
+    pay_ids = [p.id for p in payments]
+    if not pay_ids:
+        return []
+    
+    from app.models.bukti_transfer import BuktiTransfer
+    proofs = db.query(BuktiTransfer).filter(BuktiTransfer.id_pembayaran.in_(pay_ids)).order_by(BuktiTransfer.created_at.desc()).all()
+    
+    result = []
+    pay_map = {p.id: p for p in payments}
+    for pr in proofs:
+        pay = pay_map.get(pr.id_pembayaran)
+        result.append({
+            "id": pr.id,
+            "id_pembayaran": pr.id_pembayaran,
+            "file_path": pr.file_path,
+            "status": pr.status.value if hasattr(pr.status, 'value') else str(pr.status),
+            "admin_note": pr.admin_note,
+            "created_at": pr.created_at.isoformat() if pr.created_at else None,
+            "periode_bulan": pay.periode_bulan if pay else "-",
+            "jumlah": float(pay.jumlah) if pay else 0.0,
+            "status_pembayaran": pay.status.value if (pay and hasattr(pay.status, 'value')) else (str(pay.status) if pay else "-")
+        })
+    return result
 
 @router.post("/", response_model=BuktiTransferResponse, status_code=status.HTTP_201_CREATED)
 async def upload_proof(

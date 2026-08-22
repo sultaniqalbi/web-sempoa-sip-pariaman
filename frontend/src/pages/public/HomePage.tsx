@@ -95,6 +95,12 @@ export const HomePage: React.FC = () => {
   });
 
   useEffect(() => {
+    if (user && user.role === 'ortu') {
+      navigate('/ortu/dashboard', { replace: true });
+    }
+  }, [user, navigate]);
+
+  useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 992);
     };

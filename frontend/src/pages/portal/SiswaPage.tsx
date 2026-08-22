@@ -96,7 +96,9 @@ export const SiswaPage: React.FC = () => {
     alamat: '',
     tempat_lahir: '',
     tanggal_lahir: '',
-    asal_sekolah: ''
+    asal_sekolah: '',
+    target_pertemuan: 8,
+    sisa_pertemuan: 8
   });
 
   const showToast = (text: string, type: 'success' | 'error' = 'success') => {
@@ -308,7 +310,9 @@ export const SiswaPage: React.FC = () => {
       alamat: '',
       tempat_lahir: '',
       tanggal_lahir: '',
-      asal_sekolah: ''
+      asal_sekolah: '',
+      target_pertemuan: 8,
+      sisa_pertemuan: 8
     });
     setSelectedPhoto(null);
     setPhoneError(null);
@@ -332,7 +336,9 @@ export const SiswaPage: React.FC = () => {
       alamat: siswa.alamat || '',
       tempat_lahir: siswa.tempat_lahir || '',
       tanggal_lahir: siswa.tanggal_lahir || '',
-      asal_sekolah: siswa.asal_sekolah || ''
+      asal_sekolah: siswa.asal_sekolah || '',
+      target_pertemuan: siswa.target_pertemuan || 8,
+      sisa_pertemuan: siswa.sisa_pertemuan ?? 8
     });
     setSelectedPhoto(null);
     setPhoneError(null);
@@ -347,13 +353,16 @@ export const SiswaPage: React.FC = () => {
     const ageVal = calculateAge(formData.tanggal_lahir);
     const progData = (PROGRAM_CONFIG as any)[formData.kategori_program] || PROGRAM_CONFIG['Sempoa SIP'];
     const matchedPkg = progData.packages.find((p: any) => p.label === formData.paket_jadwal) || progData.packages[0];
-    const target = matchedPkg.target;
+    const target = formData.target_pertemuan ? parseInt(String(formData.target_pertemuan)) : matchedPkg.target;
+    const sisa = formData.sisa_pertemuan !== undefined && formData.sisa_pertemuan !== null && formData.sisa_pertemuan !== ''
+      ? parseInt(String(formData.sisa_pertemuan))
+      : (editingSiswa ? editingSiswa.sisa_pertemuan : target);
 
     const payload = {
       ...formData,
       umur: ageVal,
       target_pertemuan: target,
-      sisa_pertemuan: editingSiswa ? editingSiswa.sisa_pertemuan : target
+      sisa_pertemuan: sisa
     };
     if (editingSiswa) {
       updateMutation.mutate(payload as any);
@@ -736,6 +745,42 @@ export const SiswaPage: React.FC = () => {
                   </div>
                 </label>
               ))}
+            </div>
+
+            {/* Custom Sisa Pertemuan & Target (Fleksibel saat migrasi buku fisik) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-[#FFCC80]">
+              <div>
+                <label className="block text-[#E65100] font-bold text-xs mb-1">
+                  Sisa Pertemuan Awal (Saat Ini)*
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  max={30}
+                  required
+                  value={formData.sisa_pertemuan}
+                  onChange={(e) => setFormData({ ...formData, sisa_pertemuan: parseInt(e.target.value) || 0 })}
+                  className="w-full bg-white border border-[#FFCC80] rounded-lg p-2 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none"
+                  placeholder="Contoh: 8 (baru) atau 3 (migrasi buku)"
+                />
+                <span className="text-[10px] text-[#BF360C] block mt-0.5 font-medium">Bisa diisi sisa kuota dari buku absen fisik saat ini</span>
+              </div>
+              <div>
+                <label className="block text-[#E65100] font-bold text-xs mb-1">
+                  Total Target Pertemuan*
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={30}
+                  required
+                  value={formData.target_pertemuan}
+                  onChange={(e) => setFormData({ ...formData, target_pertemuan: parseInt(e.target.value) || 8 })}
+                  className="w-full bg-white border border-[#FFCC80] rounded-lg p-2 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none"
+                  placeholder="8 atau 12"
+                />
+                <span className="text-[10px] text-[#BF360C] block mt-0.5 font-medium">Total sesi per siklus SPP</span>
+              </div>
             </div>
           </div>
 

@@ -17,7 +17,7 @@ from app.models.users import User, UserRole
 from app.models.siswa import Siswa, StatusSPP
 from app.models.pembayaran_periode import PembayaranPeriode, StatusPembayaran
 from app.models.audit_log import AuditLog
-from app.schemas.siswa import SiswaCreate, SiswaUpdate, SiswaResponse, SiswaCreateResponse
+from app.schemas.siswa import SiswaCreate, SiswaUpdate, SiswaResponse, SiswaCreateResponse, SiswaPertemuanUpdate
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -185,7 +185,7 @@ async def create_new_siswa(
             hari_masuk=siswa_in.hari_masuk,
             id_guru=siswa_in.id_guru,
             target_pertemuan=siswa_in.target_pertemuan or 8,
-            sisa_pertemuan=siswa_in.target_pertemuan or 8,
+            sisa_pertemuan=siswa_in.sisa_pertemuan if siswa_in.sisa_pertemuan is not None else (siswa_in.target_pertemuan or 8),
             status_spp=StatusSPP.AKTIF,
             nama_orang_tua=siswa_in.nama_orang_tua,
             whatsapp_orang_tua=normalized_wa,
@@ -496,4 +496,34 @@ async def export_siswa_sheets(
 
     tab_name = "Data Siswa"
     return send_to_google_sheet(tab_name=tab_name, rows=rows, title="Data Siswa")
+
+@router.put("/{id}/pertemuan", response_model=SiswaResponse)
+async def update_siswa_pertemuan(
+    id: int,
+    pertemuan_in: SiswaPertemuanUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(RoleChecker([UserRole.admin, UserRole.owner, UserRole.guru]))
+):
+    """
+    Edit sisa pertemuan dan target pertemuan siswa secara langsung
+    """
+    siswa = db.query(Siswa).filter(Siswa.id == id, Siswa.is_deleted == False).first()
+    if not siswa:
+        raise HTTPException(status_code=404, detail="Data siswa tidak ditemukan")
+    
+    siswa.sisa_pertemuan = max(0, pertemuan_in.sisa_pertemuan)
+    if pertemuan_in.target_pertemuan is not None:
+        siswa.target_pertemuan = max(1, pertemuan_in.target_pertemuan)
+    if pertemuan_in.status_spp is not None:
+        siswa.status_spp = pertemuan_in.status_spp
+    elif siswa.sisa_pertemuan > 0 and siswa.status_spp == StatusSPP.EXPIRED:
+        siswa.status_spp = StatusSPP.AKTIF
+    elif siswa.sisa_pertemuan == 0 and siswa.status_spp != StatusSPP.EXPIRED:
+        siswa.status_spp = StatusSPP.EXPIRED
+    
+    db.add(siswa)
+    db.commit()
+    db.refresh(siswa)
+    return siswa
+
 

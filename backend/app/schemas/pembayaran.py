@@ -24,3 +24,11 @@ class PembayaranResponse(PembayaranBase):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+class PembayaranDueDateUpdate(BaseModel):
+    due_date: Optional[date] = None
+    status: Optional[StatusPembayaran] = None
+    tambah_kuota: Optional[bool] = False
+    jumlah: Optional[Decimal] = None
+    catatan: Optional[str] = None
+

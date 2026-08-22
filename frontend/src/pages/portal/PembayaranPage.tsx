@@ -6,7 +6,7 @@ import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
 import PageHeader from '../../components/PageHeader';
 import EmptyState from '../../components/EmptyState';
-import { PembayaranIcon } from '../../components/SvgIcons';
+import { PembayaranIcon, EditIcon, CheckIcon, CloseIcon } from '../../components/SvgIcons';
 
 interface ReminderItem {
   id_siswa: number;
@@ -30,15 +30,21 @@ interface ReminderItem {
 
 interface BuktiTransferItem {
   id: number;
-  id_siswa: number;
+  id_siswa?: number;
   id_pembayaran: number;
   file_path: string;
   status: string;
-  catatan_admin?: string;
-  uploaded_at: string;
+  admin_note?: string;
+  created_at: string;
+  nama_siswa?: string;
+  kategori_program?: string;
+  nama_orang_tua?: string;
+  whatsapp_orang_tua?: string;
+  periode_bulan?: string;
+  jumlah?: number;
 }
 
-export const PembayaranPage: React.FC = () => {
+export const SharedPembayaranPage: React.FC = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const userRole = user?.role || 'admin';
@@ -50,11 +56,25 @@ export const PembayaranPage: React.FC = () => {
   const [exportResult, setExportResult] = useState<any>(null);
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
+  // Edit Jatuh Tempo Modal State
+  const [editingDueDateSiswa, setEditingDueDateSiswa] = useState<ReminderItem | null>(null);
+  const [dueDateForm, setDueDateForm] = useState({
+    due_date: '',
+    status: 'LUNAS',
+    tambah_kuota: false,
+    jumlah: 0,
+    catatan: ''
+  });
+
+  // Lightbox for proof image
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+
   const showToast = (text: string, type: 'success' | 'error' = 'success') => {
     setToastMessage({ text, type });
     setTimeout(() => setToastMessage(null), 4000);
   };
 
+  // 1. Fetch Reminders (All Students Status)
   const { data: reminderList = [], isLoading: isLoadingReminders } = useQuery<ReminderItem[]>({
     queryKey: ['pembayaran', 'reminders'],
     queryFn: async () => {
@@ -68,42 +88,65 @@ export const PembayaranPage: React.FC = () => {
     },
   });
 
+  // 2. Fetch All Transfer Proofs (Accessible by both Admin & Owner)
   const { data: buktiList = [], isLoading: isLoadingBukti } = useQuery<BuktiTransferItem[]>({
     queryKey: ['bukti-transfer', 'list'],
     queryFn: async () => {
       const res = await apiClient.get('/bukti-transfer/');
       return res.data;
     },
-    enabled: userRole === 'owner',
   });
 
+  // Mutation Edit Jatuh Tempo / SPP
+  const updateDueDateMutation = useMutation({
+    mutationFn: async ({ siswaId, data }: { siswaId: number; data: typeof dueDateForm }) => {
+      const res = await apiClient.put(`/pembayaran/siswa/${siswaId}/due-date`, {
+        ...data,
+        due_date: data.due_date ? data.due_date : null
+      });
+      return res.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['pembayaran'] });
+      queryClient.invalidateQueries({ queryKey: ['siswa'] });
+      setEditingDueDateSiswa(null);
+      showToast(data.message || 'Jatuh tempo SPP berhasil diperbarui');
+    },
+    onError: (err: any) => {
+      showToast(`Gagal update jatuh tempo: ${err.response?.data?.detail || err.message}`, 'error');
+    }
+  });
+
+  // Mutation Approve Proof
   const approveMutation = useMutation({
     mutationFn: async (id: number) => {
-      const res = await apiClient.post(`/bukti-transfer/${id}/approve`);
+      const res = await apiClient.put(`/bukti-transfer/${id}?status_str=approved`);
       return res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bukti-transfer'] });
       queryClient.invalidateQueries({ queryKey: ['pembayaran'] });
       queryClient.invalidateQueries({ queryKey: ['siswa'] });
-      showToast('Bukti transfer disetujui. Status SPP lunas & kuota diperbarui');
+      showToast('Bukti transfer disetujui. Kuota siswa bertambah & status SPP lunas.');
     },
     onError: (err: any) => {
-      showToast(`Verifikasi gagal: ${err.message}`, 'error');
+      showToast(`Verifikasi gagal: ${err.response?.data?.detail || err.message}`, 'error');
     },
   });
 
+  // Mutation Reject Proof
   const rejectMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const res = await apiClient.post(`/bukti-transfer/${id}/reject`, { note: 'Bukti transfer tidak valid' });
+    mutationFn: async ({ id, note }: { id: number; note: string }) => {
+      const res = await apiClient.put(`/bukti-transfer/${id}?status_str=rejected&admin_note=${encodeURIComponent(note)}`);
       return res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bukti-transfer'] });
-      showToast('Bukti transfer ditolak');
+      queryClient.invalidateQueries({ queryKey: ['pembayaran'] });
+      showToast('Bukti transfer ditolak.');
     },
     onError: (err: any) => {
-      showToast(`Proses penolakan gagal: ${err.message}`, 'error');
+      showToast(`Proses penolakan gagal: ${err.response?.data?.detail || err.message}`, 'error');
     },
   });
 
@@ -126,6 +169,39 @@ export const PembayaranPage: React.FC = () => {
     },
   });
 
+  const openDueDateModal = (row: ReminderItem) => {
+    setEditingDueDateSiswa(row);
+    setDueDateForm({
+      due_date: row.due_date || '',
+      status: row.status === 'lancar' ? 'LUNAS' : 'MENUNGGAK',
+      tambah_kuota: false,
+      jumlah: 0,
+      catatan: ''
+    });
+  };
+
+  const handleDueDateSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingDueDateSiswa) return;
+    updateDueDateMutation.mutate({
+      siswaId: editingDueDateSiswa.id_siswa,
+      data: dueDateForm
+    });
+  };
+
+  const handleApproveProof = (id: number, nama?: string) => {
+    if (window.confirm(`Setujui bukti pembayaran untuk ${nama || 'siswa ini'}? Kuota akan otomatis ditambah.`)) {
+      approveMutation.mutate(id);
+    }
+  };
+
+  const handleRejectProof = (id: number, nama?: string) => {
+    const note = window.prompt(`Masukkan alasan penolakan bukti pembayaran ${nama || ''}:`);
+    if (note !== null) {
+      rejectMutation.mutate({ id, note: note || 'Bukti pembayaran tidak jelas / nominal tidak sesuai' });
+    }
+  };
+
   const openWAModal = (row: ReminderItem, type: 'peringatan' | 'urgent') => {
     const draftText = type === 'urgent'
       ? (row.wa_draft_urgent || row.wa_draft)
@@ -147,16 +223,16 @@ export const PembayaranPage: React.FC = () => {
         <div className="flex items-start gap-2.5">
           <div className="pt-1">
             {row.status === 'urgent' ? (
-              <span className="w-2.5 h-2.5 rounded-full bg-[#D32F2F] inline-block" title="Urgent" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#D32F2F] inline-block shrink-0" title="Urgent" />
             ) : row.status === 'peringatan' ? (
-              <span className="w-2.5 h-2.5 rounded-full bg-[#E65100] inline-block" title="Peringatan" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#E65100] inline-block shrink-0" title="Peringatan" />
             ) : (
-              <span className="w-2.5 h-2.5 rounded-full bg-[#2E7D32] inline-block" title="Lancar" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#2E7D32] inline-block shrink-0" title="Lancar" />
             )}
           </div>
           <div>
-            <p className="font-bold text-[#1E293B] text-xs">{row.nama_siswa}</p>
-            <p className="text-[10px] text-[#64748B] mt-0.5">
+            <p className="font-bold text-[#1E293B] text-xs sm:text-sm">{row.nama_siswa}</p>
+            <p className="text-[11px] text-[#64748B] mt-0.5">
               Ortu: <span className="font-medium text-[#334155]">{row.nama_orang_tua}</span> ({row.whatsapp_orang_tua || 'No WA'})
             </p>
           </div>
@@ -172,162 +248,201 @@ export const PembayaranPage: React.FC = () => {
       ),
     },
     {
-      header: 'Sisa Pertemuan',
-      accessor: (row: ReminderItem) => (
-        <span
-          className={`px-3 py-1 rounded-full text-xs font-extrabold inline-block ${
-            row.sisa_pertemuan <= 1
-              ? 'bg-[#FFF1F2] text-[#D32F2F] border border-[#FECDD3]'
-              : row.sisa_pertemuan <= 3
-              ? 'bg-[#FFF8E1] text-[#E65100] border border-[#FFE082]'
-              : 'bg-[#E8F5E9] text-[#388E3C] border border-[#A5D6A7]'
-          }`}
-        >
-          {row.sisa_pertemuan} / {row.target_pertemuan || 8} kali
-        </span>
-      ),
-    },
-    {
-      header: 'Status SPP & Siklus 30 Hari',
+      header: 'Pertemuan & Sisa',
       accessor: (row: ReminderItem) => {
-        if (row.is_hangus) {
-          return (
-            <div>
-              <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-[#FFE4E6] text-[#E11D48] border border-[#FECDD3] inline-flex items-center gap-1">
-                Hangus (Lewat 30 Hari)
-              </span>
-              <p className="text-[10px] text-[#E11D48] font-bold mt-0.5">Sisa {row.sisa_pertemuan} sesi hangus</p>
-            </div>
-          );
-        }
-        if (row.is_expired_30_hari) {
-          return (
-            <div>
-              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#FFEBEE] text-[#D32F2F] border border-[#FFCDD2] inline-flex items-center gap-1">
-                Expired (Lewat 30 Hari)
-              </span>
-              <p className="text-[10px] text-[#94A3B8] mt-0.5">Jatuh tempo: {row.due_date}</p>
-            </div>
-          );
-        }
-        if (row.status === 'urgent') {
-          return (
-            <div>
-              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#FFEBEE] text-[#D32F2F] border border-[#FFCDD2] inline-flex items-center gap-1">
-                Urgent (&lt; 20%)
-              </span>
-              <p className="text-[10px] text-[#94A3B8] mt-0.5">Jatuh tempo: {row.due_date}</p>
-            </div>
-          );
-        }
-        if (row.status === 'peringatan') {
-          return (
-            <div>
-              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#FFF8E1] text-[#E65100] border border-[#FFE082] inline-flex items-center gap-1">
-                Peringatan (Siap Bayar)
-              </span>
-              <p className="text-[10px] text-[#94A3B8] mt-0.5">Sisa {row.days_remaining} hari</p>
-            </div>
-          );
-        }
+        const target = row.target_pertemuan || 8;
+        const sisa = row.sisa_pertemuan ?? 0;
+        const selesai = Math.max(0, target - sisa);
+
         return (
           <div>
-            <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#E8F5E9] text-[#388E3C] border border-[#A5D6A7] inline-block">
-              Lancar
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-extrabold inline-block ${
+                sisa <= 1
+                  ? 'bg-[#FFF1F2] text-[#D32F2F] border border-[#FECDD3]'
+                  : sisa <= 3
+                  ? 'bg-[#FFF8E1] text-[#E65100] border border-[#FFE082]'
+                  : 'bg-[#E8F5E9] text-[#388E3C] border border-[#A5D6A7]'
+              }`}
+            >
+              Sisa {sisa} Sesi ({selesai}/{target})
             </span>
-            {row.due_date && <p className="text-[10px] text-[#94A3B8] mt-0.5">Siklus: {row.due_date}</p>}
           </div>
         );
       },
     },
     {
-      header: 'Aksi Notifikasi',
+      header: 'Status SPP & Jatuh Tempo',
       accessor: (row: ReminderItem) => {
-        if (row.status === 'urgent') {
-          return (
+        let badge = (
+          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#E8F5E9] text-[#388E3C] border border-[#A5D6A7] inline-block">
+            Lancar
+          </span>
+        );
+        if (row.is_hangus) {
+          badge = (
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-[#FFE4E6] text-[#E11D48] border border-[#FECDD3] inline-block">
+              Hangus (Lewat 30 Hari)
+            </span>
+          );
+        } else if (row.is_expired_30_hari || row.status === 'urgent') {
+          badge = (
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#FFEBEE] text-[#D32F2F] border border-[#FFCDD2] inline-block">
+              Urgent (Tagihan)
+            </span>
+          );
+        } else if (row.status === 'peringatan') {
+          badge = (
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#FFF8E1] text-[#E65100] border border-[#FFE082] inline-block">
+              Peringatan (Siap Bayar)
+            </span>
+          );
+        }
+
+        return (
+          <div className="space-y-1">
+            {badge}
+            <p className="text-[11px] text-[#64748B] font-medium">
+              Jatuh tempo: <strong className="text-[#334155]">{row.due_date || '-'}</strong>
+            </p>
+          </div>
+        );
+      },
+    },
+    {
+      header: 'Aksi',
+      accessor: (row: ReminderItem) => (
+        <div className="flex flex-wrap items-center gap-1.5">
+          {/* Tombol Edit Jatuh Tempo */}
+          <button
+            onClick={() => openDueDateModal(row)}
+            className="px-2.5 py-1.5 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#334155] border border-[#CBD5E1] rounded-lg text-xs font-bold flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
+            title="Edit Tanggal Jatuh Tempo & Status SPP"
+          >
+            <EditIcon size={13} className="text-[#64748B]" />
+            <span>Edit SPP</span>
+          </button>
+
+          {/* Tombol Draf WhatsApp */}
+          {row.status === 'urgent' ? (
             <button
               onClick={() => openWAModal(row, 'urgent')}
-              className="px-3 py-1.5 bg-[#D32F2F] text-white text-xs font-bold rounded-lg hover:bg-[#B71C1C] flex items-center gap-1.5 shadow-xs transition-colors"
+              className="px-2.5 py-1.5 bg-[#D32F2F] text-white text-xs font-bold rounded-lg hover:bg-[#B71C1C] flex items-center gap-1 shadow-2xs transition-all active:scale-95 cursor-pointer"
+              title="Kirim Pesan WA Tagihan"
             >
-              <span>Kirim WA Tagihan</span>
+              <span>📱 Draf WA</span>
             </button>
-          );
-        }
-        if (row.status === 'peringatan') {
-          return (
+          ) : (
             <button
               onClick={() => openWAModal(row, 'peringatan')}
-              className="px-3 py-1.5 bg-[#FF7043] text-white text-xs font-bold rounded-lg hover:bg-[#F4511E] flex items-center gap-1.5 shadow-xs transition-colors"
+              className="px-2.5 py-1.5 bg-[#E65100] text-white text-xs font-bold rounded-lg hover:bg-[#C84300] flex items-center gap-1 shadow-2xs transition-all active:scale-95 cursor-pointer"
+              title="Kirim Pesan WA Pengingat"
             >
-              <span>Kirim WA Peringatan</span>
+              <span>📱 Draf WA</span>
             </button>
-          );
-        }
-        return <span className="text-[11px] text-[#94A3B8] italic font-medium">Lancar</span>;
-      },
+          )}
+        </div>
+      ),
     },
   ];
 
   const buktiColumns = [
     {
-      header: 'ID Transaksi',
-      accessor: (row: BuktiTransferItem) => <span className="font-mono text-[#FF7043] font-bold">#BT-{row.id}</span>,
+      header: 'Siswa & Ortu',
+      accessor: (row: BuktiTransferItem) => (
+        <div>
+          <p className="font-bold text-[#1E293B] text-xs sm:text-sm">{row.nama_siswa || `Siswa #${row.id_siswa}`}</p>
+          <p className="text-[11px] text-[#64748B] mt-0.5">
+            {row.kategori_program || '-'} • Ortu: {row.nama_orang_tua || '-'}
+          </p>
+        </div>
+      ),
     },
     {
-      header: 'Bukti Transfer File',
+      header: 'Nominal & Periode',
       accessor: (row: BuktiTransferItem) => (
-        <a
-          href={row.file_path}
-          target="_blank"
-          rel="noreferrer"
-          className="text-xs font-bold text-[#1976D2] hover:underline flex items-center gap-1"
-        >
-          Lihat File Bukti
-        </a>
+        <div>
+          <p className="font-extrabold text-[#16A34A] text-xs sm:text-sm">
+            Rp {(row.jumlah || 0).toLocaleString('id-ID')}
+          </p>
+          <span className="text-[10px] text-[#64748B] uppercase font-bold">
+            Periode: {row.periode_bulan || '-'}
+          </span>
+        </div>
       ),
+    },
+    {
+      header: 'Foto Struk Bukti',
+      accessor: (row: BuktiTransferItem) => {
+        const fullUrl = row.file_path.startsWith('http')
+          ? row.file_path
+          : `/${row.file_path.replace(/^\//, '')}`;
+
+        return (
+          <div>
+            <img
+              src={fullUrl}
+              alt="Bukti Transfer"
+              onClick={() => setPreviewImage(fullUrl)}
+              className="w-14 h-14 object-cover rounded-lg border border-[#CBD5E1] cursor-pointer hover:opacity-80 transition-opacity shadow-2xs"
+            />
+            <span className="text-[10px] text-[#64748B] block mt-0.5 font-medium">Klik zoom</span>
+          </div>
+        );
+      },
     },
     {
       header: 'Status Verifikasi',
-      accessor: (row: BuktiTransferItem) => (
-        <span
-          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-            row.status === 'approved'
-              ? 'bg-[#E8F5E9] text-[#388E3C]'
-              : row.status === 'rejected'
-              ? 'bg-[#FFF1F2] text-[#D32F2F]'
-              : 'bg-[#FFF3E0] text-[#E65100]'
-          }`}
-        >
-          {row.status}
-        </span>
-      ),
+      accessor: (row: BuktiTransferItem) => {
+        const status = row.status?.toLowerCase() || 'pending';
+        return (
+          <div>
+            <span
+              className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase border inline-block ${
+                status === 'approved'
+                  ? 'bg-[#DCFCE7] text-[#16A34A] border-[#86EFAC]'
+                  : status === 'rejected'
+                  ? 'bg-[#FEE2E2] text-[#DC2626] border-[#FCA5A5]'
+                  : 'bg-[#FEF3C7] text-[#D97706] border-[#FCD34D]'
+              }`}
+            >
+              {status === 'approved' ? 'Disetujui' : status === 'rejected' ? 'Ditolak' : 'Menunggu'}
+            </span>
+            {row.admin_note && (
+              <p className="text-[10px] text-[#DC2626] mt-1 italic max-w-xs">{row.admin_note}</p>
+            )}
+          </div>
+        );
+      },
     },
     {
       header: 'Aksi Verifikasi',
-      accessor: (row: BuktiTransferItem) => (
-        <div className="flex gap-2">
-          {row.status === 'pending' ? (
-            <>
+      accessor: (row: BuktiTransferItem) => {
+        const status = row.status?.toLowerCase() || 'pending';
+        if (status === 'pending') {
+          return (
+            <div className="flex items-center gap-2">
               <button
-                onClick={() => approveMutation.mutate(row.id)}
+                onClick={() => handleApproveProof(row.id, row.nama_siswa)}
                 disabled={approveMutation.isPending}
-                className="px-3 py-1 bg-[#388E3C] hover:bg-[#2E7D32] text-white text-xs font-bold rounded-lg shadow-xs"
+                className="px-3 py-1.5 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-lg transition-all shadow-2xs active:scale-95 cursor-pointer disabled:opacity-50"
               >
                 Setujui
               </button>
               <button
-                onClick={() => rejectMutation.mutate(row.id)}
+                onClick={() => handleRejectProof(row.id, row.nama_siswa)}
                 disabled={rejectMutation.isPending}
-                className="px-3 py-1 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#D32F2F] text-xs font-bold rounded-lg border border-[#FECDD3]"
+                className="px-3 py-1.5 bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-bold rounded-lg transition-all shadow-2xs active:scale-95 cursor-pointer disabled:opacity-50"
               >
                 Tolak
               </button>
-            </>
-          ) : (
-            <span className="text-[10px] text-[#757575] italic">Sudah diverifikasi</span>
-          )}
-        </div>
-      ),
+            </div>
+          );
+        }
+        return (
+          <span className="text-[11px] text-[#94A3B8] font-bold">Sudah Diproses</span>
+        );
+      },
     },
   ];
 
@@ -335,75 +450,62 @@ export const PembayaranPage: React.FC = () => {
     <div className="space-y-6">
       {/* Toast Notification */}
       {toastMessage && (
-        <div
-          className={`p-4 rounded-xl text-xs font-bold shadow-sm border ${
-            toastMessage.type === 'success'
-              ? 'bg-[#E8F5E9] text-[#388E3C] border-[#A5D6A7]'
-              : 'bg-[#FFF1F2] text-[#D32F2F] border-[#FECDD3]'
-          }`}
-        >
+        <div className={`p-4 rounded-xl text-sm font-bold shadow-sm border animate-in fade-in duration-200 ${
+          toastMessage.type === 'success' ? 'bg-[#E8F5E9] text-[#388E3C] border-[#A5D6A7]' : 'bg-[#FFF1F2] text-[#e11d48] border-[#FECDD3]'
+        }`}>
           {toastMessage.text}
         </div>
       )}
 
       {/* Standardized Page Header */}
       <PageHeader
-        icon={<PembayaranIcon size={24} className="text-[#D32F2F]" />}
+        icon={<PembayaranIcon size={24} className="text-[#FF7043]" />}
         title="Pembayaran & Reminder SPP"
-        subtitle="Sistem notifikasi tagihan SPP, kualifikasi status kuota, dan draf WhatsApp"
-        iconColorBg="bg-[#FFF1F2] text-[#D32F2F]"
+        subtitle="Manajemen status tagihan SPP, jatuh tempo perpanjangan, dan verifikasi bukti transfer ortu"
+        iconColorBg="bg-[#FFF3E0] text-[#FF7043]"
         onExportSheets={() => exportSheetsMutation.mutate()}
         isExporting={exportSheetsMutation.isPending}
       />
 
-      {/* Navigation Tabs (Owner sees both tabs, Admin sees Reminder only) */}
-      {userRole === 'owner' ? (
-        <div className="flex border-b border-[#E2E8F0] gap-2">
-          <button
-            onClick={() => setActiveTab('reminder')}
-            className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-colors cursor-pointer ${
-              activeTab === 'reminder'
-                ? 'border-[#FF7043] text-[#FF7043] bg-[#FFF3E0]/50'
-                : 'border-transparent text-[#64748B] hover:text-[#1E293B]'
-            }`}
-          >
-            Reminder SPP (Sisa Kuota ≤ 2)
-          </button>
-          <button
-            onClick={() => setActiveTab('verifikasi')}
-            className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-colors cursor-pointer ${
-              activeTab === 'verifikasi'
-                ? 'border-[#FF7043] text-[#FF7043] bg-[#FFF3E0]/50'
-                : 'border-transparent text-[#64748B] hover:text-[#1E293B]'
-            }`}
-          >
-            Verifikasi Bukti Transfer
-          </button>
-        </div>
-      ) : (
-        <div className="p-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl flex items-center justify-between">
-          <span className="text-xs font-bold text-[#FF7043]">
-            Reminder SPP Siswa (Kualifikasi Lancar, Peringatan & Urgent)
-          </span>
-          <span className="text-[11px] text-[#64748B] font-medium">Role: Admin</span>
-        </div>
-      )}
+      {/* Navigation Tabs (Both Admin & Owner can toggle between Reminder and Bukti Transfer) */}
+      <div className="flex border-b border-[#E2E8F0] gap-2">
+        <button
+          onClick={() => setActiveTab('reminder')}
+          className={`px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-colors cursor-pointer ${
+            activeTab === 'reminder'
+              ? 'border-[#FF7043] text-[#FF7043] bg-[#FFF3E0]/50'
+              : 'border-transparent text-[#64748B] hover:text-[#1E293B]'
+          }`}
+        >
+          📋 Reminder & Status SPP Semua Siswa ({reminderList.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('verifikasi')}
+          className={`px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-colors cursor-pointer ${
+            activeTab === 'verifikasi'
+              ? 'border-[#FF7043] text-[#FF7043] bg-[#FFF3E0]/50'
+              : 'border-transparent text-[#64748B] hover:text-[#1E293B]'
+          }`}
+        >
+          📷 Verifikasi Bukti Transfer ({buktiList.length})
+        </button>
+      </div>
 
-      {/* Main Content View */}
-      {activeTab === 'reminder' || userRole === 'admin' ? (
+      {/* Tab 1: Reminder SPP */}
+      {activeTab === 'reminder' ? (
         isLoadingReminders ? (
           <div className="py-16 text-center text-[#757575] text-xs">Memuat data pengingat SPP...</div>
         ) : reminderList.length === 0 ? (
           <EmptyState
             icon={<PembayaranIcon size={40} className="text-[#757575]" />}
-            title="Tidak ada tagihan SPP jatuh tempo"
-            description="Semua murid memiliki sisa pertemuan kuota kelas yang mencukupi."
+            title="Tidak ada tagihan SPP aktif"
+            description="Daftarkan siswa baru untuk memonitor siklus jatuh tempo pembayaran SPP."
           />
         ) : (
           <DataTable
             columns={reminderColumns}
             data={reminderList}
-            searchPlaceholder="Cari siswa, orang tua, program..."
+            searchPlaceholder="Cari nama siswa, orang tua, program..."
             searchFilter={(row, q) =>
               row.nama_siswa.toLowerCase().includes(q.toLowerCase()) ||
               row.nama_orang_tua.toLowerCase().includes(q.toLowerCase()) ||
@@ -412,21 +514,135 @@ export const PembayaranPage: React.FC = () => {
             }
           />
         )
-      ) : isLoadingBukti ? (
-        <div className="py-16 text-center text-[#757575] text-xs">Memuat daftar bukti transfer...</div>
-      ) : buktiList.length === 0 ? (
-        <EmptyState
-          icon={<PembayaranIcon size={40} className="text-[#757575]" />}
-          title="Belum ada bukti transfer pending"
-          description="Bukti pembayaran SPP dari orang tua murid akan muncul di sini untuk diverifikasi."
-        />
       ) : (
-        <DataTable
-          columns={buktiColumns}
-          data={buktiList}
-          searchPlaceholder="Cari ID transaksi, status..."
-          searchFilter={(row, q) => row.id.toString().includes(q) || row.status.toLowerCase().includes(q.toLowerCase())}
-        />
+        /* Tab 2: Verifikasi Bukti Transfer */
+        isLoadingBukti ? (
+          <div className="py-16 text-center text-[#757575] text-xs">Memuat daftar bukti transfer...</div>
+        ) : buktiList.length === 0 ? (
+          <EmptyState
+            icon={<PembayaranIcon size={40} className="text-[#757575]" />}
+            title="Belum ada riwayat bukti transfer"
+            description="Bukti pembayaran SPP yang diunggah oleh orang tua murid akan muncul di sini untuk diverifikasi."
+          />
+        ) : (
+          <DataTable
+            columns={buktiColumns}
+            data={buktiList}
+            searchPlaceholder="Cari nama siswa, nominal, atau status..."
+            searchFilter={(row, q) =>
+              (row.nama_siswa || '').toLowerCase().includes(q.toLowerCase()) ||
+              (row.nama_orang_tua || '').toLowerCase().includes(q.toLowerCase()) ||
+              row.status.toLowerCase().includes(q.toLowerCase())
+            }
+          />
+        )
+      )}
+
+      {/* Modal Edit Jatuh Tempo SPP */}
+      {editingDueDateSiswa && (
+        <Modal
+          isOpen={!!editingDueDateSiswa}
+          onClose={() => setEditingDueDateSiswa(null)}
+          title={`Edit Jatuh Tempo & Status SPP: ${editingDueDateSiswa.nama_siswa}`}
+          size="md"
+        >
+          <form onSubmit={handleDueDateSubmit} className="space-y-4 text-xs">
+            <div className="p-3 bg-[#FFF3E0] border border-[#FFCC80] rounded-xl flex items-center justify-between">
+              <div>
+                <p className="font-bold text-[#E65100] text-sm">{editingDueDateSiswa.nama_siswa}</p>
+                <p className="text-[11px] text-[#BF360C] mt-0.5">
+                  Program: {editingDueDateSiswa.program} • Sisa: {editingDueDateSiswa.sisa_pertemuan}/{editingDueDateSiswa.target_pertemuan} Sesi
+                </p>
+              </div>
+              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-white text-[#FF7043] border border-[#FFCC80]">
+                Jatuh Tempo Saat Ini: {editingDueDateSiswa.due_date || '-'}
+              </span>
+            </div>
+
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">
+                Tanggal Jatuh Tempo Baru*
+              </label>
+              <input
+                type="date"
+                required
+                value={dueDateForm.due_date}
+                onChange={(e) => setDueDateForm({ ...dueDateForm, due_date: e.target.value })}
+                className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none"
+              />
+              <span className="text-[10px] text-[#64748B] block mt-1">
+                Batas masa aktif SPP periode berjalan sebelum berstatus menunggak
+              </span>
+            </div>
+
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">
+                Status Pembayaran SPP
+              </label>
+              <select
+                value={dueDateForm.status}
+                onChange={(e) => setDueDateForm({ ...dueDateForm, status: e.target.value })}
+                className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none"
+              >
+                <option value="LUNAS">LUNAS (Aktif Normal)</option>
+                <option value="MENUNGGAK">MENUNGGAK (Perlu Bayar SPP)</option>
+                <option value="OVERDUE">OVERDUE (Lewat Batas Jatuh Tempo)</option>
+              </select>
+            </div>
+
+            <div className="p-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl space-y-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={dueDateForm.tambah_kuota}
+                  onChange={(e) => setDueDateForm({ ...dueDateForm, tambah_kuota: e.target.checked })}
+                  className="w-4 h-4 accent-[#FF7043]"
+                />
+                <span className="font-bold text-[#1E293B]">
+                  Tambah Kuota Pertemuan Otomatis (+{editingDueDateSiswa.target_pertemuan || 8} Sesi)
+                </span>
+              </label>
+              <span className="text-[10px] text-[#64748B] block">
+                Centang ini jika orang tua telah membayar SPP secara tunai / transfer offline ke tempat les.
+              </span>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E2E8F0]">
+              <button
+                type="button"
+                onClick={() => setEditingDueDateSiswa(null)}
+                className="px-4 py-2 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#475569] font-bold rounded-lg transition-colors cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                disabled={updateDueDateMutation.isPending}
+                className="px-5 py-2 bg-[#FF7043] hover:bg-[#F4511E] text-white font-bold rounded-lg transition-colors shadow-sm cursor-pointer disabled:opacity-50"
+              >
+                {updateDueDateMutation.isPending ? 'Menyimpan...' : 'Simpan Perubahan'}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* Lightbox Modal for Transfer Proof Image */}
+      {previewImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-2xs animate-in fade-in"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div className="relative max-w-2xl max-h-[90vh] bg-white p-2 rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setPreviewImage(null)}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black font-bold z-10 cursor-pointer"
+            >
+              ✕
+            </button>
+            <img src={previewImage} alt="Preview Bukti Transfer" className="w-auto max-h-[80vh] object-contain mx-auto rounded-xl" />
+          </div>
+        </div>
       )}
 
       {/* WhatsApp Message Draft Modal */}
@@ -453,7 +669,7 @@ export const PembayaranPage: React.FC = () => {
                   navigator.clipboard.writeText(selectedWADraft.draft);
                   showToast('Teks pesan WhatsApp berhasil disalin ke clipboard');
                 }}
-                className="px-4 py-2.5 bg-[#FF7043] text-white font-bold rounded-xl hover:bg-[#F4511E] transition-colors flex items-center gap-1.5 shadow-xs"
+                className="px-4 py-2.5 bg-[#FF7043] text-white font-bold rounded-xl hover:bg-[#F4511E] transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
               >
                 Salin Teks
               </button>
@@ -468,7 +684,7 @@ export const PembayaranPage: React.FC = () => {
                 </a>
                 <button
                   onClick={() => setIsWADraftModalOpen(false)}
-                  className="px-4 py-2.5 bg-[#F1F5F9] text-[#475569] font-bold rounded-xl hover:bg-[#E2E8F0] border border-[#E2E8F0]"
+                  className="px-4 py-2.5 bg-[#F1F5F9] text-[#475569] font-bold rounded-xl hover:bg-[#E2E8F0] border border-[#E2E8F0] cursor-pointer"
                 >
                   Tutup
                 </button>
@@ -517,4 +733,4 @@ export const PembayaranPage: React.FC = () => {
   );
 };
 
-export default PembayaranPage;
+export default SharedPembayaranPage;

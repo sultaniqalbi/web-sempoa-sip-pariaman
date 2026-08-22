@@ -22,6 +22,7 @@ import SharedDashboardPage from './pages/portal/DashboardPage';
 import SharedSiswaPage from './pages/portal/SiswaPage';
 import SharedGuruPage from './pages/portal/GuruPage';
 import SharedJadwalPage from './pages/portal/JadwalPage';
+import SharedAbsensiPage from './pages/portal/AbsensiPage';
 import SharedPembayaranPage from './pages/portal/PembayaranPage';
 import SharedGaleriPage from './pages/portal/GaleriPage';
 
@@ -82,6 +83,7 @@ export function App() {
                 <Route path="siswa" element={<SharedSiswaPage />} />
                 <Route path="guru" element={<SharedGuruPage />} />
                 <Route path="jadwal" element={<SharedJadwalPage />} />
+                <Route path="absensi" element={<SharedAbsensiPage />} />
                 <Route path="pembayaran" element={<SharedPembayaranPage />} />
                 <Route path="galeri" element={<SharedGaleriPage />} />
               </Route>
@@ -100,6 +102,7 @@ export function App() {
                 <Route path="siswa" element={<SharedSiswaPage />} />
                 <Route path="guru" element={<SharedGuruPage />} />
                 <Route path="jadwal" element={<SharedJadwalPage />} />
+                <Route path="absensi" element={<SharedAbsensiPage />} />
                 <Route path="pembayaran" element={<SharedPembayaranPage />} />
                 <Route path="galeri" element={<SharedGaleriPage />} />
 
@@ -122,6 +125,7 @@ export function App() {
                 <Route path="siswa" element={<SharedSiswaPage />} />
                 <Route path="guru" element={<SharedGuruPage />} />
                 <Route path="jadwal" element={<SharedJadwalPage />} />
+                <Route path="absensi" element={<SharedAbsensiPage />} />
                 <Route path="pembayaran" element={<SharedPembayaranPage />} />
                 <Route path="galeri" element={<SharedGaleriPage />} />
                 <Route path="pertumbuhan" element={<PertumbuhanPage />} />

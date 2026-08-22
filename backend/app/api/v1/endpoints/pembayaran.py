@@ -10,7 +10,7 @@ from app.core.dependencies import get_current_user, RoleChecker
 from app.models.users import User, UserRole
 from app.models.pembayaran_periode import PembayaranPeriode, StatusPembayaran
 from app.models.siswa import Siswa
-from app.schemas.pembayaran import PembayaranCreate, PembayaranResponse
+from app.schemas.pembayaran import PembayaranCreate, PembayaranResponse, PembayaranDueDateUpdate
 from app.crud import pembayaran as crud_pembayaran
 
 router = APIRouter()
@@ -283,6 +283,77 @@ async def update_payment_status_endpoint(
     if not pembayaran:
         raise HTTPException(status_code=404, detail="Tagihan pembayaran tidak ditemukan")
     return crud_pembayaran.update_pembayaran_status(db, db_pembayaran=pembayaran, status=status_str)
+
+@router.put("/siswa/{siswa_id}/due-date")
+async def update_siswa_payment_due_date(
+    siswa_id: int,
+    payload: PembayaranDueDateUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(admin_or_owner)
+):
+    """
+    Update manual tanggal jatuh tempo, status pembayaran, atau mark lunas SPP siswa
+    """
+    from app.models.siswa import StatusSPP
+    siswa = db.query(Siswa).filter(Siswa.id == siswa_id, Siswa.is_deleted == False).first()
+    if not siswa:
+        raise HTTPException(status_code=404, detail="Siswa tidak ditemukan")
+    
+    bill = db.query(PembayaranPeriode).filter(
+        PembayaranPeriode.id_siswa == siswa.id
+    ).order_by(PembayaranPeriode.created_at.desc()).first()
+
+    if not bill:
+        periode_now = datetime.utcnow().strftime("%Y-%m")
+        spp_amount = get_spp_nominal(siswa.kategori_program)
+        bill = PembayaranPeriode(
+            id_siswa=siswa.id,
+            periode_bulan=periode_now,
+            jumlah=payload.jumlah or spp_amount,
+            status=payload.status or StatusPembayaran.MENUNGGAK,
+            due_date=payload.due_date
+        )
+        db.add(bill)
+    else:
+        if payload.due_date is not None:
+            bill.due_date = payload.due_date
+        if payload.status is not None:
+            bill.status = payload.status
+        if payload.jumlah is not None:
+            bill.jumlah = payload.jumlah
+        db.add(bill)
+
+    if payload.status == StatusPembayaran.LUNAS:
+        siswa.status_spp = StatusSPP.AKTIF
+        if payload.tambah_kuota:
+            siswa.sisa_pertemuan = (siswa.sisa_pertemuan or 0) + (siswa.target_pertemuan or 8)
+        elif siswa.sisa_pertemuan == 0:
+            siswa.sisa_pertemuan = siswa.target_pertemuan or 8
+        db.add(siswa)
+    elif payload.status in [StatusPembayaran.MENUNGGAK, StatusPembayaran.OVERDUE]:
+        if siswa.sisa_pertemuan == 0:
+            siswa.status_spp = StatusSPP.EXPIRED
+        db.add(siswa)
+
+    db.commit()
+    db.refresh(bill)
+    return {
+        "status": "success",
+        "message": f"Status SPP & Jatuh Tempo untuk {siswa.nama} berhasil diperbarui",
+        "siswa": {
+            "id": siswa.id,
+            "nama": siswa.nama,
+            "sisa_pertemuan": siswa.sisa_pertemuan,
+            "status_spp": siswa.status_spp.value if hasattr(siswa.status_spp, 'value') else str(siswa.status_spp)
+        },
+        "pembayaran": {
+            "id": bill.id,
+            "due_date": str(bill.due_date) if bill.due_date else None,
+            "status": bill.status.value if hasattr(bill.status, 'value') else str(bill.status),
+            "jumlah": float(bill.jumlah)
+        }
+    }
+
 
 @router.post("/export-sheets")
 async def export_pembayaran_sheets(

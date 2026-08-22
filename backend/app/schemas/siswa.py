@@ -63,3 +63,10 @@ class SiswaCreateResponse(BaseModel):
     password_sent_via: str = "whatsapp"
     ortu_password_plaintext: Optional[str] = None
     whatsapp_number: Optional[str] = None
+
+class SiswaPertemuanUpdate(BaseModel):
+    sisa_pertemuan: int
+    target_pertemuan: Optional[int] = None
+    status_spp: Optional[StatusSPP] = None
+    catatan: Optional[str] = None
+
