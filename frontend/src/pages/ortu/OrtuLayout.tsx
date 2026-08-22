@@ -126,7 +126,7 @@ export const OrtuLayout: React.FC = () => {
         const todayName = dayNames[new Date().getDay()];
 
         const response = await apiClient.get('/jadwal/');
-        const schedules: Jadwal[] = response.data;
+        const schedules: Jadwal[] = response.data || [];
 
         // Try exact match for child's program + today
         const matchingSchedule = schedules.find(
@@ -137,14 +137,14 @@ export const OrtuLayout: React.FC = () => {
 
         if (matchingSchedule) {
           return {
-            program: matchingSchedule.kategori_program,
-            hari: matchingSchedule.hari,
+            kode_program: matchingSchedule.kategori_program || child.kategori_program || 'Sempoa SIP',
+            nama_program: child.kategori_program || 'Sempoa SIP',
             jam_mulai: matchingSchedule.jam_mulai,
             jam_selesai: matchingSchedule.jam_selesai,
-            ruangan: matchingSchedule.ruangan || 'TC Pariaman',
-            mode: matchingSchedule.mode || 'Tatap Muka',
-            nama_guru: matchingSchedule.guru?.nama || child.guru?.nama,
-            no_wa_guru: matchingSchedule.guru?.no_hp || child.guru?.no_hp,
+            ruangan: matchingSchedule.lokasi || 'TC Pariaman',
+            mode_kelas: matchingSchedule.mode_kelas || 'Tatap Muka',
+            kode_guru: 'Guru TC Pariaman',
+            no_wa_guru: '628126784986',
           };
         }
 
@@ -155,37 +155,37 @@ export const OrtuLayout: React.FC = () => {
 
         if (progSchedule) {
           return {
-            program: progSchedule.kategori_program,
-            hari: progSchedule.hari,
+            kode_program: progSchedule.kategori_program || child.kategori_program || 'Sempoa SIP',
+            nama_program: child.kategori_program || 'Sempoa SIP',
             jam_mulai: progSchedule.jam_mulai,
             jam_selesai: progSchedule.jam_selesai,
-            ruangan: progSchedule.ruangan || 'TC Pariaman',
-            mode: progSchedule.mode || 'Tatap Muka',
-            nama_guru: progSchedule.guru?.nama || child.guru?.nama,
-            no_wa_guru: progSchedule.guru?.no_hp || child.guru?.no_hp,
+            ruangan: progSchedule.lokasi || 'TC Pariaman',
+            mode_kelas: progSchedule.mode_kelas || 'Tatap Muka',
+            kode_guru: 'Guru TC Pariaman',
+            no_wa_guru: '628126784986',
           };
         }
 
         return {
-          program: child.kategori_program || 'Sempoa SIP',
-          hari: child.hari_masuk || 'Senin, Kamis',
+          kode_program: child.kategori_program || 'Sempoa SIP',
+          nama_program: child.kategori_program || 'Sempoa SIP',
           jam_mulai: '09:00',
           jam_selesai: '17:00',
           ruangan: 'TC Pariaman - Ruang Sempoa',
-          mode: 'Tatap Muka',
-          nama_guru: child.guru?.nama || 'rehan uhuy',
-          no_wa_guru: child.guru?.no_hp || '629818273672',
+          mode_kelas: 'Tatap Muka',
+          kode_guru: 'Guru TC Pariaman',
+          no_wa_guru: '628126784986',
         };
       } catch (e) {
         return {
-          program: child.kategori_program || 'Sempoa SIP',
-          hari: child.hari_masuk || 'Senin, Kamis',
+          kode_program: child.kategori_program || 'Sempoa SIP',
+          nama_program: child.kategori_program || 'Sempoa SIP',
           jam_mulai: '09:00',
           jam_selesai: '17:00',
           ruangan: 'TC Pariaman - Ruang Sempoa',
-          mode: 'Tatap Muka',
-          nama_guru: child.guru?.nama || 'rehan uhuy',
-          no_wa_guru: child.guru?.no_hp || '629818273672',
+          mode_kelas: 'Tatap Muka',
+          kode_guru: 'Guru TC Pariaman',
+          no_wa_guru: '628126784986',
         };
       }
     },
