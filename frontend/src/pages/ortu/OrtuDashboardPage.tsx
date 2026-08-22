@@ -3,6 +3,7 @@ import useAuth from '../../features/auth/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
 import { Siswa, AbsensiLog, PembayaranPeriode } from '../../types';
+import { AlertTriangleIcon } from '../../components/SvgIcons';
 import { requestAndSubscribePush, isNotificationSupported, getNotificationPermissionStatus } from '../../utils/pushManager';
 
 export const OrtuDashboardPage: React.FC = () => {
@@ -533,8 +534,8 @@ export const OrtuDashboardPage: React.FC = () => {
             ) : (
               <div className="bg-gradient-to-r from-[#FFEBEE] via-[#FFCDD2] to-[#EF9A9A] p-5 border-b border-[#EF9A9A]">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-[#D32F2F] text-white flex items-center justify-center flex-shrink-0 shadow-md font-bold text-xl">
-                    ⚠️
+                  <div className="w-10 h-10 rounded-2xl bg-[#D32F2F] text-white flex items-center justify-center flex-shrink-0 shadow-md font-bold">
+                    <AlertTriangleIcon size={22} className="text-white" />
                   </div>
                   <div>
                     <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-[#FFEBEE] text-[#C62828] border border-[#FFCDD2]">
@@ -590,12 +591,15 @@ export const OrtuDashboardPage: React.FC = () => {
                 </div>
               ) : (
                 <div className="space-y-3.5">
-                  <div className="p-3 bg-[#FFEBEE] border border-[#FFCDD2] rounded-xl text-[#C62828] text-[11px] font-medium leading-relaxed">
-                    {isHangus
-                      ? '⚠️ Masa bimbingan 30 hari ananda telah berakhir. Sisa pertemuan dinyatakan hangus. Mohon segera melunasi SPP agar ananda dapat kembali aktif bimbingan.'
-                      : isExpired30Hari
-                      ? '⚠️ Masa bimbingan 30 hari ananda telah berakhir. Mohon segera melunasi SPP agar ananda dapat melanjutkan sesi belajar.'
-                      : `⚠️ Sisa kuota bimbingan Ananda ${child.nama} hampir habis (tinggal ${sisaPertemuan} sesi / < 20%). Mohon segera lakukan pembayaran SPP.`}
+                  <div className="p-3 bg-[#FFEBEE] border border-[#FFCDD2] rounded-xl text-[#C62828] text-[11px] font-medium leading-relaxed flex items-start gap-2">
+                    <AlertTriangleIcon size={16} className="text-[#C62828] shrink-0 mt-0.5" />
+                    <span>
+                      {isHangus
+                        ? 'Masa bimbingan 30 hari ananda telah berakhir. Sisa pertemuan dinyatakan hangus. Mohon segera melunasi SPP agar ananda dapat kembali aktif bimbingan.'
+                        : isExpired30Hari
+                        ? 'Masa bimbingan 30 hari ananda telah berakhir. Mohon segera melunasi SPP agar ananda dapat melanjutkan sesi belajar.'
+                        : `Sisa kuota bimbingan Ananda ${child.nama} hampir habis (tinggal ${sisaPertemuan} sesi / < 20%). Mohon segera lakukan pembayaran SPP.`}
+                    </span>
                   </div>
 
                   <div className="flex items-center justify-between px-3 py-2 bg-[#F1F8E9] rounded-xl border border-[#C8E6C9]">

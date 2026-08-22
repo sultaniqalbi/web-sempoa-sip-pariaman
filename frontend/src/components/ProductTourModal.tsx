@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { LightbulbIcon } from './SvgIcons';
 
 export interface TourStep {
   targetId: string;
   title: string;
   description: string;
   categoryBadge?: string;
-  icon?: string;
+  icon?: React.ReactNode;
 }
 
 interface ProductTourModalProps {
@@ -188,7 +189,7 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
           {/* Header Bar */}
           <div className="bg-gradient-to-r from-[#FF7043] to-[#F4511E] px-5 py-3.5 flex items-center justify-between text-white">
             <div className="flex items-center gap-2">
-              <span className="text-lg">💡</span>
+              <LightbulbIcon size={18} className="text-white" />
               <span className="text-xs font-black tracking-wider uppercase bg-white/20 px-2.5 py-0.5 rounded-full">
                 {currentStep.categoryBadge || 'Panduan Portal'}
               </span>
@@ -264,7 +265,7 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
                   onClick={handleNext}
                   className="px-5 py-2 bg-gradient-to-r from-[#FF7043] to-[#F4511E] hover:from-[#F4511E] hover:to-[#E64A19] text-white font-black text-xs rounded-xl shadow-md shadow-orange-500/25 transition-all cursor-pointer active:scale-95 flex items-center gap-1.5"
                 >
-                  <span>{currentStepIndex === steps.length - 1 ? 'Selesai ✨' : 'Lanjut →'}</span>
+                  <span>{currentStepIndex === steps.length - 1 ? 'Selesai' : 'Lanjut →'}</span>
                 </button>
               </div>
             </div>

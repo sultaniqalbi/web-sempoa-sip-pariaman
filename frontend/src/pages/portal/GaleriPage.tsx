@@ -137,7 +137,7 @@ export const GaleriPage: React.FC = () => {
     },
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['galeri'] });
-      showToast(data.is_highlighted ? '⭐ Foto disorot di halaman utama' : 'Sorotan foto dihapus');
+      showToast(data.is_highlighted ? 'Foto disorot di halaman utama' : 'Sorotan foto dihapus');
     },
     onError: (err: any) => {
       showToast(err.response?.data?.detail || `Gagal toggle sorotan: ${err.message}`, 'error');
@@ -433,7 +433,7 @@ export const GaleriPage: React.FC = () => {
                     }}
                   />
 
-                  {/* ⭐ Star Badge (top-right) for highlighted photos */}
+                  {/* Star Badge (top-right) for highlighted photos */}
                   {item.is_highlighted && (
                     <div className="absolute top-2 right-2 z-10">
                       <div className="w-8 h-8 bg-[#FF7043] rounded-full flex items-center justify-center shadow-lg border-2 border-white">
@@ -502,7 +502,7 @@ export const GaleriPage: React.FC = () => {
                       <span className={`text-[11px] font-bold ${
                         item.is_highlighted ? 'text-[#FF7043]' : 'text-[#94A3B8]'
                       }`}>
-                        {item.is_highlighted ? '⭐ Disorot' : 'Sorot'}
+                        {item.is_highlighted ? 'Disorot' : 'Sorot'}
                       </span>
                     </button>
 

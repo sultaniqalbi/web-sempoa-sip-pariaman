@@ -3,6 +3,7 @@ import useAuth from '../../features/auth/useAuth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
 import { Siswa, PembayaranPeriode } from '../../types';
+import { WhatsAppIcon, CameraIcon } from '../../components/SvgIcons';
 
 interface ProofItem {
   id: number;
@@ -322,7 +323,8 @@ export const PembayaranOrtuPage: React.FC = () => {
             rel="noreferrer"
             className="flex items-center justify-center gap-2 py-3 bg-[#25D366] hover:bg-[#1EBE5D] text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-[0.98]"
           >
-            <span>💬 Konfirmasi ke Direktur</span>
+            <WhatsAppIcon size={16} />
+            <span>Konfirmasi ke Direktur</span>
           </a>
           <a
             href={waUrlAdmin}
@@ -330,7 +332,8 @@ export const PembayaranOrtuPage: React.FC = () => {
             rel="noreferrer"
             className="flex items-center justify-center gap-2 py-3 bg-[#1976D2] hover:bg-[#1565C0] text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-[0.98]"
           >
-            <span>💬 Bantuan Admin</span>
+            <WhatsAppIcon size={16} />
+            <span>Bantuan Admin</span>
           </a>
         </div>
       </div>
@@ -339,7 +342,7 @@ export const PembayaranOrtuPage: React.FC = () => {
       <div className="bg-white border border-[#E0E0E0] rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-5 space-y-4">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center font-black">
-            📷
+            <CameraIcon size={18} />
           </div>
           <div>
             <h3 className="text-sm font-extrabold text-[#1E293B]">Upload Bukti Pembayaran SPP</h3>

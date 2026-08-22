@@ -4,7 +4,7 @@ import apiClient from '../../features/api/apiClient';
 import { DateRangePicker, RangeOption } from '../../components/DateRangePicker';
 import PageHeader from '../../components/PageHeader';
 import MetricCard from '../../components/MetricCard';
-import { MuridIcon, GuruGroupIcon, UangIcon } from '../../components/SvgIcons';
+import { MuridIcon, GuruGroupIcon, UangIcon, AlertTriangleIcon } from '../../components/SvgIcons';
 import ExportStatusModal, { ExportStatusResult } from '../../components/ExportStatusModal';
 import { 
   BarChart, Bar, 
@@ -80,8 +80,9 @@ export const PertumbuhanPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="p-6 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-400 text-sm">
-        ⚠️ Akses ditolak atau gagal memuat data pertumbuhan (Khusus Role Direktur).
+      <div className="p-6 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-400 text-sm flex items-center gap-2">
+        <AlertTriangleIcon size={18} className="text-rose-400 shrink-0" />
+        <span>Akses ditolak atau gagal memuat data pertumbuhan (Khusus Role Direktur).</span>
       </div>
     );
   }

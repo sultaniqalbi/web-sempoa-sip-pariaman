@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../../features/api/apiClient';
+import { EditIcon } from '../../../components/SvgIcons';
 
 export interface SiswaAbsensi {
   no: number;
@@ -262,10 +263,10 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
                         <button
                           type="button"
                           onClick={() => openEditModal(siswa)}
-                          className="p-1 rounded-md bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#FF7043] border border-[#FFCC80] text-[10px] font-bold transition-all active:scale-95 cursor-pointer shadow-2xs"
+                          className="p-1 rounded-md bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#FF7043] border border-[#FFCC80] text-[10px] font-bold transition-all active:scale-95 cursor-pointer shadow-2xs flex items-center justify-center"
                           title="Edit Jumlah Pertemuan Siswa"
                         >
-                          ✏️
+                          <EditIcon size={11} />
                         </button>
                       </div>
                       {siswa.is_hangus ? (

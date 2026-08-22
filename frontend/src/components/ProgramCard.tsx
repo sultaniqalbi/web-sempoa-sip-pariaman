@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { EditIcon } from './SvgIcons';
 
 interface ProgramCardProps {
   title: string;
@@ -25,7 +26,8 @@ export const ProgramCard: React.FC<ProgramCardProps> = ({ title, desc, color, ag
           to="/register"
           className="inline-flex items-center gap-1.5 text-xs font-bold bg-white text-slate-950 px-4 py-2 rounded-xl hover:bg-slate-100 transition-colors"
         >
-          Daftar Sekarang ✏️
+          <span>Daftar Sekarang</span>
+          <EditIcon size={12} />
         </Link>
       </div>
     </div>

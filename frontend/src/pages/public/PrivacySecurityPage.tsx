@@ -1,31 +1,29 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
+import {
+  ShieldCheckIcon,
+  LockIcon,
+  ScaleIcon,
+  UserIcon,
+} from '../../components/SvgIcons';
 
 export const PrivacySecurityPage: React.FC = () => {
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#1E293B] font-sans antialiased selection:bg-[#FF7043] selection:text-white">
-      {/* 1. Header Navigation Bar */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-[#E2E8F0] shadow-xs">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3 group">
+    <div className="min-h-screen bg-[#F8FAFC] text-[#1E293B]" style={{ fontFamily: "'Inter', sans-serif" }}>
+      {/* 1. Top Navbar */}
+      <header className="bg-white border-b border-[#E2E8F0] sticky top-0 z-30 shadow-2xs">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-3">
             <img src="/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa SIP" className="h-9 w-auto" />
-            <div>
-              <span className="font-black text-base sm:text-lg text-[#FF7043] tracking-tight group-hover:text-[#F4511E] transition-colors block">
-                Sempoa SIP TC Pariaman
-              </span>
-              <span className="text-[10px] text-[#64748B] font-bold block -mt-1 tracking-wider uppercase">
-                Pusat Keamanan & Privasi
-              </span>
+            <div className="hidden sm:block">
+              <span className="font-extrabold text-sm text-[#FF7043] tracking-tight block">Sempoa SIP TC Pariaman</span>
+              <span className="text-[10px] text-[#64748B] font-semibold block">Pusat Informasi Privasi & Keamanan</span>
             </div>
           </Link>
 
           <Link
             to="/"
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#F1F5F9] hover:bg-[#FFE0B2] text-[#475569] hover:text-[#E65100] text-xs font-bold transition-all border border-[#CBD5E1] cursor-pointer"
+            className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-[#CBD5E1] text-xs font-bold text-[#475569] hover:bg-[#F1F5F9] hover:text-[#0F172A] transition-all shadow-2xs cursor-pointer"
           >
             <span>←</span>
             <span>Kembali ke Beranda</span>
@@ -37,7 +35,7 @@ export const PrivacySecurityPage: React.FC = () => {
       <section className="relative overflow-hidden bg-gradient-to-b from-[#FFF3E0] via-[#FFF8F5] to-[#F8FAFC] py-12 sm:py-16 border-b border-[#FFE0B2]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center space-y-4">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-[#FFCC80] text-[#E65100] text-xs font-extrabold shadow-xs">
-            <span>🛡️</span>
+            <ShieldCheckIcon size={16} />
             <span>STANDAR KEAMANAN RESMI & KEBIJAKAN PRIVASI DATA</span>
           </div>
 
@@ -51,17 +49,17 @@ export const PrivacySecurityPage: React.FC = () => {
 
           {/* Badges */}
           <div className="flex flex-wrap items-center justify-center gap-2.5 pt-2">
-            <span className="px-3 py-1 bg-white border border-[#CBD5E1] rounded-lg text-xs font-bold text-[#334155] shadow-2xs">
-              🔒 Enkripsi TLS 1.3 & HTTPS
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-[#CBD5E1] rounded-lg text-xs font-bold text-[#334155] shadow-2xs">
+              <LockIcon size={14} className="text-[#FF7043]" /> Enkripsi TLS 1.3 & HTTPS
             </span>
-            <span className="px-3 py-1 bg-white border border-[#CBD5E1] rounded-lg text-xs font-bold text-[#334155] shadow-2xs">
-              🔑 Bcrypt Password Hashing (12 Rounds)
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-[#CBD5E1] rounded-lg text-xs font-bold text-[#334155] shadow-2xs">
+              <ShieldCheckIcon size={14} className="text-[#FF7043]" /> Bcrypt Hashing (12 Rounds)
             </span>
-            <span className="px-3 py-1 bg-white border border-[#CBD5E1] rounded-lg text-xs font-bold text-[#334155] shadow-2xs">
-              👶 Perlindungan Khusus Data Anak
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-[#CBD5E1] rounded-lg text-xs font-bold text-[#334155] shadow-2xs">
+              <UserIcon size={14} className="text-[#FF7043]" /> Perlindungan Data Anak
             </span>
-            <span className="px-3 py-1 bg-white border border-[#CBD5E1] rounded-lg text-xs font-bold text-[#334155] shadow-2xs">
-              ⚖️ Kepatuhan UU PDP No. 27/2022
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-[#CBD5E1] rounded-lg text-xs font-bold text-[#334155] shadow-2xs">
+              <ScaleIcon size={14} className="text-[#FF7043]" /> Kepatuhan UU PDP No. 27/2022
             </span>
           </div>
         </div>
@@ -69,7 +67,6 @@ export const PrivacySecurityPage: React.FC = () => {
 
       {/* 3. Main Content Container */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-10 space-y-10">
-        {/* Section 1: Prinsip Dasar */}
         <section className="bg-white p-6 sm:p-8 rounded-2xl border border-[#E2E8F0] shadow-xs space-y-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center font-bold text-lg">
@@ -84,15 +81,24 @@ export const PrivacySecurityPage: React.FC = () => {
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
             <div className="p-3.5 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0]">
-              <p className="text-xs font-black text-[#0F172A] mb-1">🎯 Tujuan Jelas</p>
+              <div className="flex items-center gap-1.5 mb-1 text-[#0F172A]">
+                <TargetIcon size={14} className="text-[#FF7043]" />
+                <p className="text-xs font-black">Tujuan Jelas</p>
+              </div>
               <p className="text-[11px] text-[#64748B]">Data dikumpulkan murni untuk administrasi belajar, absensi kartu RFID, dan konfirmasi tagihan SPP.</p>
             </div>
             <div className="p-3.5 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0]">
-              <p className="text-xs font-black text-[#0F172A] mb-1">🛡️ Tanpa Pihak Ketiga</p>
+              <div className="flex items-center gap-1.5 mb-1 text-[#0F172A]">
+                <ShieldCheckIcon size={14} className="text-[#FF7043]" />
+                <p className="text-xs font-black">Tanpa Pihak Ketiga</p>
+              </div>
               <p className="text-[11px] text-[#64748B]">Kami tidak pernah menjual, menyewakan, atau membagikan data siswa/orang tua kepada pengiklan manapun.</p>
             </div>
             <div className="p-3.5 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0]">
-              <p className="text-xs font-black text-[#0F172A] mb-1">🔐 Enkripsi Menyeluruh</p>
+              <div className="flex items-center gap-1.5 mb-1 text-[#0F172A]">
+                <LockIcon size={14} className="text-[#FF7043]" />
+                <p className="text-xs font-black">Enkripsi Menyeluruh</p>
+              </div>
               <p className="text-[11px] text-[#64748B]">Komunikasi data jaringan dilindungi sertifikat SSL/TLS dengan protokol keamanan transport terverifikasi.</p>
             </div>
           </div>
@@ -159,7 +165,7 @@ export const PrivacySecurityPage: React.FC = () => {
 
           <div className="space-y-3 pt-1 text-xs">
             <div className="p-4 rounded-xl border border-[#E2E8F0] bg-[#FAFAFA] flex items-start gap-3">
-              <span className="text-lg">🔐</span>
+              <LockIcon size={20} className="text-[#FF7043] shrink-0 mt-0.5" />
               <div>
                 <h4 className="font-extrabold text-[#0F172A]">Pengacakan Kata Sandi (Bcrypt 12 Rounds)</h4>
                 <p className="text-[#64748B] mt-0.5 leading-relaxed">
@@ -169,7 +175,7 @@ export const PrivacySecurityPage: React.FC = () => {
             </div>
 
             <div className="p-4 rounded-xl border border-[#E2E8F0] bg-[#FAFAFA] flex items-start gap-3">
-              <span className="text-lg">🛡️</span>
+              <ShieldCheckIcon size={20} className="text-[#FF7043] shrink-0 mt-0.5" />
               <div>
                 <h4 className="font-extrabold text-[#0F172A]">Role-Based Access Control (RBAC) & Anti-IDOR</h4>
                 <p className="text-[#64748B] mt-0.5 leading-relaxed">
@@ -179,7 +185,7 @@ export const PrivacySecurityPage: React.FC = () => {
             </div>
 
             <div className="p-4 rounded-xl border border-[#E2E8F0] bg-[#FAFAFA] flex items-start gap-3">
-              <span className="text-lg">📡</span>
+              <TargetIcon size={20} className="text-[#FF7043] shrink-0 mt-0.5" />
               <div>
                 <h4 className="font-extrabold text-[#0F172A]">Keamanan Perangkat Keras Absensi (ESP32 RFID)</h4>
                 <p className="text-[#64748B] mt-0.5 leading-relaxed">
@@ -189,7 +195,7 @@ export const PrivacySecurityPage: React.FC = () => {
             </div>
 
             <div className="p-4 rounded-xl border border-[#E2E8F0] bg-[#FAFAFA] flex items-start gap-3">
-              <span className="text-lg">⚡</span>
+              <LightningIcon size={20} className="text-[#FF7043] shrink-0 mt-0.5" />
               <div>
                 <h4 className="font-extrabold text-[#0F172A]">Pemberitahuan Web Push Terenkripsi (VAPID)</h4>
                 <p className="text-[#64748B] mt-0.5 leading-relaxed">
@@ -256,7 +262,7 @@ export const PrivacySecurityPage: React.FC = () => {
         {/* Section 6: Kontak & Pengaduan */}
         <section className="bg-gradient-to-br from-[#0F172A] to-[#1E293B] text-white p-6 sm:p-8 rounded-2xl shadow-xl space-y-4">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">📞</span>
+            <PhoneIcon size={24} className="text-[#FF7043]" />
             <h2 className="text-lg sm:text-xl font-black text-white">
               Kontak Petugas Perlindungan Data & Pengelola Resmi
             </h2>
@@ -280,7 +286,8 @@ export const PrivacySecurityPage: React.FC = () => {
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-[#25D366] hover:bg-[#1EBE5D] text-white font-black rounded-xl transition-all shadow-md active:scale-95 text-xs"
               >
-                <span>💬 WhatsApp Direktur (0812-6784-986)</span>
+                <WhatsAppIcon size={16} />
+                <span>WhatsApp Direktur (0812-6784-986)</span>
               </a>
             </div>
           </div>

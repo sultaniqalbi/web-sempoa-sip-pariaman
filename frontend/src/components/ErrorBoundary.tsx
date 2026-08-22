@@ -1,4 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { AlertTriangleIcon } from './SvgIcons';
 
 interface Props {
   children?: ReactNode;
@@ -28,8 +29,8 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-6">
           <div className="max-w-md w-full bg-slate-800 rounded-2xl p-8 border border-slate-700 shadow-2xl text-center space-y-6">
-            <div className="w-16 h-16 bg-rose-500/10 text-rose-500 rounded-full mx-auto flex items-center justify-center text-3xl font-extrabold shadow-lg">
-              ⚠️
+            <div className="w-16 h-16 bg-rose-500/10 text-rose-500 rounded-full mx-auto flex items-center justify-center shadow-lg">
+              <AlertTriangleIcon size={32} className="text-rose-500" />
             </div>
             <div>
               <h1 className="text-xl font-bold tracking-tight text-white">Terjadi Masalah Sistem</h1>

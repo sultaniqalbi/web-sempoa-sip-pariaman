@@ -9,7 +9,7 @@ import { ApaItuSempoa } from '../../components/ApaItuSempoa';
 import { LevelPembelajaran } from '../../components/LevelPembelajaran';
 import { MengapaBelajarSempoa } from '../../components/MengapaBelajarSempoa';
 import { DiakuiInternasional } from '../../components/DiakuiInternasional';
-import { MenuIcon, CloseIcon, MapPinIcon, CheckIcon, CubesIcon } from '../../components/SvgIcons';
+import { MenuIcon, CloseIcon, MapPinIcon, CheckIcon, CubesIcon, ShieldCheckIcon } from '../../components/SvgIcons';
 
 const programsData = [
   {
@@ -1056,8 +1056,9 @@ export const HomePage: React.FC = () => {
                 © 2026 Sempoa SIP TC Pariaman. Hak Cipta Dilindungi.
               </p>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '14px', flexWrap: 'wrap', fontSize: '0.8rem', color: '#94a3b8' }}>
-                <Link to="/privasi-keamanan" style={{ color: 'inherit', textDecoration: 'underline', transition: 'color 0.2s' }}>
-                  🛡️ Privasi & Keamanan Data
+                <Link to="/privasi-keamanan" style={{ color: 'inherit', textDecoration: 'underline', transition: 'color 0.2s', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                  <ShieldCheckIcon size={14} className="text-[#FF7043]" />
+                  <span>Privasi & Keamanan Data</span>
                 </Link>
               </div>
             </div>

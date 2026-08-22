@@ -9,47 +9,48 @@ import ScheduleCard, { ScheduleData } from './components/ScheduleCard';
 import FeatureTiles from './components/FeatureTiles';
 import OrtuBottomNav from './components/OrtuBottomNav';
 import ProductTourModal, { TourStep } from '../../components/ProductTourModal';
+import { UserIcon, CalendarIcon, CubesIcon, BellIcon, ChatBubbleIcon, DocumentTextIcon } from '../../components/SvgIcons';
 
 const TOUR_STEPS: TourStep[] = [
   {
     targetId: 'tour-ortu-header',
     categoryBadge: 'PROFIL & AKUN',
-    icon: '👤',
+    icon: <UserIcon size={20} className="text-[#FF7043]" />,
     title: 'Profil Ananda & Akun Orang Tua',
     description: 'Bagian ini memuat nama lengkap ananda, foto profil, kategori program kursus yang sedang diikuti, serta nomor WhatsApp terdaftar.',
   },
   {
     targetId: 'tour-ortu-schedule',
     categoryBadge: 'JADWAL KELAS',
-    icon: '📅',
+    icon: <CalendarIcon size={20} className="text-[#FF7043]" />,
     title: 'Jadwal Kelas Belajar Hari Ini',
     description: 'Informasi lengkap mengenai jadwal sesi belajar hari ini, ruangan kelas (atau kelas online), jam masuk, serta kontak pengajar.',
   },
   {
     targetId: 'tour-ortu-features',
     categoryBadge: 'MENU UTAMA',
-    icon: '🧭',
+    icon: <CubesIcon size={20} className="text-[#FF7043]" />,
     title: 'Akses Cepat Fitur Utama',
     description: 'Tombol navigasi cepat untuk beralih antara Dashboard Ringkasan, Detail Profil Anak Saya, dan Rincian Tagihan Pembayaran SPP.',
   },
   {
     targetId: 'tour-ortu-push',
     categoryBadge: 'NOTIFIKASI PUSH',
-    icon: '🔔',
+    icon: <BellIcon size={20} className="text-[#FF7043]" />,
     title: 'Notifikasi Otomatis ke HP',
     description: 'Aktifkan izin notifikasi di HP Anda untuk menerima pemberitahuan otomatis saat ananda tap kartu absensi RFID dan saat jatuh tempo SPP mendekat.',
   },
   {
     targetId: 'tour-ortu-contact',
     categoryBadge: 'BANTUAN & DIREKTUR',
-    icon: '💬',
+    icon: <ChatBubbleIcon size={20} className="text-[#FF7043]" />,
     title: 'Kontak Langsung Pengelola & Direktur',
     description: 'Hubungi Admin untuk bantuan operasional jadwal, atau hubungi Direktur secara langsung untuk konfirmasi pembayaran SPP dan layanan pembelajaran.',
   },
   {
     targetId: 'tour-ortu-attendance',
     categoryBadge: 'ABSENSI & CATATAN',
-    icon: '📝',
+    icon: <DocumentTextIcon size={20} className="text-[#FF7043]" />,
     title: 'Riwayat Absensi & Catatan Guru',
     description: 'Pantau riwayat kehadiran ananda dari mesin RFID secara real-time dan baca catatan evaluasi perkembangan belajar langsung dari guru pengajar.',
   },

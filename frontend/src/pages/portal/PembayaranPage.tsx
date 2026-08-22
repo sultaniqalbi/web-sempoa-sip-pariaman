@@ -6,7 +6,7 @@ import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
 import PageHeader from '../../components/PageHeader';
 import EmptyState from '../../components/EmptyState';
-import { PembayaranIcon, EditIcon } from '../../components/SvgIcons';
+import { PembayaranIcon, EditIcon, WhatsAppIcon, CameraIcon, DocumentTextIcon } from '../../components/SvgIcons';
 
 interface ReminderItem {
   id_siswa: number;
@@ -327,18 +327,20 @@ export const SharedPembayaranPage: React.FC = () => {
           {row.status === 'urgent' ? (
             <button
               onClick={() => openWAModal(row, 'urgent')}
-              className="px-2.5 py-1.5 bg-[#D32F2F] text-white text-xs font-bold rounded-lg hover:bg-[#B71C1C] flex items-center gap-1 shadow-2xs transition-all active:scale-95 cursor-pointer"
+              className="px-2.5 py-1.5 bg-[#D32F2F] text-white text-xs font-bold rounded-lg hover:bg-[#B71C1C] flex items-center gap-1.5 shadow-2xs transition-all active:scale-95 cursor-pointer"
               title="Kirim Pesan WA Tagihan"
             >
-              <span>📱 Draf WA</span>
+              <WhatsAppIcon size={14} />
+              <span>Draf WA</span>
             </button>
           ) : (
             <button
               onClick={() => openWAModal(row, 'peringatan')}
-              className="px-2.5 py-1.5 bg-[#E65100] text-white text-xs font-bold rounded-lg hover:bg-[#C84300] flex items-center gap-1 shadow-2xs transition-all active:scale-95 cursor-pointer"
+              className="px-2.5 py-1.5 bg-[#E65100] text-white text-xs font-bold rounded-lg hover:bg-[#C84300] flex items-center gap-1.5 shadow-2xs transition-all active:scale-95 cursor-pointer"
               title="Kirim Pesan WA Pengingat"
             >
-              <span>📱 Draf WA</span>
+              <WhatsAppIcon size={14} />
+              <span>Draf WA</span>
             </button>
           )}
         </div>
@@ -471,23 +473,25 @@ export const SharedPembayaranPage: React.FC = () => {
       <div className="flex border-b border-[#E2E8F0] gap-2">
         <button
           onClick={() => setActiveTab('reminder')}
-          className={`px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-colors cursor-pointer ${
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-colors cursor-pointer ${
             activeTab === 'reminder'
               ? 'border-[#FF7043] text-[#FF7043] bg-[#FFF3E0]/50'
               : 'border-transparent text-[#64748B] hover:text-[#1E293B]'
           }`}
         >
-          📋 Reminder & Status SPP Semua Siswa ({reminderList.length})
+          <DocumentTextIcon size={16} />
+          <span>Reminder & Status SPP Semua Siswa ({reminderList.length})</span>
         </button>
         <button
           onClick={() => setActiveTab('verifikasi')}
-          className={`px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-colors cursor-pointer ${
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-colors cursor-pointer ${
             activeTab === 'verifikasi'
               ? 'border-[#FF7043] text-[#FF7043] bg-[#FFF3E0]/50'
               : 'border-transparent text-[#64748B] hover:text-[#1E293B]'
           }`}
         >
-          📷 Verifikasi Bukti Transfer ({buktiList.length})
+          <CameraIcon size={16} />
+          <span>Verifikasi Bukti Transfer ({buktiList.length})</span>
         </button>
       </div>
 
