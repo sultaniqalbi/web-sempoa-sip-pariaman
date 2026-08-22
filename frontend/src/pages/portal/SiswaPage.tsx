@@ -285,17 +285,17 @@ export const SiswaPage: React.FC = () => {
     mutationFn: async (id: number) => {
       await apiClient.delete(`/siswa/${id}`);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['siswa'] });
-      showToast('Data siswa berhasil dihapus');
+    onSuccess: (data: any) => {
+      showToast(data.message || 'Sinkronisasi ke Google Sheets berhasil!');
     },
     onError: (err: any) => {
-      showToast(`Delete gagal: ${err.message}`, 'error');
+      showToast(`Gagal sinkronisasi: ${err.response?.data?.detail || err.message}`, 'error');
     }
   });
 
   const openCreateModal = () => {
     setEditingSiswa(null);
+    setIsCustomQuota(false);
     setFormData({
       uid: `SW-${Math.floor(1000 + Math.random() * 9000)}`,
       nama: '',
@@ -312,7 +312,7 @@ export const SiswaPage: React.FC = () => {
       tanggal_lahir: '',
       asal_sekolah: '',
       target_pertemuan: 8,
-      sisa_pertemuan: 8
+      sisa_pertemuan: 0
     });
     setSelectedPhoto(null);
     setPhoneError(null);
@@ -321,6 +321,7 @@ export const SiswaPage: React.FC = () => {
 
   const openEditModal = (siswa: Siswa) => {
     setEditingSiswa(siswa);
+    setIsCustomQuota(true);
     const calculatedAge = calculateAge(siswa.tanggal_lahir);
     setFormData({
       uid: siswa.uid,
@@ -338,7 +339,7 @@ export const SiswaPage: React.FC = () => {
       tanggal_lahir: siswa.tanggal_lahir || '',
       asal_sekolah: siswa.asal_sekolah || '',
       target_pertemuan: siswa.target_pertemuan || 8,
-      sisa_pertemuan: siswa.sisa_pertemuan ?? 8
+      sisa_pertemuan: siswa.sisa_pertemuan ?? 0
     });
     setSelectedPhoto(null);
     setPhoneError(null);
@@ -353,10 +354,16 @@ export const SiswaPage: React.FC = () => {
     const ageVal = calculateAge(formData.tanggal_lahir);
     const progData = (PROGRAM_CONFIG as any)[formData.kategori_program] || PROGRAM_CONFIG['Sempoa SIP'];
     const matchedPkg = progData.packages.find((p: any) => p.label === formData.paket_jadwal) || progData.packages[0];
-    const target = formData.target_pertemuan ? parseInt(String(formData.target_pertemuan)) : matchedPkg.target;
-    const sisa = (formData.sisa_pertemuan !== undefined && formData.sisa_pertemuan !== null)
-      ? parseInt(String(formData.sisa_pertemuan))
-      : (editingSiswa ? editingSiswa.sisa_pertemuan : target);
+    
+    // Total target pertemuan (otomatis dari database sistem kecuali di-custom)
+    const target = isCustomQuota && formData.target_pertemuan
+      ? parseInt(String(formData.target_pertemuan)) || matchedPkg.target
+      : matchedPkg.target;
+
+    // Sisa pertemuan (default 0 untuk siswa baru, atau angka manual jika mode siswa lama aktif)
+    const sisa = isCustomQuota
+      ? (formData.sisa_pertemuan !== undefined && formData.sisa_pertemuan !== null ? parseInt(String(formData.sisa_pertemuan)) : 0)
+      : (editingSiswa ? (editingSiswa.sisa_pertemuan ?? 0) : 0);
 
     const payload = {
       ...formData,
@@ -747,40 +754,84 @@ export const SiswaPage: React.FC = () => {
               ))}
             </div>
 
-            {/* Custom Sisa Pertemuan & Target (Fleksibel saat migrasi buku fisik) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-[#FFCC80]">
-              <div>
-                <label className="block text-[#E65100] font-bold text-xs mb-1">
-                  Sisa Pertemuan Awal (Saat Ini)*
-                </label>
-                <input
-                  type="number"
-                  min={0}
-                  max={30}
-                  required
-                  value={formData.sisa_pertemuan}
-                  onChange={(e) => setFormData({ ...formData, sisa_pertemuan: parseInt(e.target.value) || 0 })}
-                  className="w-full bg-white border border-[#FFCC80] rounded-lg p-2 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none"
-                  placeholder="Contoh: 8 (baru) atau 3 (migrasi buku)"
-                />
-                <span className="text-[10px] text-[#BF360C] block mt-0.5 font-medium">Bisa diisi sisa kuota dari buku absen fisik saat ini</span>
+            {/* Toggle Switch: Input Siswa Lama / Migrasi Data Pertemuan Manual */}
+            <div className="pt-2.5 border-t border-[#FFE082] space-y-2.5">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-white/95 border border-[#FFD54F] shadow-2xs">
+                <div className="pr-2">
+                  <div className="flex items-center gap-2">
+                    <span className="font-extrabold text-xs text-[#E65100]">Atur Pertemuan Manual (Siswa Lama)</span>
+                    <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border transition-all ${
+                      isCustomQuota 
+                        ? 'bg-[#E8F5E9] text-[#2E7D32] border-[#A5D6A7]' 
+                        : 'bg-[#F1F5F9] text-[#64748B] border-[#CBD5E1]'
+                    }`}>
+                      {isCustomQuota ? 'Siswa Lama' : 'Siswa Baru'}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-[#78350F] mt-0.5 font-medium">
+                    {isCustomQuota
+                      ? 'Aktif: Masukkan sisa pertemuan & target dari buku absen fisik lama.'
+                      : `Otomatis: Sisa pertemuan diset 0 & Target ${matchedPkg.target} sesi sesuai paket ${formData.kategori_program}.`}
+                  </p>
+                </div>
+
+                {/* Modern Tactile Toggle Switch (Green ON / Slate OFF) */}
+                <button
+                  type="button"
+                  onClick={() => setIsCustomQuota(!isCustomQuota)}
+                  className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none shadow-inner ${
+                    isCustomQuota ? 'bg-[#4CAF50]' : 'bg-[#CBD5E1]'
+                  }`}
+                  role="switch"
+                  aria-checked={isCustomQuota}
+                  title={isCustomQuota ? 'Nonaktifkan mode siswa lama' : 'Aktifkan mode siswa lama'}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                      isCustomQuota ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
               </div>
-              <div>
-                <label className="block text-[#E65100] font-bold text-xs mb-1">
-                  Total Target Pertemuan*
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  max={30}
-                  required
-                  value={formData.target_pertemuan}
-                  onChange={(e) => setFormData({ ...formData, target_pertemuan: parseInt(e.target.value) || 8 })}
-                  className="w-full bg-white border border-[#FFCC80] rounded-lg p-2 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none"
-                  placeholder="8 atau 12"
-                />
-                <span className="text-[10px] text-[#BF360C] block mt-0.5 font-medium">Total sesi per siklus SPP</span>
-              </div>
+
+              {/* Form Input Sisa & Target Pertemuan (Hanya tampil saat toggle ON) */}
+              {isCustomQuota && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-3 bg-white/80 rounded-xl border border-[#FFCC80]">
+                  <div>
+                    <label className="block text-[#E65100] font-bold text-xs mb-1">
+                      Sisa Pertemuan Awal (Saat Ini)*
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={30}
+                      required={isCustomQuota}
+                      value={formData.sisa_pertemuan}
+                      onChange={(e) => setFormData({ ...formData, sisa_pertemuan: parseInt(e.target.value) || 0 })}
+                      className="w-full bg-white border border-[#FFCC80] rounded-lg p-2 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none text-xs"
+                      placeholder="Contoh: 3 atau 5 (sisa buku fisik)"
+                    />
+                    <span className="text-[10px] text-[#BF360C] block mt-0.5 font-medium">Bisa diisi sisa kuota dari buku absen fisik saat ini</span>
+                  </div>
+                  <div>
+                    <label className="block text-[#E65100] font-bold text-xs mb-1">
+                      Total Target Pertemuan*
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={30}
+                      required={isCustomQuota}
+                      value={formData.target_pertemuan}
+                      onChange={(e) => setFormData({ ...formData, target_pertemuan: parseInt(e.target.value) || matchedPkg.target })}
+                      className="w-full bg-white border border-[#FFCC80] rounded-lg p-2 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none text-xs"
+                      placeholder="8 atau 12"
+                    />
+                    <span className="text-[10px] text-[#BF360C] block mt-0.5 font-medium">Total sesi per siklus SPP</span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
