@@ -356,14 +356,14 @@ export const SiswaPage: React.FC = () => {
     const progData = (PROGRAM_CONFIG as any)[formData.kategori_program] || PROGRAM_CONFIG['Sempoa SIP'];
     const matchedPkg = progData.packages.find((p: any) => p.label === formData.paket_jadwal) || progData.packages[0];
     
-    // Total target pertemuan (otomatis dari database sistem kecuali di-custom)
-    const target = isCustomQuota && formData.target_pertemuan
+    // Total target pertemuan (otomatis dari paket yang dipilih atau input manual jika diedit)
+    const target = formData.target_pertemuan !== undefined && formData.target_pertemuan !== null && Number(formData.target_pertemuan) > 0
       ? parseInt(String(formData.target_pertemuan)) || matchedPkg.target
       : matchedPkg.target;
 
-    // Sisa pertemuan (default 0 untuk siswa baru, atau angka manual jika mode siswa lama aktif)
-    const sisa = isCustomQuota
-      ? (formData.sisa_pertemuan !== undefined && formData.sisa_pertemuan !== null ? parseInt(String(formData.sisa_pertemuan)) : 0)
+    // Sisa pertemuan (menggunakan angka yang diinputkan user secara presisi)
+    const sisa = formData.sisa_pertemuan !== undefined && formData.sisa_pertemuan !== null && formData.sisa_pertemuan !== ''
+      ? parseInt(String(formData.sisa_pertemuan)) || 0
       : (editingSiswa ? (editingSiswa.sisa_pertemuan ?? 0) : 0);
 
     const payload = {
@@ -695,10 +695,12 @@ export const SiswaPage: React.FC = () => {
                 const newUid = !editingSiswa ? generateKodeSiswa(newProg, formData.umur, formData.tanggal_lahir) : formData.uid;
                 const progConf = (PROGRAM_CONFIG as any)[newProg] || PROGRAM_CONFIG['Sempoa SIP'];
                 const defaultPkg = progConf.packages[0].label;
+                const defaultTarget = progConf.packages[0].target;
                 setFormData({ 
                   ...formData, 
                   kategori_program: newProg, 
                   paket_jadwal: defaultPkg,
+                  target_pertemuan: defaultTarget,
                   uid: newUid 
                 });
               }}
@@ -742,7 +744,11 @@ export const SiswaPage: React.FC = () => {
                         name="paket_jadwal"
                         value={pkg.label}
                         checked={formData.paket_jadwal === pkg.label || (!formData.paket_jadwal && idx === 0)}
-                        onChange={(e) => setFormData({ ...formData, paket_jadwal: e.target.value })}
+                        onChange={(e) => setFormData({ 
+                          ...formData, 
+                          paket_jadwal: e.target.value,
+                          target_pertemuan: pkg.target
+                        })}
                         className="accent-[#FF7043]"
                       />
                       <div className="flex-1 min-w-0">
@@ -777,7 +783,7 @@ export const SiswaPage: React.FC = () => {
                       <p className="text-[10px] text-[#78350F] mt-0.5 font-medium">
                         {isCustomQuota
                           ? 'Aktif: Masukkan sisa pertemuan & target dari buku absen fisik lama.'
-                          : `Otomatis: Sisa pertemuan diset 0 & Target ${currentSelectedPackage.target} sesi sesuai paket ${formData.kategori_program}.`}
+                          : `Otomatis: Sisa pertemuan diset 0 & Target ${formData.target_pertemuan || currentSelectedPackage.target} sesi sesuai paket ${formData.kategori_program}.`}
                       </p>
                     </div>
 
@@ -813,10 +819,13 @@ export const SiswaPage: React.FC = () => {
                           min={0}
                           max={30}
                           required={isCustomQuota}
-                          value={formData.sisa_pertemuan}
-                          onChange={(e) => setFormData({ ...formData, sisa_pertemuan: parseInt(e.target.value) || 0 })}
+                          value={formData.sisa_pertemuan === 0 ? '' : formData.sisa_pertemuan}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/^0+(?=\d)/, '');
+                            setFormData({ ...formData, sisa_pertemuan: val === '' ? 0 : parseInt(val) || 0 });
+                          }}
                           className="w-full bg-white border border-[#FFCC80] rounded-lg p-2 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none text-xs"
-                          placeholder="Contoh: 3 atau 5 (sisa buku fisik)"
+                          placeholder="0"
                         />
                         <span className="text-[10px] text-[#BF360C] block mt-0.5 font-medium">Bisa diisi sisa kuota dari buku absen fisik saat ini</span>
                       </div>
@@ -829,10 +838,13 @@ export const SiswaPage: React.FC = () => {
                           min={1}
                           max={30}
                           required={isCustomQuota}
-                          value={formData.target_pertemuan}
-                          onChange={(e) => setFormData({ ...formData, target_pertemuan: parseInt(e.target.value) || currentSelectedPackage.target })}
+                          value={formData.target_pertemuan === 0 ? '' : formData.target_pertemuan}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/^0+(?=\d)/, '');
+                            setFormData({ ...formData, target_pertemuan: val === '' ? '' : parseInt(val) || 0 });
+                          }}
                           className="w-full bg-white border border-[#FFCC80] rounded-lg p-2 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none text-xs"
-                          placeholder="8 atau 12"
+                          placeholder={String(currentSelectedPackage.target)}
                         />
                         <span className="text-[10px] text-[#BF360C] block mt-0.5 font-medium">Total sesi per siklus SPP</span>
                       </div>
