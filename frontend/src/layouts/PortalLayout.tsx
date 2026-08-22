@@ -50,7 +50,7 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
           { to: `${basePath}/galeri`, label: 'Galeri Kegiatan', icon: <GaleriIcon size={20} /> },
         ];
 
-  const portalTitle = role === 'owner' ? 'Hai Owner' : 'Admin Portal';
+  const portalTitle = role === 'owner' ? 'Hai Direktur' : 'Admin Portal';
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#FAFAFA] font-sans text-[#424242]">
@@ -107,7 +107,7 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
               <p className="text-xs font-bold text-slate-800 truncate" title={user.nama}>
                 {user.nama}
               </p>
-              <p className="text-[10px] text-slate-500 font-semibold uppercase">{user.role}</p>
+              <p className="text-[10px] text-slate-500 font-semibold uppercase">{user.role === 'owner' ? 'DIREKTUR' : user.role}</p>
             </div>
           )}
           <button
@@ -183,7 +183,7 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
               {user && (
                 <div>
                   <p className="text-xs font-bold text-slate-800 truncate">{user.nama}</p>
-                  <p className="text-[10px] text-slate-500 font-semibold uppercase">{user.role}</p>
+                  <p className="text-[10px] text-slate-500 font-semibold uppercase">{user.role === 'owner' ? 'DIREKTUR' : user.role}</p>
                 </div>
               )}
               <button

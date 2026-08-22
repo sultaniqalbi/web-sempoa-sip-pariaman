@@ -108,6 +108,27 @@ export function App() {
                 <Route path="reset-data" element={<ResetDataPage />} />
               </Route>
 
+              {/* Direktur Portal Routes (Alias) */}
+              <Route
+                path="/direktur"
+                element={
+                  <ProtectedRoute allowedRoles={['owner']}>
+                    <PortalLayout role="owner" />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<Navigate to="dashboard" replace />} />
+                <Route path="dashboard" element={<SharedDashboardPage />} />
+                <Route path="siswa" element={<SharedSiswaPage />} />
+                <Route path="guru" element={<SharedGuruPage />} />
+                <Route path="jadwal" element={<SharedJadwalPage />} />
+                <Route path="pembayaran" element={<SharedPembayaranPage />} />
+                <Route path="galeri" element={<SharedGaleriPage />} />
+                <Route path="pertumbuhan" element={<PertumbuhanPage />} />
+                <Route path="keuangan" element={<KeuanganPage />} />
+                <Route path="reset-data" element={<ResetDataPage />} />
+              </Route>
+
               {/* Teacher Portal Routes */}
               <Route
                 path="/guru"

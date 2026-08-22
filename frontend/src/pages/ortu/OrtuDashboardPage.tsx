@@ -145,7 +145,7 @@ export const OrtuDashboardPage: React.FC = () => {
   };
 
   const adminWa = '6282385813163';
-  const ownerWa = '628126784986';
+  const direkturWa = '628126784986';
 
   const bankAccounts = [
     {
@@ -322,7 +322,7 @@ export const OrtuDashboardPage: React.FC = () => {
           </a>
 
           <a
-            href={`https://wa.me/${ownerWa}`}
+            href={`https://wa.me/${direkturWa}`}
             target="_blank"
             rel="noreferrer"
             className="flex items-center justify-between p-3 rounded-xl border border-[#FFE082] bg-[#FFFDE7] hover:bg-[#FFF9C4] transition-all group"
@@ -334,7 +334,7 @@ export const OrtuDashboardPage: React.FC = () => {
                 </svg>
               </div>
               <div>
-                <p className="text-[12px] font-extrabold text-[#1E293B]">Kontak Owner</p>
+                <p className="text-[12px] font-extrabold text-[#1E293B]">Kontak Direktur</p>
                 <p className="text-[10px] text-[#64748B]">Konfirmasi SPP & Layanan</p>
               </div>
             </div>
@@ -625,12 +625,12 @@ export const OrtuDashboardPage: React.FC = () => {
                   {/* Action buttons */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
                     <a
-                      href={`https://wa.me/${ownerWa}`}
+                      href={`https://wa.me/${direkturWa}`}
                       target="_blank"
                       rel="noreferrer"
                       className="flex items-center justify-center gap-2 py-2.5 bg-[#25D366] hover:bg-[#1EBE5D] text-white font-extrabold text-[11px] rounded-xl shadow-md transition-all active:scale-[0.98]"
                     >
-                      <span>Konfirmasi Owner</span>
+                      <span>Konfirmasi Direktur</span>
                     </a>
                     <a
                       href={`https://wa.me/${adminWa}`}

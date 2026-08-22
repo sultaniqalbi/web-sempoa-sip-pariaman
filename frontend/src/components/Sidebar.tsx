@@ -85,7 +85,7 @@ export const Sidebar: React.FC = () => {
             </div>
             <div className="truncate">
               <p className="text-xs font-bold text-white truncate">{user.nama}</p>
-              <p className="text-[10px] font-bold text-slate-400 uppercase">{user.role}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase">{user.role === 'owner' ? 'DIREKTUR' : user.role}</p>
             </div>
           </div>
         )}

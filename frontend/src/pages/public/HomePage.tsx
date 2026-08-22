@@ -1000,7 +1000,7 @@ export const HomePage: React.FC = () => {
                 <div className="contact-item">
                   <img src="/assets/icons/whatsapp.svg" alt="WhatsApp" />
                   <div>
-                    <p className="contact-label">WhatsApp Owner</p>
+                    <p className="contact-label">WhatsApp Direktur</p>
                     <a href="https://wa.me/628126784986" target="_blank" rel="noopener noreferrer">0812-6784-986</a>
                   </div>
                 </div>

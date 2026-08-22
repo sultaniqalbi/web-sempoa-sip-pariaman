@@ -180,7 +180,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <WaveIcon size={24} className="text-white" />
           </div>
           <p className="text-xs text-white/90 font-normal">
-            Admin & Owner Dashboard Sempoa SIP TC Pariaman
+            Admin & Direktur Dashboard Sempoa SIP TC Pariaman
           </p>
         </div>
 

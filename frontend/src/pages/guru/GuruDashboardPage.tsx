@@ -62,7 +62,7 @@ const GuruDashboardPage: React.FC = () => {
   }
 
   const adminWa = '6282385813163';
-  const ownerWa = '628126784986';
+  const direkturWa = '628126784986';
 
   const quickTiles = [
     {
@@ -219,7 +219,7 @@ const GuruDashboardPage: React.FC = () => {
           </a>
 
           <a
-            href={`https://wa.me/${ownerWa}`}
+            href={`https://wa.me/${direkturWa}`}
             target="_blank"
             rel="noreferrer"
             className="flex items-center justify-between p-3 rounded-xl border border-[#FFE082] bg-[#FFFDE7] hover:bg-[#FFF9C4] transition-all group"
@@ -231,7 +231,7 @@ const GuruDashboardPage: React.FC = () => {
                 </svg>
               </div>
               <div>
-                <p className="text-[12px] font-extrabold text-[#1E293B]">Kontak Owner</p>
+                <p className="text-[12px] font-extrabold text-[#1E293B]">Kontak Direktur</p>
                 <p className="text-[10px] text-[#64748B]">Bimbingan & Layanan TC</p>
               </div>
             </div>

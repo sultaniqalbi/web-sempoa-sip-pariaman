@@ -46,7 +46,7 @@ export const ResetDataPage: React.FC = () => {
       <div>
         <div className="flex items-center gap-2 mb-1">
           <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-rose-500/10 text-rose-400 border border-rose-500/20">
-            ⚠️ ZONA BAHAYA OWNER
+            ⚠️ ZONA BAHAYA DIREKTUR
           </span>
         </div>
         <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-rose-500">Reset Semua Data Operasional</h1>
@@ -59,7 +59,7 @@ export const ResetDataPage: React.FC = () => {
             ⚠️ PERINGATAN PENTING — Tidak Bisa Dibatalkan
           </h3>
           <p>
-            Aksi ini akan <strong>MENGHAPUS SEMUA DATA OPERASIONAL</strong> (siswa, guru, jadwal, absensi, pembayaran, bukti transfer, galeri). Data akun Admin & Owner <strong>TIDAK</strong> akan dihapus.
+            Aksi ini akan <strong>MENGHAPUS SEMUA DATA OPERASIONAL</strong> (siswa, guru, jadwal, absensi, pembayaran, bukti transfer, galeri). Data akun Admin & Direktur <strong>TIDAK</strong> akan dihapus.
           </p>
           <p className="text-rose-400/80 font-mono text-[11px]">
             ℹ️ Backup otomatis dalam format JSON timestamped akan dibuat di folder backend (<code>/app/backups/</code>) sebelum proses penghapusan dimulai.
@@ -88,7 +88,7 @@ export const ResetDataPage: React.FC = () => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Masukkan sandi khusus owner..."
+              placeholder="Masukkan sandi khusus direktur..."
               className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white font-mono focus:border-rose-500 focus:outline-none"
             />
           </div>

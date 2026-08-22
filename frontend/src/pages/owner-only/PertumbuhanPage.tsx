@@ -79,7 +79,7 @@ export const PertumbuhanPage: React.FC = () => {
   if (error) {
     return (
       <div className="p-6 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-400 text-sm">
-        ⚠️ Akses ditolak atau gagal memuat data pertumbuhan (Khusus Role Owner).
+        ⚠️ Akses ditolak atau gagal memuat data pertumbuhan (Khusus Role Direktur).
       </div>
     );
   }

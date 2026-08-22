@@ -47,7 +47,7 @@ export const AdminSidebar: React.FC<SidebarProps> = ({ onClose, isCollapsed = fa
           <img src="/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa SIP" className="h-9 w-auto shrink-0" />
           {!isCollapsed && (
             <h2 className="font-extrabold text-lg tracking-tight text-[#FF7043]" style={{ fontFamily: "'Poppins', sans-serif" }}>
-              {role === 'owner' ? 'Hai Owner' : 'Admin Portal'}
+              {role === 'owner' ? 'Hai Direktur' : 'Admin Portal'}
             </h2>
           )}
         </div>

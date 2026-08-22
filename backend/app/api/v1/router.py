@@ -15,6 +15,7 @@ api_router.include_router(pembayaran.router, prefix="/pembayaran", tags=["pembay
 api_router.include_router(bukti_transfer.router, prefix="/bukti-transfer", tags=["bukti-transfer"])
 api_router.include_router(quota.router, prefix="/quota", tags=["quota"])
 api_router.include_router(owner.router, prefix="/owner", tags=["owner"])
+api_router.include_router(owner.router, prefix="/direktur", tags=["direktur"])
 api_router.include_router(galeri.router, prefix="/galeri", tags=["galeri"])
 api_router.include_router(portal.router, prefix="/portal", tags=["portal"])
 api_router.include_router(portal.router, prefix="/admin", tags=["admin"])
@@ -41,6 +42,6 @@ async def test_owner_only(
     current_user: User = Depends(RoleChecker([UserRole.owner]))
 ):
     return {
-        "message": "Halo Owner! Route ini terproteksi khusus role Owner.",
-        "owner_name": current_user.nama
+        "message": "Halo Direktur! Route ini terproteksi khusus role Direktur.",
+        "direktur_name": current_user.nama
     }

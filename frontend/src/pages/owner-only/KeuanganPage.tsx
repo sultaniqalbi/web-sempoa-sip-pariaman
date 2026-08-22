@@ -134,7 +134,7 @@ Mohon segera lakukan pembayaran dan konfirmasi via WhatsApp ini. Terima kasih at
 
 ---
 Tim Sempoa SIP TC Pariaman
-Owner: 08126784986 | Admin: 082385813163`;
+Direktur: 08126784986 | Admin: 082385813163`;
     } else if (student.status === 'peringatan') {
       modalTitle = `Kirim Pengingat Persiapan SPP - ${student.nama_siswa}`;
       draftText = `Assalamualaikum Ibu/Pak ${ortuName},
@@ -150,7 +150,7 @@ Mohon bersiap untuk melakukan pembayaran SPP periode berikutnya agar jadwal bimb
 
 ---
 Tim Sempoa SIP TC Pariaman
-Admin: 082385813163 | Owner: 08126784986`;
+Admin: 082385813163 | Direktur: 08126784986`;
     } else {
       modalTitle = `Kirim Info Status SPP - ${student.nama_siswa}`;
       draftText = `Assalamualaikum Ibu/Pak ${ortuName},
@@ -161,14 +161,14 @@ Terima kasih atas kepercayaannya mendampingi ananda belajar bersama kami.
 
 ---
 Tim Sempoa SIP TC Pariaman
-Admin: 082385813163 | Owner: 08126784986`;
+Admin: 082385813163 | Direktur: 08126784986`;
     }
 
     setSelectedWADraft({
       name: student.nama_siswa,
       wa: waNum,
       draft: draftText,
-      title: modalTitle
+      title: modalTitle,
     });
     setIsWADraftModalOpen(true);
     setCopySuccess(false);
@@ -196,7 +196,7 @@ Admin: 082385813163 | Owner: 08126784986`;
   if (error) {
     return (
       <div className="p-6 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-400 text-sm">
-        Akses ditolak atau gagal memuat laporan keuangan (Khusus Role Owner).
+        Akses ditolak atau gagal memuat laporan keuangan (Khusus Role Direktur).
       </div>
     );
   }
