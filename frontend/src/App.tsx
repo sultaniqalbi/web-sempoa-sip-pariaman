@@ -27,7 +27,6 @@ import SharedGaleriPage from './pages/portal/GaleriPage';
 // Owner Exclusive Pages
 import PertumbuhanPage from './pages/owner-only/PertumbuhanPage';
 import KeuanganPage from './pages/owner-only/KeuanganPage';
-import ResetDataPage from './pages/owner-only/ResetDataPage';
 
 // Teacher Pages
 import GuruLayout from './pages/guru/GuruLayout';
@@ -105,7 +104,6 @@ export function App() {
                 {/* Owner Exclusive Routes */}
                 <Route path="pertumbuhan" element={<PertumbuhanPage />} />
                 <Route path="keuangan" element={<KeuanganPage />} />
-                <Route path="reset-data" element={<ResetDataPage />} />
               </Route>
 
               {/* Direktur Portal Routes (Alias) */}
@@ -126,7 +124,6 @@ export function App() {
                 <Route path="galeri" element={<SharedGaleriPage />} />
                 <Route path="pertumbuhan" element={<PertumbuhanPage />} />
                 <Route path="keuangan" element={<KeuanganPage />} />
-                <Route path="reset-data" element={<ResetDataPage />} />
               </Route>
 
               {/* Teacher Portal Routes */}
