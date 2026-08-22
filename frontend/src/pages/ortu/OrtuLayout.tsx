@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import useAuth from '../../features/auth/useAuth';
 import apiClient from '../../features/api/apiClient';
@@ -9,7 +9,7 @@ import ScheduleCard, { ScheduleData } from './components/ScheduleCard';
 import FeatureTiles from './components/FeatureTiles';
 import OrtuBottomNav from './components/OrtuBottomNav';
 import ProductTourModal, { TourStep } from '../../components/ProductTourModal';
-import { UserIcon, CalendarIcon, CubesIcon, DocumentTextIcon, CameraIcon } from '../../components/SvgIcons';
+import { UserIcon, CalendarIcon, CubesIcon, DocumentTextIcon } from '../../components/SvgIcons';
 
 const TOUR_STEPS: TourStep[] = [
   {
@@ -52,7 +52,6 @@ const TOUR_STEPS: TourStep[] = [
 export const OrtuLayout: React.FC = () => {
   const { user } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
   const isHomePage = location.pathname === '/ortu';
   const [isTourOpen, setIsTourOpen] = useState(false);
 
@@ -208,7 +207,6 @@ export const OrtuLayout: React.FC = () => {
         isOpen={isTourOpen}
         onClose={() => setIsTourOpen(false)}
         onComplete={handleTourComplete}
-        onNavigate={(path) => navigate(path)}
       />
     </div>
   );
