@@ -5,6 +5,10 @@ import {
   LockIcon,
   ScaleIcon,
   UserIcon,
+  TargetIcon,
+  LightningIcon,
+  PhoneIcon,
+  WhatsAppIcon,
 } from '../../components/SvgIcons';
 
 export const PrivacySecurityPage: React.FC = () => {
