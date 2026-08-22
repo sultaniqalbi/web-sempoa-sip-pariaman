@@ -1,53 +1,81 @@
-// Service Worker for Sempoa SIP TC Pariaman Web Push Notifications
+// Service Worker for Sempoa SIP TC Pariaman
+const CACHE_NAME = 'sempoa-sip-cache-v2';
+const STATIC_ASSETS = [
+  '/',
+  '/favicon.ico',
+  '/assets/logo/logo-sempoa-sip.png',
+  '/manifest.json'
+];
 
-self.addEventListener('push', function(event) {
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(STATIC_ASSETS);
+    })
+  );
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+      );
+    })
+  );
+  self.clients.claim();
+});
+
+self.addEventListener('fetch', (event) => {
+  // Only cache GET requests for static assets, bypass API calls and WebSocket
+  if (event.request.method !== 'GET' || event.request.url.includes('/api/')) {
+    return;
+  }
+  event.respondWith(
+    caches.match(event.request).then((cached) => {
+      return cached || fetch(event.request).catch(() => caches.match('/'));
+    })
+  );
+});
+
+// Push notification event listener
+self.addEventListener('push', (event) => {
   if (!event.data) return;
-
   try {
     const data = event.data.json();
     const title = data.title || 'Sempoa SIP TC Pariaman';
     const options = {
-      body: data.body || 'Ada pengingat baru dari Sempoa SIP.',
-      icon: data.icon || '/assets/logo/logo-sempoa-sip.png',
-      badge: data.badge || '/assets/logo/logo-sempoa-sip.png',
-      vibrate: [200, 100, 200],
-      data: {
-        url: data.url || '/ortu/keuangan',
-        dateOfArrival: Date.now()
-      },
-      actions: [
-        {
-          action: 'open_url',
-          title: 'Lihat Tagihan'
-        }
-      ]
+      body: data.body || 'Pemberitahuan baru',
+      icon: '/assets/logo/logo-sempoa-sip.png',
+      badge: '/assets/logo/logo-sempoa-sip.png',
+      data: data.url || '/ortu/dashboard',
     };
-
+    event.waitUntil(self.registration.showNotification(title, options));
+  } catch (e) {
+    const text = event.data.text();
     event.waitUntil(
-      self.registration.showNotification(title, options)
+      self.registration.showNotification('Sempoa SIP TC Pariaman', {
+        body: text,
+        icon: '/assets/logo/logo-sempoa-sip.png',
+      })
     );
-  } catch (err) {
-    console.error('Error handling push event in Service Worker:', err);
   }
 });
 
-self.addEventListener('notificationclick', function(event) {
+self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-
-  const targetUrl = (event.notification.data && event.notification.data.url) ? event.notification.data.url : '/ortu/keuangan';
-
+  const urlToOpen = event.notification.data || '/ortu/dashboard';
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
-      // Focus if already open
-      for (let i = 0; i < clientList.length; i++) {
-        const client = clientList[i];
-        if (client.url.includes(targetUrl) && 'focus' in client) {
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      for (let i = 0; i < windowClients.length; i++) {
+        const client = windowClients[i];
+        if (client.url.includes('/ortu') && 'focus' in client) {
           return client.focus();
         }
       }
-      // Otherwise open new window
       if (clients.openWindow) {
-        return clients.openWindow(targetUrl);
+        return clients.openWindow(urlToOpen);
       }
     })
   );
