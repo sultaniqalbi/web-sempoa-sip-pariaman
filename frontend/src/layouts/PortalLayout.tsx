@@ -54,21 +54,22 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
   return (
     <div className="flex h-screen overflow-hidden bg-[#FAFAFA] font-sans text-[#424242]">
       {/* 1. Desktop & Tablet Sidebar (3-mode adaptive) */}
-      <aside className="hidden md:flex flex-col w-20 lg:w-[240px] xl:w-[250px] bg-white border-r border-slate-200 shrink-0 h-full justify-between z-30 shadow-xs">
+      {/* 1. Desktop & Tablet Sidebar (3-mode adaptive) */}
+      <aside className="hidden md:flex flex-col w-20 lg:w-[260px] xl:w-[280px] bg-white border-r border-slate-200 shrink-0 h-full justify-between z-30 shadow-xs">
         <div className="flex flex-col flex-1 min-h-0">
           {/* Logo & Portal Title */}
-          <div className="flex items-center gap-2.5 px-3 lg:px-4 py-3.5 border-b border-slate-200 justify-center lg:justify-start shrink-0">
-            <img src="/assets/logo/logo-sempoa-sip.png" alt="Sempoa SIP" className="h-8.5 w-auto shrink-0" />
-            <div className="hidden lg:block min-w-0">
-              <h1 className="text-sm font-extrabold text-[#FF7043] tracking-tight leading-tight truncate">
+          <div className="flex flex-col xl:flex-row items-center xl:items-start gap-2 lg:gap-3 px-3 lg:px-4 py-4 border-b border-slate-200 justify-center lg:justify-start shrink-0">
+            <img src="/assets/logo/logo-sempoa-sip.png" alt="Sempoa SIP" className="h-9 lg:h-10 w-auto shrink-0 object-contain" />
+            <div className="hidden lg:flex flex-col justify-center min-w-0">
+              <h1 className="text-sm lg:text-[15px] font-extrabold text-[#FF7043] tracking-tight leading-tight truncate">
                 {portalTitle}
               </h1>
-              <p className="text-[9.5px] text-slate-500 font-bold uppercase tracking-wider">TC PARIAMAN</p>
+              <p className="text-[10px] lg:text-[11px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">TC PARIAMAN</p>
             </div>
           </div>
 
           {/* Nav Items */}
-          <nav className="flex-1 overflow-y-auto px-2 lg:px-3 py-2.5 space-y-1" aria-label="Main Navigation">
+          <nav className="flex-1 overflow-y-auto px-2 lg:px-4 py-4 space-y-1.5" aria-label="Main Navigation">
             {menuItems.map((item) => (
               <NavLink
                 key={item.to}
@@ -76,13 +77,13 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
                 end={item.end}
                 title={item.label}
                 className={({ isActive }) => `
-                  flex items-center gap-3
+                  flex items-center gap-3.5
                   justify-center lg:justify-start
-                  px-3 lg:px-3.5 py-2 rounded-xl
-                  text-[13.5px] font-semibold leading-normal
+                  px-3 lg:px-4 py-2.5 rounded-xl
+                  text-[14px] lg:text-[15px] font-semibold leading-normal
                   transition-all duration-150
                   ${isActive
-                    ? 'bg-[#FFF3E0] text-[#FF7043] font-bold shadow-2xs lg:border-l-3 lg:border-[#FF7043]'
+                    ? 'bg-[#FFF3E0] text-[#FF7043] font-bold shadow-2xs lg:border-l-4 lg:border-[#FF7043]'
                     : 'text-slate-600 hover:bg-[#FFF3E0]/50 hover:text-[#FF7043]'}
                 `}
               >
@@ -100,32 +101,32 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
         </div>
 
         {/* Footer User Info & Sleek Logout Card */}
-        <div className="p-2.5 lg:p-3 border-t border-slate-200 bg-[#F8FAFC] shrink-0">
-          <div className="flex items-center justify-between gap-2 p-1.5 lg:p-2 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-lg bg-orange-50 text-[#FF7043] font-black text-xs flex items-center justify-center shrink-0 border border-orange-200">
+        <div className="p-3 lg:p-4 border-t border-slate-200 bg-[#F8FAFC] shrink-0">
+          <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 lg:w-9 lg:h-9 rounded-lg bg-orange-50 text-[#FF7043] font-black text-sm flex items-center justify-center shrink-0 border border-orange-200">
                 {user?.nama ? user.nama.charAt(0).toUpperCase() : 'D'}
               </div>
               <div className="hidden lg:block min-w-0">
-                <p className="text-[12px] font-bold text-slate-800 truncate leading-tight" title={user?.nama}>
+                <p className="text-[13px] font-bold text-slate-800 truncate leading-tight" title={user?.nama}>
                   {user?.nama || 'Direktur'}
                 </p>
-                <span className="text-[9.5px] text-[#FF7043] font-extrabold uppercase tracking-wider block">
+                <span className="text-[10px] text-[#FF7043] font-extrabold uppercase tracking-wider block mt-0.5">
                   {user?.role === 'owner' ? 'DIREKTUR' : user?.role || 'ADMIN'}
                 </span>
               </div>
             </div>
             <button
               onClick={handleLogout}
-              className="h-7 px-2 lg:h-8 lg:px-2.5 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 border border-slate-200/80 hover:border-red-200 flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0 active:scale-95 text-xs font-bold"
+              className="h-8 px-2.5 lg:h-9 lg:px-3 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 border border-slate-200/80 hover:border-red-200 flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0 active:scale-95 text-[13px] font-bold"
               title="Keluar dari Portal"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                 <polyline points="16 17 21 12 16 7" />
                 <line x1="21" y1="12" x2="9" y2="12" />
               </svg>
-              <span className="hidden lg:inline text-[11px]">Keluar</span>
+              <span className="hidden xl:inline">Keluar</span>
             </button>
           </div>
         </div>
