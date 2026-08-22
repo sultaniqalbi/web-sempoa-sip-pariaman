@@ -3,7 +3,6 @@ import { LightbulbIcon } from './SvgIcons';
 
 export interface TourStep {
   targetId: string;
-  path?: string;
   title: string;
   description: string;
   categoryBadge?: string;
@@ -15,7 +14,6 @@ interface ProductTourModalProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete: () => void;
-  onNavigate?: (path: string) => void;
 }
 
 interface SpotlightRect {
@@ -30,7 +28,6 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
   isOpen,
   onClose,
   onComplete,
-  onNavigate,
 }) => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [rect, setRect] = useState<SpotlightRect | null>(null);
@@ -38,25 +35,30 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
 
   const currentStep = steps[currentStepIndex];
 
-  // Navigate to target route if specified for this step
+  // Lock body scroll completely while tour is active
   useEffect(() => {
-    if (!isOpen || !currentStep) return;
-    if (currentStep.path && onNavigate) {
-      onNavigate(currentStep.path);
-    }
-  }, [isOpen, currentStepIndex, currentStep, onNavigate]);
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      const originalTouchAction = document.body.style.touchAction;
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
 
-  // Measure and scroll smoothly to the target element
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        document.body.style.touchAction = originalTouchAction;
+      };
+    }
+  }, [isOpen]);
+
+  // Measure and target element smoothly
   const updateSpotlight = useCallback(() => {
     if (!isOpen || !currentStep) return;
 
     const measureElement = () => {
       const el = document.getElementById(currentStep.targetId);
       if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-
         const bounding = el.getBoundingClientRect();
-        const padding = 8;
+        const padding = 6;
         setRect({
           top: Math.max(0, bounding.top - padding),
           left: Math.max(0, bounding.left - padding),
@@ -68,17 +70,9 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
       }
     };
 
-    // Initial check + delayed checks to accommodate route switch and animation
     measureElement();
-    const t1 = setTimeout(measureElement, 150);
-    const t2 = setTimeout(measureElement, 350);
-    const t3 = setTimeout(measureElement, 600);
-
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
-    };
+    const t = setTimeout(measureElement, 60);
+    return () => clearTimeout(t);
   }, [isOpen, currentStep]);
 
   useEffect(() => {
@@ -91,7 +85,7 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
     }
   }, [isOpen, currentStepIndex, updateSpotlight]);
 
-  // Window resize and scroll listener
+  // Window resize listener
   useEffect(() => {
     if (!isOpen || !currentStep) return;
 
@@ -99,7 +93,7 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
       const el = document.getElementById(currentStep.targetId);
       if (el) {
         const bounding = el.getBoundingClientRect();
-        const padding = 8;
+        const padding = 6;
         setRect({
           top: Math.max(0, bounding.top - padding),
           left: Math.max(0, bounding.left - padding),
@@ -110,12 +104,13 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
     };
 
     window.addEventListener('resize', handleReposition);
-    window.addEventListener('scroll', handleReposition, { passive: true });
-    return () => {
-      window.removeEventListener('resize', handleReposition);
-      window.removeEventListener('scroll', handleReposition);
-    };
+    return () => window.removeEventListener('resize', handleReposition);
   }, [isOpen, currentStep]);
+
+  // Prevent wheel / touchmove scrolling on the backdrop
+  const handleBackdropTouchMove = (e: React.TouchEvent | React.WheelEvent) => {
+    e.preventDefault();
+  };
 
   // Keyboard navigation
   useEffect(() => {
@@ -154,21 +149,21 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
   const isBottomTarget = rect ? rect.top > windowHeight * 0.45 : false;
 
   const cardStyle: React.CSSProperties = {
-    maxWidth: '430px',
+    maxWidth: '420px',
   };
 
   if (rect) {
     if (isBottomTarget) {
       // Place above target with minimum 16px safety
       const bottomPos = windowHeight - rect.top + 16;
-      cardStyle.bottom = `${Math.min(windowHeight - 240, Math.max(16, bottomPos))}px`;
+      cardStyle.bottom = `${Math.min(windowHeight - 220, Math.max(16, bottomPos))}px`;
     } else {
       // Place below target with minimum 16px safety
       const topPos = rect.top + rect.height + 16;
-      cardStyle.top = `${Math.min(windowHeight - 280, Math.max(16, topPos))}px`;
+      cardStyle.top = `${Math.min(windowHeight - 260, Math.max(16, topPos))}px`;
     }
   } else {
-    // Default center placement when no rect is detected
+    // Default center placement
     cardStyle.top = '50%';
     cardStyle.transform = 'translate(-50%, -50%)';
   }
@@ -178,12 +173,14 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-label="Panduan Interaktif Portal Orang Tua"
-      className="fixed inset-0 z-[99999] overflow-hidden pointer-events-auto select-none"
+      onTouchMove={handleBackdropTouchMove}
+      onWheel={handleBackdropTouchMove}
+      className="fixed inset-0 z-[99999] overflow-hidden pointer-events-auto select-none touch-none"
     >
       {/* 1. CINEMATIC SPOTLIGHT CUTOUT PANELS */}
-      {/* Surrounding 4 panels with real backdrop blur & dark opacity; Center hole is 100% UNBLURRED and SHARP */}
+      {/* 4 surrounding panels with deep blur + slate overlay; Center hole has ZERO blur and 100% natural clarity */}
       {!rect ? (
-        <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity duration-300 pointer-events-none" />
+        <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-md transition-opacity duration-300 pointer-events-none" />
       ) : (
         <>
           {/* Top Panel (Blurred & Dark) */}
@@ -193,8 +190,9 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
               left: 0,
               right: 0,
               height: `${rect.top}px`,
+              transition: 'all 350ms cubic-bezier(0.16, 1, 0.3, 1)',
             }}
-            className="absolute bg-slate-950/80 backdrop-blur-md pointer-events-none transition-all duration-300"
+            className="absolute bg-slate-950/85 backdrop-blur-md pointer-events-none"
           />
 
           {/* Bottom Panel (Blurred & Dark) */}
@@ -204,8 +202,9 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
               left: 0,
               right: 0,
               bottom: 0,
+              transition: 'all 350ms cubic-bezier(0.16, 1, 0.3, 1)',
             }}
-            className="absolute bg-slate-950/80 backdrop-blur-md pointer-events-none transition-all duration-300"
+            className="absolute bg-slate-950/85 backdrop-blur-md pointer-events-none"
           />
 
           {/* Left Panel (Blurred & Dark) */}
@@ -215,8 +214,9 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
               left: 0,
               width: `${rect.left}px`,
               height: `${rect.height}px`,
+              transition: 'all 350ms cubic-bezier(0.16, 1, 0.3, 1)',
             }}
-            className="absolute bg-slate-950/80 backdrop-blur-md pointer-events-none transition-all duration-300"
+            className="absolute bg-slate-950/85 backdrop-blur-md pointer-events-none"
           />
 
           {/* Right Panel (Blurred & Dark) */}
@@ -226,29 +226,32 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
               left: `${rect.left + rect.width}px`,
               right: 0,
               height: `${rect.height}px`,
+              transition: 'all 350ms cubic-bezier(0.16, 1, 0.3, 1)',
             }}
-            className="absolute bg-slate-950/80 backdrop-blur-md pointer-events-none transition-all duration-300"
+            className="absolute bg-slate-950/85 backdrop-blur-md pointer-events-none"
           />
 
-          {/* Glowing Illuminated Spotlight Frame — Steady, elegant, crystal-clear */}
+          {/* Glowing Illuminated Spotlight Frame — Steady, elegant, 100% crystal clear */}
           <div
             style={{
               top: `${rect.top}px`,
               left: `${rect.left}px`,
               width: `${rect.width}px`,
               height: `${rect.height}px`,
-              boxShadow: '0 0 25px 4px rgba(255, 112, 67, 0.6), inset 0 0 12px rgba(255, 112, 67, 0.25)',
+              boxShadow: '0 0 28px 4px rgba(255, 112, 67, 0.65), inset 0 0 10px rgba(255, 112, 67, 0.3)',
+              transition: 'all 350ms cubic-bezier(0.16, 1, 0.3, 1)',
             }}
-            className="absolute rounded-2xl border-2 border-[#FF7043] transition-all duration-300 ease-out pointer-events-none z-10"
+            className="absolute rounded-2xl border-2 border-[#FF7043] pointer-events-none z-10"
           />
 
-          {/* Sleek Stationary Indicator Badge */}
+          {/* Stationary Indicator Beacon */}
           <div
             style={{
-              top: isBottomTarget ? `${rect.top - 12}px` : `${rect.top + rect.height - 8}px`,
+              top: isBottomTarget ? `${rect.top - 10}px` : `${rect.top + rect.height - 6}px`,
               left: `${Math.min(window.innerWidth - 30, Math.max(20, rect.left + rect.width / 2 - 8))}px`,
+              transition: 'all 350ms cubic-bezier(0.16, 1, 0.3, 1)',
             }}
-            className="absolute z-20 flex items-center justify-center pointer-events-none transition-all duration-300"
+            className="absolute z-20 flex items-center justify-center pointer-events-none"
           >
             <span className="h-4 w-4 rounded-full bg-[#FF7043] border-2 border-white shadow-lg flex items-center justify-center">
               <span className="h-1.5 w-1.5 rounded-full bg-white" />
@@ -257,13 +260,16 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
         </>
       )}
 
-      {/* 2. Floating Guidance Popover Card — Dynamically repositioned without overlapping */}
+      {/* 2. Floating Guidance Popover Card */}
       <div
         ref={cardRef}
-        style={cardStyle}
-        className={`fixed left-1/2 -translate-x-1/2 w-[92vw] sm:w-full z-30 transition-all duration-300 ease-out`}
+        style={{
+          ...cardStyle,
+          transition: 'all 350ms cubic-bezier(0.16, 1, 0.3, 1)',
+        }}
+        className="fixed left-1/2 -translate-x-1/2 w-[92vw] sm:w-full z-30 pointer-events-auto"
       >
-        <div className="bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.35)] border-2 border-[#FF7043] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="bg-white rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.45)] border-2 border-[#FF7043] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
           {/* Header Bar */}
           <div className="bg-gradient-to-r from-[#FF7043] to-[#F4511E] px-4 sm:px-5 py-3.5 flex items-center justify-between text-white shadow-xs">
             <div className="flex items-center gap-2 min-w-0">
@@ -273,7 +279,7 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
               </span>
             </div>
             <div className="flex items-center gap-2.5 shrink-0">
-              <span className="text-xs font-black text-white/95 px-2 py-0.5 bg-black/15 rounded-full">
+              <span className="text-xs font-black text-white/95 px-2.5 py-0.5 bg-black/20 rounded-full">
                 {currentStepIndex + 1} / {steps.length}
               </span>
               <button
