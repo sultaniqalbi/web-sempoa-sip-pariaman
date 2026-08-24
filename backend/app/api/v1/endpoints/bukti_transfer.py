@@ -67,10 +67,14 @@ def resolve_student_for_parent(db: Session, current_user: User, id_siswa: Option
     return None
 
 
-def _generate_kwitansi_id(proof_id: int) -> str:
-    """Generate unique receipt ID: KWT-YYYY-XXXXX"""
-    year = datetime.now().year
-    return f"KWT-{year}-{proof_id:05d}"
+def _generate_kwitansi_id(proof_id: int, siswa_uid: Optional[str]) -> str:
+    """Generate unique receipt ID: [UID]-[4_RANDOM_CHARS]"""
+    # Deterministic pseudo-random 4 chars using MD5
+    import hashlib
+    salt = "sempoa_kwitansi_random_salt"
+    random_str = hashlib.md5(f"{proof_id}_{salt}".encode()).hexdigest()[:4].upper()
+    uid = siswa_uid.upper() if siswa_uid else "UNKNOWN"
+    return f"{uid}-{random_str}"
 
 
 def _generate_kwitansi_hash(kwitansi_id: str) -> str:
@@ -98,7 +102,7 @@ def _format_proof_row(pr: BuktiTransfer, pay: Optional[PembayaranPeriode], siswa
         "periode_bulan": pay.periode_bulan if pay else "-",
         "jumlah": float(pay.jumlah) if pay and pay.jumlah else 0.0,
         "status_pembayaran": pay.status.value if (pay and hasattr(pay.status, 'value')) else (str(pay.status) if pay else "-"),
-        "kwitansi_id": _generate_kwitansi_id(pr.id),
+        "kwitansi_id": _generate_kwitansi_id(pr.id, siswa.uid if siswa else None),
     }
 
 
