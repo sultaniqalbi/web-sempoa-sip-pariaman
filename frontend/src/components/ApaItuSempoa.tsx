@@ -36,6 +36,9 @@ export const ApaItuSempoa: React.FC = () => {
               <img 
                 src="/assets/mascot/level-5.webp" 
                 alt="Mascot Sempoa" 
+                width="380"
+                height="380"
+                loading="lazy"
                 style={{ 
                   width: '380px', 
                   height: 'auto', 
@@ -58,10 +61,10 @@ export const ApaItuSempoa: React.FC = () => {
               borderRadius: '12px',
               border: '1px solid #EFEFEF'
             }}>
-              <p style={{ color: '#666666', fontSize: '15px', lineHeight: 1.7, margin: '0 0 1rem 0' }}>
+              <p style={{ color: '#334155', fontSize: '15px', lineHeight: 1.7, margin: '0 0 1rem 0' }}>
                 Sempoa SIP (Sistem Edukasi Mengoptimalkan Potensi Otak Anak) adalah metode pelatihan otak dengan menggunakan alat sempoa yang ditujukan untuk anak usia 4 - 12 tahun.
               </p>
-              <p style={{ color: '#666666', fontSize: '15px', lineHeight: 1.7, margin: 0 }}>
+              <p style={{ color: '#334155', fontSize: '15px', lineHeight: 1.7, margin: 0 }}>
                 Program kami secara khusus merangsang pertumbuhan sel-sel otak kanan dan kiri agar berimbang, menumbuhkan konsentrasi yang kuat, daya ingat tajam, dan membangun rasa percaya diri anak dalam belajar.
               </p>
             </div>
@@ -73,7 +76,7 @@ export const ApaItuSempoa: React.FC = () => {
               borderRadius: '12px',
               border: '1px solid #FDF0C3'
             }}>
-              <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#333', marginTop: 0, marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#1e293b', marginTop: 0, marginBottom: '16px' }}>
                 Manfaat Utama
               </h3>
               <div style={{ 
@@ -92,7 +95,7 @@ export const ApaItuSempoa: React.FC = () => {
                     }}>
                       ✓
                     </div>
-                    <span style={{ color: '#444', fontSize: '14px', fontWeight: 600 }}>{benefit}</span>
+                    <span style={{ color: '#1e293b', fontSize: '14px', fontWeight: 600 }}>{benefit}</span>
                   </div>
                 ))}
               </div>

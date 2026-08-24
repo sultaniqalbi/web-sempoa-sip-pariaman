@@ -185,152 +185,161 @@ export const HomePage: React.FC = () => {
   return (
     <div className="homepage-wrapper">
       {/* NAVIGATION BAR */}
-      <nav className={`navbar ${isNavScrolled ? 'scrolled' : ''}`} id="navbar">
-        <div className="container">
-          <Link to="/" className="nav-brand-logo">
-            <img src="/assets/logo/logo-sempoa-sip.webp" alt="Logo Sempoa SIP TC Pariaman" />
-          </Link>
+      <header>
+        <nav className={`navbar ${isNavScrolled ? 'scrolled' : ''}`} id="navbar" aria-label="Navigasi Utama">
+          <div className="container">
+            <Link to="/" className="nav-brand-logo" aria-label="Halaman Utama Sempoa SIP TC Pariaman">
+              <img src="/assets/logo/logo-sempoa-sip.webp" alt="Logo Sempoa SIP TC Pariaman" width="180" height="60" />
+            </Link>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            {/* Mobile-only Daftar Sekarang button */}
-            <a
-              href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak."
-              target="_blank"
-              rel="noreferrer"
-              className="btn btn-yellow mobile-only-daftar"
-            >
-              Daftar Sekarang
-            </a>
-            
-            <button
-              className="mobile-menu-btn"
-              id="mobileMenuBtn"
-              aria-label="Menu"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              {isMobileMenuOpen ? <CloseIcon size={24} color="#000000" /> : <MenuIcon size={24} color="#000000" />}
-            </button>
-          </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+              {/* Mobile-only Daftar Sekarang button */}
+              <a
+                href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak."
+                target="_blank"
+                rel="noreferrer"
+                className="btn btn-yellow mobile-only-daftar"
+                aria-label="Daftar Sekarang via WhatsApp"
+              >
+                Daftar Sekarang
+              </a>
+              
+              <button
+                className="mobile-menu-btn"
+                id="mobileMenuBtn"
+                aria-label="Buka Menu Navigasi"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
+                {isMobileMenuOpen ? <CloseIcon size={24} color="#000000" /> : <MenuIcon size={24} color="#000000" />}
+              </button>
+            </div>
 
-          <ul className={`nav-links ${isMobileMenuOpen ? 'active' : ''}`} id="navLinks">
-            <li><a href="#home" onClick={() => setIsMobileMenuOpen(false)}>Beranda</a></li>
-            <li><a href="#programs" onClick={() => setIsMobileMenuOpen(false)}>Program</a></li>
-            <li><a href="#advantages" onClick={() => setIsMobileMenuOpen(false)}>Keunggulan</a></li>
-            <li><a href="#achievements" onClick={() => setIsMobileMenuOpen(false)}>Prestasi</a></li>
-            <li><Link to="/galeri" onClick={() => setIsMobileMenuOpen(false)}>Galeri</Link></li>
-            <li><a href="#lokasi-peta" onClick={() => setIsMobileMenuOpen(false)}>Lokasi</a></li>
-            
-            {/* Mobile-only Masuk button at the bottom of the drawer */}
-            <li className="mobile-only-masuk" style={{ marginTop: 'auto', width: '100%', paddingTop: '2rem' }}>
-              {!user ? (
-                <button
-                  onClick={() => { setIsMobileMenuOpen(false); setIsLoginModalOpen(true); }}
-                  className="btn btn-primary"
-                  style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '0.8rem' }}
-                >
-                  Masuk
-                </button>
+            <ul className={`nav-links ${isMobileMenuOpen ? 'active' : ''}`} id="navLinks">
+              <li><a href="#home" onClick={() => setIsMobileMenuOpen(false)}>Beranda</a></li>
+              <li><a href="#programs" onClick={() => setIsMobileMenuOpen(false)}>Program</a></li>
+              <li><a href="#advantages" onClick={() => setIsMobileMenuOpen(false)}>Keunggulan</a></li>
+              <li><a href="#achievements" onClick={() => setIsMobileMenuOpen(false)}>Prestasi</a></li>
+              <li><Link to="/galeri" onClick={() => setIsMobileMenuOpen(false)}>Galeri</Link></li>
+              <li><a href="#lokasi-peta" onClick={() => setIsMobileMenuOpen(false)}>Lokasi</a></li>
+              
+              {/* Mobile-only Masuk button at the bottom of the drawer */}
+              <li className="mobile-only-masuk" style={{ marginTop: 'auto', width: '100%', paddingTop: '2rem' }}>
+                {!user ? (
+                  <button
+                    onClick={() => { setIsMobileMenuOpen(false); setIsLoginModalOpen(true); }}
+                    className="btn btn-primary"
+                    aria-label="Masuk ke Akun"
+                    style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '0.8rem' }}
+                  >
+                    Masuk
+                  </button>
+                ) : (
+                  <Link
+                    to={user.role === 'admin' || user.role === 'owner' ? '/admin' : user.role === 'guru' ? '/guru' : '/ortu'}
+                    className="btn btn-primary"
+                    style={{ width: '100%', display: 'block', textAlign: 'center' }}
+                  >
+                    Dashboard
+                  </Link>
+                )}
+              </li>
+            </ul>
+
+            <div className="nav-buttons">
+              {user ? (
+                <>
+                  <Link
+                    to={user.role === 'admin' || user.role === 'owner' ? '/admin' : user.role === 'guru' ? '/guru' : '/ortu'}
+                    className="btn btn-yellow"
+                  >
+                    Dashboard
+                  </Link>
+                  <a
+                    href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak."
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn btn-primary"
+                    aria-label="Daftar Sekarang via WhatsApp"
+                  >
+                    Daftar Sekarang
+                  </a>
+                </>
               ) : (
-                <Link
-                  to={user.role === 'admin' || user.role === 'owner' ? '/admin' : user.role === 'guru' ? '/guru' : '/ortu'}
-                  className="btn btn-primary"
-                  style={{ width: '100%', display: 'block', textAlign: 'center' }}
-                >
-                  Dashboard
-                </Link>
+                <>
+                  <a
+                    href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak."
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn btn-yellow"
+                    aria-label="Daftar Sekarang via WhatsApp"
+                  >
+                    Daftar Sekarang
+                  </a>
+                  <button
+                    onClick={() => setIsLoginModalOpen(true)}
+                    className="btn btn-primary"
+                    id="loginNavBtn"
+                    aria-label="Masuk ke Portal Pengguna"
+                    style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                  >
+                    Masuk
+                  </button>
+                </>
               )}
-            </li>
-          </ul>
-
-          <div className="nav-buttons">
-            {user ? (
-              <>
-                <Link
-                  to={user.role === 'admin' || user.role === 'owner' ? '/admin' : user.role === 'guru' ? '/guru' : '/ortu'}
-                  className="btn btn-yellow"
-                >
-                  Dashboard
-                </Link>
-                <a
-                  href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak."
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn btn-primary"
-                >
-                  Daftar Sekarang
-                </a>
-              </>
-            ) : (
-              <>
-                <a
-                  href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak."
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn btn-yellow"
-                >
-                  Daftar Sekarang
-                </a>
-                <button
-                  onClick={() => setIsLoginModalOpen(true)}
-                  className="btn btn-primary"
-                  id="loginNavBtn"
-                  style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
-                >
-                  Masuk
-                </button>
-              </>
-            )}
+            </div>
           </div>
-        </div>
-      </nav>
+        </nav>
+      </header>
 
-      {/* HERO SECTION */}
-      <section className="hero-centered" id="home">
-        <div className="hero-overlay" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0, 0, 0, 0.45)', zIndex: 1 }}></div>
-        <div className="container" style={{ position: 'relative', zIndex: 2 }}>
-          <div className="hero-grid-wrap">
-            <div className="hero-text-wrap" style={{ textAlign: 'left' }}>
-              <h1 className="hero-title">Basic For All Learning</h1>
-              <p className="hero-subtitle">
-                Dipercaya sejak 1998 mendampingi anak-anak usia 4-12 tahun di Kota Pariaman menjadi lebih cerdas, kreatif, fokus, dan percaya diri melatih keseimbangan otak kanan-kiri.
-              </p>
-              <div className="hero-cta">
-                <a
-                  href="#programs"
-                  className="btn btn-yellow"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.6rem', padding: '0.8rem 1.6rem', fontWeight: 700 }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    document.getElementById('programs')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                >
-                  <img src="/assets/icons/program.svg" alt="Program Kami" style={{ width: '20px', height: '20px' }} />
-                  Program Kami
-                </a>
-                <a
-                  href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak."
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn btn-primary"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.6rem', padding: '0.8rem 1.6rem', fontWeight: 700 }}
-                >
-                  <img src="/assets/icons/whatsapp.svg" alt="WhatsApp" style={{ width: '20px', height: '20px', filter: 'brightness(0) invert(1)' }} />
-                  Chat WhatsApp (Konsultasi)
-                </a>
+      {/* MAIN LANDMARK WRAPPER */}
+      <main id="main-content">
+        {/* HERO SECTION */}
+        <section className="hero-centered" id="home">
+          <div className="hero-overlay" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0, 0, 0, 0.45)', zIndex: 1 }}></div>
+          <div className="container" style={{ position: 'relative', zIndex: 2 }}>
+            <div className="hero-grid-wrap">
+              <div className="hero-text-wrap" style={{ textAlign: 'left' }}>
+                <h1 className="hero-title">Basic For All Learning</h1>
+                <p className="hero-subtitle">
+                  Dipercaya sejak 1998 mendampingi anak-anak usia 4-12 tahun di Kota Pariaman menjadi lebih cerdas, kreatif, fokus, dan percaya diri melatih keseimbangan otak kanan-kiri.
+                </p>
+                <div className="hero-cta">
+                  <a
+                    href="#programs"
+                    className="btn btn-yellow"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.6rem', padding: '0.8rem 1.6rem', fontWeight: 700 }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById('programs')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                  >
+                    <img src="/assets/icons/program.svg" alt="Program Kami" width="20" height="20" style={{ width: '20px', height: '20px' }} />
+                    Program Kami
+                  </a>
+                  <a
+                    href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak."
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn btn-primary"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.6rem', padding: '0.8rem 1.6rem', fontWeight: 700 }}
+                  >
+                    <img src="/assets/icons/whatsapp.svg" alt="WhatsApp" width="20" height="20" style={{ width: '20px', height: '20px', filter: 'brightness(0) invert(1)' }} />
+                    Chat WhatsApp (Konsultasi)
+                  </a>
+                </div>
+              </div>
+              <div className="hero-mascot-wrap">
+                <img src="/assets/mascot/maskot-hero-test.webp" alt="Maskot Sempoa SIP TC Pariaman" width="350" height="420" style={{ maxHeight: '420px', width: 'auto', filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.25))' }} />
               </div>
             </div>
-            <div className="hero-mascot-wrap">
-              <img src="/assets/mascot/maskot-hero-test.webp" alt="Maskot Sempoa SIP TC Pariaman" style={{ maxHeight: '420px', width: 'auto', filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.25))' }} />
-            </div>
           </div>
-        </div>
-        {/* Decorative SVG wave layout transition */}
-        <div className="wave-divider">
-          <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
-            <path d="M985.66,92.83C906.67,72,823.78,31,743.84,14.19c-82.26-17.34-168.06-16.33-250.45.39-57.84,11.73-114,31.07-172,41.86A600.21,600.21,0,0,1,0,27.35V120H1200V95.8C1132.19,118.92,1055.71,111.31,985.66,92.83Z" className="shape-fill"></path>
-          </svg>
-        </div>
-      </section>
+          {/* Decorative SVG wave layout transition */}
+          <div className="wave-divider">
+            <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+              <path d="M985.66,92.83C906.67,72,823.78,31,743.84,14.19c-82.26-17.34-168.06-16.33-250.45.39-57.84,11.73-114,31.07-172,41.86A600.21,600.21,0,0,1,0,27.35V120H1200V95.8C1132.19,118.92,1055.71,111.31,985.66,92.83Z" className="shape-fill"></path>
+            </svg>
+          </div>
+        </section>
 
       <ApaItuSempoa />
       <div className="section-divider"></div>
@@ -357,7 +366,7 @@ export const HomePage: React.FC = () => {
               <p>Sempoa SIP TC Pariaman adalah lembaga bimbingan belajar khusus pelatihan otak anak yang telah mendampingi ribuan buah hati di Pariaman tumbuh optimal.</p>
               <p>Kami menyelaraskan perkembangan otak kanan yang melatih kreativitas, visualisasi, dan intuisi, dengan otak kiri yang melatih kemampuan berhitung logis, rasional, dan konsentrasi tinggi.</p>
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginTop: '1.5rem' }}>
-                <img src="/assets/mascot/maskot_logo-removebg-preview.webp" alt="logo-sempoa-sip.webp" style={{ height: '70px', width: 'auto', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.15))' }} />
+                <img src="/assets/mascot/maskot_logo-removebg-preview.webp" alt="Maskot Sempoa SIP" width="70" height="70" loading="lazy" style={{ height: '70px', width: 'auto', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.15))' }} />
                 <p style={{ fontStyle: 'italic', fontSize: '0.95rem', margin: 0, fontWeight: 600, color: 'var(--color-accent-maroon)' }}>
                   "Yuk gabung bersama kami dan kembangkan potensi terbaik belajarmu, teman-teman!"
                 </p>
@@ -434,6 +443,7 @@ export const HomePage: React.FC = () => {
                         onClick={() => mobileProgramId > 1 && setMobileProgramId(mobileProgramId - 1)}
                         disabled={mobileProgramId === 1}
                         className="prog-nav-btn prev"
+                        aria-label="Program Belajar Sebelumnya"
                       >
                         ← Sebelumnya
                       </button>
@@ -441,6 +451,7 @@ export const HomePage: React.FC = () => {
                         onClick={() => mobileProgramId < programsData.length && setMobileProgramId(mobileProgramId + 1)}
                         disabled={mobileProgramId === programsData.length}
                         className="prog-nav-btn next"
+                        aria-label="Program Belajar Berikutnya"
                       >
                         Berikutnya →
                       </button>
@@ -604,7 +615,7 @@ export const HomePage: React.FC = () => {
               onClick={() => handleAdvCardClick(1)}
             >
               <div className="adv-card-image-wrap" style={{ backgroundColor: '#FFF8E1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <img src="/assets/mascot/braingym.webp" alt="Metode Senam Otak" style={{ width: '120px', height: '120px', objectFit: 'contain' }} />
+                <img src="/assets/mascot/braingym.webp" alt="Metode Senam Otak" width="120" height="120" loading="lazy" style={{ width: '120px', height: '120px', objectFit: 'contain' }} />
               </div>
               <div className="adv-card-body">
                 <h3>Metode Senam Otak (Brain Gym)</h3>
@@ -626,7 +637,7 @@ export const HomePage: React.FC = () => {
               onClick={() => handleAdvCardClick(2)}
             >
               <div className="adv-card-image-wrap" style={{ backgroundColor: '#E0F7FA', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <img src="/assets/mascot/belajar-menyenangkan.webp" alt="Belajar Menyenangkan" style={{ width: '120px', height: '120px', objectFit: 'contain' }} />
+                <img src="/assets/mascot/belajar-menyenangkan.webp" alt="Belajar Menyenangkan" width="120" height="120" loading="lazy" style={{ width: '120px', height: '120px', objectFit: 'contain' }} />
               </div>
               <div className="adv-card-body">
                 <h3>Belajar Menyenangkan (Playful Learning)</h3>
@@ -648,7 +659,7 @@ export const HomePage: React.FC = () => {
               onClick={() => handleAdvCardClick(3)}
             >
               <div className="adv-card-image-wrap" style={{ backgroundColor: '#FFEBEE', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <img src="/assets/mascot/pengajar-terlatih.webp" alt="Pengajar Terlatih" style={{ width: '120px', height: '120px', objectFit: 'contain' }} />
+                <img src="/assets/mascot/pengajar-terlatih.webp" alt="Pengajar Terlatih" width="120" height="120" loading="lazy" style={{ width: '120px', height: '120px', objectFit: 'contain' }} />
               </div>
               <div className="adv-card-body">
                 <h3>Pengajar Terlatih & Ramah Anak</h3>
@@ -670,7 +681,7 @@ export const HomePage: React.FC = () => {
               onClick={() => handleAdvCardClick(4)}
             >
               <div className="adv-card-image-wrap" style={{ backgroundColor: '#E8F5E9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <img src="/assets/mascot/ramah-anak.webp" alt="Tempat Ramah Anak" style={{ width: '120px', height: '120px', objectFit: 'contain' }} />
+                <img src="/assets/mascot/ramah-anak.webp" alt="Tempat Ramah Anak" width="120" height="120" loading="lazy" style={{ width: '120px', height: '120px', objectFit: 'contain' }} />
               </div>
               <div className="adv-card-body">
                 <h3>Tempat Ramah Anak & Penuh Keceriaan</h3>
@@ -776,6 +787,7 @@ export const HomePage: React.FC = () => {
                         onClick={() => mobileTestiId > 1 && setMobileTestiId(mobileTestiId - 1)}
                         disabled={mobileTestiId === 1}
                         className="testi-arrow-btn"
+                        aria-label="Testimoni Sebelumnya"
                       >
                         ‹
                       </button>
@@ -784,6 +796,7 @@ export const HomePage: React.FC = () => {
                         disabled={mobileTestiId === testiData.length}
                         className="testi-arrow-btn active-arrow"
                         style={{ background: activeTesti.color }}
+                        aria-label="Testimoni Berikutnya"
                       >
                         ›
                       </button>
@@ -964,6 +977,7 @@ export const HomePage: React.FC = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mobile-gmaps-btn"
+                aria-label="Buka Lokasi di Google Maps"
               >
                 <MapPinIcon size={20} className="mr-2" /> Buka di Google Maps
               </a>
@@ -971,6 +985,7 @@ export const HomePage: React.FC = () => {
           )}
         </div>
       </section>
+      </main>
 
       {/* FOOTER */}
       <footer className="footer" id="footer">
@@ -978,17 +993,17 @@ export const HomePage: React.FC = () => {
           <div className="footer-grid">
             {/* Kolom Kiri: Brand Identity */}
             <div className="footer-brand">
-              <img src="/assets/logo/logo-sempoa-sip.webp" alt="Logo Sempoa SIP" className="footer-logo" />
+              <img src="/assets/logo/logo-sempoa-sip.webp" alt="Logo Sempoa SIP" className="footer-logo" width="160" height="40" loading="lazy" />
               <h3 className="footer-brand-title">Sempoa SIP TC Pariaman</h3>
               <p className="footer-brand-desc">
                 Pusat pelatihan keseimbangan otak anak berbasis mental aritmatika dan bimbingan belajar terpercaya sejak 1998.
               </p>
               <div className="footer-social-links">
-                <a href="https://www.instagram.com/sempoasippariaman1?igsh=MXgyeHgyeWk0czUyeA==" target="_blank" rel="noopener noreferrer" title="Instagram Sempoa SIP">
-                  <img src="/assets/icons/instagram.svg" alt="Instagram" className="social-icon-img" />
+                <a href="https://www.instagram.com/sempoasippariaman1?igsh=MXgyeHgyeWk0czUyeA==" target="_blank" rel="noopener noreferrer" title="Instagram Sempoa SIP" aria-label="Instagram Resmi Sempoa SIP TC Pariaman">
+                  <img src="/assets/icons/instagram.svg" alt="Instagram" className="social-icon-img" width="24" height="24" loading="lazy" />
                 </a>
-                <a href="https://www.facebook.com/share/14kTZEcbvgw/" target="_blank" rel="noopener noreferrer" title="Facebook Sempoa SIP">
-                  <img src="/assets/icons/facebook.svg" alt="Facebook" className="social-icon-img" />
+                <a href="https://www.facebook.com/share/14kTZEcbvgw/" target="_blank" rel="noopener noreferrer" title="Facebook Sempoa SIP" aria-label="Facebook Resmi Sempoa SIP TC Pariaman">
+                  <img src="/assets/icons/facebook.svg" alt="Facebook" className="social-icon-img" width="24" height="24" loading="lazy" />
                 </a>
               </div>
             </div>
@@ -998,21 +1013,21 @@ export const HomePage: React.FC = () => {
               <h3 className="footer-section-title">Kontak Resmi</h3>
               <div className="footer-contact-items">
                 <div className="contact-item">
-                  <img src="/assets/icons/whatsapp.svg" alt="WhatsApp" />
+                  <img src="/assets/icons/whatsapp.svg" alt="WhatsApp" width="20" height="20" loading="lazy" />
                   <div>
                     <p className="contact-label">WhatsApp Admin</p>
                     <a href="https://wa.me/6282385813163" target="_blank" rel="noopener noreferrer">0823-8581-3163</a>
                   </div>
                 </div>
                 <div className="contact-item">
-                  <img src="/assets/icons/whatsapp.svg" alt="WhatsApp" />
+                  <img src="/assets/icons/whatsapp.svg" alt="WhatsApp" width="20" height="20" loading="lazy" />
                   <div>
                     <p className="contact-label">WhatsApp Direktur</p>
                     <a href="https://wa.me/628126784986" target="_blank" rel="noopener noreferrer">0812-6784-986</a>
                   </div>
                 </div>
                 <div className="contact-item">
-                  <img src="/assets/icons/email.svg" alt="Email" />
+                  <img src="/assets/icons/email.svg" alt="Email" width="20" height="20" loading="lazy" />
                   <div>
                     <p className="contact-label">Email</p>
                     <a href="mailto:sempoasip.prmn@gmail.com">sempoasip.prmn@gmail.com</a>
@@ -1026,7 +1041,7 @@ export const HomePage: React.FC = () => {
               <h3 className="footer-section-title">Lokasi & Jam Buka</h3>
               <div className="footer-location-items">
                 <div className="location-item">
-                  <img src="/assets/icons/peta.svg" alt="Lokasi" />
+                  <img src="/assets/icons/peta.svg" alt="Lokasi" width="20" height="20" loading="lazy" />
                   <div>
                     <p className="location-label">Alamat</p>
                     <p className="location-text">
@@ -1035,7 +1050,7 @@ export const HomePage: React.FC = () => {
                   </div>
                 </div>
                 <div className="location-item">
-                  <img src="/assets/icons/jam.svg" alt="Jam Buka" />
+                  <img src="/assets/icons/jam.svg" alt="Jam Buka" width="20" height="20" loading="lazy" />
                   <div>
                     <p className="location-label">Jam Operasional</p>
                     <div className="hours-list">
@@ -1074,6 +1089,7 @@ export const HomePage: React.FC = () => {
         rel="noreferrer"
         className="floating-wa"
         title="Konsultasi WhatsApp"
+        aria-label="Chat Konsultasi WhatsApp Sempoa SIP"
         style={{
           position: 'fixed',
           bottom: '30px',
@@ -1091,7 +1107,7 @@ export const HomePage: React.FC = () => {
           transition: 'transform 0.3s ease',
         }}
       >
-        <img src="/assets/icons/whatsapp.svg" alt="WhatsApp" style={{ width: '32px', height: '32px', filter: 'brightness(0) invert(1)' }} />
+        <img src="/assets/icons/whatsapp.svg" alt="WhatsApp" width="32" height="32" style={{ width: '32px', height: '32px', filter: 'brightness(0) invert(1)' }} />
       </a>
 
       {/* LIGHTBOX MODAL */}

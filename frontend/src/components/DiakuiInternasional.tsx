@@ -9,12 +9,12 @@ const affiliations = [
 ];
 
 const logos = [
-  { src: '/images/logos/waama.webp', alt: 'WAAMA' },
-  { src: '/images/logos/isdf.webp', alt: 'ISDF' },
-  { src: '/images/logos/aiama.webp', alt: 'AIAMA' },
-  { src: '/images/logos/tcoc.webp', alt: 'TCOC' },
-  { src: '/images/logos/braingym.webp', alt: 'Brain Gym' },
-  { src: '/images/logos/muri.webp', alt: 'Museum Beker' }
+  { src: '/images/logos/waama.webp', alt: 'World Association of Abacus and Mental Arithmetic (WAAMA)' },
+  { src: '/images/logos/isdf.webp', alt: 'International Soroban Diffusion Foundation (ISDF)' },
+  { src: '/images/logos/aiama.webp', alt: 'Abacusking International Abacus Mental-Arithmetic Alliance (AIAMA)' },
+  { src: '/images/logos/tcoc.webp', alt: 'International Grading Test by TCOC' },
+  { src: '/images/logos/braingym.webp', alt: 'Brain Gym International' },
+  { src: '/images/logos/muri.webp', alt: 'Museum Rekor-Dunia Indonesia (MURI)' }
 ];
 
 export const DiakuiInternasional: React.FC = () => {
@@ -29,7 +29,7 @@ export const DiakuiInternasional: React.FC = () => {
         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '2rem', marginBottom: '4rem' }}>
           {logos.map((logo, index) => (
             <div key={index} style={{ width: '120px', height: '120px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' }}>
-               <img src={logo.src} alt={logo.alt} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+               <img src={logo.src} alt={logo.alt} width="90" height="90" loading="lazy" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
             </div>
           ))}
         </div>
