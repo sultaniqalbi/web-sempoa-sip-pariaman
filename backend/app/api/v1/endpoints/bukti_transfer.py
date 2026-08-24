@@ -27,6 +27,10 @@ def resolve_student_for_parent(db: Session, current_user: User, id_siswa: Option
     if id_siswa:
         s = db.query(Siswa).filter(Siswa.id == id_siswa, Siswa.is_deleted == False).first()
         if s:
+            if not current_user.uid_terhubung or current_user.uid_terhubung != str(s.id):
+                current_user.uid_terhubung = str(s.id)
+                db.add(current_user)
+                db.commit()
             return s
 
     # 1. Match by uid_terhubung

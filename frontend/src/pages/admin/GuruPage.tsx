@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useGetGuruList, useCreateGuru, useDeleteGuru } from '../../features/api/queries';
+import ConfirmModal from '../../components/ConfirmModal';
 
 export const GuruPage: React.FC = () => {
   const { data: guruList, isLoading } = useGetGuruList();
@@ -7,6 +8,7 @@ export const GuruPage: React.FC = () => {
   const deleteGuruMutation = useDeleteGuru();
 
   const [isOpen, setIsOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: number }>({ isOpen: false, id: 0 });
   const [uid, setUid] = useState('');
   const [nama, setNama] = useState('');
   const [hari, setHari] = useState('Senin, Rabu, Jumat');
@@ -31,13 +33,12 @@ export const GuruPage: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (window.confirm("Apakah Anda yakin ingin menghapus data pengajar ini?")) {
-      try {
-        await deleteGuruMutation.mutateAsync(id);
-      } catch (err) {
-        console.error(err);
-      }
+  const handleDelete = async () => {
+    try {
+      await deleteGuruMutation.mutateAsync(deleteConfirm.id);
+      setDeleteConfirm({ isOpen: false, id: 0 });
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -82,7 +83,7 @@ export const GuruPage: React.FC = () => {
                     <td className="p-4 font-bold text-slate-300">{guru.target_kehadiran} Sesi</td>
                     <td className="p-4 text-right">
                       <button
-                        onClick={() => handleDelete(guru.id)}
+                        onClick={() => setDeleteConfirm({ isOpen: true, id: guru.id })}
                         className="px-3 py-1.5 bg-rose-500/10 text-rose-400 font-bold border border-rose-500/20 rounded-lg hover:bg-rose-500/20 transition-colors"
                       >
                         Hapus
@@ -158,6 +159,19 @@ export const GuruPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* ── Delete Confirm Modal ── */}
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        onClose={() => setDeleteConfirm({ isOpen: false, id: 0 })}
+        onConfirm={handleDelete}
+        title="Apakah Anda yakin ingin menghapus data pengajar ini?"
+        description="Data pengajar ini akan dihapus dari sistem."
+        confirmText="Ya, Hapus Pengajar"
+        cancelText="Batal"
+        variant="danger"
+        isLoading={deleteGuruMutation.isPending}
+      />
     </div>
   );
 };

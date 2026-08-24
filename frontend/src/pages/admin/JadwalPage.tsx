@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useGetJadwalList, useCreateJadwal, useDeleteJadwal, useGetSiswaList, useGetGuruList } from '../../features/api/queries';
+import ConfirmModal from '../../components/ConfirmModal';
 
 export const JadwalPage: React.FC = () => {
   const { data: jadwalList, isLoading } = useGetJadwalList();
@@ -10,6 +11,7 @@ export const JadwalPage: React.FC = () => {
   const deleteJadwalMutation = useDeleteJadwal();
 
   const [isOpen, setIsOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: number }>({ isOpen: false, id: 0 });
   const [siswaId, setSiswaId] = useState<number>(0);
   const [guruId, setGuruId] = useState<number>(0);
   const [hari, setHari] = useState('Senin');
@@ -37,13 +39,12 @@ export const JadwalPage: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (window.confirm("Apakah Anda yakin ingin menghapus jadwal belajar ini?")) {
-      try {
-        await deleteJadwalMutation.mutateAsync(id);
-      } catch (err) {
-        console.error(err);
-      }
+  const handleDelete = async () => {
+    try {
+      await deleteJadwalMutation.mutateAsync(deleteConfirm.id);
+      setDeleteConfirm({ isOpen: false, id: 0 });
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -105,7 +106,7 @@ export const JadwalPage: React.FC = () => {
                     <td className="p-4 text-slate-400">{jadwal.lokasi}</td>
                     <td className="p-4 text-right">
                       <button
-                        onClick={() => handleDelete(jadwal.id)}
+                        onClick={() => setDeleteConfirm({ isOpen: true, id: jadwal.id })}
                         className="px-3 py-1.5 bg-rose-500/10 text-rose-400 font-bold border border-rose-500/20 rounded-lg hover:bg-rose-500/20 transition-colors"
                       >
                         Hapus
@@ -237,6 +238,19 @@ export const JadwalPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* ── Delete Confirm Modal ── */}
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        onClose={() => setDeleteConfirm({ isOpen: false, id: 0 })}
+        onConfirm={handleDelete}
+        title="Apakah Anda yakin ingin menghapus jadwal ini?"
+        description="Jadwal kelas akan dihapus dari sistem."
+        confirmText="Ya, Hapus Jadwal"
+        cancelText="Batal"
+        variant="danger"
+        isLoading={deleteJadwalMutation.isPending}
+      />
     </div>
   );
 };

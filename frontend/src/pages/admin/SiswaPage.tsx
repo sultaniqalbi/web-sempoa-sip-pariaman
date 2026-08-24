@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useGetSiswaList, useCreateSiswa, useDeleteSiswa } from '../../features/api/queries';
+import ConfirmModal from '../../components/ConfirmModal';
 
 const PROGRAM_CONFIG: Record<string, { label: string; target: number; spp: number }[]> = {
   "Sempoa SIP": [
@@ -23,6 +24,7 @@ export const SiswaPage: React.FC = () => {
   const deleteSiswaMutation = useDeleteSiswa();
 
   const [isOpen, setIsOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: number }>({ isOpen: false, id: 0 });
   const [uid, setUid] = useState('');
   const [nama, setNama] = useState('');
   const [kategori, setKategori] = useState('Sempoa SIP');
@@ -63,13 +65,12 @@ export const SiswaPage: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (window.confirm("Apakah Anda yakin ingin menghapus siswa ini? (Soft Delete)")) {
-      try {
-        await deleteSiswaMutation.mutateAsync(id);
-      } catch (err) {
-        console.error(err);
-      }
+  const handleDelete = async () => {
+    try {
+      await deleteSiswaMutation.mutateAsync(deleteConfirm.id);
+      setDeleteConfirm({ isOpen: false, id: 0 });
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -130,8 +131,8 @@ export const SiswaPage: React.FC = () => {
                     </td>
                     <td className="p-4 text-right">
                       <button
-                        onClick={() => handleDelete(siswa.id)}
-                        className="px-3 py-1.5 bg-rose-500/10 text-rose-400 font-bold border border-rose-500/20 rounded-lg hover:bg-rose-500/20 transition-colors"
+                        onClick={() => setDeleteConfirm({ isOpen: true, id: siswa.id })}
+                        className="px-3 py-1.5 bg-rose-500/10 text-rose-400 font-bold border border-rose-500/20 rounded-lg hover:bg-rose-500/20 transition-colors cursor-pointer"
                       >
                         Hapus
                       </button>
@@ -221,6 +222,19 @@ export const SiswaPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* ── Delete Confirm Modal ── */}
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        onClose={() => setDeleteConfirm({ isOpen: false, id: 0 })}
+        onConfirm={handleDelete}
+        title="Apakah Anda yakin ingin menghapus siswa ini?"
+        description="Data siswa ini akan dihapus sementara (Soft Delete). Anda masih bisa memulihkannya nanti."
+        confirmText="Ya, Hapus Siswa"
+        cancelText="Batal"
+        variant="danger"
+        isLoading={deleteSiswaMutation.isPending}
+      />
     </div>
   );
 };
