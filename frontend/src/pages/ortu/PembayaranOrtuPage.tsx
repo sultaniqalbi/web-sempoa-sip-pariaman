@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
 import { Siswa, PembayaranPeriode } from '../../types';
 import { WhatsAppIcon, CameraIcon } from '../../components/SvgIcons';
+import KwitansiModal from '../../components/KwitansiModal';
 
 interface ProofItem {
   id: number;
@@ -12,9 +13,12 @@ interface ProofItem {
   status: string;
   admin_note?: string;
   created_at: string;
+  tanggal_upload?: string;
   periode_bulan: string;
   jumlah: number;
   status_pembayaran: string;
+  nama_siswa?: string;
+  kwitansi_id?: string;
 }
 
 export const PembayaranOrtuPage: React.FC = () => {
@@ -26,6 +30,7 @@ export const PembayaranOrtuPage: React.FC = () => {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [copiedBank, setCopiedBank] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [kwitansiModal, setKwitansiModal] = useState<{ isOpen: boolean; data: any; isLoading: boolean }>({ isOpen: false, data: null, isLoading: false });
 
   const showToast = (text: string, type: 'success' | 'error' = 'success') => {
     setToastMessage({ text, type });
@@ -58,14 +63,13 @@ export const PembayaranOrtuPage: React.FC = () => {
     enabled: !!child?.id,
   });
 
-  // Fetch uploaded transfer proofs history
+  // Fetch uploaded transfer proofs history — NO POLLING, only fetch once + on invalidation
   const { data: proofHistory = [], isLoading: isProofLoading } = useQuery<ProofItem[]>({
     queryKey: ['child-proof-history'],
     queryFn: async () => {
       const res = await apiClient.get('/bukti-transfer/my-child');
       return res.data;
     },
-    refetchInterval: 3000,
   });
 
   // Upload proof mutation
@@ -86,7 +90,7 @@ export const PembayaranOrtuPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['child-proof-history'] });
       queryClient.invalidateQueries({ queryKey: ['child-payments'] });
       setSelectedFile(null);
-      showToast('✓ Bukti transfer berhasil diunggah! Mohon tunggu verifikasi admin.', 'success');
+      showToast('Bukti transfer berhasil diunggah! Mohon tunggu verifikasi admin.', 'success');
     },
     onError: (err: any) => {
       showToast(`Gagal mengunggah: ${err.response?.data?.detail || err.message}`, 'error');
@@ -107,6 +111,17 @@ export const PembayaranOrtuPage: React.FC = () => {
       childId: child?.id,
       file: selectedFile,
     });
+  };
+
+  const handleOpenKwitansi = async (proofId: number) => {
+    setKwitansiModal({ isOpen: true, data: null, isLoading: true });
+    try {
+      const res = await apiClient.get(`/bukti-transfer/${proofId}/kwitansi`);
+      setKwitansiModal({ isOpen: true, data: res.data, isLoading: false });
+    } catch (err: any) {
+      showToast(`Gagal memuat kwitansi: ${err.response?.data?.detail || err.message}`, 'error');
+      setKwitansiModal({ isOpen: false, data: null, isLoading: false });
+    }
   };
 
   // Computed values
@@ -309,7 +324,7 @@ export const PembayaranOrtuPage: React.FC = () => {
                   className="px-2.5 py-1 bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#E65100] border border-[#FFCC80] rounded-lg text-[10px] font-extrabold transition-all active:scale-95 cursor-pointer shadow-2xs"
                   title="Salin Nomor Rekening"
                 >
-                  {copiedBank === b.id ? '✓ Tersalin' : 'Salin Rek'}
+                  {copiedBank === b.id ? 'Tersalin' : 'Salin Rek'}
                 </button>
               </div>
             </div>
@@ -411,55 +426,97 @@ export const PembayaranOrtuPage: React.FC = () => {
         </form>
       </div>
 
-      {/* 4. Riwayat Upload Bukti Transfer & Status Verifikasi */}
+      {/* 4. Riwayat Upload Bukti Transfer — Structured Table */}
       <div className="bg-white border border-[#E0E0E0] rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-5 space-y-3">
         <h3 className="text-sm font-extrabold text-[#1E293B]">Riwayat Bukti Pembayaran Anda</h3>
 
         {isProofLoading ? (
-          <div className="py-6 text-center text-xs text-[#94A3B8]">Memuat riwayat unggahan...</div>
+          <div className="py-6 text-center text-xs text-[#94A3B8]">
+            <div className="w-6 h-6 border-2 border-[#FF7043] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+            Memuat riwayat unggahan...
+          </div>
         ) : proofHistory.length > 0 ? (
-          <div className="divide-y divide-[#F1F5F9]">
-            {proofHistory.map((pr) => {
-              const fullUrl = pr.file_path.startsWith('http')
-                ? pr.file_path
-                : `/${pr.file_path.replace(/^\//, '')}`;
+          <div className="overflow-x-auto -mx-5 px-5">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b-2 border-[#E2E8F0]">
+                  <th className="text-left py-2.5 px-2 font-extrabold text-[#64748B] uppercase tracking-wider text-[10px] w-10">No</th>
+                  <th className="text-left py-2.5 px-2 font-extrabold text-[#64748B] uppercase tracking-wider text-[10px]">Tanggal & Jam</th>
+                  <th className="text-left py-2.5 px-2 font-extrabold text-[#64748B] uppercase tracking-wider text-[10px]">Bukti Foto</th>
+                  <th className="text-left py-2.5 px-2 font-extrabold text-[#64748B] uppercase tracking-wider text-[10px]">Periode</th>
+                  <th className="text-left py-2.5 px-2 font-extrabold text-[#64748B] uppercase tracking-wider text-[10px]">Nominal</th>
+                  <th className="text-center py-2.5 px-2 font-extrabold text-[#64748B] uppercase tracking-wider text-[10px]">Status</th>
+                  <th className="text-center py-2.5 px-2 font-extrabold text-[#64748B] uppercase tracking-wider text-[10px]">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {proofHistory.map((pr, idx) => {
+                  const fullUrl = pr.file_path.startsWith('http')
+                    ? pr.file_path
+                    : `/${pr.file_path.replace(/^\//, '')}`;
+                  const statusLower = (pr.status || 'pending').toLowerCase();
 
-              return (
-                <div key={pr.id} className="py-3 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={fullUrl}
-                      alt="Struk Transfer"
-                      onClick={() => setPreviewImage(fullUrl)}
-                      className="w-12 h-12 object-cover rounded-lg border border-[#CBD5E1] cursor-pointer hover:opacity-80 transition-opacity shadow-2xs shrink-0"
-                    />
-                    <div>
-                      <p className="text-xs font-bold text-[#1E293B]">
-                        Periode {pr.periode_bulan || '-'} &bull; Rp {(pr.jumlah || sppAmount).toLocaleString('id-ID')}
-                      </p>
-                      <p className="text-[10px] text-[#64748B]">
-                        Diunggah pada: {pr.created_at ? new Date(pr.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '-'}
-                      </p>
-                      {pr.admin_note && (
-                        <p className="text-[10px] text-[#DC2626] font-semibold italic mt-0.5">Catatan Admin: {pr.admin_note}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <span
-                    className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shrink-0 ${
-                      pr.status === 'approved'
-                        ? 'bg-[#E8F5E9] text-[#2E7D32] border border-[#A5D6A7]'
-                        : pr.status === 'rejected'
-                        ? 'bg-[#FFEBEE] text-[#C62828] border border-[#FFCDD2]'
-                        : 'bg-[#FFF3E0] text-[#E65100] border border-[#FFE082]'
-                    }`}
-                  >
-                    {pr.status === 'approved' ? 'Disetujui' : pr.status === 'rejected' ? 'Ditolak' : 'Menunggu'}
-                  </span>
-                </div>
-              );
-            })}
+                  return (
+                    <tr key={pr.id} className="border-b border-[#F1F5F9] hover:bg-[#FAFAFA] transition-colors">
+                      <td className="py-3 px-2 font-bold text-[#94A3B8]">{idx + 1}</td>
+                      <td className="py-3 px-2">
+                        <p className="font-bold text-[#1E293B]">
+                          {pr.tanggal_upload || (pr.created_at ? new Date(pr.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '-')}
+                        </p>
+                      </td>
+                      <td className="py-3 px-2">
+                        <img
+                          src={fullUrl}
+                          alt="Struk"
+                          onClick={() => setPreviewImage(fullUrl)}
+                          className="w-11 h-11 object-cover rounded-lg border border-[#CBD5E1] cursor-pointer hover:opacity-80 transition-opacity shadow-2xs"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                      </td>
+                      <td className="py-3 px-2 font-bold text-[#475569]">{pr.periode_bulan || '-'}</td>
+                      <td className="py-3 px-2 font-extrabold text-[#16A34A]">
+                        Rp {(pr.jumlah || sppAmount).toLocaleString('id-ID')}
+                      </td>
+                      <td className="py-3 px-2 text-center">
+                        <span
+                          className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider inline-block ${
+                            statusLower === 'approved'
+                              ? 'bg-[#DCFCE7] text-[#16A34A] border border-[#86EFAC]'
+                              : statusLower === 'rejected'
+                              ? 'bg-[#FEE2E2] text-[#DC2626] border border-[#FCA5A5]'
+                              : 'bg-[#FEF3C7] text-[#D97706] border border-[#FCD34D]'
+                          }`}
+                        >
+                          {statusLower === 'approved' ? 'Disetujui' : statusLower === 'rejected' ? 'Ditolak' : 'Menunggu'}
+                        </span>
+                        {pr.admin_note && (
+                          <p className="text-[9px] text-[#DC2626] italic mt-1 max-w-[120px] mx-auto">{pr.admin_note}</p>
+                        )}
+                      </td>
+                      <td className="py-3 px-2 text-center">
+                        {statusLower === 'approved' ? (
+                          <button
+                            onClick={() => handleOpenKwitansi(pr.id)}
+                            className="px-3 py-1.5 bg-[#FF7043] hover:bg-[#F4511E] text-white text-[10px] font-extrabold rounded-lg transition-all active:scale-95 cursor-pointer shadow-xs flex items-center gap-1.5 mx-auto"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="6 9 6 2 18 2 18 9" />
+                              <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" />
+                              <rect x="6" y="14" width="12" height="8" />
+                            </svg>
+                            Cetak Kwitansi
+                          </button>
+                        ) : statusLower === 'rejected' ? (
+                          <span className="text-[10px] text-[#DC2626] font-bold">Ditolak</span>
+                        ) : (
+                          <span className="text-[10px] text-[#94A3B8] font-semibold">Menunggu Verifikasi</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         ) : (
           <p className="text-xs text-[#94A3B8] text-center py-4">Belum ada riwayat unggahan bukti transfer.</p>
@@ -477,12 +534,22 @@ export const PembayaranOrtuPage: React.FC = () => {
               onClick={() => setPreviewImage(null)}
               className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black font-bold z-10 cursor-pointer"
             >
-              ✕
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
             </button>
             <img src={previewImage} alt="Preview Bukti Transfer" className="w-auto max-h-[80vh] object-contain mx-auto rounded-xl" />
           </div>
         </div>
       )}
+
+      {/* Kwitansi Modal */}
+      <KwitansiModal
+        isOpen={kwitansiModal.isOpen}
+        onClose={() => setKwitansiModal({ isOpen: false, data: null, isLoading: false })}
+        data={kwitansiModal.data}
+        isLoading={kwitansiModal.isLoading}
+      />
     </div>
   );
 };

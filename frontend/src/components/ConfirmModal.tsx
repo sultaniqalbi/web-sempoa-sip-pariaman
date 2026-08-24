@@ -1,112 +1,144 @@
-import React, { useEffect } from 'react';
+import React, { useState } from 'react';
 
 interface ConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
-  title?: string;
-  message: string;
+  onConfirm: (note?: string) => void;
+  title: string;
+  description?: string;
   confirmText?: string;
   cancelText?: string;
-  variant?: 'danger' | 'warning' | 'info';
+  variant?: 'success' | 'danger' | 'warning';
+  showNoteInput?: boolean;
+  notePlaceholder?: string;
+  noteRequired?: boolean;
   isLoading?: boolean;
 }
+
+const variantConfig = {
+  success: {
+    iconBg: 'bg-[#DCFCE7]',
+    iconColor: 'text-[#16A34A]',
+    btnBg: 'bg-[#16A34A] hover:bg-[#15803D]',
+    borderColor: 'border-[#86EFAC]',
+  },
+  danger: {
+    iconBg: 'bg-[#FEE2E2]',
+    iconColor: 'text-[#DC2626]',
+    btnBg: 'bg-[#DC2626] hover:bg-[#B91C1C]',
+    borderColor: 'border-[#FCA5A5]',
+  },
+  warning: {
+    iconBg: 'bg-[#FEF3C7]',
+    iconColor: 'text-[#D97706]',
+    btnBg: 'bg-[#D97706] hover:bg-[#B45309]',
+    borderColor: 'border-[#FCD34D]',
+  },
+};
 
 export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   isOpen,
   onClose,
   onConfirm,
-  title = 'Konfirmasi Aksi',
-  message,
-  confirmText = 'Ya, Hapus',
+  title,
+  description,
+  confirmText = 'Konfirmasi',
   cancelText = 'Batal',
-  variant = 'danger',
+  variant = 'warning',
+  showNoteInput = false,
+  notePlaceholder = 'Masukkan catatan...',
+  noteRequired = false,
   isLoading = false,
 }) => {
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  const [note, setNote] = useState('');
+  const config = variantConfig[variant];
 
   if (!isOpen) return null;
 
-  const iconColors = {
-    danger: 'bg-[#FEE2E2] text-[#DC2626] border-[#FECDD3]',
-    warning: 'bg-[#FFF3E0] text-[#E65100] border-[#FFE082]',
-    info: 'bg-[#E0F2FE] text-[#0284C7] border-[#BAE6FD]',
+  const handleConfirm = () => {
+    if (showNoteInput && noteRequired && !note.trim()) return;
+    onConfirm(showNoteInput ? note : undefined);
+    setNote('');
   };
 
-  const confirmBtnColors = {
-    danger: 'bg-[#DC2626] hover:bg-[#B91C1C] text-white shadow-red-500/20',
-    warning: 'bg-[#E65100] hover:bg-[#C2410C] text-white shadow-orange-500/20',
-    info: 'bg-[#0284C7] hover:bg-[#0369A1] text-white shadow-sky-500/20',
+  const handleClose = () => {
+    setNote('');
+    onClose();
   };
 
   return (
     <div
-      role="dialog"
-      aria-modal="true"
-      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+      className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-xs flex items-center justify-center p-4"
+      onClick={handleClose}
     >
-      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-5 sm:p-6 shadow-2xl relative text-[#1E293B] w-full max-w-md animate-in zoom-in-95 duration-150 space-y-4">
-        {/* Header Icon + Title */}
-        <div className="flex items-start gap-3.5">
-          <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border ${iconColors[variant]}`}>
-            {variant === 'danger' && (
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2m-6 5v6m4-6v6" />
+      <div
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header with icon */}
+        <div className="px-6 pt-6 pb-4 flex items-start gap-4">
+          <div className={`w-12 h-12 rounded-xl ${config.iconBg} flex items-center justify-center shrink-0`}>
+            {variant === 'success' ? (
+              <svg className={config.iconColor} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 12l2 2 4-4" />
+                <circle cx="12" cy="12" r="10" />
               </svg>
-            )}
-            {variant === 'warning' && (
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+            ) : variant === 'danger' ? (
+              <svg className={config.iconColor} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="15" y1="9" x2="9" y2="15" />
+                <line x1="9" y1="9" x2="15" y2="15" />
+              </svg>
+            ) : (
+              <svg className={config.iconColor} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                 <line x1="12" y1="9" x2="12" y2="13" />
                 <line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
             )}
-            {variant === 'info' && (
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="16" x2="12" y2="12" />
-                <line x1="12" y1="8" x2="12.01" y2="8" />
-              </svg>
-            )}
           </div>
-          <div className="flex-1 min-w-0 pt-0.5">
-            <h3 className="text-base font-bold text-[#0F172A] leading-snug truncate">
-              {title}
-            </h3>
-            <p className="text-xs text-[#64748B] mt-1.5 leading-relaxed break-words font-medium">
-              {message}
-            </p>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-base font-extrabold text-[#1E293B] leading-snug">{title}</h3>
+            {description && (
+              <p className="text-xs text-[#64748B] mt-1.5 leading-relaxed">{description}</p>
+            )}
           </div>
         </div>
 
-        {/* Buttons Action */}
-        <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[#F1F5F9]">
+        {/* Note input (optional) */}
+        {showNoteInput && (
+          <div className="px-6 pb-4">
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder={notePlaceholder}
+              rows={3}
+              className={`w-full bg-[#F8FAFC] border ${config.borderColor} rounded-xl p-3 text-xs text-[#1E293B] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#FF7043]/30 resize-none`}
+            />
+            {noteRequired && !note.trim() && (
+              <p className="text-[10px] text-[#DC2626] mt-1 font-semibold">* Wajib diisi</p>
+            )}
+          </div>
+        )}
+
+        {/* Action buttons */}
+        <div className="px-6 pb-6 flex items-center justify-end gap-2.5">
           <button
-            type="button"
-            onClick={onClose}
+            onClick={handleClose}
             disabled={isLoading}
-            className="px-4 py-2.5 bg-[#F8FAFC] hover:bg-[#F1F5F9] text-[#475569] font-bold text-xs rounded-xl border border-[#E2E8F0] transition-colors cursor-pointer active:scale-95 disabled:opacity-50"
+            className="px-5 py-2.5 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#475569] font-bold text-xs rounded-xl border border-[#E2E8F0] transition-all cursor-pointer disabled:opacity-50"
           >
             {cancelText}
           </button>
           <button
-            type="button"
-            onClick={onConfirm}
-            disabled={isLoading}
-            className={`px-4 py-2.5 font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2 ${confirmBtnColors[variant]} disabled:opacity-50`}
+            onClick={handleConfirm}
+            disabled={isLoading || (showNoteInput && noteRequired && !note.trim())}
+            className={`px-5 py-2.5 ${config.btnBg} text-white font-bold text-xs rounded-xl shadow-sm transition-all active:scale-95 cursor-pointer disabled:opacity-50 flex items-center gap-2`}
           >
-            {isLoading ? (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : null}
-            <span>{confirmText}</span>
+            {isLoading && (
+              <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            )}
+            {confirmText}
           </button>
         </div>
       </div>

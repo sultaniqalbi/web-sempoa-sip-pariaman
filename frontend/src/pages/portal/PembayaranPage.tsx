@@ -4,6 +4,8 @@ import apiClient from '../../features/api/apiClient';
 import useAuth from '../../features/auth/useAuth';
 import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
+import ConfirmModal from '../../components/ConfirmModal';
+import KwitansiModal from '../../components/KwitansiModal';
 import PageHeader from '../../components/PageHeader';
 import EmptyState from '../../components/EmptyState';
 import { PembayaranIcon, EditIcon, WhatsAppIcon, CameraIcon, DocumentTextIcon } from '../../components/SvgIcons';
@@ -36,12 +38,14 @@ interface BuktiTransferItem {
   status: string;
   admin_note?: string;
   created_at: string;
+  tanggal_upload?: string;
   nama_siswa?: string;
   kategori_program?: string;
   nama_orang_tua?: string;
   whatsapp_orang_tua?: string;
   periode_bulan?: string;
   jumlah?: number;
+  kwitansi_id?: string;
 }
 
 export const SharedPembayaranPage: React.FC = () => {
@@ -69,6 +73,13 @@ export const SharedPembayaranPage: React.FC = () => {
   // Lightbox for proof image
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
+  // Confirm modal states (replaces window.confirm / window.prompt)
+  const [approveConfirm, setApproveConfirm] = useState<{ isOpen: boolean; id: number; nama: string }>({ isOpen: false, id: 0, nama: '' });
+  const [rejectConfirm, setRejectConfirm] = useState<{ isOpen: boolean; id: number; nama: string }>({ isOpen: false, id: 0, nama: '' });
+
+  // Kwitansi modal state
+  const [kwitansiModal, setKwitansiModal] = useState<{ isOpen: boolean; data: any; isLoading: boolean }>({ isOpen: false, data: null, isLoading: false });
+
   const showToast = (text: string, type: 'success' | 'error' = 'success') => {
     setToastMessage({ text, type });
     setTimeout(() => setToastMessage(null), 4000);
@@ -86,17 +97,15 @@ export const SharedPembayaranPage: React.FC = () => {
         return res.data.siswa || res.data;
       }
     },
-    refetchInterval: 5000,
   });
 
-  // 2. Fetch All Transfer Proofs (Accessible by both Admin & Owner)
+  // 2. Fetch All Transfer Proofs — NO POLLING, invalidate on actions only
   const { data: buktiList = [], isLoading: isLoadingBukti } = useQuery<BuktiTransferItem[]>({
     queryKey: ['bukti-transfer', 'list'],
     queryFn: async () => {
       const res = await apiClient.get('/bukti-transfer/');
       return res.data;
     },
-    refetchInterval: 3000,
   });
 
   // Mutation Edit Jatuh Tempo / SPP
@@ -129,6 +138,7 @@ export const SharedPembayaranPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['bukti-transfer'] });
       queryClient.invalidateQueries({ queryKey: ['pembayaran'] });
       queryClient.invalidateQueries({ queryKey: ['siswa'] });
+      setApproveConfirm({ isOpen: false, id: 0, nama: '' });
       showToast('Bukti transfer disetujui. Kuota siswa bertambah & status SPP lunas.');
     },
     onError: (err: any) => {
@@ -145,6 +155,7 @@ export const SharedPembayaranPage: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bukti-transfer'] });
       queryClient.invalidateQueries({ queryKey: ['pembayaran'] });
+      setRejectConfirm({ isOpen: false, id: 0, nama: '' });
       showToast('Bukti transfer ditolak.');
     },
     onError: (err: any) => {
@@ -191,16 +202,23 @@ export const SharedPembayaranPage: React.FC = () => {
     });
   };
 
+  // Premium modal-based approve/reject handlers
   const handleApproveProof = (id: number, nama?: string) => {
-    if (window.confirm(`Setujui bukti pembayaran untuk ${nama || 'siswa ini'}? Kuota akan otomatis ditambah.`)) {
-      approveMutation.mutate(id);
-    }
+    setApproveConfirm({ isOpen: true, id, nama: nama || 'siswa ini' });
   };
 
   const handleRejectProof = (id: number, nama?: string) => {
-    const note = window.prompt(`Masukkan alasan penolakan bukti pembayaran ${nama || ''}:`);
-    if (note !== null) {
-      rejectMutation.mutate({ id, note: note || 'Bukti pembayaran tidak jelas / nominal tidak sesuai' });
+    setRejectConfirm({ isOpen: true, id, nama: nama || 'siswa ini' });
+  };
+
+  const handleOpenKwitansi = async (proofId: number) => {
+    setKwitansiModal({ isOpen: true, data: null, isLoading: true });
+    try {
+      const res = await apiClient.get(`/bukti-transfer/${proofId}/kwitansi`);
+      setKwitansiModal({ isOpen: true, data: res.data, isLoading: false });
+    } catch (err: any) {
+      showToast(`Gagal memuat kwitansi: ${err.response?.data?.detail || err.message}`, 'error');
+      setKwitansiModal({ isOpen: false, data: null, isLoading: false });
     }
   };
 
@@ -355,9 +373,9 @@ export const SharedPembayaranPage: React.FC = () => {
       header: 'Siswa & Ortu',
       accessor: (row: BuktiTransferItem) => (
         <div>
-          <p className="font-bold text-[#1E293B] text-xs sm:text-sm">{row.nama_siswa || `Siswa #${row.id_siswa}`}</p>
+          <p className="font-bold text-[#1E293B] text-xs sm:text-sm">{row.nama_siswa || 'N/A'}</p>
           <p className="text-[11px] text-[#64748B] mt-0.5">
-            {row.kategori_program || '-'} • Ortu: {row.nama_orang_tua || '-'}
+            {row.kategori_program || '-'} &bull; Ortu: {row.nama_orang_tua || '-'}
           </p>
         </div>
       ),
@@ -376,11 +394,19 @@ export const SharedPembayaranPage: React.FC = () => {
       ),
     },
     {
+      header: 'Tanggal Upload',
+      accessor: (row: BuktiTransferItem) => (
+        <span className="text-[11px] font-semibold text-[#475569]">
+          {row.tanggal_upload || (row.created_at ? new Date(row.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '-')}
+        </span>
+      ),
+    },
+    {
       header: 'Foto Struk Bukti',
       accessor: (row: BuktiTransferItem) => {
-        const fullUrl = row.file_path.startsWith('http')
+        const fullUrl = row.file_path?.startsWith('http')
           ? row.file_path
-          : `/${row.file_path.replace(/^\//, '')}`;
+          : `/${(row.file_path || '').replace(/^\//, '')}`;
 
         return (
           <div>
@@ -389,7 +415,18 @@ export const SharedPembayaranPage: React.FC = () => {
               alt="Bukti Transfer"
               onClick={() => setPreviewImage(fullUrl)}
               className="w-14 h-14 object-cover rounded-lg border border-[#CBD5E1] cursor-pointer hover:opacity-80 transition-opacity shadow-2xs"
+              onError={(e) => {
+                const img = e.target as HTMLImageElement;
+                img.style.display = 'none';
+                const fallback = img.parentElement?.querySelector('.img-fallback') as HTMLElement;
+                if (fallback) fallback.style.display = 'flex';
+              }}
             />
+            <div className="img-fallback w-14 h-14 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] items-center justify-center hidden">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
+              </svg>
+            </div>
             <span className="text-[10px] text-[#64748B] block mt-0.5 font-medium">Klik zoom</span>
           </div>
         );
@@ -443,6 +480,21 @@ export const SharedPembayaranPage: React.FC = () => {
             </div>
           );
         }
+        if (status === 'approved') {
+          return (
+            <button
+              onClick={() => handleOpenKwitansi(row.id)}
+              className="px-3 py-1.5 bg-[#FF7043] hover:bg-[#F4511E] text-white text-xs font-bold rounded-lg transition-all shadow-2xs active:scale-95 cursor-pointer flex items-center gap-1.5"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 6 2 18 2 18 9" />
+                <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" />
+                <rect x="6" y="14" width="12" height="8" />
+              </svg>
+              Cetak Kwitansi
+            </button>
+          );
+        }
         return (
           <span className="text-[11px] text-[#94A3B8] font-bold">Sudah Diproses</span>
         );
@@ -471,7 +523,7 @@ export const SharedPembayaranPage: React.FC = () => {
         isExporting={exportSheetsMutation.isPending}
       />
 
-      {/* Navigation Tabs (Both Admin & Owner can toggle between Reminder and Bukti Transfer) */}
+      {/* Navigation Tabs */}
       <div className="flex border-b border-[#E2E8F0] gap-2">
         <button
           onClick={() => setActiveTab('reminder')}
@@ -549,6 +601,42 @@ export const SharedPembayaranPage: React.FC = () => {
         )
       )}
 
+      {/* ── Approve Confirm Modal (replaces window.confirm) ── */}
+      <ConfirmModal
+        isOpen={approveConfirm.isOpen}
+        onClose={() => setApproveConfirm({ isOpen: false, id: 0, nama: '' })}
+        onConfirm={() => approveMutation.mutate(approveConfirm.id)}
+        title={`Setujui bukti pembayaran ${approveConfirm.nama}?`}
+        description="Kuota pertemuan siswa akan otomatis ditambah sesuai target, status SPP menjadi LUNAS, dan jatuh tempo diperpanjang 30 hari."
+        confirmText="Ya, Setujui"
+        cancelText="Batal"
+        variant="success"
+        isLoading={approveMutation.isPending}
+      />
+
+      {/* ── Reject Confirm Modal (replaces window.prompt) ── */}
+      <ConfirmModal
+        isOpen={rejectConfirm.isOpen}
+        onClose={() => setRejectConfirm({ isOpen: false, id: 0, nama: '' })}
+        onConfirm={(note) => rejectMutation.mutate({ id: rejectConfirm.id, note: note || 'Bukti pembayaran tidak jelas / nominal tidak sesuai' })}
+        title={`Tolak bukti pembayaran ${rejectConfirm.nama}?`}
+        description="Status pembayaran akan kembali menjadi MENUNGGAK. Masukkan alasan penolakan agar orang tua dapat mengunggah ulang."
+        confirmText="Ya, Tolak"
+        cancelText="Batal"
+        variant="danger"
+        showNoteInput={true}
+        notePlaceholder="Masukkan alasan penolakan (contoh: foto blur, nominal tidak sesuai)..."
+        isLoading={rejectMutation.isPending}
+      />
+
+      {/* ── Kwitansi Modal ── */}
+      <KwitansiModal
+        isOpen={kwitansiModal.isOpen}
+        onClose={() => setKwitansiModal({ isOpen: false, data: null, isLoading: false })}
+        data={kwitansiModal.data}
+        isLoading={kwitansiModal.isLoading}
+      />
+
       {/* Modal Edit Jatuh Tempo SPP */}
       {editingDueDateSiswa && (
         <Modal
@@ -562,7 +650,7 @@ export const SharedPembayaranPage: React.FC = () => {
               <div>
                 <p className="font-bold text-[#E65100] text-sm">{editingDueDateSiswa.nama_siswa}</p>
                 <p className="text-[11px] text-[#BF360C] mt-0.5">
-                  Program: {editingDueDateSiswa.program} • Sisa: {editingDueDateSiswa.sisa_pertemuan}/{editingDueDateSiswa.target_pertemuan} Sesi
+                  Program: {editingDueDateSiswa.program} - Sisa: {editingDueDateSiswa.sisa_pertemuan}/{editingDueDateSiswa.target_pertemuan} Sesi
                 </p>
               </div>
               <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-white text-[#FF7043] border border-[#FFCC80]">
@@ -649,7 +737,9 @@ export const SharedPembayaranPage: React.FC = () => {
               onClick={() => setPreviewImage(null)}
               className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black font-bold z-10 cursor-pointer"
             >
-              ✕
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
             </button>
             <img src={previewImage} alt="Preview Bukti Transfer" className="w-auto max-h-[80vh] object-contain mx-auto rounded-xl" />
           </div>
