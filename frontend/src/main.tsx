@@ -11,13 +11,14 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   </React.StrictMode>,
 )
 
-// Register Service Worker for Push Notifications
+// Register Service Worker for Push Notifications & Auto Update
 if ('serviceWorker' in navigator && typeof window !== 'undefined') {
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('/sw.js')
       .then((reg) => {
-        console.log('Service Worker registered successfully with scope:', reg.scope);
+        reg.update();
+        console.log('Service Worker registered and updated:', reg.scope);
       })
       .catch((err) => {
         console.warn('Service Worker registration failed:', err);
