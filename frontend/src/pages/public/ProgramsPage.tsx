@@ -63,11 +63,12 @@ export const ProgramsPage: React.FC = () => {
 
         {/* Mobile Nav Actions */}
         <div className="md:hidden flex items-center gap-3">
-          <Link to="/" className="w-10 h-10 bg-slate-900 text-slate-300 rounded-xl flex items-center justify-center hover:bg-slate-800 transition-colors">
+          <Link to="/" aria-label="Kembali ke Beranda" className="w-10 h-10 bg-slate-900 text-slate-300 rounded-xl flex items-center justify-center hover:bg-slate-800 transition-colors">
             <HomeIcon size={20} />
           </Link>
           <button 
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Buka Menu Navigasi"
             className="w-10 h-10 bg-amber-500 text-slate-950 rounded-xl flex items-center justify-center font-bold hover:bg-amber-400 transition-colors"
           >
             {isMobileMenuOpen ? <CloseIcon size={20} /> : <MenuIcon size={20} />}

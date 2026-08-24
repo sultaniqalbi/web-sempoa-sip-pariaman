@@ -191,6 +191,7 @@ export const ProgramDetailPage: React.FC = () => {
             <button
               className="mobile-menu-btn"
               id="mobileMenuBtn"
+              aria-label="Buka Menu Navigasi"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               style={{ background: 'none', border: 'none', cursor: 'pointer', outline: 'none' }}
             >
