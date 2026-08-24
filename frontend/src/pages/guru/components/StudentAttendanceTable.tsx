@@ -258,7 +258,7 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
                               : 'bg-[#E8F5E9] text-[#2E7D32] border-[#C8E6C9]'
                           }`}
                         >
-                          {siswa.pertemuan_selesai} / {siswa.total_pertemuan}
+                          {siswa.sisa_pertemuan} / {siswa.total_pertemuan}
                         </span>
                         <button
                           type="button"
