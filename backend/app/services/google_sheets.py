@@ -77,7 +77,7 @@ def send_to_google_sheet(tab_name: str, rows: list, title: str = "Export Data"):
                 ws.clear()
             except Exception:
                 ws = sh.add_worksheet(title=tab_name, rows=len(rows)+10, cols=max(len(r) for r in rows) if rows else 10)
-            ws.update("A1", rows)
+            ws.update(values=rows, range_name="A1")
             return {
                 "status": "success",
                 "method": "service_account",
