@@ -227,9 +227,9 @@ async def export_galeri_sheets(
     items = db.query(Galeri).all()
     rows = [["Judul", "Deskripsi", "Tanggal Dibuat", "Tautan Foto"]]
     for g in items:
-        # Menggunakan rumus HYPERLINK Google Sheets agar link bisa di-klik dengan teks yang rapi
         full_url = f"https://sempoasippariaman.com{g.file_path}" if g.file_path.startswith("/") else g.file_path
-        hyperlink_formula = f'=HYPERLINK("{full_url}", "Lihat Foto")'
+        # Karena Google Sheets user menggunakan Bahasa Indonesia, pemisah rumus adalah titik koma (;) bukan koma (,)
+        hyperlink_formula = f'=HYPERLINK("{full_url}"; "Lihat Foto")'
         
         rows.append([
             g.judul,
