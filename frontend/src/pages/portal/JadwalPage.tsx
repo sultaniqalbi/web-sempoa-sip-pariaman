@@ -301,7 +301,7 @@ export const JadwalPage: React.FC = () => {
     {
       header: 'Aksi',
       accessor: (row: Jadwal) => (
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex items-center md:justify-end gap-2">
           <button
             onClick={() => openEditModal(row)}
             className="px-2.5 py-1 bg-[#FAFAFA] hover:bg-[#E2E8F0] text-[#334155] text-xs font-bold rounded-lg border border-[#CBD5E1] transition-colors"
@@ -322,7 +322,7 @@ export const JadwalPage: React.FC = () => {
           )}
         </div>
       ),
-      className: 'w-[140px] text-right',
+      className: 'md:w-[140px] text-right',
     },
   ];
 

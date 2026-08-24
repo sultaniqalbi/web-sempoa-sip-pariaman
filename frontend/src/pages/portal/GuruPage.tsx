@@ -393,7 +393,7 @@ export const GuruPage: React.FC = () => {
           </div>
         );
       },
-      className: 'w-[70px] text-center',
+      className: 'md:w-[70px] text-center',
     },
     {
       header: 'UID RFID',
@@ -402,7 +402,7 @@ export const GuruPage: React.FC = () => {
           {row.uid}
         </span>
       ),
-      className: 'w-[120px]',
+      className: 'md:w-[120px]',
     },
     {
       header: 'NAMA GURU',
@@ -419,7 +419,7 @@ export const GuruPage: React.FC = () => {
           </div>
         );
       },
-      className: 'w-[220px]',
+      className: 'md:w-[220px]',
     },
     {
       header: 'KATEGORI',
@@ -428,7 +428,7 @@ export const GuruPage: React.FC = () => {
           {row.kategori_program}
         </span>
       ),
-      className: 'w-[130px]',
+      className: 'md:w-[130px]',
     },
     {
       header: 'JADWAL',
@@ -444,12 +444,12 @@ export const GuruPage: React.FC = () => {
           )}
         </div>
       ),
-      className: 'w-[200px]',
+      className: 'md:w-[200px]',
     },
     {
       header: 'Aksi',
       accessor: (row: Guru) => (
-        <div className="flex items-center justify-end gap-1.5 flex-wrap">
+        <div className="flex items-center md:justify-end gap-1.5 flex-wrap">
           <button
             onClick={() => openEditModal(row)}
             className="px-2.5 py-1 bg-[#FAFAFA] hover:bg-[#E2E8F0] text-[#334155] text-xs font-bold rounded-lg border border-[#CBD5E1] transition-colors"
@@ -496,7 +496,7 @@ export const GuruPage: React.FC = () => {
           )}
         </div>
       ),
-      className: 'w-[200px] text-right',
+      className: 'md:w-[200px] text-right',
     },
   ];
 

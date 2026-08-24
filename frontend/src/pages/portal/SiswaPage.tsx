@@ -408,7 +408,7 @@ export const SiswaPage: React.FC = () => {
           </div>
         );
       },
-      className: 'w-[70px] text-center'
+      className: 'md:w-[70px] text-center'
     },
     {
       header: 'Kode Siswa',
