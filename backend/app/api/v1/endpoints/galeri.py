@@ -225,11 +225,20 @@ async def export_galeri_sheets(
     current_user: User = Depends(admin_or_owner)
 ):
     items = db.query(Galeri).all()
-    rows = [["ID", "Judul", "URL File Path", "Deskripsi", "Tanggal Dibuat"]]
+    rows = [["Judul", "Deskripsi", "Tanggal Dibuat", "Tautan Foto"]]
     for g in items:
-        rows.append([g.id, g.judul, g.file_path, g.deskripsi or "-", g.created_at.strftime("%Y-%m-%d %H:%M") if g.created_at else "-"])
+        # Menggunakan rumus HYPERLINK Google Sheets agar link bisa di-klik dengan teks yang rapi
+        full_url = f"https://sempoasippariaman.com{g.file_path}" if g.file_path.startswith("/") else g.file_path
+        hyperlink_formula = f'=HYPERLINK("{full_url}", "Lihat Foto")'
+        
+        rows.append([
+            g.judul,
+            g.deskripsi or "-",
+            g.created_at.strftime("%Y-%m-%d %H:%M") if g.created_at else "-",
+            hyperlink_formula
+        ])
 
     from app.services.google_sheets import send_to_google_sheet
     
-    tab_name = f"Galeri_{datetime.utcnow().strftime('%Y%m%d')}"
+    tab_name = "Galeri"
     return send_to_google_sheet(tab_name=tab_name, rows=rows, title="Data Galeri Foto")
