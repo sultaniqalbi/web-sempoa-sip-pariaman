@@ -28,6 +28,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 import os
 from pathlib import Path
 from app.core.database import engine, Base
+import app.models  # Crucial: load all models into Base.metadata before create_all
 from app.seed_data import run_seed
 
 app = FastAPI(
@@ -61,6 +62,24 @@ def on_startup():
         except Exception as mig_e:
             if "duplicate column name" not in str(mig_e).lower() and "already exists" not in str(mig_e).lower():
                 logger.warning(f"Auto-migration skipped or failed: {mig_e}")
+
+        # Auto-migration for bukti_transfer (ensure table exists on any DB engine)
+        try:
+            with engine.connect() as conn:
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS bukti_transfer (
+                        id SERIAL PRIMARY KEY,
+                        id_pembayaran INTEGER NOT NULL,
+                        file_path VARCHAR(255) NOT NULL,
+                        status VARCHAR(50) NOT NULL DEFAULT 'pending',
+                        admin_note VARCHAR(255),
+                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                    );
+                """))
+                conn.commit()
+                logger.info("Auto-migration: Ensured bukti_transfer table exists")
+        except Exception as bt_e:
+            logger.warning(f"Auto-migration for bukti_transfer: {bt_e}")
                 
         run_seed()
         
@@ -98,6 +117,9 @@ app.add_middleware(CORSMiddleware, **cors_kwargs)
 # Mount static files for uploads
 uploads_dir = os.path.join(os.path.dirname(__file__), "uploads")
 os.makedirs(uploads_dir, exist_ok=True)
+os.makedirs(os.path.join(uploads_dir, "bukti_transfer"), exist_ok=True)
+os.makedirs(os.path.join(uploads_dir, "profil"), exist_ok=True)
+os.makedirs(os.path.join(uploads_dir, "galeri"), exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
 
