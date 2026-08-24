@@ -395,11 +395,18 @@ export const SharedPembayaranPage: React.FC = () => {
     },
     {
       header: 'Tanggal Upload',
-      accessor: (row: BuktiTransferItem) => (
-        <span className="text-[11px] font-semibold text-[#475569]">
-          {row.tanggal_upload || (row.created_at ? new Date(row.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '-')}
-        </span>
-      ),
+      accessor: (row: BuktiTransferItem) => {
+        // Assume backend created_at is UTC. Ensure it's parsed as UTC by appending 'Z' if missing.
+        const dtStr = row.created_at || '';
+        const isUtc = dtStr.endsWith('Z') || dtStr.includes('+');
+        const finalDtStr = dtStr ? (isUtc ? dtStr : dtStr + 'Z') : '';
+        const displayDate = finalDtStr ? new Date(finalDtStr).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '-';
+        return (
+          <span className="text-[11px] font-semibold text-[#475569]">
+            {displayDate}
+          </span>
+        );
+      },
     },
     {
       header: 'Foto Struk Bukti',
@@ -409,12 +416,11 @@ export const SharedPembayaranPage: React.FC = () => {
           : `/${(row.file_path || '').replace(/^\//, '')}`;
 
         return (
-          <div>
+          <div onClick={() => setPreviewImage(fullUrl)} className="cursor-pointer group">
             <img
               src={fullUrl}
               alt="Bukti Transfer"
-              onClick={() => setPreviewImage(fullUrl)}
-              className="w-14 h-14 object-cover rounded-lg border border-[#CBD5E1] cursor-pointer hover:opacity-80 transition-opacity shadow-2xs"
+              className="w-14 h-14 object-cover rounded-lg border border-[#CBD5E1] group-hover:opacity-80 transition-opacity shadow-2xs"
               onError={(e) => {
                 const img = e.target as HTMLImageElement;
                 img.style.display = 'none';
@@ -422,12 +428,12 @@ export const SharedPembayaranPage: React.FC = () => {
                 if (fallback) fallback.style.display = 'flex';
               }}
             />
-            <div className="img-fallback w-14 h-14 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] items-center justify-center hidden">
+            <div className="img-fallback w-14 h-14 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] items-center justify-center hidden group-hover:bg-[#E2E8F0] transition-colors">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2">
                 <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
               </svg>
             </div>
-            <span className="text-[10px] text-[#64748B] block mt-0.5 font-medium">Klik zoom</span>
+            <span className="text-[10px] text-[#64748B] block mt-0.5 font-medium group-hover:text-[#475569]">Klik zoom</span>
           </div>
         );
       },
