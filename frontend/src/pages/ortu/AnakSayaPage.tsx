@@ -70,6 +70,7 @@ export const AnakSayaPage: React.FC = () => {
   });
 
   // Form state
+  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [formData, setFormData] = useState<ChildFormData>({
     nama: '',
     nama_panggilan: '',
@@ -146,9 +147,17 @@ export const AnakSayaPage: React.FC = () => {
         whatsapp_orang_tua: formData.no_wa_ortu,
       };
       await apiClient.put(`/siswa/${child.id}`, payload);
+      if (selectedPhoto) {
+        const fileData = new FormData();
+        fileData.append('file', selectedPhoto);
+        await apiClient.post(`/siswa/${child.id}/upload-foto`, fileData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      }
       await queryClient.invalidateQueries({ queryKey: ['child-profile'] });
       setSaveMessage({ type: 'success', text: 'Data profil anak berhasil disimpan!' });
       setIsEditing(false);
+      setSelectedPhoto(null);
     } catch (err: any) {
       setSaveMessage({ type: 'error', text: `Gagal menyimpan data: ${err.response?.data?.detail || err.message}` });
     } finally {
@@ -159,6 +168,7 @@ export const AnakSayaPage: React.FC = () => {
   const handleCancel = () => {
     setIsEditing(false);
     setSaveMessage(null);
+    setSelectedPhoto(null);
     if (child) {
       const calculatedAge = calculateAge(child.tanggal_lahir);
       setFormData({
@@ -236,43 +246,57 @@ export const AnakSayaPage: React.FC = () => {
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <FormField label="Nama Lengkap Anak" required>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">Nama Lengkap Siswa*</label>
               <input
                 type="text"
+                required
                 value={formData.nama}
                 onChange={(e) => handleInputChange('nama', e.target.value)}
                 disabled={!isEditing}
-                className="form-input-ortu"
-                placeholder="Nama lengkap"
+                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none disabled:opacity-70 disabled:cursor-not-allowed"
+                placeholder="Nama Lengkap Anak"
               />
-            </FormField>
-            <FormField label="Nama Panggilan">
+            </div>
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">Nama Panggilan* (untuk email ortu)</label>
               <input
                 type="text"
+                required
                 value={formData.nama_panggilan}
                 onChange={(e) => handleInputChange('nama_panggilan', e.target.value)}
                 disabled={!isEditing}
-                placeholder="Nama panggilan"
-                className="form-input-ortu"
+                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none disabled:opacity-70 disabled:cursor-not-allowed"
+                placeholder="Nama Panggilan"
               />
-            </FormField>
+            </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
-            <FormField label="Tempat Lahir">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">Tempat Lahir</label>
               <input
                 type="text"
                 value={formData.tempat_lahir}
                 onChange={(e) => handleInputChange('tempat_lahir', e.target.value)}
                 disabled={!isEditing}
-                placeholder="Kota/Kab"
-                className="form-input-ortu"
+                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none disabled:opacity-70 disabled:cursor-not-allowed"
+                placeholder="Kota / Kab"
               />
-            </FormField>
-            <FormField label="Tanggal Lahir">
+            </div>
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[#1E293B] font-bold">Tanggal Lahir*</label>
+                {formData.tanggal_lahir && calculateAge(formData.tanggal_lahir) !== null && (
+                  <span className="text-[11px] font-extrabold text-[#2E7D32] bg-[#E8F5E9] border border-[#A5D6A7] px-2 py-0.5 rounded-full">
+                    Umur: {calculateAge(formData.tanggal_lahir)} Tahun
+                  </span>
+                )}
+              </div>
               <input
                 type="date"
+                required
                 value={formData.tanggal_lahir}
                 onChange={(e) => {
                   const val = e.target.value;
@@ -284,105 +308,109 @@ export const AnakSayaPage: React.FC = () => {
                   }));
                 }}
                 disabled={!isEditing}
-                className="form-input-ortu"
+                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none font-medium disabled:opacity-70 disabled:cursor-not-allowed"
               />
-            </FormField>
-            <FormField label="Umur (Thn)">
-              <input
-                type="number"
-                value={formData.umur}
-                onChange={(e) => handleInputChange('umur', e.target.value)}
-                disabled={!isEditing}
-                placeholder="0"
-                className="form-input-ortu"
-              />
-            </FormField>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <FormField label="Asal Sekolah">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">Asal Sekolah</label>
               <input
                 type="text"
                 value={formData.asal_sekolah}
                 onChange={(e) => handleInputChange('asal_sekolah', e.target.value)}
                 disabled={!isEditing}
-                placeholder="Contoh: SDN 01 Pariaman / TK Kemala"
-                className="form-input-ortu"
+                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none disabled:opacity-70 disabled:cursor-not-allowed"
+                placeholder="SDN 01 Pariaman / TK Kemala"
               />
-            </FormField>
-            <FormField label="Kelas di Sekolah">
+            </div>
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">Kelas di Sekolah</label>
               <input
                 type="text"
                 value={formData.kelas_sekolah}
                 onChange={(e) => handleInputChange('kelas_sekolah', e.target.value)}
                 disabled={!isEditing}
-                placeholder="Contoh: 1 SD / TK B"
-                className="form-input-ortu"
+                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none disabled:opacity-70 disabled:cursor-not-allowed"
+                placeholder="Contoh: 1 SD, 2 SD, TK B"
               />
-            </FormField>
+            </div>
           </div>
 
-          <FormField label="Alamat Tempat Tinggal">
+          <div className="text-xs">
+            <label className="block text-[#1E293B] font-bold mb-1">Pas Foto (Tampil 3x4)</label>
+            <input
+              type="file"
+              accept="image/*"
+              disabled={!isEditing}
+              onChange={(e) => setSelectedPhoto(e.target.files ? e.target.files[0] : null)}
+              className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2 text-[#1E293B] focus:border-[#FF7043] focus:outline-none file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#FF7043] file:text-white hover:file:bg-[#F4511E] disabled:opacity-70 disabled:cursor-not-allowed"
+            />
+            {child?.foto_profil && !selectedPhoto && (
+              <p className="text-[10px] text-[#64748B] mt-1">Anak Anda sudah memiliki foto profil. Upload baru untuk mengganti.</p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">Nama Orang Tua*</label>
+              <input
+                type="text"
+                required
+                value={formData.nama_ortu}
+                onChange={(e) => handleInputChange('nama_ortu', e.target.value)}
+                disabled={!isEditing}
+                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none disabled:opacity-70 disabled:cursor-not-allowed"
+              />
+            </div>
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">No. WhatsApp Orang Tua*</label>
+              <input
+                type="tel"
+                required
+                value={formData.no_wa_ortu}
+                onChange={(e) => handleInputChange('no_wa_ortu', e.target.value)}
+                disabled={!isEditing}
+                placeholder="08xxxxxxxxxx"
+                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none disabled:opacity-70 disabled:cursor-not-allowed"
+              />
+              {isEditing && (
+                <p className="text-[10px] text-[#94A3B8] mt-1">Format: 08 + 8-11 digit angka</p>
+              )}
+            </div>
+          </div>
+
+          <div className="text-xs">
+            <label className="block text-[#1E293B] font-bold mb-1">Alamat Tempat Tinggal Siswa*</label>
             <textarea
+              required
               value={formData.alamat}
               onChange={(e) => handleInputChange('alamat', e.target.value)}
               disabled={!isEditing}
               rows={2}
               placeholder="Alamat lengkap"
-              className="form-input-ortu resize-none"
+              className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none disabled:opacity-70 disabled:cursor-not-allowed resize-none"
             />
-          </FormField>
-
-          <FormField label="Program Sempoa">
-            <input
-              type="text"
-              value={formData.program}
-              disabled
-              className="form-input-ortu bg-[#F5F5F5] text-[#9E9E9E] cursor-not-allowed"
-            />
-          </FormField>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <FormField label="Nama Orang Tua" required>
-              <input
-                type="text"
-                value={formData.nama_ortu}
-                onChange={(e) => handleInputChange('nama_ortu', e.target.value)}
-                disabled={!isEditing}
-                className="form-input-ortu"
-              />
-            </FormField>
-
-            <FormField label="No. WhatsApp Ortu" required>
-              <input
-                type="tel"
-                value={formData.no_wa_ortu}
-                onChange={(e) => handleInputChange('no_wa_ortu', e.target.value)}
-                disabled={!isEditing}
-                placeholder="08xxxxxxxxxx"
-                className="form-input-ortu"
-              />
-              {isEditing && (
-                <p className="text-[10px] text-[#9E9E9E] mt-1">Format: 08 + 8-11 digit angka</p>
-              )}
-            </FormField>
           </div>
 
           {/* Action Buttons */}
           {isEditing && (
             <div className="flex gap-3 pt-2">
               <button
+                type="button"
                 onClick={handleCancel}
-                className="flex-1 py-3 bg-white border border-[#E0E0E0] text-[#757575] rounded-xl text-[13px] font-bold hover:bg-[#F5F5F5] transition-colors min-h-[44px]"
+                className="flex-1 py-3 bg-white border border-[#E2E8F0] text-[#64748B] rounded-xl text-[13px] font-bold hover:bg-[#F8FAFC] transition-colors min-h-[44px]"
               >
                 Batal
               </button>
               <button
+                type="button"
                 onClick={handleSave}
                 disabled={isSaving}
-                className="flex-1 py-3 bg-[#4CAF50] hover:bg-[#43A047] text-white rounded-xl text-[13px] font-bold shadow-[0_4px_12px_rgba(76,175,80,0.3)] transition-all active:scale-[0.98] min-h-[44px] disabled:opacity-50"
+                className="flex-1 py-3 bg-[#FF7043] hover:bg-[#F4511E] text-white rounded-xl text-[13px] font-bold shadow-sm transition-all active:scale-[0.98] min-h-[44px] disabled:opacity-50"
               >
-                {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
+                {isSaving ? 'Menyimpan...' : 'Perbarui Data Siswa'}
               </button>
             </div>
           )}
