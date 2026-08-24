@@ -108,10 +108,10 @@ export function DataTable<T>({
         </div>
       )}
 
-      <div className="bg-white border border-[#E2E8F0] rounded-2xl overflow-hidden shadow-sm">
-        <div className="overflow-x-auto w-full">
-          <table className="w-full min-w-[640px] text-left border-collapse" aria-label="Tabel Data">
-            <thead>
+      <div className="bg-transparent md:bg-white md:border md:border-[#E2E8F0] rounded-2xl overflow-hidden md:shadow-sm">
+        <div className="w-full">
+          <table className="w-full text-left border-collapse block md:table" aria-label="Tabel Data">
+            <thead className="hidden md:table-header-group">
               <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-xs text-[#FF7043] uppercase font-extrabold">
                 {columns.map((col, idx) => (
                   <th
@@ -131,13 +131,13 @@ export function DataTable<T>({
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#E2E8F0] text-xs text-[#1E293B]">
+            <tbody className="block md:table-row-group space-y-4 md:space-y-0 md:divide-y md:divide-[#E2E8F0] text-xs text-[#1E293B]">
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={`skeleton-${i}`} className="animate-pulse bg-white">
+                  <tr key={`skeleton-${i}`} className="animate-pulse bg-white block md:table-row border border-[#E2E8F0] md:border-none rounded-xl md:rounded-none p-4 md:p-0 shadow-sm md:shadow-none mb-4 md:mb-0">
                     {columns.map((col, j) => (
-                      <td key={j} className={`p-3.5 sm:p-4 ${col.className || ''}`}>
-                        <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                      <td key={j} className={`block md:table-cell p-2 md:p-3.5 sm:p-4 ${col.className || ''}`}>
+                        <div className="h-4 bg-slate-200 rounded w-3/4 mb-2 md:mb-0"></div>
                       </td>
                     ))}
                   </tr>
@@ -146,18 +146,21 @@ export function DataTable<T>({
                 paginatedData.map((row, rowIdx) => (
                   <tr
                     key={rowIdx}
-                    className="hover:bg-[#F8FAFC] cursor-default bg-white"
+                    className="hover:bg-[#F8FAFC] cursor-default bg-white block md:table-row border border-[#E2E8F0] md:border-none rounded-xl md:rounded-none p-3 md:p-0 shadow-sm md:shadow-none relative"
                   >
                     {columns.map((col, colIdx) => (
-                      <td key={colIdx} className={`p-3.5 sm:p-4 text-xs text-[#1E293B] ${col.className || ''}`}>
-                        {col.accessor(row)}
+                      <td key={colIdx} className={`block md:table-cell px-2 py-2 md:p-3.5 sm:p-4 text-xs text-[#1E293B] ${col.className || ''} ${colIdx !== columns.length - 1 ? 'border-b border-gray-100 md:border-none' : ''}`}>
+                        <div className="flex flex-col md:block w-full">
+                          <span className="md:hidden text-[10px] text-[#94A3B8] font-bold uppercase mb-1">{col.header}</span>
+                          <div className="max-w-full overflow-hidden [&_img]:max-w-full [&_img]:h-auto">{col.accessor(row)}</div>
+                        </div>
                       </td>
                     ))}
                   </tr>
                 ))
               ) : (
-                <tr>
-                  <td colSpan={columns.length} className="px-5 py-8 text-center text-[#94A3B8]">
+                <tr className="block md:table-row">
+                  <td colSpan={columns.length} className="block md:table-cell px-5 py-8 text-center text-[#94A3B8] bg-white rounded-xl border border-[#E2E8F0] md:border-none">
                     Tidak ada data yang ditemukan.
                   </td>
                 </tr>
