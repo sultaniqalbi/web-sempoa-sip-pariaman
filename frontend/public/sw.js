@@ -1,5 +1,5 @@
 // Service Worker for Sempoa SIP TC Pariaman - Network First Strategy
-const CACHE_NAME = 'sempoa-sip-cache-v3';
+const CACHE_NAME = 'sempoa-sip-cache-v4';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -54,8 +54,8 @@ self.addEventListener('push', (event) => {
     const title = data.title || 'Sempoa SIP TC Pariaman';
     const options = {
       body: data.body || 'Pemberitahuan baru',
-      icon: '/assets/logo/logo-sempoa-sip.png',
-      badge: '/assets/logo/logo-sempoa-sip.png',
+      icon: '/assets/logo/logo-sempoa-sip.webp',
+      badge: '/assets/logo/logo-sempoa-sip.webp',
       data: data.url || '/ortu/dashboard',
     };
     event.waitUntil(self.registration.showNotification(title, options));
@@ -64,7 +64,7 @@ self.addEventListener('push', (event) => {
     event.waitUntil(
       self.registration.showNotification('Sempoa SIP TC Pariaman', {
         body: text,
-        icon: '/assets/logo/logo-sempoa-sip.png',
+        icon: '/assets/logo/logo-sempoa-sip.webp',
       })
     );
   }
