@@ -17,8 +17,7 @@ if ('serviceWorker' in navigator && typeof window !== 'undefined') {
     navigator.serviceWorker
       .register('/sw.js')
       .then((reg) => {
-        reg.update();
-        console.log('Service Worker registered and updated:', reg.scope);
+        console.log('Service Worker registered:', reg.scope);
       })
       .catch((err) => {
         console.warn('Service Worker registration failed:', err);
