@@ -15,6 +15,8 @@ engine = create_engine(
     get_database_url(),
     echo=(settings.fastapi_env == "development"),
     pool_pre_ping=True,
+    pool_size=10,
+    max_overflow=10,
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

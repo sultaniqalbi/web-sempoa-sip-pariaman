@@ -9,6 +9,15 @@ services:
         - VITE_API_URL=/api/v1
     container_name: sempoa_frontend_prod
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
     networks:
       - sempoa-network
 
@@ -38,6 +47,15 @@ services:
       - db
       - redis
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 1G
     networks:
       - sempoa-network
 
@@ -48,6 +66,15 @@ services:
     command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
     networks:
       - sempoa-network
 
@@ -61,6 +88,15 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 1G
     networks:
       - sempoa-network
 
@@ -78,6 +114,15 @@ services:
       - frontend
       - backend
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
     networks:
       - sempoa-network
 
