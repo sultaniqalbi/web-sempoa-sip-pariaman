@@ -213,18 +213,15 @@ async def upload_proof(
     # Broadcast realtime event to all connected admin/owner/ortu portals
     try:
         from app.core.websocket import manager
-        await manager.broadcast({
-            "event": "NEW_PAYMENT_PROOF",
-            "data": {
-                "id": new_proof.id,
-                "id_pembayaran": pembayaran.id,
-                "id_siswa": siswa.id,
-                "nama_siswa": siswa.nama,
-                "kategori_program": siswa.kategori_program,
-                "jumlah": float(pembayaran.jumlah),
-                "periode_bulan": pembayaran.periode_bulan,
-                "timestamp": datetime.utcnow().isoformat()
-            }
+        await manager.broadcast("NEW_PAYMENT_PROOF", {
+            "id": new_proof.id,
+            "id_pembayaran": pembayaran.id,
+            "id_siswa": siswa.id,
+            "nama_siswa": siswa.nama,
+            "kategori_program": siswa.kategori_program,
+            "jumlah": float(pembayaran.jumlah),
+            "periode_bulan": pembayaran.periode_bulan,
+            "timestamp": datetime.utcnow().isoformat()
         })
     except Exception as ws_err:
         logger.warning(f"Gagal broadcast WebSocket NEW_PAYMENT_PROOF: {ws_err}")
@@ -261,16 +258,13 @@ async def verify_proof(
         from app.core.websocket import manager
         pay = db.query(PembayaranPeriode).filter(PembayaranPeriode.id == proof.id_pembayaran).first()
         siswa = db.query(Siswa).filter(Siswa.id == pay.id_siswa).first() if pay else None
-        await manager.broadcast({
-            "event": "PAYMENT_PROOF_VERIFIED",
-            "data": {
-                "id": proof.id,
-                "id_pembayaran": proof.id_pembayaran,
-                "status": status_str.value,
-                "nama_siswa": siswa.nama if siswa else "Siswa",
-                "id_siswa": siswa.id if siswa else None,
-                "timestamp": datetime.utcnow().isoformat()
-            }
+        await manager.broadcast("PAYMENT_PROOF_VERIFIED", {
+            "id": proof.id,
+            "id_pembayaran": proof.id_pembayaran,
+            "status": status_str.value,
+            "nama_siswa": siswa.nama if siswa else "Siswa",
+            "id_siswa": siswa.id if siswa else None,
+            "timestamp": datetime.utcnow().isoformat()
         })
     except Exception as ws_err:
         logger.warning(f"Gagal broadcast WebSocket PAYMENT_PROOF_VERIFIED: {ws_err}")
