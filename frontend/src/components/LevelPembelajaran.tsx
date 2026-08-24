@@ -93,7 +93,7 @@ export const LevelPembelajaran: React.FC = () => {
               
               {/* Mascot */}
               <div className="mobile-mascot-wrapper">
-                <img src={activeObj.img} alt={activeObj.name} className="mobile-mascot" />
+                <img src={activeObj.img} alt={activeObj.name} width="228" height="212" className="mobile-mascot" />
               </div>
 
               {/* Badges */}
@@ -218,6 +218,9 @@ export const LevelPembelajaran: React.FC = () => {
                     <img 
                       src={level.img} 
                       alt={level.name}
+                      width={level.iconSize}
+                      height={level.iconSize}
+                      loading="lazy"
                       style={{ 
                         position: 'absolute',
                         bottom: 'calc(100% - 5px)',
@@ -274,6 +277,9 @@ export const LevelPembelajaran: React.FC = () => {
                       <img 
                         src={level.img} 
                         alt={level.name}
+                        width="100"
+                        height="100"
+                        loading="lazy"
                         style={{ 
                           width: '100px',
                           height: 'auto',

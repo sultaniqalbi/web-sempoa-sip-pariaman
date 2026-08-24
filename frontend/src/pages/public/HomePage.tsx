@@ -210,7 +210,7 @@ export const HomePage: React.FC = () => {
         <nav className={`navbar ${isNavScrolled ? 'scrolled' : ''}`} id="navbar" aria-label="Navigasi Utama">
           <div className="container">
             <Link to="/" className="nav-brand-logo" aria-label="Halaman Utama Sempoa SIP TC Pariaman">
-              <img src="/assets/logo/logo-sempoa-sip.webp" alt="Logo Sempoa SIP TC Pariaman" width="180" height="60" />
+              <img src="/assets/logo/logo-sempoa-sip@2x.webp" alt="Logo Sempoa SIP TC Pariaman" width="180" height="60" />
             </Link>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
@@ -343,7 +343,7 @@ export const HomePage: React.FC = () => {
                 </div>
               </div>
               <div className="hero-mascot-wrap">
-                <img src="/assets/mascot/maskot-hero-test.webp" alt="Maskot Sempoa SIP TC Pariaman" width="350" height="420" style={{ maxHeight: '420px', width: 'auto', filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.25))' }} />
+                <img src="/assets/mascot/maskot-hero-test.webp" alt="Maskot Sempoa SIP TC Pariaman" width="1024" height="731" fetchPriority="high" style={{ maxHeight: '420px', width: 'auto', filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.25))' }} />
               </div>
             </div>
           </div>
@@ -1003,7 +1003,7 @@ export const HomePage: React.FC = () => {
           <div className="footer-grid">
             {/* Kolom Kiri: Brand Identity */}
             <div className="footer-brand">
-              <img src="/assets/logo/logo-sempoa-sip.webp" alt="Logo Sempoa SIP" className="footer-logo" width="160" height="40" loading="lazy" />
+              <img src="/assets/logo/logo-sempoa-sip@2x.webp" alt="Logo Sempoa SIP" className="footer-logo" width="160" height="40" loading="lazy" />
               <h3 className="footer-brand-title">Sempoa SIP TC Pariaman</h3>
               <p className="footer-brand-desc">
                 Pusat pelatihan keseimbangan otak anak berbasis mental aritmatika dan bimbingan belajar terpercaya sejak 1998.

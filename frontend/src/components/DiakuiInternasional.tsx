@@ -9,12 +9,12 @@ const affiliations = [
 ];
 
 const logos = [
-  { src: '/images/logos/waama.webp', alt: 'World Association of Abacus and Mental Arithmetic (WAAMA)' },
-  { src: '/images/logos/isdf.webp', alt: 'International Soroban Diffusion Foundation (ISDF)' },
-  { src: '/images/logos/aiama.webp', alt: 'Abacusking International Abacus Mental-Arithmetic Alliance (AIAMA)' },
-  { src: '/images/logos/tcoc.webp', alt: 'International Grading Test by TCOC' },
-  { src: '/images/logos/braingym.webp', alt: 'Brain Gym International' },
-  { src: '/images/logos/muri.webp', alt: 'Museum Rekor-Dunia Indonesia (MURI)' }
+  { src: '/images/logos/waama@2x.webp', alt: 'World Association of Abacus and Mental Arithmetic (WAAMA)' },
+  { src: '/images/logos/isdf@2x.webp', alt: 'International Soroban Diffusion Foundation (ISDF)' },
+  { src: '/images/logos/aiama@2x.webp', alt: 'Abacusking International Abacus Mental-Arithmetic Alliance (AIAMA)' },
+  { src: '/images/logos/tcoc@2x.webp', alt: 'International Grading Test by TCOC' },
+  { src: '/images/logos/braingym@2x.webp', alt: 'Brain Gym International' },
+  { src: '/images/logos/muri@2x.webp', alt: 'Museum Rekor-Dunia Indonesia (MURI)' }
 ];
 
 export const DiakuiInternasional: React.FC = () => {
