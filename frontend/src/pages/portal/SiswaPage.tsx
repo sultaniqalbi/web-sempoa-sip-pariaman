@@ -1043,11 +1043,11 @@ export const SiswaPage: React.FC = () => {
                   Buka Google Sheets
                 </a>
               </div>
-            ) : (
+            ) : exportResult.status === 'pending' ? (
               <div className="p-3 bg-[#FFF3E0] border border-[#FFCC80] rounded-xl text-[#E65100]">
                 Fitur ini memerlukan <code>GOOGLE_SERVICE_ACCOUNT_JSON</code> dan <code>GOOGLE_SHEET_ID</code> pada file .env backend.
               </div>
-            )}
+            ) : null}
             <div className="flex justify-end pt-2">
               <button onClick={() => setIsExportModalOpen(false)} className="px-4 py-2 bg-[#F1F5F9] text-[#475569] font-bold rounded-lg border border-[#E2E8F0]">
                 Tutup

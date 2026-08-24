@@ -820,11 +820,11 @@ export const SharedPembayaranPage: React.FC = () => {
                   Buka Google Sheets
                 </a>
               </div>
-            ) : (
+            ) : exportResult.status === 'pending' ? (
               <div className="p-3 bg-[#FFF3E0] border border-[#FFCC80] rounded-xl text-[#E65100]">
                 Fitur ini memerlukan <code>GOOGLE_SERVICE_ACCOUNT_JSON</code> dan <code>GOOGLE_SHEET_ID</code> pada file .env backend.
               </div>
-            )}
+            ) : null}
             <div className="flex justify-end pt-2">
               <button
                 onClick={() => setIsExportModalOpen(false)}
