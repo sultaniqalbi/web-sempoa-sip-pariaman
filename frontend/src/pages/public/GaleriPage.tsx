@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
 import useAuth from '../../features/auth/useAuth';
 import useMascotCursor from '../../hooks/useMascotCursor';
+import { MenuIcon, CloseIcon } from '../../components/SvgIcons';
 
 export const GaleriPage: React.FC = () => {
   useMascotCursor();
@@ -84,9 +85,9 @@ export const GaleriPage: React.FC = () => {
               id="mobileMenuBtn"
               aria-label="Buka Menu Navigasi"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
-              <i className={`fas ${isMobileMenuOpen ? 'fa-times' : 'fa-bars'}`}></i>
+              {isMobileMenuOpen ? <CloseIcon size={24} /> : <MenuIcon size={24} />}
             </button>
           </div>
 

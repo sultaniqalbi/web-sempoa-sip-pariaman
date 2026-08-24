@@ -527,4 +527,60 @@ export const ChatBubbleIcon: React.FC<IconProps> = ({ size = 20, className = 'te
   </svg>
 );
 
+// 33. Arrow Right Icon (FontAwesome replacement)
+export const ArrowRightIcon: React.FC<IconProps> = ({ size = 16, className = '', color = 'currentColor' }) => (
+  <svg width={size} height={size} viewBox="0 0 512 512" fill={color} className={`shrink-0 ${className}`} xmlns="http://www.w3.org/2000/svg" style={{ display: 'inline-block', verticalAlign: '-0.125em' }}>
+    <path d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0-105.4 105.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z" />
+  </svg>
+);
+
+// 34. Clock Icon (FontAwesome replacement)
+export const ClockIcon: React.FC<IconProps> = ({ size = 16, className = '', color = 'currentColor' }) => (
+  <svg width={size} height={size} viewBox="0 0 512 512" fill={color} className={`shrink-0 ${className}`} xmlns="http://www.w3.org/2000/svg" style={{ display: 'inline-block', verticalAlign: '-0.125em' }}>
+    <path d="M256 0a256 256 0 1 1 0 512A256 256 0 1 1 256 0zm0 464a208 208 0 1 0 0-416 208 208 0 1 0 0 416zM232 120l0 136c0 8 4 15.5 10.7 20l96 64c11.4 7.6 26.8 4.5 34.4-6.9s4.5-26.8-6.9-34.4L280 241.7 280 120c0-13.3-10.7-24-24-24s-24 10.7-24 24z" />
+  </svg>
+);
+
+// 35. Graduation Cap Icon (FontAwesome replacement)
+export const GraduationCapIcon: React.FC<IconProps> = ({ size = 18, className = '', color = 'currentColor' }) => (
+  <svg width={size} height={size} viewBox="0 0 512 512" fill={color} className={`shrink-0 ${className}`} xmlns="http://www.w3.org/2000/svg" style={{ display: 'inline-block', verticalAlign: '-0.125em' }}>
+    <path d="M480 160l-224-80L32 160l224 80 192-68.6V304c0 8.8 7.2 16 16 16s16-7.2 16-16V160zm-224 114.7L85.3 214.2V320c0 53 76.4 96 170.7 96s170.7-43 170.7-96V214.2L256 274.7z" />
+  </svg>
+);
+
+// 36. Quote Right Icon (FontAwesome replacement)
+export const QuoteRightIcon: React.FC<IconProps> = ({ size = 18, className = '', color = 'currentColor' }) => (
+  <svg width={size} height={size} viewBox="0 0 512 512" fill={color} className={`shrink-0 ${className}`} xmlns="http://www.w3.org/2000/svg" style={{ display: 'inline-block', verticalAlign: '-0.125em' }}>
+    <path d="M24 112c0-26.5 21.5-48 48-48h96c26.5 0 48 21.5 48 48v96c0 26.5-21.5 48-48 48h-48c0 35.3 28.7 64 64 64h8c13.3 0 24 10.7 24 24s-10.7 24-24 24h-8c-61.9 0-112-50.1-112-112V112zm240 0c0-26.5 21.5-48 48-48h96c26.5 0 48 21.5 48 48v96c0 26.5-21.5 48-48 48h-48c0 35.3 28.7 64 64 64h8c13.3 0 24 10.7 24 24s-10.7 24-24 24h-8c-61.9 0-112-50.1-112-112V112z" />
+  </svg>
+);
+
+// 37. Images Gallery Icon (FontAwesome replacement)
+export const ImagesIcon: React.FC<IconProps> = ({ size = 18, className = '', color = 'currentColor' }) => (
+  <svg width={size} height={size} viewBox="0 0 512 512" fill={color} className={`shrink-0 ${className}`} xmlns="http://www.w3.org/2000/svg" style={{ display: 'inline-block', verticalAlign: '-0.125em' }}>
+    <path d="M0 96C0 60.7 28.7 32 64 32h384c35.3 0 64 28.7 64 64v256c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V96zm64 64v192h384V160H64zm112-32a32 32 0 1 1 0 64 32 32 0 1 1 0-64zm144 144l-64-64-80 96h240l-96-128-64 96z" />
+  </svg>
+);
+
+// 38. Thumbs Up Icon (FontAwesome replacement)
+export const ThumbsUpIcon: React.FC<IconProps> = ({ size = 16, className = '', color = 'currentColor' }) => (
+  <svg width={size} height={size} viewBox="0 0 512 512" fill={color} className={`shrink-0 ${className}`} xmlns="http://www.w3.org/2000/svg" style={{ display: 'inline-block', verticalAlign: '-0.125em' }}>
+    <path d="M313.4 32.9c26 5.2 45.5 27.8 46.5 54.3l3.6 88.8h112.5c27.1 0 48.7 22.8 45.8 49.8-3.9 36.6-24 144.1-29.3 169.5-6.1 29.5-31.9 50.7-62.1 50.7H192V176l92.7-133.5c6.3-9.1 16.5-14.8 28.7-14.8v5.2zM64 192v256H0V192h64z" />
+  </svg>
+);
+
+// 39. Praying Hands Icon (FontAwesome replacement)
+export const PrayingHandsIcon: React.FC<IconProps> = ({ size = 16, className = '', color = 'currentColor' }) => (
+  <svg width={size} height={size} viewBox="0 0 512 512" fill={color} className={`shrink-0 ${className}`} xmlns="http://www.w3.org/2000/svg" style={{ display: 'inline-block', verticalAlign: '-0.125em' }}>
+    <path d="M256 0c17.7 0 32 14.3 32 32v128h-64V32c0-17.7 14.3-32 32-32zm64 64c17.7 0 32 14.3 32 32v96h-64V96c0-17.7 14.3-32 32-32zM192 64c17.7 0 32 14.3 32 32v96h-64V96c0-17.7 14.3-32 32-32zm192 64c17.7 0 32 14.3 32 32v64h-64v-64c0-17.7 14.3-32 32-32zM128 128c17.7 0 32 14.3 32 32v64H96v-64c0-17.7 14.3-32 32-32z" />
+  </svg>
+);
+
+// 40. Hands Helping Icon (FontAwesome replacement)
+export const HandsHelpingIcon: React.FC<IconProps> = ({ size = 16, className = '', color = 'currentColor' }) => (
+  <svg width={size} height={size} viewBox="0 0 512 512" fill={color} className={`shrink-0 ${className}`} xmlns="http://www.w3.org/2000/svg" style={{ display: 'inline-block', verticalAlign: '-0.125em' }}>
+    <path d="M256 160c17.7 0 32-14.3 32-32s-14.3-32-32-32-32 14.3-32 32 14.3 32 32 32zm-64 32h128c17.7 0 32 14.3 32 32v64h-32v-48h-16v144h-48V240h-16v144h-48V240h-16v48H160v-64c0-17.7 14.3-32 32-32z" />
+  </svg>
+);
+
 

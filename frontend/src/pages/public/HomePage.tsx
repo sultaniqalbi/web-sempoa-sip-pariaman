@@ -9,7 +9,7 @@ import { ApaItuSempoa } from '../../components/ApaItuSempoa';
 import { LevelPembelajaran } from '../../components/LevelPembelajaran';
 import { MengapaBelajarSempoa } from '../../components/MengapaBelajarSempoa';
 import { DiakuiInternasional } from '../../components/DiakuiInternasional';
-import { MenuIcon, CloseIcon, MapPinIcon, CheckIcon, CubesIcon, ShieldCheckIcon } from '../../components/SvgIcons';
+import { MenuIcon, CloseIcon, MapPinIcon, CheckIcon, CubesIcon, ShieldCheckIcon, ArrowRightIcon, ClockIcon, GraduationCapIcon, QuoteRightIcon, ImagesIcon } from '../../components/SvgIcons';
 
 const programsData = [
   {
@@ -439,7 +439,7 @@ export const HomePage: React.FC = () => {
                     {/* Schedule Box */}
                     <div className="mobile-program-schedule">
                       <div className="sched-header">
-                        <span style={{ color: '#ea580c', marginRight: '4px' }}><i className="far fa-clock"></i></span> <strong>Sesi & Jadwal Kelas:</strong>
+                        <span style={{ color: '#ea580c', marginRight: '4px' }}><ClockIcon size={14} color="#ea580c" /></span> <strong>Sesi & Jadwal Kelas:</strong>
                       </div>
                       <ul className="sched-list">
                         <li>• Hari Biasa: <strong>{activeProg.jadwalBiasa}</strong></li>
@@ -469,7 +469,7 @@ export const HomePage: React.FC = () => {
 
                     {/* Main Action Button */}
                     <Link to={activeProg.link} className="mobile-program-action-btn">
-                      <span style={{ fontSize: '1.1rem', marginRight: '6px' }}><i className="fas fa-graduation-cap"></i></span> Pelajari Kurikulum & Detail Program →
+                      <span style={{ fontSize: '1.1rem', marginRight: '6px' }}><GraduationCapIcon size={18} /></span> Pelajari Kurikulum & Detail Program →
                     </Link>
                   </div>
                 </div>
@@ -505,7 +505,7 @@ export const HomePage: React.FC = () => {
                   </div>
                 </div>
                 <Link to="/program/sempoa" aria-label="Lihat detail program Sempoa" className="btn btn-outline" style={{ padding: '0.6rem 1.25rem', fontSize: '0.9rem', width: '100%', marginTop: 'auto', justifyContent: 'center' }}>
-                  Lihat Detail Program <i className="fas fa-arrow-right" style={{ marginLeft: '0.3rem' }}></i>
+                  Lihat Detail Program <ArrowRightIcon size={14} className="ml-1" />
                 </Link>
               </div>
 
@@ -536,7 +536,7 @@ export const HomePage: React.FC = () => {
                   </div>
                 </div>
                 <Link to="/program/fonem" aria-label="Lihat detail program Fonem" className="btn btn-outline" style={{ padding: '0.6rem 1.25rem', fontSize: '0.9rem', width: '100%', marginTop: 'auto', justifyContent: 'center' }}>
-                  Lihat Detail Program <i className="fas fa-arrow-right" style={{ marginLeft: '0.3rem' }}></i>
+                  Lihat Detail Program <ArrowRightIcon size={14} className="ml-1" />
                 </Link>
               </div>
 
@@ -567,7 +567,7 @@ export const HomePage: React.FC = () => {
                   </div>
                 </div>
                 <Link to="/program/tahfidz" aria-label="Lihat detail program Tahfidz" className="btn btn-outline" style={{ padding: '0.6rem 1.25rem', fontSize: '0.9rem', width: '100%', marginTop: 'auto', justifyContent: 'center' }}>
-                  Lihat Detail Program <i className="fas fa-arrow-right" style={{ marginLeft: '0.3rem' }}></i>
+                  Lihat Detail Program <ArrowRightIcon size={14} className="ml-1" />
                 </Link>
               </div>
 
@@ -598,7 +598,7 @@ export const HomePage: React.FC = () => {
                   </div>
                 </div>
                 <Link to="/program/inggris" aria-label="Lihat detail program Bahasa Inggris" className="btn btn-outline" style={{ padding: '0.6rem 1.25rem', fontSize: '0.9rem', width: '100%', marginTop: 'auto', justifyContent: 'center' }}>
-                  Lihat Detail Program <i className="fas fa-arrow-right" style={{ marginLeft: '0.3rem' }}></i>
+                  Lihat Detail Program <ArrowRightIcon size={14} className="ml-1" />
                 </Link>
               </div>
             </div>
@@ -748,9 +748,9 @@ export const HomePage: React.FC = () => {
           {isMobile ? (() => {
             const testiData = [
               { id: 1, tabName: 'Ortu Hafla', initials: 'OH', color: '#c2410c', bgColor: '#fff8e1', borderColor: '#ffecb3', name: 'Orang Tua Hafla', role: 'Wali Murid Sempoa SIP', text: '"Sebelum belajar sempoa, Hafla memang anak yang cenderung pemalu dan kurang percaya diri jika harus tampil di depan banyak orang. Kami sebagai orang tua sering khawatir karena dia lebih suka menghindari situasi yang mengharuskannya berbicara di depan umum. Alhamdulillah, sejak mengikuti kelas sempoa, kami melihat perubahan yang sangat positif. Hafla menjadi lebih berani dan percaya diri. Bahkan saat ustazah di sekolah memintanya tampil di depan kelas, ataupun depan umum dia mau melakukannya tanpa menolak seperti sebelumnya. Bagi kami, manfaat sempoa bukan hanya melatih kemampuan berhitung, tetapi juga membantu membangun keberanian, kepercayaan diri, serta kesiapan anak untuk tampil di depan orang lain. Semoga Hafla terus berkembang menjadi anak yang percaya diri dan berprestasi."' },
-              { id: 2, tabName: 'Ortu Queenza', initials: 'OQ', color: '#00838f', bgColor: '#e0f7fa', borderColor: '#b2ebf2', name: 'Orang Tua Queenza', role: 'Wali Murid Sempoa SIP', text: '"Testimoni queenza selama belajar sempoa sangat lah bagus buk .. Alhamdulillah queenza sangat menyukai pelajaran matematika .. Sangat aktif dalam semua perlombaan baik itu matematika atau pun akademik lainnya .. Selain itu alhamdulillah nya, dari kelas 1 sampai sekarang kelas 6 queenza selalu juara 1 di sekolah .. Dan selain itu queenza dapat menghitung cepat, dan bayangan saja .. Sempoa sangat sangat bagus <i className="fas fa-thumbs-up"></i> Terimakasih buat guru2 yang sudah mengajarkan dan mendidikan queenza,sehingga alhamdulillah queenza menjadi anak yg berprestasi dari dl sampai sekarang, mudah2an kedepannya akan lebih sukses lagi aamiin <i className="fas fa-praying-hands"></i>"' },
+              { id: 2, tabName: 'Ortu Queenza', initials: 'OQ', color: '#00838f', bgColor: '#e0f7fa', borderColor: '#b2ebf2', name: 'Orang Tua Queenza', role: 'Wali Murid Sempoa SIP', text: '"Testimoni queenza selama belajar sempoa sangat lah bagus buk .. Alhamdulillah queenza sangat menyukai pelajaran matematika .. Sangat aktif dalam semua perlombaan baik itu matematika atau pun akademik lainnya .. Selain itu alhamdulillah nya, dari kelas 1 sampai sekarang kelas 6 queenza selalu juara 1 di sekolah .. Dan selain itu queenza dapat menghitung cepat, dan bayangan saja .. Sempoa sangat sangat bagus 👍 Terimakasih buat guru2 yang sudah mengajarkan dan mendidikan queenza,sehingga alhamdulillah queenza menjadi anak yg berprestasi dari dl sampai sekarang, mudah2an kedepannya akan lebih sukses lagi aamiin 🙏"' },
               { id: 3, tabName: 'Ortu Fatihah', initials: 'OF', color: '#2E7D32', bgColor: '#e8f5e9', borderColor: '#c8e6c9', name: 'Orang Tua Fatihah', role: 'Wali Murid Sempoa SIP', text: '"sejak pertama masuk sempoa fatihah sangat bersemangat b emi, sampai masuk foundation A, difoundation B sampai sekarang semangatnya agak kurang b emi, dirumah mami tanya apakah fatihah capek belajar? Fatihah bilang capek dikit mi, mungkin karna kegiatan sekolahnya fullday jd kurang fokus, mudah2an kedepannya fatihah lebih semangat lagi b emi."' },
-              { id: 4, tabName: 'Ortu Agis', initials: 'OA', color: '#c62828', bgColor: '#ffebee', borderColor: '#ffcdd2', name: 'Orang Tua Agis', role: 'Wali Murid Sempoa SIP', text: '"Allahamdulillah sejak agis mengenal sempoa dari sejak TK B, jauh sangat manfaat yang di rasakan sejak belajar, mulai dari anak yang biasa tidak fokus, atau kurang fokus, allhamdulillah sekarng dalam belajar suah terlihat fokus, dan uang paling syanag rasakan kali dampaknya, dari segi Daya Ingat Kuat terkihat sepintas dalam proses belajar apapun mendengar sekilas kata2, tidak disadari dia ingat sekali, dan sangat menyukai hitungan math, dan juga sangat Percaya Diri. Terima kasih untuk sempoa <i className="fas fa-hands-helping"></i><i className="fas fa-thumbs-up"></i><i className="fas fa-thumbs-up"></i>"' },
+              { id: 4, tabName: 'Ortu Agis', initials: 'OA', color: '#c62828', bgColor: '#ffebee', borderColor: '#ffcdd2', name: 'Orang Tua Agis', role: 'Wali Murid Sempoa SIP', text: '"Allahamdulillah sejak agis mengenal sempoa dari sejak TK B, jauh sangat manfaat yang di rasakan sejak belajar, mulai dari anak yang biasa tidak fokus, atau kurang fokus, allhamdulillah sekarng dalam belajar suah terlihat fokus, dan uang paling syanag rasakan kali dampaknya, dari segi Daya Ingat Kuat terkihat sepintas dalam proses belajar apapun mendengar sekilas kata2, tidak disadari dia ingat sekali, dan sangat menyukai hitungan math, dan juga sangat Percaya Diri. Terima kasih untuk sempoa 🤝👍👍"' },
             ];
             const activeTesti = testiData.find(t => t.id === mobileTestiId) || testiData[0];
             return (
@@ -821,7 +821,7 @@ export const HomePage: React.FC = () => {
             <div className="testi-card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderRadius: '12px', background: '#fff8e1', border: '1px solid #ffecb3' }}>
               <div style={{ position: 'relative' }}>
                 <div style={{ position: 'absolute', top: '-0.5rem', right: '-0.5rem', width: '42px', height: '42px', borderRadius: '50%', background: '#f57c00', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.15, zIndex: 0 }}>
-                  <i className="fas fa-quote-right" style={{ color: 'white', fontSize: '1.1rem' }}></i>
+                  <QuoteRightIcon size={18} color="white" />
                 </div>
                 <p className="testi-text" style={{ fontSize: '0.84rem', lineHeight: 1.6, color: '#424242', marginBottom: '1rem', position: 'relative', zIndex: 1 }}>
                   "Sebelum belajar sempoa, Hafla memang anak yang cenderung pemalu dan kurang percaya diri jika harus tampil di depan banyak orang. Kami sebagai orang tua sering khawatir karena dia lebih suka menghindari situasi yang mengharuskannya berbicara di depan umum. Alhamdulillah, sejak mengikuti kelas sempoa, kami melihat perubahan yang sangat positif. Hafla menjadi lebih berani dan percaya diri. Bahkan saat ustazah di sekolah memintanya tampil di depan kelas, ataupun depan umum dia mau melakukannya tanpa menolak seperti sebelumnya. Bagi kami, manfaat sempoa bukan hanya melatih kemampuan berhitung, tetapi juga membantu membangun keberanian, kepercayaan diri, serta kesiapan anak untuk tampil di depan orang lain. Semoga Hafla terus berkembang menjadi anak yang percaya diri dan berprestasi.."
@@ -842,10 +842,10 @@ export const HomePage: React.FC = () => {
             <div className="testi-card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderRadius: '12px', background: '#e0f7fa', border: '1px solid #b2ebf2' }}>
               <div style={{ position: 'relative' }}>
                 <div style={{ position: 'absolute', top: '-0.5rem', right: '-0.5rem', width: '42px', height: '42px', borderRadius: '50%', background: '#00acc1', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.15, zIndex: 0 }}>
-                  <i className="fas fa-quote-right" style={{ color: 'white', fontSize: '1.1rem' }}></i>
+                  <QuoteRightIcon size={18} color="white" />
                 </div>
                 <p className="testi-text" style={{ fontSize: '0.84rem', lineHeight: 1.6, color: '#424242', marginBottom: '1rem', position: 'relative', zIndex: 1 }}>
-                  "Testimoni queenza selama belajar sempoa sangat lah bagus buk .. Alhamdulillah queenza sangat menyukai pelajaran matematika .. Sangat aktif dalam semua perlombaan baik itu matematika atau pun akademik lainnya .. Selain itu alhamdulillah nya, dari kelas 1 sampai sekarang kelas 6 queenza selalu juara 1 di sekolah .. Dan selain itu queenza dapat menghitung cepat, dan bayangan saja .. Sempoa sangat sangat bagus <i className="fas fa-thumbs-up"></i> Terimakasih buat guru2 yang sudah mengajarkan dan mendidikan queenza,sehingga alhamdulillah queenza menjadi anak yg berprestasi dari dl sampai sekarang, mudah2an kedepannya akan lebih sukses lagi aamiin <i className="fas fa-praying-hands"></i>"
+                  "Testimoni queenza selama belajar sempoa sangat lah bagus buk .. Alhamdulillah queenza sangat menyukai pelajaran matematika .. Sangat aktif dalam semua perlombaan baik itu matematika atau pun akademik lainnya .. Selain itu alhamdulillah nya, dari kelas 1 sampai sekarang kelas 6 queenza selalu juara 1 di sekolah .. Dan selain itu queenza dapat menghitung cepat, dan bayangan saja .. Sempoa sangat sangat bagus 👍 Terimakasih buat guru2 yang sudah mengajarkan dan mendidikan queenza,sehingga alhamdulillah queenza menjadi anak yg berprestasi dari dl sampai sekarang, mudah2an kedepannya akan lebih sukses lagi aamiin 🙏"
                 </p>
               </div>
               <div className="testi-author" style={{ borderTop: '1px solid #80deea', paddingTop: '0.75rem', marginTop: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -863,7 +863,7 @@ export const HomePage: React.FC = () => {
             <div className="testi-card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderRadius: '12px', background: '#e8f5e9', border: '1px solid #c8e6c9' }}>
               <div style={{ position: 'relative' }}>
                 <div style={{ position: 'absolute', top: '-0.5rem', right: '-0.5rem', width: '42px', height: '42px', borderRadius: '50%', background: '#2E7D32', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.15, zIndex: 0 }}>
-                  <i className="fas fa-quote-right" style={{ color: 'white', fontSize: '1.1rem' }}></i>
+                  <QuoteRightIcon size={18} color="white" />
                 </div>
                 <p className="testi-text" style={{ fontSize: '0.84rem', lineHeight: 1.6, color: '#424242', marginBottom: '1rem', position: 'relative', zIndex: 1 }}>
                   "sejak pertama masuk sempoa fatihah sangat bersemangat b emi, sampai masuk foundation A, difoundation B sampai sekarang semangatnya agak kurang b emi, dirumah mami tanya apakah fatihah capek belajar? Fatihah bilang capek dikit mi, mungkin karna kegiatan sekolahnya fullday jd kurang fokus, mudah2an kedepannya fatihah lebih semangat lagi b emi."
@@ -884,10 +884,10 @@ export const HomePage: React.FC = () => {
             <div className="testi-card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderRadius: '12px', background: '#ffebee', border: '1px solid #ffcdd2' }}>
               <div style={{ position: 'relative' }}>
                 <div style={{ position: 'absolute', top: '-0.5rem', right: '-0.5rem', width: '42px', height: '42px', borderRadius: '50%', background: '#c62828', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.15, zIndex: 0 }}>
-                  <i className="fas fa-quote-right" style={{ color: 'white', fontSize: '1.1rem' }}></i>
+                  <QuoteRightIcon size={18} color="white" />
                 </div>
                 <p className="testi-text" style={{ fontSize: '0.84rem', lineHeight: 1.6, color: '#424242', marginBottom: '1rem', position: 'relative', zIndex: 1 }}>
-                  "Allahamdulillah sejak agis mengenal sempoa dari sejak TK B, jauh sangat manfaat yang di rasakan sejak belajar, mulai dari anak yang biasa tidak fokus, atau kurang fokus, allhamdulillah sekarng dalam belajar suah terlihat fokus, dan uang paling syanag rasakan kali dampaknya, dari segi Daya Ingat Kuat terkihat sepintas dalam proses belajar apapun mendengar sekilas kata2, tidak disadari dia ingat sekali, dan sangat menyukai hitungan math, dan juga sangat Percaya Diri: Menyelesaikan soal matematika menumbuhkan keberanian menghadapi tantangan. Disekolah sekarng guru2 sekolah pun menyampai kalo agis ini sangat aktif dan percaya diri tampil jika dia mengetahui suatu hal, Terima kasih untuk sempoa <i className="fas fa-hands-helping"></i><i className="fas fa-thumbs-up"></i><i className="fas fa-thumbs-up"></i>"
+                  "Allahamdulillah sejak agis mengenal sempoa dari sejak TK B, jauh sangat manfaat yang di rasakan sejak belajar, mulai dari anak yang biasa tidak fokus, atau kurang fokus, allhamdulillah sekarng dalam belajar suah terlihat fokus, dan uang paling syanag rasakan kali dampaknya, dari segi Daya Ingat Kuat terkihat sepintas dalam proses belajar apapun mendengar sekilas kata2, tidak disadari dia ingat sekali, dan sangat menyukai hitungan math, dan juga sangat Percaya Diri: Menyelesaikan soal matematika menumbuhkan keberanian menghadapi tantangan. Disekolah sekarng guru2 sekolah pun menyampai kalo agis ini sangat aktif dan percaya diri tampil jika dia mengetahui suatu hal, Terima kasih untuk sempoa 🤝👍👍"
                 </p>
               </div>
               <div className="testi-author" style={{ borderTop: '1px solid #ef9a9a', paddingTop: '0.75rem', marginTop: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -957,7 +957,7 @@ export const HomePage: React.FC = () => {
 
           <div style={{ marginTop: '2rem' }}>
             <Link to="/galeri" className="btn btn-primary" style={{ padding: '0.75rem 1.75rem', fontSize: '0.95rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-              <i className="fas fa-images"></i> Lihat Seluruh Galeri Foto
+              <ImagesIcon size={18} /> Lihat Seluruh Galeri Foto
             </Link>
           </div>
         </div>

@@ -11,6 +11,7 @@ import {
   GaleriIcon,
   SearchIcon,
 } from '../components/SvgIcons';
+import { useAuthenticatedFontAwesome } from '../hooks/useAuthenticatedFontAwesome';
 import '../styles/style-admin.css';
 
 interface PortalLayoutProps {
@@ -18,6 +19,7 @@ interface PortalLayoutProps {
 }
 
 export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
+  useAuthenticatedFontAwesome();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);

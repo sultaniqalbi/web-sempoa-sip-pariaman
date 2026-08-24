@@ -10,6 +10,7 @@ import FeatureTiles from './components/FeatureTiles';
 import OrtuBottomNav from './components/OrtuBottomNav';
 import ProductTourModal, { TourStep } from '../../components/ProductTourModal';
 import { UserIcon, CalendarIcon, CubesIcon, DocumentTextIcon } from '../../components/SvgIcons';
+import { useAuthenticatedFontAwesome } from '../../hooks/useAuthenticatedFontAwesome';
 
 const TOUR_STEPS: TourStep[] = [
   {
@@ -50,6 +51,7 @@ const TOUR_STEPS: TourStep[] = [
 ];
 
 export const OrtuLayout: React.FC = () => {
+  useAuthenticatedFontAwesome();
   const { user } = useAuth();
   const location = useLocation();
   const isHomePage = location.pathname === '/ortu';
