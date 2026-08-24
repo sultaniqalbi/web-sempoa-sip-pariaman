@@ -188,7 +188,7 @@ export const HomePage: React.FC = () => {
       <nav className={`navbar ${isNavScrolled ? 'scrolled' : ''}`} id="navbar">
         <div className="container">
           <Link to="/" className="nav-brand-logo">
-            <img src="/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa SIP TC Pariaman" />
+            <img src="/assets/logo/logo-sempoa-sip.webp" alt="Logo Sempoa SIP TC Pariaman" />
           </Link>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
@@ -205,6 +205,7 @@ export const HomePage: React.FC = () => {
             <button
               className="mobile-menu-btn"
               id="mobileMenuBtn"
+              aria-label="Menu"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? <CloseIcon size={24} color="#000000" /> : <MenuIcon size={24} color="#000000" />}
@@ -348,7 +349,7 @@ export const HomePage: React.FC = () => {
         <div className="container">
           <div className="trust-card">
             <div className="trust-badge">
-              <h3>{new Date().getFullYear() - 1998}+</h3>
+              <div className="hero-stats-number">{new Date().getFullYear() - 1998}+</div>
               <p>Tahun Pengalaman<br />di Kota Pariaman</p>
             </div>
             <div className="trust-content">
@@ -356,7 +357,7 @@ export const HomePage: React.FC = () => {
               <p>Sempoa SIP TC Pariaman adalah lembaga bimbingan belajar khusus pelatihan otak anak yang telah mendampingi ribuan buah hati di Pariaman tumbuh optimal.</p>
               <p>Kami menyelaraskan perkembangan otak kanan yang melatih kreativitas, visualisasi, dan intuisi, dengan otak kiri yang melatih kemampuan berhitung logis, rasional, dan konsentrasi tinggi.</p>
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginTop: '1.5rem' }}>
-                <img src="/assets/mascot/maskot_logo-removebg-preview.webp" alt="logo-sempoa-sip.png" style={{ height: '70px', width: 'auto', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.15))' }} />
+                <img src="/assets/mascot/maskot_logo-removebg-preview.webp" alt="logo-sempoa-sip.webp" style={{ height: '70px', width: 'auto', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.15))' }} />
                 <p style={{ fontStyle: 'italic', fontSize: '0.95rem', margin: 0, fontWeight: 600, color: 'var(--color-accent-maroon)' }}>
                   "Yuk gabung bersama kami dan kembangkan potensi terbaik belajarmu, teman-teman!"
                 </p>
@@ -766,7 +767,7 @@ export const HomePage: React.FC = () => {
                         {activeTesti.initials}
                       </div>
                       <div>
-                        <h4 className="mobile-testi-name">{activeTesti.name}</h4>
+                        <h3 className="mobile-testi-name">{activeTesti.name}</h3>
                         <p className="mobile-testi-role">{activeTesti.role}</p>
                       </div>
                     </div>
@@ -808,7 +809,7 @@ export const HomePage: React.FC = () => {
                   OH
                 </div>
                 <div style={{ minWidth: 0 }}>
-                  <h4 style={{ fontSize: '0.92rem', margin: 0, fontWeight: 700, color: 'var(--color-text-dark)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Orang Tua Hafla</h4>
+                  <h3 style={{ fontSize: '0.92rem', margin: 0, fontWeight: 700, color: 'var(--color-text-dark)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Orang Tua Hafla</h3>
                   <p style={{ fontSize: '0.78rem', color: 'var(--color-text-light)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Wali Murid Sempoa SIP</p>
                 </div>
               </div>
@@ -829,7 +830,7 @@ export const HomePage: React.FC = () => {
                   OQ
                 </div>
                 <div style={{ minWidth: 0 }}>
-                  <h4 style={{ fontSize: '0.92rem', margin: 0, fontWeight: 700, color: 'var(--color-text-dark)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Orang Tua Queenza</h4>
+                  <h3 style={{ fontSize: '0.92rem', margin: 0, fontWeight: 700, color: 'var(--color-text-dark)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Orang Tua Queenza</h3>
                   <p style={{ fontSize: '0.78rem', color: 'var(--color-text-light)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Wali Murid Sempoa SIP</p>
                 </div>
               </div>
@@ -850,7 +851,7 @@ export const HomePage: React.FC = () => {
                   OF
                 </div>
                 <div style={{ minWidth: 0 }}>
-                  <h4 style={{ fontSize: '0.92rem', margin: 0, fontWeight: 700, color: 'var(--color-text-dark)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Orang Tua Fatihah</h4>
+                  <h3 style={{ fontSize: '0.92rem', margin: 0, fontWeight: 700, color: 'var(--color-text-dark)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Orang Tua Fatihah</h3>
                   <p style={{ fontSize: '0.78rem', color: 'var(--color-text-light)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Wali Murid Sempoa SIP</p>
                 </div>
               </div>
@@ -871,7 +872,7 @@ export const HomePage: React.FC = () => {
                   OA
                 </div>
                 <div style={{ minWidth: 0 }}>
-                  <h4 style={{ fontSize: '0.92rem', margin: 0, fontWeight: 700, color: 'var(--color-text-dark)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Orang Tua Agis</h4>
+                  <h3 style={{ fontSize: '0.92rem', margin: 0, fontWeight: 700, color: 'var(--color-text-dark)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Orang Tua Agis</h3>
                   <p style={{ fontSize: '0.78rem', color: 'var(--color-text-light)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Wali Murid Sempoa SIP</p>
                 </div>
               </div>
@@ -977,7 +978,7 @@ export const HomePage: React.FC = () => {
           <div className="footer-grid">
             {/* Kolom Kiri: Brand Identity */}
             <div className="footer-brand">
-              <img src="/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa SIP" className="footer-logo" />
+              <img src="/assets/logo/logo-sempoa-sip.webp" alt="Logo Sempoa SIP" className="footer-logo" />
               <h3 className="footer-brand-title">Sempoa SIP TC Pariaman</h3>
               <p className="footer-brand-desc">
                 Pusat pelatihan keseimbangan otak anak berbasis mental aritmatika dan bimbingan belajar terpercaya sejak 1998.
@@ -1108,6 +1109,7 @@ export const HomePage: React.FC = () => {
             <button
               style={{ position: 'absolute', top: '10px', right: '15px', background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: '36px', height: '36px', fontSize: '1.2rem', cursor: 'pointer', zIndex: 10 }}
               onClick={() => setLightboxImg(null)}
+              aria-label="Tutup"
             >
               &times;
             </button>

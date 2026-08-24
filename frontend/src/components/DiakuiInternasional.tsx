@@ -9,12 +9,12 @@ const affiliations = [
 ];
 
 const logos = [
-  { src: '/images/logos/waama.png', alt: 'WAAMA' },
-  { src: '/images/logos/isdf.png', alt: 'ISDF' },
-  { src: '/images/logos/aiama.png', alt: 'AIAMA' },
-  { src: '/images/logos/tcoc.png', alt: 'TCOC' },
-  { src: '/images/logos/braingym.png', alt: 'Brain Gym' },
-  { src: '/images/logos/muri.png', alt: 'Museum Beker' }
+  { src: '/images/logos/waama.webp', alt: 'WAAMA' },
+  { src: '/images/logos/isdf.webp', alt: 'ISDF' },
+  { src: '/images/logos/aiama.webp', alt: 'AIAMA' },
+  { src: '/images/logos/tcoc.webp', alt: 'TCOC' },
+  { src: '/images/logos/braingym.webp', alt: 'Brain Gym' },
+  { src: '/images/logos/muri.webp', alt: 'Museum Beker' }
 ];
 
 export const DiakuiInternasional: React.FC = () => {

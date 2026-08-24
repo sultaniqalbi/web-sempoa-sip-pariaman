@@ -18,7 +18,7 @@ export const PrivacySecurityPage: React.FC = () => {
       <header className="bg-white border-b border-[#E2E8F0] sticky top-0 z-30 shadow-2xs">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            <img src="/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa SIP" className="h-9 w-auto" />
+            <img src="/assets/logo/logo-sempoa-sip.webp" alt="Logo Sempoa SIP" className="h-9 w-auto" />
             <div className="hidden sm:block">
               <span className="font-extrabold text-sm text-[#FF7043] tracking-tight block">Sempoa SIP TC Pariaman</span>
               <span className="text-[10px] text-[#64748B] font-semibold block">Pusat Informasi Privasi & Keamanan</span>

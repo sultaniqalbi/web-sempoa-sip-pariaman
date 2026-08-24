@@ -175,7 +175,7 @@ export const ProgramDetailPage: React.FC = () => {
       <nav className="navbar" id="navbar" style={{ position: 'sticky', top: 0, zIndex: 1000, background: 'rgba(255,255,255,0.98)', borderBottom: '1px solid #e2e8f0' }}>
         <div className="container">
           <Link to="/" className="nav-brand-logo">
-            <img src="/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa SIP TC Pariaman" />
+            <img src="/assets/logo/logo-sempoa-sip.webp" alt="Logo Sempoa SIP TC Pariaman" />
           </Link>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>

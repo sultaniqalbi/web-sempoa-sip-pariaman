@@ -31,7 +31,7 @@ export const GuruSidebar: React.FC<SidebarProps> = ({ onClose, isCollapsed = fal
       <div className="p-4 sm:p-5">
         <div className={`flex items-center justify-between mb-6 ${isCollapsed ? 'justify-center' : ''}`}>
           <div className="flex items-center gap-3">
-            <img src="/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa SIP" className="h-10 w-auto shrink-0" />
+            <img src="/assets/logo/logo-sempoa-sip.webp" alt="Logo Sempoa SIP" className="h-10 w-auto shrink-0" />
             {!isCollapsed && (
               <div>
                 <h1 className="font-extrabold text-sm text-[#1E293B] tracking-tight leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>PORTAL GURU</h1>

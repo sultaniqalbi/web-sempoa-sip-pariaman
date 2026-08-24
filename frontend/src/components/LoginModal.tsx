@@ -179,7 +179,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
 
           <div id="login-form-container" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
             <div className="login-modal-header">
-              <img src="/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa SIP" className="login-modal-logo" />
+              <img src="/assets/logo/logo-sempoa-sip.webp" alt="Logo Sempoa SIP" className="login-modal-logo" />
               <h2 className="login-modal-title" id="modal-title">Masuk ke Akun Anda</h2>
               <p className="login-modal-subtitle">Akses portal Sempoa SIP TC Pariaman</p>
             </div>

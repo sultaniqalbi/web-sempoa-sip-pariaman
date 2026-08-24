@@ -63,7 +63,7 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
         <div className="flex flex-col flex-1 min-h-0">
           {/* Logo & Portal Title */}
           <div className="flex flex-col xl:flex-row items-center xl:items-start gap-2 lg:gap-3 px-3 lg:px-4 py-4 border-b border-slate-200 justify-center lg:justify-start shrink-0">
-            <img src="/assets/logo/logo-sempoa-sip.png" alt="Sempoa SIP" className="h-9 lg:h-10 w-auto shrink-0 object-contain" />
+            <img src="/assets/logo/logo-sempoa-sip.webp" alt="Sempoa SIP" className="h-9 lg:h-10 w-auto shrink-0 object-contain" />
             <div className="hidden lg:flex flex-col justify-center min-w-0">
               <h1 className="text-sm lg:text-[15px] font-extrabold text-[#FF7043] tracking-tight leading-tight truncate">
                 {portalTitle}
@@ -149,7 +149,7 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
               {/* Header Logo + Close Button */}
               <div className="flex items-center justify-between p-3.5 border-b border-slate-200 shrink-0">
                 <div className="flex items-center gap-2.5 overflow-hidden">
-                  <img src="/assets/logo/logo-sempoa-sip.png" alt="Logo Sempoa" className="h-8 w-auto shrink-0" />
+                  <img src="/assets/logo/logo-sempoa-sip.webp" alt="Logo Sempoa" className="h-8 w-auto shrink-0" />
                   <div className="overflow-hidden">
                     <h2 className="text-sm font-extrabold text-[#FF7043] truncate">{portalTitle}</h2>
                     <p className="text-[9.5px] text-slate-500 font-bold uppercase truncate">TC PARIAMAN</p>
