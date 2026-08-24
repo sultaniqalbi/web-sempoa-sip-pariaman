@@ -221,7 +221,7 @@ async def get_kwitansi(
     pay = db.query(PembayaranPeriode).filter(PembayaranPeriode.id == proof.id_pembayaran).first()
     siswa = db.query(Siswa).filter(Siswa.id == pay.id_siswa).first() if pay else None
 
-    kwt_id = _generate_kwitansi_id(proof.id)
+    kwt_id = _generate_kwitansi_id(proof.id, siswa.uid if siswa else None)
     kwt_hash = _generate_kwitansi_hash(kwt_id)
 
     return {
