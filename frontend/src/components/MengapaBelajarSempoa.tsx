@@ -99,7 +99,7 @@ export const MengapaBelajarSempoa: React.FC = () => {
             </div>
             <div style={{ 
               backgroundColor: '#FFF1E6', 
-              color: '#F97316', 
+              color: '#c2410c', 
               fontSize: '11px', 
               fontWeight: 800, 
               padding: '6px 12px', 
@@ -122,8 +122,8 @@ export const MengapaBelajarSempoa: React.FC = () => {
             position: 'relative'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '24px' }}>
-              <span style={{ backgroundColor: '#0284C7', color: '#fff', fontSize: '11px', fontWeight: 800, padding: '4px 12px', borderRadius: '20px', letterSpacing: '0.5px' }}>LOGIKA & ANALISIS</span>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0284C7', margin: 0 }}>Otak Kiri</h3>
+              <span style={{ backgroundColor: '#0369a1', color: '#fff', fontSize: '11px', fontWeight: 800, padding: '4px 12px', borderRadius: '20px', letterSpacing: '0.5px' }}>LOGIKA & ANALISIS</span>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0369a1', margin: 0 }}>Otak Kiri</h3>
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -141,7 +141,7 @@ export const MengapaBelajarSempoa: React.FC = () => {
                     boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
                   }}
                 >
-                  <CheckIcon color="#0284C7" />
+                  <CheckIcon color="#0369a1" />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#1E293B', lineHeight: 1.3 }}>{point.title}</span>
                     <span style={{ fontSize: '0.85rem', color: '#64748B', lineHeight: 1.4 }}>{point.desc}</span>
@@ -160,8 +160,8 @@ export const MengapaBelajarSempoa: React.FC = () => {
             position: 'relative'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '24px' }}>
-              <span style={{ backgroundColor: '#EA580C', color: '#fff', fontSize: '11px', fontWeight: 800, padding: '4px 12px', borderRadius: '20px', letterSpacing: '0.5px' }}>KREATIF & VISUAL</span>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#EA580C', margin: 0 }}>Otak Kanan</h3>
+              <span style={{ backgroundColor: '#c2410c', color: '#fff', fontSize: '11px', fontWeight: 800, padding: '4px 12px', borderRadius: '20px', letterSpacing: '0.5px' }}>KREATIF & VISUAL</span>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#c2410c', margin: 0 }}>Otak Kanan</h3>
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>

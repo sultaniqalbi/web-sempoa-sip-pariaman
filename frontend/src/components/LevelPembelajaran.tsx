@@ -4,31 +4,31 @@ const levels = [
   { 
     id: 1, name: 'JUNIOR', subtitle: '1-2', color: '#FFB74D', gradient: 'linear-gradient(90deg, #F57C00 0%, #FFCC80 50%, #F57C00 100%)', topColor: '#FFE0B2', shadow: 'rgba(245, 124, 0, 0.5)', offset: 0, iconSize: 90, delay: 0,
     usia: '4 - 6 Tahun',
-    img: '/assets/mascot/level-1.webp', 
+    img: '/assets/mascot/level-1@2x.webp', 
     desc: 'Mengembangkan potensi dasar anak dengan Brain Gym dan melatih motorik halus lewat alat Sempoa untuk memberikan pengertian konsep angka secara menyenangkan (Fun Learning).' 
   },
   { 
     id: 2, name: 'FOUNDATION', subtitle: '1-2', color: '#E57373', gradient: 'linear-gradient(90deg, #D32F2F 0%, #FFCDD2 50%, #D32F2F 100%)', topColor: '#FFEBEE', shadow: 'rgba(211, 47, 47, 0.5)', offset: 40, iconSize: 120, delay: 0.2,
     usia: '6 - 8 Tahun',
-    img: '/assets/mascot/level-2.webp', 
+    img: '/assets/mascot/level-2@2x.webp', 
     desc: 'Anak-anak mulai belajar dan berlatih merangsang syaraf-syaraf di jari yang akan menumbuhkan Sinapsis di otak yang penting untuk kecepatan proses pembelajaran dan memori, dan di level ini kemampuan imajinatif anak sudah mulai dilatih.' 
   },
   { 
     id: 3, name: 'INTERMEDIATE', subtitle: '1-2-3', color: '#64B5F6', gradient: 'linear-gradient(90deg, #1976D2 0%, #BBDEFB 50%, #1976D2 100%)', topColor: '#E3F2FD', shadow: 'rgba(25, 118, 210, 0.5)', offset: 80, iconSize: 150, delay: 0.4,
     usia: '8 - 10 Tahun',
-    img: '/assets/mascot/level-3.webp', 
+    img: '/assets/mascot/level-3@2x.webp', 
     desc: 'Melalui proses operasional Aritmatika maka, kemampuan imajinatif dan fokus serta daya ingat anak lebih ditingkatkan. Kemampuan pemrosesan otak sudah terlatih lebih cepat dari anak-anak pada umumnya, target di level ini adalah Cepat dan Tepat.' 
   },
   { 
     id: 4, name: 'ADVANCE', subtitle: '1-2-3', color: '#BA68C8', gradient: 'linear-gradient(90deg, #7B1FA2 0%, #E1BEE7 50%, #7B1FA2 100%)', topColor: '#F3E5F5', shadow: 'rgba(123, 31, 162, 0.5)', offset: 120, iconSize: 180, delay: 0.6,
     usia: '10 - 12 Tahun',
-    img: '/assets/mascot/level-4.webp', 
+    img: '/assets/mascot/level-4@2x.webp', 
     desc: 'Di level ini, penekanannya adalah pada Cepat dan Tepat, karena otak hanya bisa berfungsi optimal bila ada tantangan dalam kecepatan dan soal yang lebih panjang dan rumit, sehingga kemampuan dan keberanian untuk bersaing dan mengejar target / goal telah dimiliki oleh anak-anak.' 
   },
   { 
     id: 5, name: 'GRADUATE', subtitle: '1-2-3', color: '#81C784', gradient: 'linear-gradient(90deg, #388E3C 0%, #C8E6C9 50%, #388E3C 100%)', topColor: '#E8F5E9', shadow: 'rgba(56, 142, 60, 0.5)', offset: 160, iconSize: 210, delay: 0.8,
     usia: '12+ Tahun',
-    img: '/assets/mascot/level-5.webp', 
+    img: '/assets/mascot/level-5@2x.webp', 
     desc: 'Level ini adalah level tertinggi dimana kemampuan fokus, daya ingat, kecepatan dan ketepatan dalam memproses data telah terbentuk, sehingga menjadi kebiasaan dalam aplikasi kehidupan sehari-hari, kemampuan ini akan memberi kesempatan sukses yang lebih besar untuk anak Sempoa.' 
   },
 ];

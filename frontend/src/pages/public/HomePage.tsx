@@ -84,14 +84,35 @@ export const HomePage: React.FC = () => {
   const [mobileTestiId, setMobileTestiId] = useState<number>(1);
   const [isMobile, setIsMobile] = useState<boolean>(false);
 
-  // Fetch highlighted gallery photos for homepage display
+  // Gallery section ref & intersection observer for query deferral (P9)
+  const galleryRef = useRef<HTMLElement>(null);
+  const [galleryInView, setGalleryInView] = useState(false);
+
+  useEffect(() => {
+    if (!galleryRef.current || galleryInView) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0] && entries[0].isIntersecting) {
+          setGalleryInView(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+    observer.observe(galleryRef.current);
+    return () => observer.disconnect();
+  }, [galleryInView]);
+
+  // Fetch highlighted gallery photos deferred until gallery section is in view
   const { data: highlightedPhotos = [] } = useQuery({
     queryKey: ['galeri', 'highlighted'],
     queryFn: async () => {
       const res = await apiClient.get('/galeri/highlighted');
       return res.data;
     },
-    staleTime: 60000,
+    enabled: galleryInView,
+    staleTime: 300000,
+    refetchOnWindowFocus: false,
   });
 
   useEffect(() => {
@@ -100,13 +121,13 @@ export const HomePage: React.FC = () => {
     }
   }, [user, navigate]);
 
+  // P5: Avoid forced layout reflow by using matchMedia listener instead of reading window.innerWidth
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 992);
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    const mql = window.matchMedia('(max-width: 992px)');
+    const onChange = (e: MediaQueryListEvent | MediaQueryList) => setIsMobile(e.matches);
+    setIsMobile(mql.matches);
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
   }, []);
 
   // Counter targets ref
@@ -207,7 +228,8 @@ export const HomePage: React.FC = () => {
               <button
                 className="mobile-menu-btn"
                 id="mobileMenuBtn"
-                aria-label="Buka Menu Navigasi"
+                aria-label={isMobileMenuOpen ? "Tutup menu navigasi" : "Buka menu navigasi"}
+                aria-expanded={isMobileMenuOpen}
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               >
                 {isMobileMenuOpen ? <CloseIcon size={24} color="#000000" /> : <MenuIcon size={24} color="#000000" />}
@@ -307,23 +329,19 @@ export const HomePage: React.FC = () => {
                   <a
                     href="#programs"
                     className="btn btn-yellow"
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.6rem', padding: '0.8rem 1.6rem', fontWeight: 700 }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      document.getElementById('programs')?.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                  >
-                    <img src="/assets/icons/program.svg" alt="Program Kami" width="20" height="20" style={{ width: '20px', height: '20px' }} />
-                    Program Kami
+                <div className="hero-buttons">
+                  <a href="#programs" className="btn btn-outline-white" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <img src="/assets/icons/program.svg" alt="" width="20" height="20" style={{ width: '20px', height: '20px' }} />
+                    Lihat Semua Program
                   </a>
                   <a
-                    href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak."
+                    href="https://wa.me/6282385813163?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20mendaftar%20kelas%20gratis%20(Free%20Trial)."
                     target="_blank"
                     rel="noreferrer"
                     className="btn btn-primary"
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.6rem', padding: '0.8rem 1.6rem', fontWeight: 700 }}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
                   >
-                    <img src="/assets/icons/whatsapp.svg" alt="WhatsApp" width="20" height="20" style={{ width: '20px', height: '20px', filter: 'brightness(0) invert(1)' }} />
+                    <img src="/assets/icons/whatsapp.svg" alt="" width="20" height="20" style={{ width: '20px', height: '20px', filter: 'brightness(0) invert(1)' }} />
                     Chat WhatsApp (Konsultasi)
                   </a>
                 </div>
@@ -366,7 +384,7 @@ export const HomePage: React.FC = () => {
               <p>Sempoa SIP TC Pariaman adalah lembaga bimbingan belajar khusus pelatihan otak anak yang telah mendampingi ribuan buah hati di Pariaman tumbuh optimal.</p>
               <p>Kami menyelaraskan perkembangan otak kanan yang melatih kreativitas, visualisasi, dan intuisi, dengan otak kiri yang melatih kemampuan berhitung logis, rasional, dan konsentrasi tinggi.</p>
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginTop: '1.5rem' }}>
-                <img src="/assets/mascot/maskot_logo-removebg-preview.webp" alt="Maskot Sempoa SIP" width="70" height="70" loading="lazy" style={{ height: '70px', width: 'auto', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.15))' }} />
+                <img src="/assets/mascot/maskot_logo-removebg-preview@2x.webp" alt="Maskot Sempoa SIP" width="123" height="70" loading="lazy" style={{ height: '70px', width: 'auto', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.15))' }} />
                 <p style={{ fontStyle: 'italic', fontSize: '0.95rem', margin: 0, fontWeight: 600, color: 'var(--color-accent-maroon)' }}>
                   "Yuk gabung bersama kami dan kembangkan potensi terbaik belajarmu, teman-teman!"
                 </p>
@@ -408,16 +426,12 @@ export const HomePage: React.FC = () => {
                     ))}
                   </div>
 
-                  {/* Main Card */}
-                  <div className="mobile-program-card" style={{ borderColor: activeProg.borderColor }}>
-                    {/* Badges */}
-                    <div className="mobile-program-badges">
-                      <span className="mobile-prog-badge-primary" style={{ color: activeProg.badgeColor, backgroundColor: activeProg.badgeBg, borderColor: activeProg.borderColor }}>
-                        {activeProg.badgeText}
-                      </span>
-                      <span className="mobile-prog-badge-age">
-                        {activeProg.usia}
-                      </span>
+                  {/* Content Container */}
+                  <div className="mobile-program-content">
+                    {/* Badge Pill */}
+                    <div className="mobile-program-badge-wrap">
+                      <span className="mobile-prog-badge badge-orange" style={{ color: '#c2410c' }}>PROGRAM {activeProg.id} • {activeProg.category}</span>
+                      <span className="mobile-prog-badge badge-grey" style={{ color: '#9a3412', backgroundColor: '#fff8e1' }}>Usia {activeProg.age}</span>
                     </div>
 
                     {/* Title */}
@@ -490,11 +504,11 @@ export const HomePage: React.FC = () => {
                     <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                       <span style={{ minWidth: '60px' }}>Hari Libur:</span>
                       <span>Senin - Sabtu</span>
-                      <span style={{ background: '#fff3e0', color: '#e65100', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>09:00 - 15:30 WIB</span>
+                      <span style={{ background: '#fff3e0', color: '#9a3412', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>09:00 - 15:30 WIB</span>
                     </div>
                   </div>
                 </div>
-                <Link to="/program/sempoa" className="btn btn-outline" style={{ padding: '0.6rem 1.25rem', fontSize: '0.9rem', width: '100%', marginTop: 'auto', justifyContent: 'center' }}>
+                <Link to="/program/sempoa" aria-label="Lihat detail program Sempoa" className="btn btn-outline" style={{ padding: '0.6rem 1.25rem', fontSize: '0.9rem', width: '100%', marginTop: 'auto', justifyContent: 'center' }}>
                   Lihat Detail Program <i className="fas fa-arrow-right" style={{ marginLeft: '0.3rem' }}></i>
                 </Link>
               </div>
@@ -505,27 +519,27 @@ export const HomePage: React.FC = () => {
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', minHeight: '3.2rem' }}>
                       <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.35rem', color: 'var(--color-text-dark)' }}>Fonem</h3>
-                      <span style={{ background: '#e0f7fa', color: '#00838f', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '20px', border: '1px solid #b2ebf2' }}>Usia 4 - 12 Thn</span>
+                      <span style={{ background: '#e0f7fa', color: '#006064', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.65rem', borderRadius: '20px', border: '1px solid #b2ebf2' }}>Usia 4 - 12 Thn</span>
                     </div>
                     <p style={{ fontSize: '0.92rem', marginBottom: '1.25rem', color: 'var(--color-text-body)', textAlign: 'left', lineHeight: 1.6, minHeight: '4.8rem' }}>
                       Metode PeSO (Pembelajaran Seluruh Otak) membaca & menulis cepat tanpa mengeja dan tanpa stres.
                     </p>
                   </div>
                   <div className="program-schedule-box" style={{ padding: '0.75rem 0.9rem', marginBottom: '1.5rem', textAlign: 'left', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', minHeight: '85px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                    <div style={{ fontSize: '0.8rem', color: '#00838f', fontWeight: 700, marginBottom: '0.35rem' }}>Sesi & Jadwal Kelas</div>
+                    <div style={{ fontSize: '0.8rem', color: '#006064', fontWeight: 700, marginBottom: '0.35rem' }}>Sesi & Jadwal Kelas</div>
                     <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
                       <span style={{ minWidth: '60px' }}>Hari Biasa:</span>
                       <span>Senin - Sabtu</span>
-                      <span style={{ background: '#e0f7fa', color: '#00838f', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>09:00 - 17:00 WIB</span>
+                      <span style={{ background: '#e0f7fa', color: '#006064', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>09:00 - 17:00 WIB</span>
                     </div>
                     <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                       <span style={{ minWidth: '60px' }}>Hari Libur:</span>
                       <span>Senin - Sabtu</span>
-                      <span style={{ background: '#e0f7fa', color: '#00838f', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>09:00 - 15:30 WIB</span>
+                      <span style={{ background: '#e0f7fa', color: '#006064', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.74rem' }}>09:00 - 15:30 WIB</span>
                     </div>
                   </div>
                 </div>
-                <Link to="/program/fonem" className="btn btn-outline" style={{ padding: '0.6rem 1.25rem', fontSize: '0.9rem', width: '100%', marginTop: 'auto', justifyContent: 'center' }}>
+                <Link to="/program/fonem" aria-label="Lihat detail program Fonem" className="btn btn-outline" style={{ padding: '0.6rem 1.25rem', fontSize: '0.9rem', width: '100%', marginTop: 'auto', justifyContent: 'center' }}>
                   Lihat Detail Program <i className="fas fa-arrow-right" style={{ marginLeft: '0.3rem' }}></i>
                 </Link>
               </div>
@@ -556,7 +570,7 @@ export const HomePage: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                <Link to="/program/tahfidz" className="btn btn-outline" style={{ padding: '0.6rem 1.25rem', fontSize: '0.9rem', width: '100%', marginTop: 'auto', justifyContent: 'center' }}>
+                <Link to="/program/tahfidz" aria-label="Lihat detail program Tahfidz" className="btn btn-outline" style={{ padding: '0.6rem 1.25rem', fontSize: '0.9rem', width: '100%', marginTop: 'auto', justifyContent: 'center' }}>
                   Lihat Detail Program <i className="fas fa-arrow-right" style={{ marginLeft: '0.3rem' }}></i>
                 </Link>
               </div>
@@ -587,7 +601,7 @@ export const HomePage: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                <Link to="/program/inggris" className="btn btn-outline" style={{ padding: '0.6rem 1.25rem', fontSize: '0.9rem', width: '100%', marginTop: 'auto', justifyContent: 'center' }}>
+                <Link to="/program/inggris" aria-label="Lihat detail program Bahasa Inggris" className="btn btn-outline" style={{ padding: '0.6rem 1.25rem', fontSize: '0.9rem', width: '100%', marginTop: 'auto', justifyContent: 'center' }}>
                   Lihat Detail Program <i className="fas fa-arrow-right" style={{ marginLeft: '0.3rem' }}></i>
                 </Link>
               </div>
@@ -737,10 +751,10 @@ export const HomePage: React.FC = () => {
 
           {isMobile ? (() => {
             const testiData = [
-              { id: 1, tabName: 'Ortu Hafla', initials: 'OH', color: '#f57c00', bgColor: '#fff8e1', borderColor: '#ffecb3', name: 'Orang Tua Hafla', role: 'Wali Murid Sempoa SIP', text: '"Sebelum belajar sempoa, Hafla memang anak yang cenderung pemalu dan kurang percaya diri jika harus tampil di depan banyak orang. Kami sebagai orang tua sering khawatir karena dia lebih suka menghindari situasi yang mengharuskannya berbicara di depan umum. Alhamdulillah, sejak mengikuti kelas sempoa, kami melihat perubahan yang sangat positif. Hafla menjadi lebih berani dan percaya diri. Bahkan saat ustazah di sekolah memintanya tampil di depan kelas, ataupun depan umum dia mau melakukannya tanpa menolak seperti sebelumnya. Bagi kami, manfaat sempoa bukan hanya melatih kemampuan berhitung, tetapi juga membantu membangun keberanian, kepercayaan diri, serta kesiapan anak untuk tampil di depan orang lain. Semoga Hafla terus berkembang menjadi anak yang percaya diri dan berprestasi."' },
-              { id: 2, tabName: 'Ortu Queenza', initials: 'OQ', color: '#00acc1', bgColor: '#e0f7fa', borderColor: '#b2ebf2', name: 'Orang Tua Queenza', role: 'Wali Murid Sempoa SIP', text: '"Testimoni queenza selama belajar sempoa sangat lah bagus buk .. Alhamdulillah queenza sangat menyukai pelajaran matematika .. Sangat aktif dalam semua perlombaan baik itu matematika atau pun akademik lainnya .. Selain itu alhamdulillah nya, dari kelas 1 sampai sekarang kelas 6 queenza selalu juara 1 di sekolah .. Dan selain itu queenza dapat menghitung cepat, dan bayangan saja .. Sempoa sangat sangat bagus <i className="fas fa-thumbs-up"></i> Terimakasih buat guru2 yang sudah mengajarkan dan mendidikan queenza,sehingga alhamdulillah queenza menjadi anak yg berprestasi dari dl sampai sekarang, mudah2an kedepannya akan lebih sukses lagi aamiin <i className="fas fa-praying-hands"></i>"' },
+              { id: 1, tabName: 'Ortu Hafla', initials: 'OH', color: '#c2410c', bgColor: '#fff8e1', borderColor: '#ffecb3', name: 'Orang Tua Hafla', role: 'Wali Murid Sempoa SIP', text: '"Sebelum belajar sempoa, Hafla memang anak yang cenderung pemalu dan kurang percaya diri jika harus tampil di depan banyak orang. Kami sebagai orang tua sering khawatir karena dia lebih suka menghindari situasi yang mengharuskannya berbicara di depan umum. Alhamdulillah, sejak mengikuti kelas sempoa, kami melihat perubahan yang sangat positif. Hafla menjadi lebih berani dan percaya diri. Bahkan saat ustazah di sekolah memintanya tampil di depan kelas, ataupun depan umum dia mau melakukannya tanpa menolak seperti sebelumnya. Bagi kami, manfaat sempoa bukan hanya melatih kemampuan berhitung, tetapi juga membantu membangun keberanian, kepercayaan diri, serta kesiapan anak untuk tampil di depan orang lain. Semoga Hafla terus berkembang menjadi anak yang percaya diri dan berprestasi."' },
+              { id: 2, tabName: 'Ortu Queenza', initials: 'OQ', color: '#00838f', bgColor: '#e0f7fa', borderColor: '#b2ebf2', name: 'Orang Tua Queenza', role: 'Wali Murid Sempoa SIP', text: '"Testimoni queenza selama belajar sempoa sangat lah bagus buk .. Alhamdulillah queenza sangat menyukai pelajaran matematika .. Sangat aktif dalam semua perlombaan baik itu matematika atau pun akademik lainnya .. Selain itu alhamdulillah nya, dari kelas 1 sampai sekarang kelas 6 queenza selalu juara 1 di sekolah .. Dan selain itu queenza dapat menghitung cepat, dan bayangan saja .. Sempoa sangat sangat bagus <i className="fas fa-thumbs-up"></i> Terimakasih buat guru2 yang sudah mengajarkan dan mendidikan queenza,sehingga alhamdulillah queenza menjadi anak yg berprestasi dari dl sampai sekarang, mudah2an kedepannya akan lebih sukses lagi aamiin <i className="fas fa-praying-hands"></i>"' },
               { id: 3, tabName: 'Ortu Fatihah', initials: 'OF', color: '#2E7D32', bgColor: '#e8f5e9', borderColor: '#c8e6c9', name: 'Orang Tua Fatihah', role: 'Wali Murid Sempoa SIP', text: '"sejak pertama masuk sempoa fatihah sangat bersemangat b emi, sampai masuk foundation A, difoundation B sampai sekarang semangatnya agak kurang b emi, dirumah mami tanya apakah fatihah capek belajar? Fatihah bilang capek dikit mi, mungkin karna kegiatan sekolahnya fullday jd kurang fokus, mudah2an kedepannya fatihah lebih semangat lagi b emi."' },
-              { id: 4, tabName: 'Ortu Agis', initials: 'OA', color: '#E53935', bgColor: '#ffebee', borderColor: '#ffcdd2', name: 'Orang Tua Agis', role: 'Wali Murid Sempoa SIP', text: '"Allahamdulillah sejak agis mengenal sempoa dari sejak TK B, jauh sangat manfaat yang di rasakan sejak belajar, mulai dari anak yang biasa tidak fokus, atau kurang fokus, allhamdulillah sekarng dalam belajar suah terlihat fokus, dan uang paling syanag rasakan kali dampaknya, dari segi Daya Ingat Kuat terkihat sepintas dalam proses belajar apapun mendengar sekilas kata2, tidak disadari dia ingat sekali, dan sangat menyukai hitungan math, dan juga sangat Percaya Diri. Terima kasih untuk sempoa <i className="fas fa-hands-helping"></i><i className="fas fa-thumbs-up"></i><i className="fas fa-thumbs-up"></i>"' },
+              { id: 4, tabName: 'Ortu Agis', initials: 'OA', color: '#c62828', bgColor: '#ffebee', borderColor: '#ffcdd2', name: 'Orang Tua Agis', role: 'Wali Murid Sempoa SIP', text: '"Allahamdulillah sejak agis mengenal sempoa dari sejak TK B, jauh sangat manfaat yang di rasakan sejak belajar, mulai dari anak yang biasa tidak fokus, atau kurang fokus, allhamdulillah sekarng dalam belajar suah terlihat fokus, dan uang paling syanag rasakan kali dampaknya, dari segi Daya Ingat Kuat terkihat sepintas dalam proses belajar apapun mendengar sekilas kata2, tidak disadari dia ingat sekali, dan sangat menyukai hitungan math, dan juga sangat Percaya Diri. Terima kasih untuk sempoa <i className="fas fa-hands-helping"></i><i className="fas fa-thumbs-up"></i><i className="fas fa-thumbs-up"></i>"' },
             ];
             const activeTesti = testiData.find(t => t.id === mobileTestiId) || testiData[0];
             return (
@@ -779,7 +793,7 @@ export const HomePage: React.FC = () => {
                       </div>
                       <div>
                         <h3 className="mobile-testi-name">{activeTesti.name}</h3>
-                        <p className="mobile-testi-role">{activeTesti.role}</p>
+                        <p className="mobile-testi-role" style={{ color: '#475569' }}>{activeTesti.role}</p>
                       </div>
                     </div>
                     <div className="mobile-testi-nav-arrows">
@@ -895,8 +909,8 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* GALLERY SECTION - Dynamic from API (highlighted/sorot photos) */}
-      <section className="gallery section-padding" id="galeri" style={{ backgroundColor: 'var(--color-bg-light)', borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
+      {/* GALLERY SECTION - Dynamic from API (highlighted/sorot photos deferred) */}
+      <section ref={galleryRef} className="gallery section-padding" id="galeri" style={{ backgroundColor: 'var(--color-bg-light)', borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
         <div className="container" style={{ textAlign: 'center' }}>
           <div className="section-header">
             <h2>Galeri Kegiatan &amp; Prestasi</h2>
@@ -1012,53 +1026,32 @@ export const HomePage: React.FC = () => {
             <div className="footer-section">
               <h3 className="footer-section-title">Kontak Resmi</h3>
               <div className="footer-contact-items">
-                <div className="contact-item">
-                  <img src="/assets/icons/whatsapp.svg" alt="WhatsApp" width="20" height="20" loading="lazy" />
-                  <div>
-                    <p className="contact-label">WhatsApp Admin</p>
-                    <a href="https://wa.me/6282385813163" target="_blank" rel="noopener noreferrer">0823-8581-3163</a>
-                  </div>
-                </div>
-                <div className="contact-item">
-                  <img src="/assets/icons/whatsapp.svg" alt="WhatsApp" width="20" height="20" loading="lazy" />
-                  <div>
-                    <p className="contact-label">WhatsApp Direktur</p>
-                    <a href="https://wa.me/628126784986" target="_blank" rel="noopener noreferrer">0812-6784-986</a>
-                  </div>
-                </div>
-                <div className="contact-item">
-                  <img src="/assets/icons/email.svg" alt="Email" width="20" height="20" loading="lazy" />
-                  <div>
-                    <p className="contact-label">Email</p>
-                    <a href="mailto:sempoasip.prmn@gmail.com">sempoasip.prmn@gmail.com</a>
-                  </div>
-                </div>
+                <a href="https://wa.me/6282385813163" target="_blank" rel="noopener noreferrer" title="Hubungi via WhatsApp" aria-label="WhatsApp Hotline 1">
+                  <img src="/assets/icons/whatsapp.svg" alt="" width="20" height="20" loading="lazy" />
+                  <span>+62 823-8581-3163 (Hotline 1)</span>
+                </a>
+                <a href="https://wa.me/628126784986" target="_blank" rel="noopener noreferrer" title="Hubungi via WhatsApp" aria-label="WhatsApp Hotline 2">
+                  <img src="/assets/icons/whatsapp.svg" alt="" width="20" height="20" loading="lazy" />
+                  <span>+62 812-6784-986 (Hotline 2)</span>
+                </a>
+                <a href="mailto:sempoasiptcpariaman@gmail.com" title="Kirim Email" aria-label="Email Resmi">
+                  <img src="/assets/icons/email.svg" alt="" width="20" height="20" loading="lazy" />
+                  <span>sempoasiptcpariaman@gmail.com</span>
+                </a>
               </div>
             </div>
 
             {/* Kolom Kanan: Lokasi & Jam Buka */}
             <div className="footer-section">
               <h3 className="footer-section-title">Lokasi & Jam Buka</h3>
-              <div className="footer-location-items">
-                <div className="location-item">
-                  <img src="/assets/icons/peta.svg" alt="Lokasi" width="20" height="20" loading="lazy" />
-                  <div>
-                    <p className="location-label">Alamat</p>
-                    <p className="location-text">
-                      Jl. Imam Bonjol, Alai Gelombang, Kec. Pariaman Tengah, Kota Pariaman, Sumatera Barat 25517
-                    </p>
-                  </div>
+              <div className="footer-contact-list">
+                <div className="footer-contact-item">
+                  <img src="/assets/icons/peta.svg" alt="" width="20" height="20" loading="lazy" />
+                  <span>Jl. Imam Bonjol, Alai Gelombang, Pariaman Tengah, Kota Pariaman</span>
                 </div>
-                <div className="location-item">
-                  <img src="/assets/icons/jam.svg" alt="Jam Buka" width="20" height="20" loading="lazy" />
-                  <div>
-                    <p className="location-label">Jam Operasional</p>
-                    <div className="hours-list">
-                      <p><strong>Senin - Sabtu:</strong> 09.00 - 17.00 WIB</p>
-                      <p><strong>Hari Libur:</strong> 09.00 - 15.30 WIB</p>
-                      <p><strong>Minggu:</strong> Libur</p>
-                    </div>
-                  </div>
+                <div className="footer-contact-item">
+                  <img src="/assets/icons/jam.svg" alt="" width="20" height="20" loading="lazy" />
+                  <span>Senin - Sabtu: 09.00 - 17.00 WIB (Minggu Libur)</span>
                 </div>
               </div>
             </div>
@@ -1082,32 +1075,16 @@ export const HomePage: React.FC = () => {
         </div>
       </footer>
 
-      {/* FLOATING WHATSAPP BUTTON */}
+      {/* FLOATING ACTION BUTTON */}
       <a
-        href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak."
+        href="https://wa.me/6282385813163?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20mendaftar%20kelas%20gratis%20(Free%20Trial)."
         target="_blank"
         rel="noreferrer"
         className="floating-wa"
-        title="Konsultasi WhatsApp"
-        aria-label="Chat Konsultasi WhatsApp Sempoa SIP"
-        style={{
-          position: 'fixed',
-          bottom: '30px',
-          right: '30px',
-          width: '60px',
-          height: '60px',
-          background: '#25D366',
-          color: '#fff',
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 6px 20px rgba(37, 211, 102, 0.4)',
-          zIndex: 9999,
-          transition: 'transform 0.3s ease',
-        }}
+        id="floatingWaBtn"
+        aria-label="Hubungi kami via WhatsApp"
       >
-        <img src="/assets/icons/whatsapp.svg" alt="WhatsApp" width="32" height="32" style={{ width: '32px', height: '32px', filter: 'brightness(0) invert(1)' }} />
+        <img src="/assets/icons/whatsapp.svg" alt="" width="32" height="32" style={{ width: '32px', height: '32px', filter: 'brightness(0) invert(1)' }} />
       </a>
 
       {/* LIGHTBOX MODAL */}

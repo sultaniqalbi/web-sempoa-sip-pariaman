@@ -93,6 +93,13 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const connectWebSocket = () => {
       if (!isMounted) return;
 
+      // Gate connection: only connect when user has an active authentication token
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        setIsConnected(false);
+        return;
+      }
+
       try {
         const wsUrl = getWebSocketUrl();
         const ws = new WebSocket(wsUrl);
