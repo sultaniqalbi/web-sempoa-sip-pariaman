@@ -149,11 +149,9 @@ export function DataTable<T>({
                     className="hover:bg-[#F8FAFC] cursor-default bg-white block md:table-row border border-[#E2E8F0] md:border-none rounded-xl md:rounded-none p-3 md:p-0 shadow-sm md:shadow-none relative"
                   >
                     {columns.map((col, colIdx) => (
-                      <td key={colIdx} className={`block md:table-cell px-2 py-2 md:p-3.5 sm:p-4 text-xs text-[#1E293B] ${col.className || ''} ${colIdx !== columns.length - 1 ? 'border-b border-gray-100 md:border-none' : ''}`}>
-                        <div className="flex flex-col md:block w-full">
-                          <span className="md:hidden text-[10px] text-[#94A3B8] font-bold uppercase mb-1">{col.header}</span>
-                          <div className="max-w-full overflow-hidden [&_img]:max-w-full [&_img]:h-auto">{col.accessor(row)}</div>
-                        </div>
+                      <td key={colIdx} className={`grid grid-cols-[110px_1fr] sm:grid-cols-[140px_1fr] gap-2 items-start md:table-cell px-3 py-2.5 md:p-3.5 sm:p-4 text-xs text-[#1E293B] ${col.className || ''} ${colIdx !== columns.length - 1 ? 'border-b border-slate-100 md:border-none' : ''}`}>
+                        <span className="md:hidden text-[10px] text-[#94A3B8] font-bold uppercase mt-1 leading-tight">{col.header}</span>
+                        <div className="max-w-full overflow-hidden [&_img]:max-w-full [&_img]:h-auto flex items-center md:items-start">{col.accessor(row)}</div>
                       </td>
                     ))}
                   </tr>
