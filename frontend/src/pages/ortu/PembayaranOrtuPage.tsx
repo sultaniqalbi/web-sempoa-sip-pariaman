@@ -65,6 +65,7 @@ export const PembayaranOrtuPage: React.FC = () => {
       const res = await apiClient.get('/bukti-transfer/my-child');
       return res.data;
     },
+    refetchInterval: 3000,
   });
 
   // Upload proof mutation

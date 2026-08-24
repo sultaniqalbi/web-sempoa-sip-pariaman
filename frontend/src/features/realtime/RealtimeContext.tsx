@@ -35,6 +35,8 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     queryClient.invalidateQueries({ queryKey: ['child-absensi-dashboard'] });
     queryClient.invalidateQueries({ queryKey: ['child-catatan-dashboard'] });
     queryClient.invalidateQueries({ queryKey: ['child-payments-dashboard'] });
+    queryClient.invalidateQueries({ queryKey: ['child-payments'] });
+    queryClient.invalidateQueries({ queryKey: ['child-proof-history'] });
     queryClient.invalidateQueries({ queryKey: ['schedule-today'] });
 
     // Invalidate Guru portal queries
@@ -49,6 +51,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     queryClient.invalidateQueries({ queryKey: ['siswa'] });
     queryClient.invalidateQueries({ queryKey: ['absensi'] });
     queryClient.invalidateQueries({ queryKey: ['pembayaran'] });
+    queryClient.invalidateQueries({ queryKey: ['bukti-transfer'] });
     queryClient.invalidateQueries({ queryKey: ['quota'] });
     queryClient.invalidateQueries({ queryKey: ['jadwal'] });
   };
@@ -118,7 +121,10 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               data.event === 'ABSENSI_UPDATE' ||
               data.event === 'CATATAN_UPDATE' ||
               data.event === 'MODE_KELAS_UPDATE' ||
-              data.event === 'DATA_UPDATE'
+              data.event === 'DATA_UPDATE' ||
+              data.event === 'NEW_PAYMENT_PROOF' ||
+              data.event === 'PAYMENT_PROOF_VERIFIED' ||
+              data.event === 'PAYMENT_UPDATE'
             ) {
               invalidateAllPortals(data.event);
               if (broadcastChannelRef.current) {

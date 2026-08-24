@@ -86,6 +86,7 @@ export const SharedPembayaranPage: React.FC = () => {
         return res.data.siswa || res.data;
       }
     },
+    refetchInterval: 5000,
   });
 
   // 2. Fetch All Transfer Proofs (Accessible by both Admin & Owner)
@@ -95,6 +96,7 @@ export const SharedPembayaranPage: React.FC = () => {
       const res = await apiClient.get('/bukti-transfer/');
       return res.data;
     },
+    refetchInterval: 3000,
   });
 
   // Mutation Edit Jatuh Tempo / SPP
@@ -492,6 +494,11 @@ export const SharedPembayaranPage: React.FC = () => {
         >
           <CameraIcon size={16} />
           <span>Verifikasi Bukti Transfer ({buktiList.length})</span>
+          {buktiList.filter(b => (b.status || '').toLowerCase() === 'pending').length > 0 && (
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-[#EF4444] text-white shadow-xs animate-pulse">
+              {buktiList.filter(b => (b.status || '').toLowerCase() === 'pending').length} Baru
+            </span>
+          )}
         </button>
       </div>
 
