@@ -6,6 +6,7 @@ interface ConfirmModalProps {
   onConfirm: (note?: string) => void;
   title: string;
   description?: string;
+  message?: string;
   confirmText?: string;
   cancelText?: string;
   variant?: 'success' | 'danger' | 'warning';
@@ -42,6 +43,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   onConfirm,
   title,
   description,
+  message,
   confirmText = 'Konfirmasi',
   cancelText = 'Batal',
   variant = 'warning',
@@ -52,6 +54,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
 }) => {
   const [note, setNote] = useState('');
   const config = variantConfig[variant];
+  const displayDesc = description || message;
 
   if (!isOpen) return null;
 
@@ -99,8 +102,8 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-base font-extrabold text-[#1E293B] leading-snug">{title}</h3>
-            {description && (
-              <p className="text-xs text-[#64748B] mt-1.5 leading-relaxed">{description}</p>
+            {displayDesc && (
+              <p className="text-xs text-[#64748B] mt-1.5 leading-relaxed">{displayDesc}</p>
             )}
           </div>
         </div>
