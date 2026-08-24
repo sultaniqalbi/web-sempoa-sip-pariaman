@@ -325,10 +325,6 @@ export const HomePage: React.FC = () => {
                 <p className="hero-subtitle">
                   Dipercaya sejak 1998 mendampingi anak-anak usia 4-12 tahun di Kota Pariaman menjadi lebih cerdas, kreatif, fokus, dan percaya diri melatih keseimbangan otak kanan-kiri.
                 </p>
-                <div className="hero-cta">
-                  <a
-                    href="#programs"
-                    className="btn btn-yellow"
                 <div className="hero-buttons">
                   <a href="#programs" className="btn btn-outline-white" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
                     <img src="/assets/icons/program.svg" alt="" width="20" height="20" style={{ width: '20px', height: '20px' }} />
