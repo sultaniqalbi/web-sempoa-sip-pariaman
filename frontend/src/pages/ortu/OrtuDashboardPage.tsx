@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import useAuth from '../../features/auth/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
@@ -7,6 +8,7 @@ import { AlertTriangleIcon } from '../../components/SvgIcons';
 import { requestAndSubscribePush, isNotificationSupported, getNotificationPermissionStatus } from '../../utils/pushManager';
 
 export const OrtuDashboardPage: React.FC = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [isModalDismissed, setIsModalDismissed] = useState(false);
   const [copiedBank, setCopiedBank] = useState<string | null>(null);
@@ -629,7 +631,19 @@ export const OrtuDashboardPage: React.FC = () => {
                   </div>
 
                   {/* Action buttons */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
+                  <div className="pt-2">
+                    <button
+                      onClick={() => {
+                        setIsModalDismissed(true);
+                        navigate('/ortu/pembayaran');
+                      }}
+                      className="w-full flex items-center justify-center gap-2 py-3 bg-[#FF9800] hover:bg-[#F57C00] text-white font-extrabold text-[12px] rounded-xl shadow-md transition-all active:scale-[0.99] cursor-pointer mb-2"
+                    >
+                      <i className="fas fa-upload"></i>
+                      Kirim Bukti Pembayaran
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <a
                       href={`https://wa.me/${direkturWa}`}
                       target="_blank"

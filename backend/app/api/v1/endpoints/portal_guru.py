@@ -390,6 +390,13 @@ async def save_siswa_absensi(
 
         status_enum = status_map.get(item.status.lower(), StatusAbsensi.HADIR)
 
+        # Get teacher mode
+        guru_mode = (guru.mode_kelas or "OFFLINE").upper()
+        try:
+            mode_enum = ModeAbsensi(guru_mode)
+        except ValueError:
+            mode_enum = ModeAbsensi.OFFLINE
+
         # Check if already marked on this date to update rather than duplicate
         existing_log = db.query(AbsensiLog).filter(
             AbsensiLog.uid == siswa.uid,
@@ -400,6 +407,7 @@ async def save_siswa_absensi(
             prev_status = existing_log.status
             existing_log.status = status_enum
             existing_log.waktu = now
+            existing_log.mode = mode_enum
 
             # If changed from IZIN to HADIR or ALFA: deduct remaining sessions
             if prev_status == StatusAbsensi.IZIN and status_enum in [StatusAbsensi.HADIR, StatusAbsensi.ALFA]:
@@ -416,7 +424,7 @@ async def save_siswa_absensi(
             log = AbsensiLog(
                 uid=siswa.uid,
                 waktu=now,
-                mode=ModeAbsensi.ONLINE,
+                mode=mode_enum,
                 status=status_enum
             )
             db.add(log)
