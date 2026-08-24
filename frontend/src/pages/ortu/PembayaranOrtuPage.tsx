@@ -79,9 +79,7 @@ export const PembayaranOrtuPage: React.FC = () => {
         formData.append('id_siswa', String(childId));
       }
       formData.append('file', file);
-      const res = await apiClient.post('/bukti-transfer/', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const res = await apiClient.post('/bukti-transfer/', formData);
       return res.data;
     },
     onSuccess: () => {

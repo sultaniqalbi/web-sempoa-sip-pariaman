@@ -19,7 +19,7 @@ from app.crud import bukti_transfer as crud_bukti_transfer
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-UPLOAD_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../uploads/bukti-transfer"))
+UPLOAD_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../uploads/bukti_transfer"))
 
 def resolve_student_for_parent(db: Session, current_user: User, id_siswa: Optional[int] = None) -> Optional[Siswa]:
     """
@@ -207,7 +207,7 @@ async def upload_proof(
             detail=f"Gagal menyimpan berkas di server: {e}"
         )
 
-    relative_path = f"uploads/bukti-transfer/{filename}"
+    relative_path = f"/uploads/bukti_transfer/{filename}"
     new_proof = crud_bukti_transfer.create_bukti_transfer(db, id_pembayaran=pembayaran.id, file_path=relative_path)
 
     # Broadcast realtime event to all connected admin/owner/ortu portals

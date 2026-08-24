@@ -23,7 +23,15 @@ apiClient.interceptors.request.use(
     }
     
     // Convert empty strings to null for JSON payloads to prevent FastAPI 422 errors
-    if (config.data && typeof config.data === 'object' && !(config.data instanceof FormData)) {
+    if (config.data instanceof FormData) {
+      // Crucial: remove Content-Type header so browser/axios attaches multipart boundary automatically
+      if (config.headers) {
+        delete config.headers['Content-Type'];
+        if (typeof config.headers.delete === 'function') {
+          config.headers.delete('Content-Type');
+        }
+      }
+    } else if (config.data && typeof config.data === 'object') {
       const cleanData = (obj: any) => {
         for (const key in obj) {
           if (obj[key] === '') {
