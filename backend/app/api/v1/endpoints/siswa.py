@@ -418,11 +418,18 @@ async def upload_foto_siswa(
     id: int,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    current_user: User = Depends(admin_or_owner)
+    current_user: User = Depends(get_current_user)
 ):
     siswa = db.query(Siswa).filter(Siswa.id == id, Siswa.is_deleted == False).first()
     if not siswa:
         raise HTTPException(status_code=404, detail="Siswa tidak ditemukan")
+
+    if current_user.role in [UserRole.admin, UserRole.owner]:
+        pass
+    elif current_user.role == UserRole.ortu and (current_user.uid_terhubung == str(id) or current_user.uid_terhubung == siswa.uid):
+        pass
+    else:
+        raise HTTPException(status_code=403, detail="Anda tidak memiliki izin untuk mengedit data siswa ini")
         
     try:
         contents = await file.read()

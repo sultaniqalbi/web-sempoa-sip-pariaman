@@ -109,8 +109,8 @@ export const SiswaPage: React.FC = () => {
 
   const validatePhone = (num: string): boolean => {
     const clean = num.replace(/[^0-9]/g, '');
-    if (!clean || clean.length < 10 || clean.length > 13) {
-      setPhoneError('Nomor HP harus berupa angka (10-13 digit)');
+    if (!clean || clean.length < 9 || clean.length > 14) {
+      setPhoneError('Masukkan 9-14 digit angka');
       return false;
     }
     setPhoneError(null);
@@ -879,21 +879,27 @@ export const SiswaPage: React.FC = () => {
             </div>
             <div>
               <label className="block text-[#1E293B] font-bold mb-1">No. WhatsApp Orang Tua*</label>
-              <input
-                type="tel"
-                pattern="[0-9]*"
-                required
-                value={formData.whatsapp_orang_tua}
-                onChange={(e) => {
-                  const cleaned = e.target.value.replace(/[^0-9]/g, '');
-                  setFormData({ ...formData, whatsapp_orang_tua: cleaned });
-                  if (cleaned) validatePhone(cleaned);
-                }}
-                className={`w-full bg-[#F1F5F9] border rounded-lg p-2.5 text-[#1E293B] focus:outline-none ${
-                  phoneError ? 'border-[#D32F2F] focus:border-[#D32F2F]' : 'border-[#E2E8F0] focus:border-[#FF7043]'
-                }`}
-                placeholder="081234567890"
-              />
+              <div className="flex">
+                <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 bg-[#E2E8F0] text-[#475569] text-xs font-bold border-[#E2E8F0]">
+                  +62
+                </span>
+                <input
+                  type="tel"
+                  pattern="[0-9]*"
+                  required
+                  value={formData.whatsapp_orang_tua.replace(/^(?:\+62|62|0)/, '')}
+                  onChange={(e) => {
+                    const cleaned = e.target.value.replace(/[^0-9]/g, '');
+                    const finalVal = cleaned ? `8${cleaned.replace(/^8/, '')}` : '';
+                    setFormData({ ...formData, whatsapp_orang_tua: finalVal });
+                    if (finalVal) validatePhone(finalVal);
+                  }}
+                  className={`w-full bg-[#F1F5F9] border rounded-r-lg p-2.5 text-[#1E293B] focus:outline-none ${
+                    phoneError ? 'border-[#D32F2F] focus:border-[#D32F2F]' : 'border-[#E2E8F0] focus:border-[#FF7043]'
+                  }`}
+                  placeholder="8xxxxxxxxxx"
+                />
+              </div>
               {phoneError && <p className="text-[10px] text-[#D32F2F] font-semibold mt-1">{phoneError}</p>}
             </div>
           </div>

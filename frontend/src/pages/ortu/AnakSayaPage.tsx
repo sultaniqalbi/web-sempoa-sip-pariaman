@@ -122,7 +122,8 @@ export const AnakSayaPage: React.FC = () => {
   };
 
   const validateWa = (wa: string) => {
-    return /^08\d{8,11}$/.test(wa);
+    const clean = wa.replace(/\D/g, '');
+    return /^(08|628|8)\d{7,12}$/.test(clean);
   };
 
   const handleSave = async () => {
@@ -366,17 +367,25 @@ export const AnakSayaPage: React.FC = () => {
             </div>
             <div>
               <label className="block text-[#1E293B] font-bold mb-1">No. WhatsApp Orang Tua*</label>
-              <input
-                type="tel"
-                required
-                value={formData.no_wa_ortu}
-                onChange={(e) => handleInputChange('no_wa_ortu', e.target.value)}
-                disabled={!isEditing}
-                placeholder="08xxxxxxxxxx"
-                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none disabled:opacity-70 disabled:cursor-not-allowed"
-              />
+              <div className="flex">
+                <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-[#E2E8F0] bg-[#E2E8F0] text-[#475569] text-xs font-bold">
+                  +62
+                </span>
+                <input
+                  type="tel"
+                  required
+                  value={formData.no_wa_ortu.replace(/^(?:\+62|62|0)/, '')}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '');
+                    handleInputChange('no_wa_ortu', val ? `8${val.replace(/^8/, '')}` : '');
+                  }}
+                  disabled={!isEditing}
+                  placeholder="8xxxxxxxxxx"
+                  className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-r-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none disabled:opacity-70 disabled:cursor-not-allowed"
+                />
+              </div>
               {isEditing && (
-                <p className="text-[10px] text-[#94A3B8] mt-1">Format: 08 + 8-11 digit angka</p>
+                <p className="text-[10px] text-[#94A3B8] mt-1">Masukkan angka setelah +62 (contoh: 8123456789)</p>
               )}
             </div>
           </div>
