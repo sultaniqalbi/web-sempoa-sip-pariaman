@@ -461,17 +461,33 @@ export const PembayaranOrtuPage: React.FC = () => {
                       <td className="py-3 px-2 font-bold text-[#94A3B8]">{idx + 1}</td>
                       <td className="py-3 px-2">
                         <p className="font-bold text-[#1E293B]">
-                          {pr.tanggal_upload || (pr.created_at ? new Date(pr.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '-')}
+                          {(() => {
+                            const dtStr = pr.created_at || '';
+                            const isUtc = dtStr.endsWith('Z') || dtStr.includes('+');
+                            const finalDtStr = dtStr ? (isUtc ? dtStr : dtStr + 'Z') : '';
+                            return finalDtStr ? new Date(finalDtStr).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '-';
+                          })()}
                         </p>
                       </td>
                       <td className="py-3 px-2">
-                        <img
-                          src={fullUrl}
-                          alt="Struk"
-                          onClick={() => setPreviewImage(fullUrl)}
-                          className="w-11 h-11 object-cover rounded-lg border border-[#CBD5E1] cursor-pointer hover:opacity-80 transition-opacity shadow-2xs"
-                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                        />
+                        <div onClick={() => setPreviewImage(fullUrl)} className="cursor-pointer group inline-block">
+                          <img
+                            src={fullUrl}
+                            alt="Struk"
+                            className="w-11 h-11 object-cover rounded-lg border border-[#CBD5E1] group-hover:opacity-80 transition-opacity shadow-2xs"
+                            onError={(e) => {
+                              const img = e.target as HTMLImageElement;
+                              img.style.display = 'none';
+                              const fallback = img.parentElement?.querySelector('.img-fallback') as HTMLElement;
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
+                          />
+                          <div className="img-fallback w-11 h-11 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] items-center justify-center hidden group-hover:bg-[#E2E8F0] transition-colors">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2.5">
+                              <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
+                            </svg>
+                          </div>
+                        </div>
                       </td>
                       <td className="py-3 px-2 font-bold text-[#475569]">{pr.periode_bulan || '-'}</td>
                       <td className="py-3 px-2 font-extrabold text-[#16A34A]">
