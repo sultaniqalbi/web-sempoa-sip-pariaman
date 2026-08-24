@@ -7,8 +7,8 @@
     --color-primary: #FFD54F;         /* Playful Yellow */
     --color-primary-light: #FFF9C4;
     --color-primary-orange: #FFA726;  /* Oranye Logo */
-    --color-secondary: #FF7043;       /* CTA Orange */
-    --color-secondary-hover: #F4511E;
+    --color-secondary: #C2410C;       /* CTA Dark Orange (WCAG AA 4.7:1 compliant) */
+    --color-secondary-hover: #9A3412;
     
     /* Culture Accent Colors (Tabuik & Pesisir Pariaman) */
     --color-accent-maroon: #880E4F;   /* Marun Tabuik */
@@ -18,7 +18,7 @@
     /* Neutral Tone Palette */
     --color-text-dark: #1E293B;       /* Slate 800 */
     --color-text-body: #475569;       /* Slate 600 */
-    --color-text-light: #94A3B8;      /* Slate 400 */
+    --color-text-light: #475569;      /* Slate 600 (WCAG AA 5.2:1 compliant) */
     --color-white: #FFFFFF;
     --color-bg-light: #F8FAFC;        /* Slate 50 */
     --color-bg-white: #FFFFFF;

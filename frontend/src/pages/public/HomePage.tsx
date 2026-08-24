@@ -16,7 +16,7 @@ const programsData = [
     id: 1,
     tabName: 'SEMPOA',
     badgeText: 'PROGRAM 1 • Pelatihan Otak Kanan & Kiri',
-    badgeColor: '#f97316',
+    badgeColor: '#9a3412',
     badgeBg: '#fff7ed',
     usia: 'Usia 4 - 12 Tahun',
     title: 'Sempoa (Basic For All Learning)',
@@ -24,7 +24,7 @@ const programsData = [
     jadwalBiasa: 'Senin - Sabtu: 09:00 - 17:00 WIB',
     jadwalLibur: 'Senin - Sabtu: 09:00 - 15:30 WIB',
     link: '/program/sempoa',
-    borderColor: '#f97316'
+    borderColor: '#ea580c'
   },
   {
     id: 2,
@@ -439,7 +439,7 @@ export const HomePage: React.FC = () => {
                     {/* Schedule Box */}
                     <div className="mobile-program-schedule">
                       <div className="sched-header">
-                        <span style={{ color: '#ea580c', marginRight: '4px' }}><ClockIcon size={14} color="#ea580c" /></span> <strong>Sesi & Jadwal Kelas:</strong>
+                        <span style={{ color: '#c2410c', marginRight: '4px' }}><ClockIcon size={14} color="#c2410c" /></span> <strong>Sesi & Jadwal Kelas:</strong>
                       </div>
                       <ul className="sched-list">
                         <li>• Hari Biasa: <strong>{activeProg.jadwalBiasa}</strong></li>
@@ -828,7 +828,7 @@ export const HomePage: React.FC = () => {
                 </p>
               </div>
               <div className="testi-author" style={{ borderTop: '1px solid #ffe082', paddingTop: '0.75rem', marginTop: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div className="author-img" style={{ background: '#f57c00', color: 'white', width: '38px', height: '38px', minWidth: '38px', flexShrink: 0, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
+                <div className="author-img" style={{ background: '#c2410c', color: 'white', width: '38px', height: '38px', minWidth: '38px', flexShrink: 0, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
                   OH
                 </div>
                 <div style={{ minWidth: 0 }}>
@@ -849,7 +849,7 @@ export const HomePage: React.FC = () => {
                 </p>
               </div>
               <div className="testi-author" style={{ borderTop: '1px solid #80deea', paddingTop: '0.75rem', marginTop: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div className="author-img" style={{ background: '#00acc1', color: 'white', width: '38px', height: '38px', minWidth: '38px', flexShrink: 0, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
+                <div className="author-img" style={{ background: '#00838f', color: 'white', width: '38px', height: '38px', minWidth: '38px', flexShrink: 0, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
                   OQ
                 </div>
                 <div style={{ minWidth: 0 }}>
@@ -891,7 +891,7 @@ export const HomePage: React.FC = () => {
                 </p>
               </div>
               <div className="testi-author" style={{ borderTop: '1px solid #ef9a9a', paddingTop: '0.75rem', marginTop: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div className="author-img" style={{ background: '#E53935', color: 'white', width: '38px', height: '38px', minWidth: '38px', flexShrink: 0, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
+                <div className="author-img" style={{ background: '#c62828', color: 'white', width: '38px', height: '38px', minWidth: '38px', flexShrink: 0, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
                   OA
                 </div>
                 <div style={{ minWidth: 0 }}>
@@ -925,7 +925,7 @@ export const HomePage: React.FC = () => {
             };
 
             return highlightedPhotos.length === 0 ? (
-              <div style={{ padding: '3rem 1rem', color: '#94a3b8', fontSize: '0.95rem' }}>
+              <div style={{ padding: '3rem 1rem', color: '#475569', fontSize: '0.95rem' }}>
                 <p style={{ marginBottom: '0.5rem', fontWeight: 600 }}>Nantikan momen-momen seru kami!</p>
                 <p style={{ fontSize: '0.85rem' }}>Foto kegiatan dan prestasi siswa-siswi Sempoa SIP TC Pariaman akan segera hadir di sini.</p>
               </div>
