@@ -69,9 +69,14 @@ export const PembayaranOrtuPage: React.FC = () => {
 
   // Upload proof mutation
   const uploadProofMutation = useMutation({
-    mutationFn: async ({ paymentId, file }: { paymentId: number; file: File }) => {
+    mutationFn: async ({ paymentId, childId, file }: { paymentId?: number | null; childId?: number; file: File }) => {
       const formData = new FormData();
-      formData.append('id_pembayaran', String(paymentId));
+      if (paymentId && paymentId > 0) {
+        formData.append('id_pembayaran', String(paymentId));
+      }
+      if (childId) {
+        formData.append('id_siswa', String(childId));
+      }
       formData.append('file', file);
       const res = await apiClient.post('/bukti-transfer/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -82,7 +87,7 @@ export const PembayaranOrtuPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['child-proof-history'] });
       queryClient.invalidateQueries({ queryKey: ['child-payments'] });
       setSelectedFile(null);
-      showToast('Bukti transfer berhasil diunggah! Mohon tunggu verifikasi admin.');
+      showToast('✓ Bukti transfer berhasil diunggah! Mohon tunggu verifikasi admin.', 'success');
     },
     onError: (err: any) => {
       showToast(`Gagal mengunggah: ${err.response?.data?.detail || err.message}`, 'error');
@@ -96,15 +101,11 @@ export const PembayaranOrtuPage: React.FC = () => {
       return;
     }
 
-    // Determine target payment id
     const targetId = selectedPaymentId || (payments.length > 0 ? payments[0].id : null);
-    if (!targetId) {
-      showToast('Belum ada tagihan aktif untuk anak ini', 'error');
-      return;
-    }
 
     uploadProofMutation.mutate({
       paymentId: targetId,
+      childId: child?.id,
       file: selectedFile,
     });
   };
@@ -351,25 +352,61 @@ export const PembayaranOrtuPage: React.FC = () => {
           </div>
         </div>
 
-        <form onSubmit={handleUploadSubmit} className="space-y-3">
+        <form onSubmit={handleUploadSubmit} className="space-y-4">
           <div>
-            <label className="block text-[#1E293B] font-bold text-xs mb-1">Pilih File Struk Pembayaran* (JPG / PNG max 5MB)</label>
+            <label className="block text-[#1E293B] font-bold text-xs mb-1.5">
+              Pilih File Struk Pembayaran* (JPG, PNG, atau WEBP max 10MB)
+            </label>
             <input
               type="file"
-              accept="image/jpeg,image/png"
+              accept="image/jpeg,image/png,image/jpg,image/webp"
               required
-              onChange={(e) => setSelectedFile(e.target.files ? e.target.files[0] : null)}
+              onChange={(e) => {
+                const file = e.target.files ? e.target.files[0] : null;
+                setSelectedFile(file);
+              }}
               className="w-full bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl p-2.5 text-xs text-[#1E293B] focus:border-[#FF7043] focus:outline-none file:mr-4 file:py-1.5 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-[#FF7043] file:text-white hover:file:bg-[#F4511E] cursor-pointer"
             />
           </div>
 
-          <div className="flex items-center justify-end">
+          {/* File Selected Preview */}
+          {selectedFile && (
+            <div className="flex items-center gap-3 p-3 bg-[#FFF3E0] border border-[#FFCC80] rounded-xl">
+              <img
+                src={URL.createObjectURL(selectedFile)}
+                alt="Pratinjau Struk"
+                className="w-14 h-14 object-cover rounded-lg border border-[#FFB74D] shadow-2xs shrink-0"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-[#E65100] truncate">{selectedFile.name}</p>
+                <p className="text-[10px] text-[#BF360C] font-semibold">
+                  Ukuran: {(selectedFile.size / 1024).toFixed(1)} KB &bull; Siap diunggah
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedFile(null)}
+                className="text-xs font-bold text-[#C62828] hover:underline px-2 py-1"
+              >
+                Hapus
+              </button>
+            </div>
+          )}
+
+          <div className="flex items-center justify-end pt-1">
             <button
               type="submit"
               disabled={uploadProofMutation.isPending || !selectedFile}
-              className="px-5 py-2.5 bg-[#FF7043] hover:bg-[#F4511E] text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+              className="px-6 py-3 bg-gradient-to-r from-[#FF7043] to-[#F4511E] hover:from-[#F4511E] hover:to-[#E64A19] text-white font-extrabold text-xs rounded-xl shadow-md shadow-orange-500/25 transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex items-center gap-2"
             >
-              {uploadProofMutation.isPending ? 'Mengunggah...' : 'Unggah Bukti Pembayaran'}
+              {uploadProofMutation.isPending ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Mengunggah Berkas...</span>
+                </>
+              ) : (
+                <span>Unggah Bukti Pembayaran</span>
+              )}
             </button>
           </div>
         </form>

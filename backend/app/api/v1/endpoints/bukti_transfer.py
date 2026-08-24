@@ -1,6 +1,6 @@
 import os
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional
 from fastapi import APIRouter, Depends, Form, File, UploadFile, HTTPException, status
 from sqlalchemy.orm import Session
@@ -9,7 +9,7 @@ from app.core.config import settings
 from app.core.database import get_db
 from app.core.dependencies import get_current_user, RoleChecker
 from app.models.users import User, UserRole
-from app.models.pembayaran_periode import PembayaranPeriode
+from app.models.pembayaran_periode import PembayaranPeriode, StatusPembayaran
 from app.models.siswa import Siswa
 from app.models.bukti_transfer import StatusBuktiTransfer
 from app.schemas.bukti_transfer import BuktiTransferResponse
@@ -93,50 +93,94 @@ async def read_my_child_proofs(
 
 @router.post("/", response_model=BuktiTransferResponse, status_code=status.HTTP_201_CREATED)
 async def upload_proof(
-    id_pembayaran: int = Form(...),
+    id_pembayaran: Optional[int] = Form(None),
+    id_siswa: Optional[int] = Form(None),
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    if current_user.role != UserRole.ortu:
+    if current_user.role not in [UserRole.ortu, UserRole.admin, UserRole.owner]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Hanya Orang Tua yang dapat mengupload bukti transfer"
+            detail="Hanya Orang Tua / Admin yang dapat mengupload bukti transfer"
         )
 
-    pembayaran = db.query(PembayaranPeriode).filter(PembayaranPeriode.id == id_pembayaran).first()
-    if not pembayaran:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Tagihan pembayaran tidak ditemukan"
-        )
+    # 1. Resolve Siswa
+    siswa = None
+    if id_siswa:
+        siswa = db.query(Siswa).filter(Siswa.id == id_siswa, Siswa.is_deleted == False).first()
+    elif current_user.uid_terhubung:
+        siswa = db.query(Siswa).filter(
+            (Siswa.uid == current_user.uid_terhubung) | (Siswa.id == (int(current_user.uid_terhubung) if current_user.uid_terhubung.isdigit() else -1)),
+            Siswa.is_deleted == False
+        ).first()
+
+    # 2. Resolve Pembayaran
+    pembayaran = None
+    if id_pembayaran and id_pembayaran > 0:
+        pembayaran = db.query(PembayaranPeriode).filter(PembayaranPeriode.id == id_pembayaran).first()
     
-    siswa = db.query(Siswa).filter(Siswa.id == pembayaran.id_siswa).first()
-    if not siswa or (str(siswa.id) != current_user.uid_terhubung and siswa.uid != current_user.uid_terhubung):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Anda tidak memiliki akses ke tagihan pembayaran siswa ini"
-        )
+    if not pembayaran:
+        if not siswa:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Data siswa tidak ditemukan untuk tagihan ini"
+            )
+        # Check existing bill or auto-create one
+        pembayaran = db.query(PembayaranPeriode).filter(
+            PembayaranPeriode.id_siswa == siswa.id
+        ).order_by(PembayaranPeriode.created_at.desc()).first()
 
-    if file.content_type not in ["image/jpeg", "image/png"]:
+        if not pembayaran:
+            is_sempoa = "sempoa" in (siswa.kategori_program or "").lower()
+            nominal = 350000.0 if is_sempoa else 200000.0
+            bulan_str = datetime.now().strftime("%B %Y")
+            
+            pembayaran = PembayaranPeriode(
+                id_siswa=siswa.id,
+                periode_bulan=bulan_str,
+                jumlah=nominal,
+                status=StatusPembayaran.PENDING_VERIFIKASI,
+                due_date=(datetime.utcnow() + timedelta(days=30)).date()
+            )
+            db.add(pembayaran)
+            db.commit()
+            db.refresh(pembayaran)
+    
+    if not siswa:
+        siswa = db.query(Siswa).filter(Siswa.id == pembayaran.id_siswa).first()
+
+    if current_user.role == UserRole.ortu:
+        if not siswa or (str(siswa.id) != current_user.uid_terhubung and siswa.uid != current_user.uid_terhubung):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Anda tidak memiliki akses ke tagihan pembayaran siswa ini"
+            )
+
+    # Validate file extension and MIME type
+    file_ext = os.path.splitext(file.filename or "")[1].lower()
+    valid_extensions = [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif"]
+    valid_content_types = ["image/jpeg", "image/png", "image/jpg", "image/webp", "image/heic", "image/heif", "application/octet-stream"]
+
+    if file.content_type not in valid_content_types and file_ext not in valid_extensions:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Format file tidak didukung. Harus JPEG atau PNG"
+            detail="Format file tidak didukung. Harap unggah foto struk dalam format JPG, PNG, atau WEBP."
         )
 
-    max_size = 5 * 1024 * 1024
+    max_size = 10 * 1024 * 1024 # 10MB
     content = await file.read()
     if len(content) > max_size:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Ukuran file terlalu besar. Maksimal 5MB"
+            detail="Ukuran file terlalu besar. Maksimal 10MB"
         )
     await file.seek(0)
 
     os.makedirs(UPLOAD_DIR, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    file_ext = ".png" if file.content_type == "image/png" else ".jpg"
-    filename = f"{siswa.id}_{timestamp}{file_ext}"
+    ext = file_ext if file_ext in [".png", ".jpg", ".jpeg", ".webp"] else ".jpg"
+    filename = f"{siswa.id}_{timestamp}{ext}"
     file_path = os.path.join(UPLOAD_DIR, filename)
 
     try:
@@ -144,18 +188,13 @@ async def upload_proof(
             f.write(content)
     except Exception as e:
         logger.error(f"Gagal menyimpan berkas bukti transfer: {e}", exc_info=True)
-        if settings.fastapi_env == "production":
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Terjadi kesalahan internal server saat menyimpan berkas."
-            )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Gagal menyimpan berkas di server: {e}"
         )
 
     relative_path = f"uploads/bukti-transfer/{filename}"
-    return crud_bukti_transfer.create_bukti_transfer(db, id_pembayaran=id_pembayaran, file_path=relative_path)
+    return crud_bukti_transfer.create_bukti_transfer(db, id_pembayaran=pembayaran.id, file_path=relative_path)
 
 @router.put("/{id}", response_model=BuktiTransferResponse)
 async def verify_proof(
