@@ -9,7 +9,7 @@ import { ApaItuSempoa } from '../../components/ApaItuSempoa';
 import { LevelPembelajaran } from '../../components/LevelPembelajaran';
 import { MengapaBelajarSempoa } from '../../components/MengapaBelajarSempoa';
 import { DiakuiInternasional } from '../../components/DiakuiInternasional';
-import { MenuIcon, CloseIcon, MapPinIcon, CheckIcon, CubesIcon, ShieldCheckIcon, ArrowRightIcon, ClockIcon, GraduationCapIcon, QuoteRightIcon, ImagesIcon } from '../../components/SvgIcons';
+import { MenuIcon, CloseIcon, MapPinIcon, CheckIcon, CubesIcon, ShieldCheckIcon, ArrowRightIcon, ClockIcon, GraduationCapIcon, QuoteRightIcon, ImagesIcon, WhatsAppIcon, EmailIcon } from '../../components/SvgIcons';
 
 const programsData = [
   {
@@ -327,7 +327,7 @@ export const HomePage: React.FC = () => {
                 </p>
                 <div className="hero-buttons">
                   <a href="#programs" className="btn btn-outline-white" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <img src="/assets/icons/program.svg" alt="" width="20" height="20" style={{ width: '20px', height: '20px' }} />
+                    <img src="/assets/icons/program.svg" alt="" width="20" height="20" style={{ width: '20px', height: '20px', filter: 'brightness(0) invert(1)' }} />
                     Lihat Semua Program
                   </a>
                   <a
@@ -1023,15 +1023,15 @@ export const HomePage: React.FC = () => {
               <h3 className="footer-section-title">Kontak Resmi</h3>
               <div className="footer-contact-items">
                 <a href="https://wa.me/6282385813163" target="_blank" rel="noopener noreferrer" title="Hubungi via WhatsApp" aria-label="WhatsApp Hotline 1">
-                  <img src="/assets/icons/whatsapp.svg" alt="" width="20" height="20" loading="lazy" />
+                  <WhatsAppIcon size={20} className="text-[#FFA726] shrink-0" />
                   <span>+62 823-8581-3163 (Hotline 1)</span>
                 </a>
                 <a href="https://wa.me/628126784986" target="_blank" rel="noopener noreferrer" title="Hubungi via WhatsApp" aria-label="WhatsApp Hotline 2">
-                  <img src="/assets/icons/whatsapp.svg" alt="" width="20" height="20" loading="lazy" />
+                  <WhatsAppIcon size={20} className="text-[#FFA726] shrink-0" />
                   <span>+62 812-6784-986 (Hotline 2)</span>
                 </a>
                 <a href="mailto:sempoasiptcpariaman@gmail.com" title="Kirim Email" aria-label="Email Resmi">
-                  <img src="/assets/icons/email.svg" alt="" width="20" height="20" loading="lazy" />
+                  <EmailIcon size={20} className="text-[#FFA726] shrink-0" />
                   <span>sempoasiptcpariaman@gmail.com</span>
                 </a>
               </div>
@@ -1042,11 +1042,11 @@ export const HomePage: React.FC = () => {
               <h3 className="footer-section-title">Lokasi & Jam Buka</h3>
               <div className="footer-contact-list">
                 <div className="footer-contact-item">
-                  <img src="/assets/icons/peta.svg" alt="" width="20" height="20" loading="lazy" />
+                  <MapPinIcon size={20} className="text-[#FFA726] shrink-0 mt-0.5" />
                   <span>Jl. Imam Bonjol, Alai Gelombang, Pariaman Tengah, Kota Pariaman</span>
                 </div>
                 <div className="footer-contact-item">
-                  <img src="/assets/icons/jam.svg" alt="" width="20" height="20" loading="lazy" />
+                  <ClockIcon size={20} className="text-[#FFA726] shrink-0 mt-0.5" />
                   <span>Senin - Sabtu: 09.00 - 17.00 WIB (Minggu Libur)</span>
                 </div>
               </div>
