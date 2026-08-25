@@ -1496,13 +1496,13 @@ img {
 .footer-contact-items {
   display: flex;
   flex-direction: column;
-  gap: 1.1rem;
+  gap: 1.25rem;
 }
 
 .footer-contact-items a {
   display: flex !important;
-  align-items: center !important;
-  gap: 0.75rem !important;
+  align-items: flex-start !important;
+  gap: 0.85rem !important;
   color: rgba(255, 255, 255, 0.9) !important;
   text-decoration: none !important;
   font-size: 0.92rem !important;
@@ -1517,13 +1517,13 @@ img {
 .footer-contact-list {
   display: flex;
   flex-direction: column;
-  gap: 1.1rem;
+  gap: 1.25rem;
 }
 
 .footer-contact-item {
   display: flex !important;
   align-items: flex-start !important;
-  gap: 0.75rem !important;
+  gap: 0.85rem !important;
   color: rgba(255, 255, 255, 0.9) !important;
   font-size: 0.92rem !important;
   line-height: 1.5 !important;

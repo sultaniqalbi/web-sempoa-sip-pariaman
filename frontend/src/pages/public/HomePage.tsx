@@ -1022,32 +1022,51 @@ export const HomePage: React.FC = () => {
             <div className="footer-section">
               <h3 className="footer-section-title">Kontak Resmi</h3>
               <div className="footer-contact-items">
-                <a href="https://wa.me/6282385813163" target="_blank" rel="noopener noreferrer" title="Hubungi via WhatsApp" aria-label="WhatsApp Hotline 1">
-                  <WhatsAppIcon size={20} className="text-[#FFA726] shrink-0" />
-                  <span>+62 823-8581-3163 (Hotline 1)</span>
+                <a href="https://wa.me/6282385813163" target="_blank" rel="noopener noreferrer" title="Hubungi WhatsApp Admin" aria-label="WhatsApp Admin">
+                  <WhatsAppIcon size={20} className="text-[#FFA726] shrink-0 mt-1" />
+                  <div>
+                    <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>WhatsApp Admin</div>
+                    <div style={{ fontSize: '0.92rem', color: '#ffffff', fontWeight: 500 }}>0823-8581-3163</div>
+                  </div>
                 </a>
-                <a href="https://wa.me/628126784986" target="_blank" rel="noopener noreferrer" title="Hubungi via WhatsApp" aria-label="WhatsApp Hotline 2">
-                  <WhatsAppIcon size={20} className="text-[#FFA726] shrink-0" />
-                  <span>+62 812-6784-986 (Hotline 2)</span>
+                <a href="https://wa.me/628126784986" target="_blank" rel="noopener noreferrer" title="Hubungi WhatsApp Direktur" aria-label="WhatsApp Direktur">
+                  <WhatsAppIcon size={20} className="text-[#FFA726] shrink-0 mt-1" />
+                  <div>
+                    <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>WhatsApp Direktur</div>
+                    <div style={{ fontSize: '0.92rem', color: '#ffffff', fontWeight: 500 }}>0812-6784-986</div>
+                  </div>
                 </a>
-                <a href="mailto:sempoasiptcpariaman@gmail.com" title="Kirim Email" aria-label="Email Resmi">
-                  <EmailIcon size={20} className="text-[#FFA726] shrink-0" />
-                  <span>sempoasiptcpariaman@gmail.com</span>
+                <a href="mailto:sempoasiptcpariaman@gmail.com" title="Kirim Email Resmi" aria-label="Email Resmi">
+                  <EmailIcon size={20} className="text-[#FFA726] shrink-0 mt-1" />
+                  <div>
+                    <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Email Resmi</div>
+                    <div style={{ fontSize: '0.92rem', color: '#ffffff', fontWeight: 500 }}>sempoasiptcpariaman@gmail.com</div>
+                  </div>
                 </a>
               </div>
             </div>
 
             {/* Kolom Kanan: Lokasi & Jam Buka */}
             <div className="footer-section">
-              <h3 className="footer-section-title">Lokasi & Jam Buka</h3>
+              <h3 className="footer-section-title">Lokasi &amp; Jam Buka</h3>
               <div className="footer-contact-list">
                 <div className="footer-contact-item">
-                  <MapPinIcon size={20} className="text-[#FFA726] shrink-0 mt-0.5" />
-                  <span>Jl. Imam Bonjol, Alai Gelombang, Pariaman Tengah, Kota Pariaman</span>
+                  <MapPinIcon size={20} className="text-[#FFA726] shrink-0 mt-1" />
+                  <div>
+                    <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Alamat</div>
+                    <div style={{ fontSize: '0.88rem', color: 'rgba(255,255,255,0.9)', lineHeight: 1.5 }}>Jl. Imam Bonjol, Alai Gelombang, Kec. Pariaman Tengah, Kota Pariaman, Sumatera Barat 25517</div>
+                  </div>
                 </div>
                 <div className="footer-contact-item">
-                  <ClockIcon size={20} className="text-[#FFA726] shrink-0 mt-0.5" />
-                  <span>Senin - Sabtu: 09.00 - 17.00 WIB (Minggu Libur)</span>
+                  <ClockIcon size={20} className="text-[#FFA726] shrink-0 mt-1" />
+                  <div>
+                    <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(255,255,255,0.6)', fontWeight: 600, marginBottom: '0.2rem' }}>Jam Operasional</div>
+                    <div style={{ fontSize: '0.88rem', color: 'rgba(255,255,255,0.9)', lineHeight: 1.6 }}>
+                      <div><strong>Senin - Sabtu:</strong> 09.00 - 17.00 WIB</div>
+                      <div><strong>Hari Libur:</strong> 09.00 - 15.30 WIB</div>
+                      <div><strong>Minggu:</strong> Libur</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
