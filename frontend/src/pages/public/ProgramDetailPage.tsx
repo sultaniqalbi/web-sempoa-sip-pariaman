@@ -178,7 +178,7 @@ export const ProgramDetailPage: React.FC = () => {
             <img src="/assets/logo/logo-sempoa-sip.webp" alt="Logo Sempoa SIP TC Pariaman" />
           </Link>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <div className="mobile-nav-toggle-wrap">
             <a
               href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak."
               target="_blank"
@@ -193,7 +193,6 @@ export const ProgramDetailPage: React.FC = () => {
               id="mobileMenuBtn"
               aria-label="Buka Menu Navigasi"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', outline: 'none' }}
             >
               {isMobileMenuOpen ? <CloseIcon size={24} color="#000" /> : <MenuIcon size={24} color="#000" />}
             </button>

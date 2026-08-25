@@ -307,13 +307,31 @@ img {
     color: var(--color-secondary);
 }
 
-.mobile-menu-btn {
-    display: none;
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    color: var(--color-text-dark);
-    cursor: pointer;
+.mobile-menu-btn,
+.mobile-nav-toggle-wrap,
+.mobile-only-daftar {
+    display: none !important;
+}
+
+@media (max-width: 992px) {
+    .mobile-menu-btn {
+        display: flex !important;
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: var(--color-text-dark);
+        cursor: pointer;
+        align-items: center;
+        justify-content: center;
+    }
+    .mobile-nav-toggle-wrap {
+        display: flex !important;
+        align-items: center;
+        gap: 15px;
+    }
+    .mobile-only-daftar {
+        display: inline-flex !important;
+    }
 }
 
 /* === HERO SECTION === */
