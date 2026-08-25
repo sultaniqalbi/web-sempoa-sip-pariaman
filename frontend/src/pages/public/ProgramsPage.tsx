@@ -1,9 +1,19 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import ProgramCard from '../../components/ProgramCard';
+import useSeoMeta from '../../hooks/useSeoMeta';
+import useBreadcrumb from '../../hooks/useBreadcrumb';
 import { MenuIcon, CloseIcon, HomeIcon, MapPinIcon } from '../../components/SvgIcons';
 
 export const ProgramsPage: React.FC = () => {
+  useSeoMeta(
+    'Program Bimbingan Belajar - Sempoa SIP Pariaman',
+    'Pilihan program bimbingan belajar pelatihan otak anak usia 4-12 tahun di Sempoa SIP Pariaman: Sempoa, Fonem (Baca Cepat), Tahfidz Cilik, dan Bahasa Inggris.'
+  );
+  useBreadcrumb([
+    { name: 'Beranda', path: '/' },
+    { name: 'Program Bimbingan', path: '/programs' },
+  ]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const programs = [
     {

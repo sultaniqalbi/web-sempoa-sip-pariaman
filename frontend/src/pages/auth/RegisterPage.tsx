@@ -1,8 +1,18 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import useSeoMeta from '../../hooks/useSeoMeta';
+import useBreadcrumb from '../../hooks/useBreadcrumb';
 
 export const RegisterPage: React.FC = () => {
+  useSeoMeta(
+    'Pendaftaran Siswa Baru - Sempoa SIP Pariaman',
+    'Formulir pendaftaran kelas bimbingan belajar pelatihan otak dan Free Trial di Sempoa SIP Pariaman.'
+  );
+  useBreadcrumb([
+    { name: 'Beranda', path: '/' },
+    { name: 'Pendaftaran Siswa Baru', path: '/register' },
+  ]);
   const navigate = useNavigate();
   const [namaOrtu, setNamaOrtu] = useState('');
   const [namaAnak, setNamaAnak] = useState('');

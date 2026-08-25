@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import useAuth from '../../features/auth/useAuth';
 import useMascotCursor from '../../hooks/useMascotCursor';
+import useSeoMeta from '../../hooks/useSeoMeta';
+import useBreadcrumb from '../../hooks/useBreadcrumb';
 import { MenuIcon, CloseIcon, HomeIcon, ChevronLeftIcon, ChevronRightIcon, BookOpenIcon, StarIcon, CubesIcon, CheckIcon } from '../../components/SvgIcons';
 
 interface ProgramDetail {
@@ -169,13 +171,44 @@ export const ProgramDetailPage: React.FC = () => {
   const key = programId?.toLowerCase() || 'sempoa';
   const data = programDataMap[key] || programDataMap['sempoa'];
 
+  const seoConfig: Record<string, { title: string; desc: string }> = {
+    sempoa: {
+      title: 'Program Sempoa - Sempoa SIP Pariaman',
+      desc: 'Program pelatihan otak kanan dan kiri dengan metode sempoa untuk anak usia 4-12 tahun di Kota Pariaman.',
+    },
+    fonem: {
+      title: 'Program Fonem - Sempoa SIP Pariaman',
+      desc: 'Program belajar membaca metode fonem untuk anak usia dini di Sempoa SIP Pariaman.',
+    },
+    tahfidz: {
+      title: 'Program Tahfidz - Sempoa SIP Pariaman',
+      desc: 'Program tahfidz Al-Quran untuk anak di Sempoa SIP Pariaman.',
+    },
+    inggris: {
+      title: 'Program Bahasa Inggris - Sempoa SIP Pariaman',
+      desc: 'Program bahasa Inggris untuk anak usia dini di Sempoa SIP Pariaman.',
+    },
+  };
+
+  const seo = seoConfig[key] || {
+    title: `Program ${data.title} - Sempoa SIP Pariaman`,
+    desc: data.description,
+  };
+
+  useSeoMeta(seo.title, seo.desc);
+  useBreadcrumb([
+    { name: 'Beranda', path: '/' },
+    { name: 'Program Bimbingan', path: '/programs' },
+    { name: `Program ${data.title}`, path: `/program/${key}` },
+  ]);
+
   return (
     <div className="program-detail-wrapper" style={{ background: '#f8fafc', minHeight: '100vh' }}>
       {/* NAVBAR */}
       <nav className="navbar" id="navbar" style={{ position: 'sticky', top: 0, zIndex: 1000, background: 'rgba(255,255,255,0.98)', borderBottom: '1px solid #e2e8f0' }}>
         <div className="container">
           <Link to="/" className="nav-brand-logo">
-            <img src="/assets/logo/logo-sempoa-sip.webp" alt="Logo Sempoa SIP TC Pariaman" />
+            <img src="/assets/logo/logo-sempoa-sip.webp" alt="Sempoa SIP Pariaman" />
           </Link>
 
           <div className="mobile-nav-toggle-wrap">

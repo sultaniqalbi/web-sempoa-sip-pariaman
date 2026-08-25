@@ -1,4 +1,10 @@
 User-agent: *
 Allow: /
+Disallow: /admin/
+Disallow: /owner/
+Disallow: /direktur/
+Disallow: /guru/
+Disallow: /ortu/
+Disallow: /api/
 
 Sitemap: https://sempoasippariaman.com/sitemap.xml

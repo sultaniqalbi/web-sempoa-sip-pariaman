@@ -1,5 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import useSeoMeta from '../../hooks/useSeoMeta';
+import useBreadcrumb from '../../hooks/useBreadcrumb';
 import {
   ShieldCheckIcon,
   LockIcon,
@@ -12,6 +14,15 @@ import {
 } from '../../components/SvgIcons';
 
 export const PrivacySecurityPage: React.FC = () => {
+  useSeoMeta(
+    'Kebijakan Privasi & Keamanan Data - Sempoa SIP Pariaman',
+    'Kebijakan privasi dan standar perlindungan data siswa serta wali murid di Sempoa SIP Pariaman.'
+  );
+  useBreadcrumb([
+    { name: 'Beranda', path: '/' },
+    { name: 'Kebijakan Privasi & Keamanan', path: '/privasi-keamanan' },
+  ]);
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-[#1E293B]" style={{ fontFamily: "'Inter', sans-serif" }}>
       {/* 1. Top Navbar */}

@@ -6,6 +6,7 @@ import { AuthProvider } from './features/auth/AuthContext';
 import { RealtimeProvider } from './features/realtime/RealtimeContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
+import useCanonical from './hooks/useCanonical';
 
 // Lazy loading pages for performance optimization
 // Public Pages
@@ -62,12 +63,18 @@ const queryClient = new QueryClient({
   },
 });
 
+function CanonicalManager() {
+  useCanonical();
+  return null;
+}
+
 export function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <RealtimeProvider>
           <BrowserRouter>
+            <CanonicalManager />
             <AuthProvider>
               <Suspense fallback={<PageLoader />}>
                 <Routes>

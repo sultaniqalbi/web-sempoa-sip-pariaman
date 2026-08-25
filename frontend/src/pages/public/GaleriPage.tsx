@@ -4,10 +4,20 @@ import { useQuery } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
 import useAuth from '../../features/auth/useAuth';
 import useMascotCursor from '../../hooks/useMascotCursor';
+import useSeoMeta from '../../hooks/useSeoMeta';
+import useBreadcrumb from '../../hooks/useBreadcrumb';
 import { MenuIcon, CloseIcon } from '../../components/SvgIcons';
 
 export const GaleriPage: React.FC = () => {
   useMascotCursor();
+  useSeoMeta(
+    'Galeri Kegiatan - Sempoa SIP Pariaman',
+    'Dokumentasi foto kegiatan belajar dan prestasi murid Sempoa SIP TC Pariaman.'
+  );
+  useBreadcrumb([
+    { name: 'Beranda', path: '/' },
+    { name: 'Galeri Kegiatan', path: '/galeri' },
+  ]);
   const { user } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [lightbox, setLightbox] = useState<{

@@ -4,6 +4,7 @@ import apiClient from '../../features/api/apiClient';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../../features/auth/useAuth';
 import useMascotCursor from '../../hooks/useMascotCursor';
+import useSeoMeta from '../../hooks/useSeoMeta';
 import LoginModal from '../../components/LoginModal';
 import { ApaItuSempoa } from '../../components/ApaItuSempoa';
 import { LevelPembelajaran } from '../../components/LevelPembelajaran';
@@ -71,6 +72,11 @@ const programsData = [
 ];
 
 export const HomePage: React.FC = () => {
+  useSeoMeta(
+    'Sempoa SIP Pariaman - Bimbingan Belajar Pelatihan Otak Anak',
+    'Lembaga bimbingan belajar pelatihan otak anak usia 4-12 tahun di Kota Pariaman. Metode sempoa untuk meningkatkan konsentrasi, daya ingat, dan kreativitas.'
+  );
+
   useMascotCursor();
   const { user } = useAuth();
   const navigate = useNavigate();
