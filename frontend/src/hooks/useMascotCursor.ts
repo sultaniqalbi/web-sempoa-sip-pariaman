@@ -229,14 +229,17 @@ export function useMascotCursor() {
       };
     };
 
-    const idleId = 'requestIdleCallback' in window
-      ? (window as any).requestIdleCallback(init, { timeout: 3000 })
-      : window.setTimeout(init, 2000);
+    const win = typeof window !== 'undefined' ? (window as any) : null;
+    if (!win) return;
+
+    const idleId = win.requestIdleCallback
+      ? win.requestIdleCallback(init, { timeout: 3000 })
+      : setTimeout(init, 2000);
 
     return () => {
       cancelled = true;
-      if ('cancelIdleCallback' in window) {
-        (window as any).cancelIdleCallback(idleId);
+      if (win.cancelIdleCallback) {
+        win.cancelIdleCallback(idleId);
       } else {
         clearTimeout(idleId);
       }
