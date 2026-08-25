@@ -426,7 +426,7 @@ export const HomePage: React.FC = () => {
                   <div className="mobile-program-content">
                     {/* Badge Pill */}
                     <div className="mobile-program-badge-wrap">
-                      <span className="mobile-prog-badge badge-orange" style={{ color: '#c2410c' }}>{activeProg.badgeText}</span>
+                      <span className="mobile-prog-badge badge-orange" style={{ color: '#9a3412', backgroundColor: '#fff7ed', borderColor: '#ea580c' }}>{activeProg.badgeText}</span>
                       <span className="mobile-prog-badge badge-grey" style={{ color: '#9a3412', backgroundColor: '#fff8e1' }}>{activeProg.usia}</span>
                     </div>
 
