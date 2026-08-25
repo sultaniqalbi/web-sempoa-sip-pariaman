@@ -445,11 +445,15 @@ img {
     min-width: 180px;
 }
 
-.trust-badge h3 {
+.trust-badge h3,
+.trust-badge .hero-stats-number,
+.trust-badge-number {
     font-size: 3.5rem;
+    font-weight: 800;
     color: var(--color-accent-maroon);
     line-height: 1;
     margin-bottom: 0.5rem;
+    font-family: var(--font-heading);
 }
 
 .trust-badge p {

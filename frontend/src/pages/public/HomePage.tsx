@@ -372,7 +372,7 @@ export const HomePage: React.FC = () => {
         <div className="container">
           <div className="trust-card">
             <div className="trust-badge">
-              <div className="hero-stats-number">{new Date().getFullYear() - 1998}+</div>
+              <h3 className="trust-badge-number">{new Date().getFullYear() - 1998}+</h3>
               <p>Tahun Pengalaman<br />di Kota Pariaman</p>
             </div>
             <div className="trust-content">
