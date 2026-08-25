@@ -133,10 +133,10 @@ export const HomePage: React.FC = () => {
   // Counter targets ref
   const achievementsRef = useRef<HTMLDivElement>(null);
   const [counters, setCounters] = useState({
-    c1: '0+',
-    c2: '0+',
-    c3: '0',
-    c4: '0%',
+    c1: '150+',
+    c2: '500+',
+    c3: '45',
+    c4: '100%',
   });
   const [counterAnimated, setCounterAnimated] = useState(false);
 
