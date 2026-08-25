@@ -31,21 +31,21 @@ export const ApaItuSempoa: React.FC = () => {
         }}>
           
           {/* Left Column: Mascot Visual */}
-          <div className="desktop-only-mascot" style={{ flex: '1 1 350px', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '380px' }}>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <div className="desktop-only-mascot" style={{ flex: '1 1 350px', display: 'flex', justifyContent: 'flex-start', alignItems: 'center', paddingLeft: '20px', minHeight: '380px' }}>
+            <div style={{ transform: 'translateX(160px)' }}>
               <img 
-                src="/assets/mascot/apa-itu-sempoa-hd.webp" 
-                alt="Mascot Sempoa Belajar" 
-                width="400"
-                height="400"
+                src="/assets/mascot/level-5@2x.webp" 
+                alt="Mascot Sempoa" 
+                width="388"
+                height="266"
                 loading="lazy"
                 style={{ 
                   width: '380px', 
                   height: 'auto', 
-                  margin: '0 auto',
+                  margin: '0',
                   objectFit: 'contain',
                   animation: 'float 3s ease-in-out infinite',
-                  filter: 'drop-shadow(0 12px 20px rgba(0,0,0,0.12))'
+                  filter: 'drop-shadow(0 10px 15px rgba(0,0,0,0.1))'
                 }} 
               />
             </div>
