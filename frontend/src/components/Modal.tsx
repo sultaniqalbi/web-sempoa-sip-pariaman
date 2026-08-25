@@ -21,8 +21,14 @@ export const Modal: React.FC<ModalProps> = ({
         onClose();
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -30,9 +36,9 @@ export const Modal: React.FC<ModalProps> = ({
   const sizeClasses = {
     sm: 'max-w-md w-full',
     md: 'max-w-lg w-full',
-    lg: 'max-w-4xl w-[85vw]',
-    xl: 'max-w-6xl w-[90vw] sm:w-[95vw] lg:w-[90vw]',
-    full: 'w-[95vw] max-w-7xl',
+    lg: 'max-w-4xl w-[92vw] sm:w-[85vw]',
+    xl: 'max-w-6xl w-[94vw] sm:w-[95vw] lg:w-[90vw]',
+    full: 'w-[96vw] max-w-7xl',
   };
 
   return (
@@ -40,15 +46,17 @@ export const Modal: React.FC<ModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
-      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto"
+      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3.5 sm:p-4 overflow-y-auto"
+      onClick={onClose}
     >
       <div
-        className={`bg-white border border-[#E0E0E0] rounded-t-2xl sm:rounded-2xl p-4 sm:p-6 shadow-2xl relative text-[#424242] w-full max-h-[92vh] sm:max-h-[85vh] flex flex-col ${
+        className={`bg-white border border-[#E2E8F0] rounded-2xl p-4 sm:p-6 shadow-2xl relative text-[#424242] w-full max-h-[86dvh] sm:max-h-[85vh] flex flex-col my-auto ${
           sizeClasses[size] || sizeClasses.md
         }`}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex justify-between items-center border-b border-[#E0E0E0] pb-3 mb-4 shrink-0">
+        <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-3.5 mb-3.5 shrink-0">
           <h3 id="modal-title" className="text-base sm:text-lg font-bold text-[#1E293B] truncate pr-2">
             {title}
           </h3>
@@ -65,7 +73,7 @@ export const Modal: React.FC<ModalProps> = ({
         </div>
 
         {/* Content Body */}
-        <div className="overflow-y-auto flex-1 pr-1">{children}</div>
+        <div className="overflow-y-auto flex-1 pr-1 pb-6 overscroll-contain">{children}</div>
       </div>
     </div>
   );

@@ -52,25 +52,25 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3.5 sm:p-4 overflow-y-auto"
       onClick={onClose}
     >
       {/* Overlay */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]" />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" />
 
       {/* Modal */}
       <div
-        className="relative bg-white w-full sm:max-w-[500px] sm:rounded-2xl rounded-t-2xl shadow-[0_16px_48px_rgba(0,0,0,0.2)] overflow-hidden animate-[slideUp_0.3s_ease-out]"
+        className="relative bg-white w-full sm:max-w-[500px] rounded-2xl shadow-2xl overflow-hidden my-auto max-h-[86dvh] sm:max-h-[85vh] flex flex-col animate-[slideUp_0.3s_ease-out]"
         onClick={(e) => e.stopPropagation()}
         style={{ fontFamily: "'Inter', sans-serif" }}
       >
         {/* Header */}
-        <div className="px-6 py-5 border-b border-[#F5F5F5] bg-gradient-to-r from-[#FFF3E0] to-white">
+        <div className="px-6 py-4 border-b border-[#F5F5F5] bg-gradient-to-r from-[#FFF3E0] to-white shrink-0">
           <div className="flex items-center justify-between">
             <h2 className="text-[16px] font-extrabold text-[#424242]">Informasi Pembayaran</h2>
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-full bg-[#F5F5F5] hover:bg-[#EEEEEE] flex items-center justify-center transition-colors"
+              className="w-8 h-8 rounded-full bg-[#F5F5F5] hover:bg-[#EEEEEE] flex items-center justify-center transition-colors shrink-0 cursor-pointer"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#757575" strokeWidth="2.5" strokeLinecap="round">
                 <line x1="18" y1="6" x2="6" y2="18" />
@@ -81,7 +81,7 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="px-6 py-5 space-y-5 max-h-[70vh] overflow-y-auto">
+        <div className="px-6 py-5 space-y-5 flex-1 overflow-y-auto pb-6 overscroll-contain">
           {/* Program info */}
           <div className="space-y-3">
             <InfoRow label="Nama Anak" value={childName} />
@@ -133,16 +133,16 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
         </div>
 
         {/* Footer buttons */}
-        <div className="px-6 py-4 border-t border-[#F5F5F5] bg-[#FAFAFA] flex gap-3">
+        <div className="px-6 py-4 pb-5 sm:pb-4 border-t border-[#F5F5F5] bg-[#FAFAFA] shrink-0 flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-3 bg-white border border-[#E0E0E0] text-[#757575] rounded-xl text-[13px] font-bold hover:bg-[#F5F5F5] transition-colors min-h-[44px]"
+            className="flex-1 py-3 bg-white border border-[#E0E0E0] text-[#757575] rounded-xl text-[13px] font-bold hover:bg-[#F5F5F5] transition-colors min-h-[44px] cursor-pointer"
           >
             Tutup
           </button>
           <button
             onClick={onConfirmPayment}
-            className="flex-1 py-3 bg-[#FF7043] hover:bg-[#F4511E] text-white rounded-xl text-[13px] font-bold shadow-[0_4px_12px_rgba(255,112,67,0.3)] transition-all active:scale-[0.98] min-h-[44px]"
+            className="flex-1 py-3 bg-[#FF7043] hover:bg-[#F4511E] text-white rounded-xl text-[13px] font-bold shadow-[0_4px_12px_rgba(255,112,67,0.3)] transition-all active:scale-[0.98] min-h-[44px] cursor-pointer"
           >
             Selesai Pembayaran
           </button>

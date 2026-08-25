@@ -74,19 +74,19 @@ export const KwitansiModal: React.FC<KwitansiModalProps> = ({ isOpen, onClose, d
 
   return (
     <div
-      className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+      className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-xs flex items-center justify-center p-3.5 sm:p-4 overflow-y-auto"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[86dvh] sm:max-h-[85vh] flex flex-col my-auto overflow-hidden animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex justify-between items-center px-5 py-3.5 border-b border-[#E2E8F0]">
+        <div className="flex justify-between items-center px-5 py-3.5 border-b border-[#E2E8F0] shrink-0">
           <h3 className="text-sm font-extrabold text-[#1E293B]">Kwitansi Pembayaran SPP</h3>
           <button
             onClick={onClose}
-            className="w-7 h-7 rounded-full bg-[#F1F5F9] hover:bg-[#FEE2E2] text-[#475569] hover:text-[#DC2626] flex items-center justify-center transition-all cursor-pointer"
+            className="w-7 h-7 rounded-full bg-[#F1F5F9] hover:bg-[#FEE2E2] text-[#475569] hover:text-[#DC2626] flex items-center justify-center transition-all cursor-pointer shrink-0"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
@@ -95,7 +95,7 @@ export const KwitansiModal: React.FC<KwitansiModalProps> = ({ isOpen, onClose, d
         </div>
 
         {/* Kwitansi Content */}
-        <div className="p-5 overflow-y-auto max-h-[70vh]">
+        <div className="p-4 sm:p-5 overflow-y-auto flex-1 pb-6 overscroll-contain">
           {isLoading || !data ? (
             <div className="py-12 text-center">
               <div className="w-8 h-8 border-3 border-[#FF7043] border-t-transparent rounded-full animate-spin mx-auto" />
@@ -165,16 +165,16 @@ export const KwitansiModal: React.FC<KwitansiModalProps> = ({ isOpen, onClose, d
 
         {/* Action buttons */}
         {data && !isLoading && (
-          <div className="px-5 py-3.5 border-t border-[#E2E8F0] flex items-center justify-end gap-2.5">
+          <div className="px-5 py-3.5 pb-5 sm:pb-3.5 border-t border-[#E2E8F0] shrink-0 bg-[#F8FAFC] flex items-center justify-end gap-2.5">
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#475569] font-bold text-xs rounded-xl border border-[#E2E8F0] transition-all cursor-pointer"
+              className="px-4 py-2.5 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#475569] font-bold text-xs rounded-xl border border-[#E2E8F0] transition-all cursor-pointer"
             >
               Tutup
             </button>
             <button
               onClick={handlePrint}
-              className="px-5 py-2 bg-[#FF7043] hover:bg-[#F4511E] text-white font-extrabold text-xs rounded-xl shadow-sm transition-all active:scale-95 cursor-pointer flex items-center gap-2"
+              className="px-5 py-2.5 bg-[#FF7043] hover:bg-[#F4511E] text-white font-extrabold text-xs rounded-xl shadow-sm transition-all active:scale-95 cursor-pointer flex items-center gap-2"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="6 9 6 2 18 2 18 9" />

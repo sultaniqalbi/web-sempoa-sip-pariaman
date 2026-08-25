@@ -923,24 +923,24 @@ export const SiswaPage: React.FC = () => {
             </div>
           )}
 
-          <div className="flex justify-end gap-3 pt-3">
+          <div className="flex justify-end gap-2.5 pt-4 pb-2 border-t border-[#E2E8F0] mt-2">
             <button
               type="button"
               onClick={() => setIsAddModalOpen(false)}
-              className="px-4 py-2 bg-[#F1F5F9] text-[#475569] rounded-lg font-bold hover:bg-[#E2E8F0] border border-[#E2E8F0]"
+              className="px-4 py-2.5 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#475569] rounded-xl font-bold border border-[#E2E8F0] transition-colors cursor-pointer"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={createMutation.isPending || updateMutation.isPending}
-              className="px-4 py-2 bg-[#FF7043] text-white font-bold rounded-lg hover:bg-[#F4511E] disabled:opacity-50"
+              className="px-5 py-2.5 bg-[#FF7043] text-white font-bold rounded-xl hover:bg-[#F4511E] disabled:opacity-50 shadow-sm transition-all active:scale-95 cursor-pointer"
             >
               {createMutation.isPending || updateMutation.isPending
                 ? 'Simpan...'
                 : editingSiswa
                 ? 'Perbarui Data Siswa'
-                : 'Simpan & buat Akun'}
+                : 'Simpan & Buat Akun'}
             </button>
           </div>
         </form>

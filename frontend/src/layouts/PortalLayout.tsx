@@ -146,7 +146,7 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
             onClick={() => setDrawerOpen(false)}
             aria-hidden="true"
           />
-          <div className="md:hidden fixed inset-y-0 left-0 z-50 w-[270px] max-w-[85vw] bg-white border-r border-slate-200 flex flex-col justify-between overflow-hidden animate-in slide-in-from-left duration-200 shadow-2xl">
+          <div className="md:hidden fixed top-0 bottom-0 left-0 z-50 w-[280px] max-w-[85vw] h-[100dvh] max-h-[100dvh] bg-white border-r border-slate-200 flex flex-col justify-between overflow-hidden animate-in slide-in-from-left duration-200 shadow-2xl">
             <div className="flex flex-col flex-1 min-h-0">
               {/* Header Logo + Close Button */}
               <div className="flex items-center justify-between p-3.5 border-b border-slate-200 shrink-0">
@@ -191,8 +191,8 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
               </nav>
             </div>
 
-            {/* Bottom User & Logout in Drawer */}
-            <div className="p-3 border-t border-slate-200 bg-[#F8FAFC] shrink-0">
+            {/* Bottom User & Logout in Drawer (with extra bottom safe padding for mobile) */}
+            <div className="p-3 pb-8 sm:pb-3 border-t border-slate-200 bg-[#F8FAFC] shrink-0">
               <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
                 <div className="flex items-center gap-2 min-w-0">
                   <div className="w-8 h-8 rounded-lg bg-orange-50 text-[#FF7043] font-black text-xs flex items-center justify-center shrink-0 border border-orange-200">
@@ -205,7 +205,7 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="h-8 px-2.5 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 text-xs font-bold rounded-lg transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                  className="h-8 px-2.5 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 text-xs font-bold rounded-lg transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 shrink-0"
                   title="Keluar"
                 >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
@@ -253,7 +253,7 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
             </div>
           </div>
 
-          {/* Right: User Avatar & Info */}
+          {/* Right: User Avatar & Info + Mobile Quick Logout */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-[#FF7043] text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
@@ -263,6 +263,18 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
                 {user?.nama || 'Admin SIP Pariaman'}
               </span>
             </div>
+            <button
+              onClick={handleLogout}
+              className="md:hidden p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all shrink-0"
+              title="Keluar"
+              aria-label="Keluar"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+            </button>
           </div>
         </header>
 
