@@ -1036,11 +1036,11 @@ export const HomePage: React.FC = () => {
                     <div style={{ fontSize: '0.92rem', color: '#ffffff', fontWeight: 500 }}>0812-6784-986</div>
                   </div>
                 </a>
-                <a href="mailto:sempoasiptcpariaman@gmail.com" title="Kirim Email Resmi" aria-label="Email Resmi">
+                <a href="mailto:sempoasip.prmn@gmail.com" title="Kirim Email Resmi" aria-label="Email Resmi">
                   <EmailIcon size={20} className="text-[#FFA726] shrink-0 mt-1" />
                   <div>
                     <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Email Resmi</div>
-                    <div style={{ fontSize: '0.92rem', color: '#ffffff', fontWeight: 500 }}>sempoasiptcpariaman@gmail.com</div>
+                    <div style={{ fontSize: '0.92rem', color: '#ffffff', fontWeight: 500 }}>sempoasip.prmn@gmail.com</div>
                   </div>
                 </a>
               </div>
