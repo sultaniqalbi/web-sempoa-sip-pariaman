@@ -930,7 +930,7 @@ export const HomePage: React.FC = () => {
                 <p style={{ fontSize: '0.85rem' }}>Foto kegiatan dan prestasi siswa-siswi Sempoa SIP TC Pariaman akan segera hadir di sini.</p>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
+              <div className="highlighted-gallery-grid">
                 {highlightedPhotos.map((item: any, idx: number) => (
                   <div
                     key={item.id}
