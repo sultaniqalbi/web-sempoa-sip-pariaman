@@ -9,7 +9,7 @@ import { ApaItuSempoa } from '../../components/ApaItuSempoa';
 import { LevelPembelajaran } from '../../components/LevelPembelajaran';
 import { MengapaBelajarSempoa } from '../../components/MengapaBelajarSempoa';
 import { DiakuiInternasional } from '../../components/DiakuiInternasional';
-import { MenuIcon, CloseIcon, MapPinIcon, CheckIcon, CubesIcon, ShieldCheckIcon, ArrowRightIcon, ClockIcon, GraduationCapIcon, QuoteRightIcon, ImagesIcon, WhatsAppIcon, EmailIcon } from '../../components/SvgIcons';
+import { MenuIcon, CloseIcon, MapPinIcon, CheckIcon, CubesIcon, ShieldCheckIcon, ArrowRightIcon, ClockIcon, GraduationCapIcon, QuoteRightIcon, ImagesIcon, WhatsAppIcon, EmailIcon, ProgramIcon } from '../../components/SvgIcons';
 
 const programsData = [
   {
@@ -327,8 +327,8 @@ export const HomePage: React.FC = () => {
                 </p>
                 <div className="hero-buttons">
                   <a href="#programs" className="btn btn-outline-white" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <img src="/assets/icons/program.svg" alt="" width="20" height="20" style={{ width: '20px', height: '20px', filter: 'brightness(0) invert(1)' }} />
-                    Lihat Semua Program
+                    <ProgramIcon size={20} className="shrink-0" />
+                    <span>Lihat Semua Program</span>
                   </a>
                   <a
                     href="https://wa.me/6282385813163?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20mendaftar%20kelas%20gratis%20(Free%20Trial)."
