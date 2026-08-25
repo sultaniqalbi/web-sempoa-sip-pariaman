@@ -31,18 +31,18 @@ export const ApaItuSempoa: React.FC = () => {
         }}>
           
           {/* Left Column: Mascot Visual */}
-          <div className="desktop-only-mascot" style={{ flex: '1 1 350px', display: 'flex', justifyContent: 'flex-start', alignItems: 'center', paddingLeft: '20px', minHeight: '380px' }}>
-            <div style={{ transform: 'translateX(160px)' }}>
+          <div className="desktop-only-mascot" style={{ flex: '1 1 350px', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '380px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
               <img 
-                src="/assets/mascot/level-5@2x.webp" 
+                src="/assets/mascot/mascot-female.webp" 
                 alt="Mascot Sempoa" 
-                width="388"
-                height="266"
+                width="500"
+                height="500"
                 loading="lazy"
                 style={{ 
-                  width: '380px', 
+                  width: '320px', 
                   height: 'auto', 
-                  margin: '0',
+                  margin: '0 auto',
                   objectFit: 'contain',
                   animation: 'float 3s ease-in-out infinite',
                   filter: 'drop-shadow(0 10px 15px rgba(0,0,0,0.1))'
