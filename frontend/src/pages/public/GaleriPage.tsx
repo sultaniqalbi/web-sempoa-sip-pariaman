@@ -175,14 +175,6 @@ export const GaleriPage: React.FC = () => {
                 position: 'relative',
               }}
             >
-              {/* Star Badge for highlighted photos */}
-              {item.is_highlighted && (
-                <div style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 2, width: '30px', height: '30px', background: item.border, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid white', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="white" stroke="none">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                  </svg>
-                </div>
-              )}
               <div className="gallery-img-wrap" style={{ width: '100%', aspectRatio: '1 / 1', overflow: 'hidden', background: '#f8f9fa' }}>
                 <img src={item.src} alt={item.title} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
