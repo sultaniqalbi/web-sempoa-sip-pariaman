@@ -905,6 +905,9 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
+      {/* SECTION DIVIDER */}
+      <div className="section-divider"></div>
+
       {/* GALLERY SECTION - Dynamic from API (highlighted/sorot photos deferred) */}
       <section ref={galleryRef} className="gallery section-padding" id="galeri" style={{ backgroundColor: 'var(--color-bg-light)', borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
         <div className="container" style={{ textAlign: 'center' }}>
@@ -962,6 +965,9 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* SECTION DIVIDER */}
+      <div className="section-divider"></div>
 
       {/* MAPS & LOCATION DETAILS */}
       <section className="cta-banner" id="lokasi-peta">
