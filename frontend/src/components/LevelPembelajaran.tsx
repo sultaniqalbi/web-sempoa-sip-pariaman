@@ -250,10 +250,10 @@ export const LevelPembelajaran: React.FC = () => {
                       }}>
                         {level.name}
                       </div>
-                      <div style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 700, fontSize: '13px', marginBottom: '12px', textAlign: 'center', textShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
+                      <div style={{ color: '#ffffff', fontWeight: 800, fontSize: '13px', marginBottom: '12px', textAlign: 'center', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
                         {level.subtitle}
                       </div>
-                      <div style={{ opacity: 0.8, color: '#fff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', whiteSpace: 'nowrap', textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
+                      <div style={{ color: '#ffffff', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', whiteSpace: 'nowrap', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
                         Klik untuk selengkapnya
                       </div>
                     </div>
