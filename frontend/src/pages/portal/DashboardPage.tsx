@@ -22,22 +22,14 @@ export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
 
-  const { data: statsData, isLoading, error } = useQuery<DashboardStats>({
+  const { data: statsData, isLoading, error, refetch } = useQuery<DashboardStats>({
     queryKey: ['portal', 'dashboard'],
     queryFn: async () => {
-      try {
-        const response = await apiClient.get('/portal/dashboard');
-        return response.data;
-      } catch {
-        try {
-          const response = await apiClient.get('/admin/stats');
-          return response.data;
-        } catch {
-          const response = await apiClient.get('/admin/dashboard');
-          return response.data;
-        }
-      }
+      const response = await apiClient.get('/portal/dashboard');
+      return response.data;
     },
+    retry: 2,
+    staleTime: 30000,
   });
 
   const [isRekapModalOpen, setIsRekapModalOpen] = useState(false);
@@ -79,8 +71,15 @@ export const DashboardPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="m-6 p-6 bg-[#FFF1F2] border border-[#D32F2F] rounded-lg text-[#D32F2F] text-xs font-medium">
-        Gagal memuat statistik dashboard. Pastikan backend server terhubung.
+      <div className="m-6 p-6 bg-[#FFF1F2] border border-[#FFCDD2] rounded-2xl text-[#D32F2F] text-xs font-medium flex flex-col items-center justify-center gap-3 shadow-xs">
+        <p className="text-center font-bold">Gagal memuat statistik dashboard. Sesi login mungkin perlu disegarkan atau server sedang restart.</p>
+        <button
+          type="button"
+          onClick={() => refetch()}
+          className="px-5 py-2 bg-[#FF7043] hover:bg-[#F4511E] text-white font-black rounded-xl text-xs shadow-md transition-all active:scale-95 cursor-pointer"
+        >
+          Muat Ulang Dashboard
+        </button>
       </div>
     );
   }
