@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 export function useMascotCursor() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (window.matchMedia('(pointer: coarse)').matches) return;
+    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
     if (document.getElementById('custom-mascot-cursor')) return;
 
     let cleanup: (() => void) | undefined;
@@ -62,6 +62,7 @@ export function useMascotCursor() {
       const ctx = canvas.getContext('2d', { alpha: true });
 
       function resizeCanvas() {
+        if (!canvas) return;
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
       }
@@ -71,28 +72,7 @@ export function useMascotCursor() {
       const targetContainer = document.body || document.documentElement;
       targetContainer.appendChild(canvas);
       targetContainer.appendChild(cursor);
-
-      // CSS animation override
-      const style = document.createElement('style');
-      style.id = 'custom-mascot-cursor-style';
-      style.innerHTML = `
-        body, a, button, input, select, textarea, label, [role="button"] {
-          cursor: none !important;
-        }
-
-        @keyframes mascotFlipJumpSmooth {
-          0% { transform: scaleX(1) translateY(0); }
-          35% { transform: scaleX(-1) translateY(-14px) rotate(-6deg); }
-          50% { transform: scaleX(-1) translateY(-20px) rotate(0deg); }
-          70% { transform: scaleX(1) translateY(-8px) rotate(4deg); }
-          100% { transform: scaleX(1) translateY(0) rotate(0deg); }
-        }
-
-        .mascot-jump-anim {
-          animation: mascotFlipJumpSmooth 0.75s cubic-bezier(0.33, 1, 0.68, 1) forwards !important;
-        }
-      `;
-      document.head.appendChild(style);
+      document.body.classList.add('has-mascot-cursor');
 
       // Tracking
       let savedX = sessionStorage.getItem('sempoa_cur_x');
@@ -225,7 +205,7 @@ export function useMascotCursor() {
         window.removeEventListener('resize', resizeCanvas);
         cursor.remove();
         canvas.remove();
-        style.remove();
+        document.body.classList.remove('has-mascot-cursor');
       };
     };
 

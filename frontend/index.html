@@ -45,16 +45,23 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-    <!-- Preload Hero LCP Mascot & Body Font -->
+    <!-- Preload Hero LCP Mascot -->
     <link rel="preload" as="image" href="/assets/mascot/maskot-hero-test.webp" fetchpriority="high" />
-    <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/nunitosans/v19/pe0AMImSLYBIv1o4X1M8ce2xCx3yop4tQpF_MeTm0lfUVwoNnq4CLz0_kJ3xzA.woff2" />
 
-    <!-- Google Fonts (Optimized with display=swap) -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400..800&family=Poppins:wght@400;500;600;700;800&display=swap" />
+    <!-- Google Fonts: Asynchronous Non-Render-Blocking (Eliminates 750ms blocking penalty) -->
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400..800&family=Poppins:wght@400;500;600;700;800&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'"
+    />
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400..800&family=Poppins:wght@400;500;600;700;800&display=swap" />
+    </noscript>
 
     <!-- Critical Above-the-Fold CSS (Zero render-blocking layout) -->
     <style id="critical-above-the-fold">
-      :root{--color-primary:#FFD54F;--color-primary-orange:#FFA726;--color-secondary:#C2410C;--color-secondary-hover:#9A3412;--color-accent-maroon:#880E4F;--color-text-dark:#1E293B;--color-text-body:#475569;--color-text-light:#475569;--color-white:#FFFFFF;--color-bg-light:#F8FAFC;--color-border:#E2E8F0;--font-heading:'Poppins',sans-serif;--font-body:'Nunito Sans',sans-serif;--radius-full:9999px;--transition:all 0.3s cubic-bezier(0.4,0,0.2,1)}
+      :root{--color-primary:#FFD54F;--color-primary-orange:#FFA726;--color-secondary:#C2410C;--color-secondary-hover:#9A3412;--color-accent-maroon:#880E4F;--color-text-dark:#1E293B;--color-text-body:#475569;--color-text-light:#475569;--color-white:#FFFFFF;--color-bg-light:#F8FAFC;--color-border:#E2E8F0;--font-heading:'Poppins',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;--font-body:'Nunito Sans',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;--radius-full:9999px;--transition:all 0.3s cubic-bezier(0.4,0,0.2,1)}
       *,::before,::after{box-sizing:border-box;margin:0;padding:0}
       html{scroll-behavior:smooth;font-size:16px;width:100%}
       body,#root{font-family:var(--font-body);color:var(--color-text-body);background-color:var(--color-bg-light);line-height:1.6;overflow-x:hidden;margin:0;padding:0}

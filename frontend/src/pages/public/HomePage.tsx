@@ -216,7 +216,7 @@ export const HomePage: React.FC = () => {
         <nav className={`navbar ${isNavScrolled ? 'scrolled' : ''}`} id="navbar" aria-label="Navigasi Utama">
           <div className="container">
             <Link to="/" className="nav-brand-logo" aria-label="Halaman Utama Sempoa SIP TC Pariaman">
-              <img src="/assets/logo/logo-sempoa-sip@2x.webp" alt="Logo Sempoa SIP TC Pariaman" width="200" height="122" />
+              <img src="/assets/logo/logo-sempoa-sip@2x.webp" alt="Logo Sempoa SIP TC Pariaman" width="100" height="61" fetchpriority="high" decoding="async" />
             </Link>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
@@ -1033,7 +1033,7 @@ export const HomePage: React.FC = () => {
           <div className="footer-grid">
             {/* Kolom Kiri: Brand Identity */}
             <div className="footer-brand">
-              <img src="/assets/logo/logo-sempoa-sip@2x.webp" alt="Logo Sempoa SIP" className="footer-logo" width="200" height="122" loading="lazy" />
+              <img src="/assets/logo/logo-sempoa-sip@2x.webp" alt="Logo Sempoa SIP" className="footer-logo" width="100" height="61" loading="lazy" decoding="async" />
               <h3 className="footer-brand-title">Sempoa SIP TC Pariaman</h3>
               <p className="footer-brand-desc">
                 Pusat pelatihan keseimbangan otak anak berbasis mental aritmatika dan bimbingan belajar terpercaya sejak 1998.

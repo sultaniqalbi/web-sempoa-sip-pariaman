@@ -39,12 +39,12 @@ export const LevelPembelajaran: React.FC = () => {
   const [isMobile, setIsMobile] = useState<boolean>(false);
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 992);
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    if (typeof window === 'undefined') return;
+    const mql = window.matchMedia('(max-width: 992px)');
+    setIsMobile(mql.matches);
+    const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
   }, []);
 
   const activeObj = levels.find(l => l.id === mobileActiveId) || levels[0];
@@ -93,7 +93,7 @@ export const LevelPembelajaran: React.FC = () => {
               
               {/* Mascot */}
               <div className="mobile-mascot-wrapper">
-                <img src={activeObj.img} alt={activeObj.name} width="228" height="212" className="mobile-mascot" />
+                <img src={activeObj.img} alt={activeObj.name} width="175" height="120" loading="lazy" decoding="async" className="mobile-mascot" />
               </div>
 
               {/* Badges */}
