@@ -298,18 +298,16 @@ async def push_whatsapp_guru(
     user_guru = db.query(User).filter(User.role == UserRole.guru, User.uid_terhubung == str(id)).first()
     guru_email = user_guru.email if user_guru else f"guru_{guru.id}@sempoasippariaman.com"
 
-    new_sandi = generate_random_password(10)
-    if user_guru:
-        user_guru.password = get_password_hash(new_sandi)
-        db.commit()
-
+    # Keep user's active password intact (do not overwrite/rotate on every push)
     message_template = f"""Halo {guru.nama},
 
-Anda telah terdaftar sebagai pengajar di Sempoa SIP TC Pariaman.
+Pemberitahuan akses akun Pengajar di Sempoa SIP TC Pariaman:
 
 - Email: {guru_email}
-- Sandi: {new_sandi}
+- Sandi: (Gunakan sandi akun yang telah didaftarkan/diberikan sebelumnya)
 - Portal: https://sempoasippariaman.com/login
+
+Jika lupa kata sandi, silakan hubungi Administrator untuk permintaan reset sandi baru.
 
 ---
 Tim Sempoa SIP TC Pariaman"""

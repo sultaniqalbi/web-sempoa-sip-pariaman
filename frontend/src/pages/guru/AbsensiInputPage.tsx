@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
 import StudentAttendanceTable from './components/StudentAttendanceTable';
+import ManualAttendanceModal from './components/ManualAttendanceModal';
+import IzinGuruModal from './components/IzinGuruModal';
 import useAuth from '../../features/auth/useAuth';
 
 export const AbsensiInputPage: React.FC = () => {
@@ -9,6 +11,10 @@ export const AbsensiInputPage: React.FC = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'input' | 'rekap' | 'log'>('input');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  // Modal states for manual attendance and teacher leave
+  const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+  const [isIzinModalOpen, setIsIzinModalOpen] = useState(false);
 
   // Input date filter state (defaults to today)
   const todayStr = new Date().toISOString().split('T')[0];
@@ -50,7 +56,7 @@ export const AbsensiInputPage: React.FC = () => {
     enabled: activeTab === 'rekap',
   });
 
-  // Fetch Dashboard (to get current mode_kelas)
+  // Fetch Dashboard (to get current mode_kelas & guru profile)
   const { data: dashboardData } = useQuery({
     queryKey: ['guru-dashboard'],
     queryFn: async () => {
@@ -108,6 +114,13 @@ export const AbsensiInputPage: React.FC = () => {
     saveMutation.mutate({ attendance: data, catatan, tanggal: inputDate });
   };
 
+  const handleActionSuccess = (msg: string) => {
+    setToast({ message: msg, type: 'success' });
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  const guruNama = dashboardData?.guru?.nama_guru || user?.nama || 'Pengajar';
+
   return (
     <div className="space-y-4" style={{ fontFamily: "'Inter', sans-serif" }}>
       {/* Toast Notification */}
@@ -150,6 +163,61 @@ export const AbsensiInputPage: React.FC = () => {
           Log Guru
         </button>
       </div>
+
+      {/* Teacher Quick Action Card (Input Kehadiran Manual & Izin Pengajar) */}
+      <div className="bg-gradient-to-r from-orange-50 via-amber-50 to-white rounded-2xl border border-orange-200/80 p-3.5 sm:p-4 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center text-lg shadow-sm shrink-0">
+            ✍️
+          </div>
+          <div>
+            <h3 className="text-xs sm:text-sm font-black text-[#1E293B] flex items-center gap-2">
+              <span>Presensi Mandiri Pengajar</span>
+              <span className="text-[9px] font-bold text-orange-700 bg-orange-100 px-2 py-0.5 rounded-full border border-orange-200 uppercase">
+                {guruNama}
+              </span>
+            </h3>
+            <p className="text-[11px] text-[#64748B] mt-0.5">
+              Presensi dapat dilakukan via <b>Tap Kartu RFID</b> di kelas atau <b>Formulir Web</b> di bawah:
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <button
+            type="button"
+            onClick={() => setIsManualModalOpen(true)}
+            className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-black shadow-sm transition-all flex items-center justify-center gap-1.5 active:scale-98"
+          >
+            <span>📝</span>
+            <span>Input Kehadiran</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsIzinModalOpen(true)}
+            className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-black shadow-sm transition-all flex items-center justify-center gap-1.5 active:scale-98"
+          >
+            <span>📋</span>
+            <span>Izin</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Manual Attendance Modal */}
+      <ManualAttendanceModal
+        isOpen={isManualModalOpen}
+        onClose={() => setIsManualModalOpen(false)}
+        guruNama={guruNama}
+        onSuccess={handleActionSuccess}
+      />
+
+      {/* Izin Guru Modal */}
+      <IzinGuruModal
+        isOpen={isIzinModalOpen}
+        onClose={() => setIsIzinModalOpen(false)}
+        guruNama={guruNama}
+        onSuccess={handleActionSuccess}
+      />
 
       {/* TAB 1: Input Absensi */}
       {activeTab === 'input' && (
@@ -326,11 +394,16 @@ export const AbsensiInputPage: React.FC = () => {
       {/* TAB 3: Log Absensi Saya */}
       {activeTab === 'log' && (
         <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-[#E0E0E0] p-5 space-y-4">
-          <div>
-            <h2 className="text-sm sm:text-base font-black text-[#1E293B]">Riwayat Tap RFID Saya</h2>
-            <p className="text-[11px] text-[#64748B] mt-0.5">
-              Riwayat tap kartu pengajar di perangkat RFID TC Pariaman
-            </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#F5F5F5] pb-3">
+            <div>
+              <h2 className="text-sm sm:text-base font-black text-[#1E293B]">Riwayat Presensi Pengajar</h2>
+              <p className="text-[11px] text-[#64748B] mt-0.5">
+                Riwayat kehadiran via Tap Kartu RFID TC Pariaman, Formulir Manual Web, maupun Izin
+              </p>
+            </div>
+            <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg w-fit">
+              15 Presensi Terakhir
+            </span>
           </div>
 
           {isLoadingLog ? (
@@ -344,29 +417,65 @@ export const AbsensiInputPage: React.FC = () => {
                 <thead>
                   <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
                     <th className="p-3 font-bold text-[#64748B]">UID Kartu</th>
-                    <th className="p-3 font-bold text-[#64748B]">Waktu Tap</th>
-                    <th className="p-3 font-bold text-[#64748B]">Status</th>
+                    <th className="p-3 font-bold text-[#64748B]">Waktu Presensi</th>
+                    <th className="p-3 font-bold text-[#64748B] text-center">Metode / Sumber</th>
+                    <th className="p-3 font-bold text-[#64748B] text-center">Status</th>
+                    <th className="p-3 font-bold text-[#64748B]">Keterangan</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#F1F5F9]">
                   {!logData?.logs || logData.logs.length === 0 ? (
                     <tr>
-                      <td colSpan={3} className="p-8 text-center text-[#94A3B8]">
-                        Belum ada riwayat tap absensi pengajar.
+                      <td colSpan={5} className="p-8 text-center text-[#94A3B8]">
+                        Belum ada riwayat presensi pengajar.
                       </td>
                     </tr>
                   ) : (
-                    logData.logs.map((log: any, idx: number) => (
-                      <tr key={idx} className="hover:bg-[#F8FAFC]">
-                        <td className="p-3 font-mono text-[#64748B] font-bold">{log.uid_rfid}</td>
-                        <td className="p-3 font-bold text-[#1E293B]">{log.waktu_tap}</td>
-                        <td className="p-3">
-                          <span className="inline-block px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-[#E8F5E9] text-[#2E7D32] border border-[#A5D6A7]">
-                            {log.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))
+                    logData.logs.map((log: any, idx: number) => {
+                      const sumber = (log.sumber || 'RFID').toUpperCase();
+                      let sumberBadge = 'bg-blue-50 text-blue-700 border-blue-200';
+                      let sumberIcon = '💳';
+                      let sumberText = 'RFID Tap';
+
+                      if (sumber.includes('MANUAL')) {
+                        sumberBadge = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                        sumberIcon = '📝';
+                        sumberText = 'Manual Web';
+                      } else if (sumber.includes('IZIN')) {
+                        sumberBadge = 'bg-amber-50 text-amber-700 border-amber-200';
+                        sumberIcon = '📋';
+                        sumberText = sumber.includes('JADWAL') ? 'Izin (Jadwal)' : 'Izin (Harian)';
+                      }
+
+                      const isIzin = (log.status || '').toLowerCase().includes('izin');
+
+                      return (
+                        <tr key={idx} className="hover:bg-[#F8FAFC]">
+                          <td className="p-3 font-mono text-[#64748B] font-bold">{log.uid_rfid}</td>
+                          <td className="p-3 font-bold text-[#1E293B]">{log.waktu_tap}</td>
+                          <td className="p-3 text-center">
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border ${sumberBadge}`}>
+                              <span>{sumberIcon}</span>
+                              <span>{sumberText}</span>
+                            </span>
+                          </td>
+                          <td className="p-3 text-center">
+                            <span
+                              className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-black uppercase border ${
+                                isIzin
+                                  ? 'bg-[#FFF3E0] text-[#E65100] border-[#FFE082]'
+                                  : 'bg-[#E8F5E9] text-[#2E7D32] border-[#A5D6A7]'
+                              }`}
+                            >
+                              {log.status}
+                            </span>
+                          </td>
+                          <td className="p-3 text-[#64748B] max-w-[250px] truncate">
+                            {log.catatan || '-'}
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>

@@ -233,7 +233,9 @@ async def get_absensi_list(
         result.append({
             "uid_rfid": log.uid,
             "waktu_tap": f"{waktu_str} WIB ({tanggal_str})",
-            "status": "Hadir" if "hadir" in status_name.lower() else status_name
+            "status": "Izin" if "izin" in status_name.lower() else ("Hadir" if "hadir" in status_name.lower() else status_name),
+            "sumber": getattr(log, 'sumber', 'RFID') or 'RFID',
+            "catatan": getattr(log, 'catatan', None)
         })
         
     return {"logs": result}
@@ -597,3 +599,220 @@ async def get_rekap_absensi(
         "catatan_pembelajaran": note_row.catatan if note_row else None,
         "rekap": rekap_list
     }
+
+class KehadiranManualGuruRequest(BaseModel):
+    tanggal: str  # Format: YYYY-MM-DD
+    waktu: str    # Format: HH:MM
+
+@router.post("/kehadiran-manual")
+async def input_kehadiran_manual_guru(
+    payload: KehadiranManualGuruRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(teacher_only)
+):
+    """
+    Input kehadiran guru secara manual dari Portal Guru Web.
+    Nama guru otomatis diambil dari sesi user yang login (tidak bisa diubah manual).
+    """
+    guru = _get_current_guru(db, current_user)
+
+    try:
+        tgl_obj = datetime.strptime(payload.tanggal, "%Y-%m-%d").date()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Format tanggal tidak valid. Gunakan YYYY-MM-DD")
+
+    try:
+        wkt_parts = [int(p) for p in payload.waktu.split(":")]
+        hour, minute = wkt_parts[0], wkt_parts[1]
+    except Exception:
+        hour, minute = datetime.now().hour, datetime.now().minute
+
+    target_datetime = datetime(tgl_obj.year, tgl_obj.month, tgl_obj.day, hour, minute)
+
+    guru_mode = (guru.mode_kelas or "OFFLINE").upper()
+    try:
+        mode_enum = ModeAbsensi(guru_mode)
+    except ValueError:
+        mode_enum = ModeAbsensi.OFFLINE
+
+    # Cek apakah sudah ada log kehadiran guru pada tanggal tersebut
+    existing_log = db.query(AbsensiLog).filter(
+        AbsensiLog.uid == guru.uid,
+        func.date(AbsensiLog.waktu) == tgl_obj
+    ).first()
+
+    if existing_log:
+        existing_log.waktu = target_datetime
+        existing_log.mode = mode_enum
+        existing_log.status = StatusAbsensi.HADIR
+        existing_log.sumber = "MANUAL"
+        existing_log.catatan = f"Kehadiran manual web oleh {guru.nama}"
+    else:
+        new_log = AbsensiLog(
+            uid=guru.uid,
+            waktu=target_datetime,
+            mode=mode_enum,
+            status=StatusAbsensi.HADIR,
+            sumber="MANUAL",
+            catatan=f"Kehadiran manual web oleh {guru.nama}"
+        )
+        db.add(new_log)
+
+    db.commit()
+
+    manager.broadcast_sync("ABSENSI_GURU_UPDATE", {
+        "guru_id": guru.id,
+        "guru_nama": guru.nama,
+        "uid": guru.uid,
+        "status": "HADIR",
+        "sumber": "MANUAL",
+        "waktu": target_datetime.strftime("%H:%M WIB"),
+        "tanggal": target_datetime.strftime("%d %B %Y")
+    })
+
+    return {
+        "status": "success",
+        "message": f"Kehadiran guru {guru.nama} berhasil dicatat pada {target_datetime.strftime('%d %B %Y %H:%M WIB')} (Manual Web)",
+        "waktu_tercatat": target_datetime.isoformat()
+    }
+
+class IzinGuruRequest(BaseModel):
+    alasan: str
+    tipe_izin: str  # "HARIAN" atau "JADWAL"
+    tanggal_mulai: str  # Format: YYYY-MM-DD
+    tanggal_selesai: Optional[str] = None  # Format: YYYY-MM-DD (untuk tipe HARIAN)
+    jam_mulai: Optional[str] = None  # Format: HH:MM (untuk tipe JADWAL)
+    jam_selesai: Optional[str] = None  # Format: HH:MM (untuk tipe JADWAL)
+
+@router.post("/izin-guru")
+async def input_izin_guru(
+    payload: IzinGuruRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(teacher_only)
+):
+    """
+    Input permohonan / pencatatan izin guru secara mandiri dari Web.
+    Mendukung opsi Harian (24 jam) atau Jadwal (rentang jam tertentu).
+    """
+    guru = _get_current_guru(db, current_user)
+
+    if not payload.alasan or not payload.alasan.strip():
+        raise HTTPException(status_code=400, detail="Alasan izin wajib diisi.")
+
+    tipe = payload.tipe_izin.upper()
+    if tipe not in ["HARIAN", "JADWAL"]:
+        tipe = "HARIAN"
+
+    guru_mode = (guru.mode_kelas or "OFFLINE").upper()
+    try:
+        mode_enum = ModeAbsensi(guru_mode)
+    except ValueError:
+        mode_enum = ModeAbsensi.OFFLINE
+
+    if tipe == "HARIAN":
+        try:
+            start_date = datetime.strptime(payload.tanggal_mulai, "%Y-%m-%d").date()
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Format tanggal mulai tidak valid.")
+
+        if payload.tanggal_selesai:
+            try:
+                end_date = datetime.strptime(payload.tanggal_selesai, "%Y-%m-%d").date()
+            except ValueError:
+                end_date = start_date
+        else:
+            end_date = start_date
+
+        if end_date < start_date:
+            raise HTTPException(status_code=400, detail="Tanggal selesai tidak boleh sebelum tanggal mulai.")
+
+        # Maksimal 30 hari dalam satu kali input
+        delta_days = (end_date - start_date).days
+        if delta_days > 30:
+            raise HTTPException(status_code=400, detail="Rentang izin maksimal 30 hari.")
+
+        for i in range(delta_days + 1):
+            curr_date = start_date + timedelta(days=i)
+            target_datetime = datetime(curr_date.year, curr_date.month, curr_date.day, 8, 0)
+            
+            existing_log = db.query(AbsensiLog).filter(
+                AbsensiLog.uid == guru.uid,
+                func.date(AbsensiLog.waktu) == curr_date
+            ).first()
+
+            note_text = f"[Izin Harian] {payload.alasan.strip()}"
+            if existing_log:
+                existing_log.status = StatusAbsensi.IZIN
+                existing_log.sumber = "IZIN_HARIAN"
+                existing_log.catatan = note_text
+            else:
+                new_log = AbsensiLog(
+                    uid=guru.uid,
+                    waktu=target_datetime,
+                    mode=mode_enum,
+                    status=StatusAbsensi.IZIN,
+                    sumber="IZIN_HARIAN",
+                    catatan=note_text
+                )
+                db.add(new_log)
+
+        date_msg = f"dari {start_date.strftime('%d %b %Y')} s.d. {end_date.strftime('%d %b %Y')}" if delta_days > 0 else start_date.strftime('%d %b %Y')
+
+    else:
+        # Tipe JADWAL (rentang jam tertentu pada hari tertentu)
+        try:
+            target_date = datetime.strptime(payload.tanggal_mulai, "%Y-%m-%d").date()
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Format tanggal tidak valid.")
+
+        jam_mulai_str = payload.jam_mulai or "08:00"
+        jam_selesai_str = payload.jam_selesai or "10:00"
+
+        try:
+            h, m = [int(x) for x in jam_mulai_str.split(":")]
+        except Exception:
+            h, m = 8, 0
+
+        target_datetime = datetime(target_date.year, target_date.month, target_date.day, h, m)
+        note_text = f"[Izin Jadwal {jam_mulai_str}-{jam_selesai_str} WIB] {payload.alasan.strip()}"
+
+        existing_log = db.query(AbsensiLog).filter(
+            AbsensiLog.uid == guru.uid,
+            func.date(AbsensiLog.waktu) == target_date
+        ).first()
+
+        if existing_log:
+            existing_log.status = StatusAbsensi.IZIN
+            existing_log.sumber = "IZIN_JADWAL"
+            existing_log.catatan = note_text
+        else:
+            new_log = AbsensiLog(
+                uid=guru.uid,
+                waktu=target_datetime,
+                mode=mode_enum,
+                status=StatusAbsensi.IZIN,
+                sumber="IZIN_JADWAL",
+                catatan=note_text
+            )
+            db.add(new_log)
+
+        date_msg = f"tanggal {target_date.strftime('%d %b %Y')} jam {jam_mulai_str} - {jam_selesai_str} WIB"
+
+    db.commit()
+
+    manager.broadcast_sync("ABSENSI_GURU_UPDATE", {
+        "guru_id": guru.id,
+        "guru_nama": guru.nama,
+        "uid": guru.uid,
+        "status": "IZIN",
+        "sumber": f"IZIN_{tipe}",
+        "alasan": payload.alasan,
+        "keterangan": date_msg
+    })
+
+    return {
+        "status": "success",
+        "message": f"Izin guru {guru.nama} ({date_msg}) berhasil dicatat!",
+        "tipe": tipe
+    }
+

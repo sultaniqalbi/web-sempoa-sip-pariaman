@@ -362,19 +362,16 @@ async def push_whatsapp_siswa(
     user_ortu = db.query(User).filter(User.role == UserRole.ortu, User.uid_terhubung == str(id)).first()
     ortu_email = user_ortu.email if user_ortu else f"ortu_{siswa.id}@sempoasippariaman.com"
 
-    # Auto generate fresh password for credential push
-    new_sandi = generate_random_password(10)
-    if user_ortu:
-        user_ortu.password = get_password_hash(new_sandi)
-        db.commit()
-
+    # Keep user's active password intact (do not overwrite/rotate on every push)
     message_template = f"""Halo {siswa.nama_orang_tua or 'Orang Tua'},
 
-Putra/putri Anda, {siswa.nama}, telah terdaftar di Sempoa SIP TC Pariaman.
+Pemberitahuan akses Portal Orang Tua untuk ananda {siswa.nama} di Sempoa SIP TC Pariaman:
 
 - Email: {ortu_email}
-- Sandi: {new_sandi}
+- Sandi: (Gunakan sandi akun yang telah didaftarkan/diberikan sebelumnya)
 - Portal: https://sempoasippariaman.com/login
+
+Jika lupa kata sandi, silakan hubungi Administrator untuk permintaan reset sandi baru.
 
 ---
 Tim Sempoa SIP TC Pariaman"""
