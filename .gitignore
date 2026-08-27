@@ -45,3 +45,15 @@ composer.lock
 *.zip
 scratch/
 test_extract/
+
+# Uploaded User Media & Persistent Assets
+backend/app/uploads/*
+!backend/app/uploads/.gitkeep
+!backend/app/uploads/galeri/.gitkeep
+!backend/app/uploads/profil/.gitkeep
+!backend/app/uploads/bukti_transfer/.gitkeep
+
+# Database Backups
+backend/backups/*
+!backend/backups/.gitkeep
+

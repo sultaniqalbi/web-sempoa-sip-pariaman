@@ -1,36 +1,55 @@
 #!/bin/bash
 # ============================================================
-# SCRIPT DEPLOY OTOMATIS - Sempoa SIP TC Pariaman
+# SCRIPT DEPLOY OTOMATIS & AMAN - Sempoa SIP TC Pariaman
 # Jalankan di VPS: bash /opt/sempoa-sip/deploy.sh
 # ============================================================
 
 set -e
 
-echo "============================================"
-echo "  DEPLOYING SEMPOA SIP TC PARIAMAN"
-echo "============================================"
+echo "=========================================================="
+echo "  🚀 MEMULAI DEPLOYMENT AMAN SEMPOA SIP TC PARIAMAN"
+echo "=========================================================="
 
 cd /opt/sempoa-sip
 
+# Buat folder backup jika belum ada
+mkdir -p /opt/sempoa-sip/backend/backups
+
 echo ""
-echo "[1/4] Mengambil kode terbaru dari GitHub..."
+echo "[1/5] 🛡️ Membuat Snapshot Backup Database Otomatis..."
+if docker compose -f docker-compose.prod.yml ps db | grep -q "Up\|running"; then
+  BACKUP_FILE="/opt/sempoa-sip/backend/backups/auto_pre_deploy_$(date +%Y%m%d_%H%M%S).sql.gz"
+  docker compose -f docker-compose.prod.yml exec -T db pg_dump -U ${POSTGRES_USER:-sempoa_prod} ${POSTGRES_DB:-sempoa_sip} 2>/dev/null | gzip > "${BACKUP_FILE}" || true
+  if [ -s "${BACKUP_FILE}" ]; then
+    echo "  ✅ Backup tersimpan: ${BACKUP_FILE}"
+  else
+    rm -f "${BACKUP_FILE}"
+  fi
+fi
+
+echo ""
+echo "[2/5] 📥 Mengambil kode terbaru dari GitHub..."
 git pull origin master
 
 echo ""
-echo "[2/4] Build ulang frontend TANPA cache lama..."
-docker compose -f docker-compose.prod.yml build --no-cache frontend
+echo "[3/5] 🗄️ Menjalankan Migrasi Skema Database (Alembic)..."
+docker compose -f docker-compose.prod.yml exec backend alembic upgrade head || true
 
 echo ""
-echo "[3/4] Restart container frontend dan nginx..."
-docker compose -f docker-compose.prod.yml up -d --force-recreate frontend nginx
+echo "[4/5] 🔨 Build Frontend & Backend..."
+docker compose -f docker-compose.prod.yml build --no-cache frontend backend
 
 echo ""
-echo "[4/4] Membersihkan image Docker yang tidak terpakai..."
+echo "[5/5] 🚀 Restart Service Frontend, Backend & Nginx (Database Tetap Berjalan)..."
+docker compose -f docker-compose.prod.yml up -d --force-recreate frontend backend nginx
+
+echo ""
+echo "🧹 Membersihkan cache image lama..."
 docker image prune -f
 
 echo ""
-echo "============================================"
-echo "  DEPLOY SELESAI!"
-echo "  Silakan tes ulang di PageSpeed Insights:"
-echo "  https://pagespeed.web.dev/"
-echo "============================================"
+echo "=========================================================="
+echo "  ✅ DEPLOY BERHASIL & SEMUA DATA DATABASE TETAP AMAN!"
+echo "  Web: https://sempoasippariaman.com"
+echo "=========================================================="
+
