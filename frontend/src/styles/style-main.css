@@ -2918,21 +2918,19 @@ html, body { overflow-x: hidden; max-width: 100vw; }
         display: flex !important;
         align-items: center;
         justify-content: center;
-        background: #F97316 !important;
-        color: #000000 !important; /* Black icon */
+        background: transparent !important;
+        color: var(--color-text-dark) !important;
         width: 44px !important;
         height: 44px !important;
         border-radius: 8px !important;
         font-size: 1.5rem !important;
         border: none !important;
         cursor: pointer;
-        
-        /* Floating positioning on the left below navbar */
-        position: fixed !important;
-        left: 20px !important;
-        top: 100px !important;
+        position: relative !important;
+        left: auto !important;
+        top: auto !important;
         z-index: 1001 !important;
-        box-shadow: 0 4px 10px rgba(249, 115, 22, 0.3) !important;
+        box-shadow: none !important;
     }
     
     .nav-links {
@@ -2945,7 +2943,7 @@ html, body { overflow-x: hidden; max-width: 100vw; }
         flex-direction: column !important;
         justify-content: flex-start !important;
         align-items: flex-start !important;
-        padding: 160px 2rem 2rem !important; /* Extra padding so the menu items start below the floating button */
+        padding: 90px 2rem 2rem !important;
         gap: 1.5rem !important;
         box-shadow: 5px 0 25px rgba(0,0,0,0.1) !important;
         transition: left 0.3s ease !important;

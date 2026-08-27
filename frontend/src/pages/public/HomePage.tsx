@@ -431,9 +431,27 @@ export const HomePage: React.FC = () => {
                   {/* Content Container */}
                   <div className="mobile-program-content">
                     {/* Badge Pill */}
-                    <div className="mobile-program-badge-wrap">
-                      <span className="mobile-prog-badge badge-orange" style={{ color: '#9a3412', backgroundColor: '#fff7ed', borderColor: '#ea580c' }}>{activeProg.badgeText}</span>
-                      <span className="mobile-prog-badge badge-grey" style={{ color: '#9a3412', backgroundColor: '#fff8e1' }}>{activeProg.usia}</span>
+                    <div className="mobile-program-badges">
+                      <span
+                        className="mobile-prog-badge-primary"
+                        style={{
+                          color: '#c2410c',
+                          backgroundColor: '#fff7ed',
+                          borderColor: '#fed7aa',
+                        }}
+                      >
+                        {activeProg.badgeText}
+                      </span>
+                      <span
+                        className="mobile-prog-badge-age"
+                        style={{
+                          color: '#475569',
+                          backgroundColor: '#f1f5f9',
+                          border: '1px solid #e2e8f0',
+                        }}
+                      >
+                        {activeProg.usia}
+                      </span>
                     </div>
 
                     {/* Title */}

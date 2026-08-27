@@ -357,36 +357,37 @@ export const ProgramDetailPage: React.FC = () => {
                 className="program-usp-card"
                 style={{
                   background: '#fff',
-                  borderRadius: '18px',
-                  padding: '1.5rem 1.1rem',
+                  borderRadius: '16px',
+                  padding: '1.25rem 1rem',
                   border: '1px solid #e2e8f0',
-                  boxShadow: '0 6px 18px rgba(0,0,0,0.04)',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
                   display: 'flex',
                   flexDirection: 'column',
-                  alignItems: 'center',
-                  textAlign: 'center',
+                  alignItems: 'flex-start',
+                  textAlign: 'left',
                   justifyContent: 'flex-start',
+                  height: '100%',
                 }}
               >
                 <div
                   style={{
                     background: data.color,
                     color: '#fff',
-                    width: '38px',
-                    height: '38px',
+                    width: '34px',
+                    height: '34px',
                     borderRadius: '50%',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontWeight: 800,
-                    fontSize: '1rem',
-                    marginBottom: '1rem',
-                    boxShadow: `0 4px 12px ${data.color}40`,
+                    fontSize: '0.95rem',
+                    marginBottom: '0.85rem',
+                    boxShadow: `0 4px 10px ${data.color}35`,
                   }}
                 >
                   {idx + 1}
                 </div>
-                <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: '#1e293b', lineHeight: 1.5 }}>{item}</p>
+                <p style={{ margin: 0, fontSize: '0.88rem', fontWeight: 600, color: '#1e293b', lineHeight: 1.55 }}>{item}</p>
               </div>
             ))}
           </div>
@@ -557,10 +558,12 @@ export const ProgramDetailPage: React.FC = () => {
           .program-usp-grid {
             grid-template-columns: repeat(2, 1fr) !important;
             gap: 0.85rem !important;
+            align-items: stretch !important;
           }
           .program-usp-card {
-            padding: 1.1rem 0.75rem !important;
-            min-height: 150px;
+            padding: 1.15rem 0.85rem !important;
+            height: 100% !important;
+            min-height: auto !important;
           }
           .program-bottom-nav {
             margin-top: 2.5rem !important;
