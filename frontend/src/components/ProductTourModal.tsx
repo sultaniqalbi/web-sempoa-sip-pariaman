@@ -288,7 +288,10 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
                 className="w-7 h-7 rounded-full bg-white/20 hover:bg-white/35 flex items-center justify-center transition-colors text-white text-xs font-bold cursor-pointer"
                 title="Tutup Panduan"
               >
-                ✕
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
               </button>
             </div>
           </div>
@@ -349,7 +352,22 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
                   onClick={handleNext}
                   className="px-5 py-2 bg-gradient-to-r from-[#FF7043] to-[#F4511E] hover:from-[#F4511E] hover:to-[#E64A19] text-white font-black text-xs rounded-xl shadow-md shadow-orange-500/25 transition-all cursor-pointer active:scale-95 flex items-center gap-1.5"
                 >
-                  <span>{currentStepIndex === steps.length - 1 ? 'Selesai ✓' : 'Lanjut →'}</span>
+                  {currentStepIndex === steps.length - 1 ? (
+                    <>
+                      <span>Selesai</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    </>
+                  ) : (
+                    <>
+                      <span>Lanjut</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                        <polyline points="12 5 19 12 12 19" />
+                      </svg>
+                    </>
+                  )}
                 </button>
               </div>
             </div>

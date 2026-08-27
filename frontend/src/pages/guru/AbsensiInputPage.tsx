@@ -167,8 +167,11 @@ export const AbsensiInputPage: React.FC = () => {
       {/* Teacher Quick Action Card (Input Kehadiran Manual & Izin Pengajar) */}
       <div className="bg-gradient-to-r from-orange-50 via-amber-50 to-white rounded-2xl border border-orange-200/80 p-3.5 sm:p-4 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center text-lg shadow-sm shrink-0">
-            ✍️
+          <div className="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center shadow-sm shrink-0">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 20h9" />
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+            </svg>
           </div>
           <div>
             <h3 className="text-xs sm:text-sm font-black text-[#1E293B] flex items-center gap-2">
@@ -189,7 +192,10 @@ export const AbsensiInputPage: React.FC = () => {
             onClick={() => setIsManualModalOpen(true)}
             className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-black shadow-sm transition-all flex items-center justify-center gap-1.5 active:scale-98"
           >
-            <span>📝</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
             <span>Input Kehadiran</span>
           </button>
           <button
@@ -197,7 +203,12 @@ export const AbsensiInputPage: React.FC = () => {
             onClick={() => setIsIzinModalOpen(true)}
             className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-black shadow-sm transition-all flex items-center justify-center gap-1.5 active:scale-98"
           >
-            <span>📋</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+            </svg>
             <span>Izin</span>
           </button>
         </div>
@@ -434,17 +445,32 @@ export const AbsensiInputPage: React.FC = () => {
                     logData.logs.map((log: any, idx: number) => {
                       const sumber = (log.sumber || 'RFID').toUpperCase();
                       let sumberBadge = 'bg-blue-50 text-blue-700 border-blue-200';
-                      let sumberIcon = '💳';
                       let sumberText = 'RFID Tap';
+                      let renderIcon = (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="2" y="5" width="20" height="14" rx="2" />
+                          <line x1="2" y1="10" x2="22" y2="10" />
+                        </svg>
+                      );
 
                       if (sumber.includes('MANUAL')) {
                         sumberBadge = 'bg-emerald-50 text-emerald-700 border-emerald-200';
-                        sumberIcon = '📝';
                         sumberText = 'Manual Web';
+                        renderIcon = (
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                          </svg>
+                        );
                       } else if (sumber.includes('IZIN')) {
                         sumberBadge = 'bg-amber-50 text-amber-700 border-amber-200';
-                        sumberIcon = '📋';
                         sumberText = sumber.includes('JADWAL') ? 'Izin (Jadwal)' : 'Izin (Harian)';
+                        renderIcon = (
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                          </svg>
+                        );
                       }
 
                       const isIzin = (log.status || '').toLowerCase().includes('izin');
@@ -454,8 +480,8 @@ export const AbsensiInputPage: React.FC = () => {
                           <td className="p-3 font-mono text-[#64748B] font-bold">{log.uid_rfid}</td>
                           <td className="p-3 font-bold text-[#1E293B]">{log.waktu_tap}</td>
                           <td className="p-3 text-center">
-                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border ${sumberBadge}`}>
-                              <span>{sumberIcon}</span>
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${sumberBadge}`}>
+                              {renderIcon}
                               <span>{sumberText}</span>
                             </span>
                           </td>

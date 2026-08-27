@@ -69,8 +69,11 @@ export const ManualAttendanceModal: React.FC<ManualAttendanceModalProps> = ({
         {/* Modal Header */}
         <div className="bg-gradient-to-r from-[#FF7043] to-[#F97316] p-4 sm:p-5 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl shadow-inner">
-              📝
+            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shadow-inner">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
             </div>
             <div>
               <h3 className="font-black text-base sm:text-lg leading-tight">Input Kehadiran Manual</h3>
@@ -80,9 +83,12 @@ export const ManualAttendanceModal: React.FC<ManualAttendanceModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-lg transition-colors"
+            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
           >
-            ✕
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
           </button>
         </div>
 
@@ -90,7 +96,11 @@ export const ManualAttendanceModal: React.FC<ManualAttendanceModalProps> = ({
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           {errorMsg && (
             <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs font-bold flex items-center gap-2">
-              <span>⚠️</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
               <span>{errorMsg}</span>
             </div>
           )}
@@ -99,8 +109,12 @@ export const ManualAttendanceModal: React.FC<ManualAttendanceModalProps> = ({
           <div>
             <label className="block text-xs font-bold text-[#475569] mb-1.5 flex items-center justify-between">
               <span>Nama Pengajar</span>
-              <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                🔒 Otomatis Sistem
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                Otomatis Sistem
               </span>
             </label>
             <input
@@ -143,7 +157,12 @@ export const ManualAttendanceModal: React.FC<ManualAttendanceModalProps> = ({
 
           <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-800 space-y-1">
             <p className="font-bold flex items-center gap-1.5">
-              <span>💡</span> Catatan Penting:
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-amber-600">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="16" x2="12" y2="12" />
+                <line x1="12" y1="8" x2="12.01" y2="8" />
+              </svg>
+              Catatan Penting:
             </p>
             <p className="text-[10px] leading-relaxed text-amber-700">
               Absensi manual ini akan tercatat di riwayat kehadiran dengan label <b>[MANUAL Web]</b> dan langsung tersinkronisasi ke laporan kehadiran.
@@ -171,7 +190,9 @@ export const ManualAttendanceModal: React.FC<ManualAttendanceModalProps> = ({
                 </>
               ) : (
                 <>
-                  <span>✓</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
                   <span>Simpan Kehadiran</span>
                 </>
               )}

@@ -357,8 +357,11 @@ Admin: 082385813163 | Direktur: 08126784986`;
             className="w-full bg-transparent text-xs text-[#1E293B] placeholder-[#94A3B8] outline-none font-medium"
           />
           {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="text-[#94A3B8] hover:text-[#1E293B] text-xs font-bold">
-              ✕
+            <button onClick={() => setSearchQuery('')} className="text-[#94A3B8] hover:text-[#1E293B] p-1 transition-colors" title="Bersihkan pencarian">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
             </button>
           )}
         </div>

@@ -403,9 +403,13 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
               <h3 className="text-sm font-black text-[#1E293B]">Edit Pertemuan: {editingSiswa.nama_lengkap}</h3>
               <button
                 onClick={() => setEditingSiswa(null)}
-                className="w-7 h-7 rounded-full bg-[#F1F5F9] text-[#475569] flex items-center justify-center font-bold cursor-pointer"
+                className="w-7 h-7 rounded-full bg-[#F1F5F9] text-[#475569] hover:bg-[#E2E8F0] flex items-center justify-center cursor-pointer transition-colors"
+                title="Tutup"
               >
-                ✕
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
               </button>
             </div>
 

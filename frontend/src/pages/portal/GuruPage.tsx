@@ -585,16 +585,17 @@ export const GuruPage: React.FC = () => {
                 }`}
                 placeholder="Tempelkan kartu RFID pada alat atau ketik manual..."
               />
-              {formData.uid && (
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, uid: '' })}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-[#757575] hover:text-[#D32F2F] px-1.5 py-0.5 rounded cursor-pointer"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#757575] hover:text-[#D32F2F] p-1 rounded cursor-pointer transition-colors"
                   title="Hapus / Ganti UID"
                 >
-                  ✕
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
                 </button>
-              )}
             </div>
             <p className="text-[10px] text-[#64748B] mt-1">
               {formData.uid

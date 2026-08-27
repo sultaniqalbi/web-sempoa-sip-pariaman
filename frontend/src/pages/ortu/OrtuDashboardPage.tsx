@@ -622,9 +622,18 @@ export const OrtuDashboardPage: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => copyToClipboard(b.rawRekening, b.id)}
-                          className="px-3 py-1.5 bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#E65100] border border-[#FFCC80] rounded-lg text-[10px] font-extrabold transition-all active:scale-95 cursor-pointer shadow-2xs"
+                          className="px-3 py-1.5 bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#E65100] border border-[#FFCC80] rounded-lg text-[10px] font-extrabold transition-all active:scale-95 cursor-pointer shadow-2xs inline-flex items-center gap-1"
                         >
-                          {copiedBank === b.id ? '✓ Tersalin' : 'Salin Rek'}
+                          {copiedBank === b.id ? (
+                            <>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                              <span>Tersalin</span>
+                            </>
+                          ) : (
+                            <span>Salin Rek</span>
+                          )}
                         </button>
                       </div>
                     ))}

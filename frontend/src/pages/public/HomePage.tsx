@@ -10,7 +10,7 @@ import { ApaItuSempoa } from '../../components/ApaItuSempoa';
 import { LevelPembelajaran } from '../../components/LevelPembelajaran';
 import { MengapaBelajarSempoa } from '../../components/MengapaBelajarSempoa';
 import { DiakuiInternasional } from '../../components/DiakuiInternasional';
-import { MenuIcon, CloseIcon, MapPinIcon, CheckIcon, CubesIcon, ShieldCheckIcon, ArrowRightIcon, ClockIcon, GraduationCapIcon, QuoteRightIcon, ImagesIcon, WhatsAppIcon, EmailIcon, ProgramIcon } from '../../components/SvgIcons';
+import { MenuIcon, CloseIcon, MapPinIcon, CheckIcon, CubesIcon, ShieldCheckIcon, ArrowRightIcon, ClockIcon, GraduationCapIcon, QuoteRightIcon, ImagesIcon, WhatsAppIcon, EmailIcon, ProgramIcon, StarIcon } from '../../components/SvgIcons';
 
 const programsData = [
   {
@@ -772,9 +772,9 @@ export const HomePage: React.FC = () => {
           {isMobile ? (() => {
             const testiData = [
               { id: 1, tabName: 'Ortu Hafla', initials: 'OH', color: '#c2410c', bgColor: '#fff8e1', borderColor: '#ffecb3', name: 'Orang Tua Hafla', role: 'Wali Murid Sempoa SIP', text: '"Sebelum belajar sempoa, Hafla memang anak yang cenderung pemalu dan kurang percaya diri jika harus tampil di depan banyak orang. Kami sebagai orang tua sering khawatir karena dia lebih suka menghindari situasi yang mengharuskannya berbicara di depan umum. Alhamdulillah, sejak mengikuti kelas sempoa, kami melihat perubahan yang sangat positif. Hafla menjadi lebih berani dan percaya diri. Bahkan saat ustazah di sekolah memintanya tampil di depan kelas, ataupun depan umum dia mau melakukannya tanpa menolak seperti sebelumnya. Bagi kami, manfaat sempoa bukan hanya melatih kemampuan berhitung, tetapi juga membantu membangun keberanian, kepercayaan diri, serta kesiapan anak untuk tampil di depan orang lain. Semoga Hafla terus berkembang menjadi anak yang percaya diri dan berprestasi."' },
-              { id: 2, tabName: 'Ortu Queenza', initials: 'OQ', color: '#00838f', bgColor: '#e0f7fa', borderColor: '#b2ebf2', name: 'Orang Tua Queenza', role: 'Wali Murid Sempoa SIP', text: '"Testimoni queenza selama belajar sempoa sangat lah bagus buk .. Alhamdulillah queenza sangat menyukai pelajaran matematika .. Sangat aktif dalam semua perlombaan baik itu matematika atau pun akademik lainnya .. Selain itu alhamdulillah nya, dari kelas 1 sampai sekarang kelas 6 queenza selalu juara 1 di sekolah .. Dan selain itu queenza dapat menghitung cepat, dan bayangan saja .. Sempoa sangat sangat bagus 👍 Terimakasih buat guru2 yang sudah mengajarkan dan mendidikan queenza,sehingga alhamdulillah queenza menjadi anak yg berprestasi dari dl sampai sekarang, mudah2an kedepannya akan lebih sukses lagi aamiin 🙏"' },
+              { id: 2, tabName: 'Ortu Queenza', initials: 'OQ', color: '#00838f', bgColor: '#e0f7fa', borderColor: '#b2ebf2', name: 'Orang Tua Queenza', role: 'Wali Murid Sempoa SIP', text: '"Testimoni queenza selama belajar sempoa sangat lah bagus buk .. Alhamdulillah queenza sangat menyukai pelajaran matematika .. Sangat aktif dalam semua perlombaan baik itu matematika atau pun akademik lainnya .. Selain itu alhamdulillah nya, dari kelas 1 sampai sekarang kelas 6 queenza selalu juara 1 di sekolah .. Dan selain itu queenza dapat menghitung cepat, dan bayangan saja .. Sempoa sangat sangat bagus. Terimakasih buat guru2 yang sudah mengajarkan dan mendidikan queenza,sehingga alhamdulillah queenza menjadi anak yg berprestasi dari dl sampai sekarang, mudah2an kedepannya akan lebih sukses lagi aamiin."' },
               { id: 3, tabName: 'Ortu Fatihah', initials: 'OF', color: '#2E7D32', bgColor: '#e8f5e9', borderColor: '#c8e6c9', name: 'Orang Tua Fatihah', role: 'Wali Murid Sempoa SIP', text: '"sejak pertama masuk sempoa fatihah sangat bersemangat b emi, sampai masuk foundation A, difoundation B sampai sekarang semangatnya agak kurang b emi, dirumah mami tanya apakah fatihah capek belajar? Fatihah bilang capek dikit mi, mungkin karna kegiatan sekolahnya fullday jd kurang fokus, mudah2an kedepannya fatihah lebih semangat lagi b emi."' },
-              { id: 4, tabName: 'Ortu Agis', initials: 'OA', color: '#c62828', bgColor: '#ffebee', borderColor: '#ffcdd2', name: 'Orang Tua Agis', role: 'Wali Murid Sempoa SIP', text: '"Allahamdulillah sejak agis mengenal sempoa dari sejak TK B, jauh sangat manfaat yang di rasakan sejak belajar, mulai dari anak yang biasa tidak fokus, atau kurang fokus, allhamdulillah sekarng dalam belajar suah terlihat fokus, dan uang paling syanag rasakan kali dampaknya, dari segi Daya Ingat Kuat terkihat sepintas dalam proses belajar apapun mendengar sekilas kata2, tidak disadari dia ingat sekali, dan sangat menyukai hitungan math, dan juga sangat Percaya Diri. Terima kasih untuk sempoa 🤝👍👍"' },
+              { id: 4, tabName: 'Ortu Agis', initials: 'OA', color: '#c62828', bgColor: '#ffebee', borderColor: '#ffcdd2', name: 'Orang Tua Agis', role: 'Wali Murid Sempoa SIP', text: '"Allahamdulillah sejak agis mengenal sempoa dari sejak TK B, jauh sangat manfaat yang di rasakan sejak belajar, mulai dari anak yang biasa tidak fokus, atau kurang fokus, allhamdulillah sekarng dalam belajar suah terlihat fokus, dan uang paling syanag rasakan kali dampaknya, dari segi Daya Ingat Kuat terkihat sepintas dalam proses belajar apapun mendengar sekilas kata2, tidak disadari dia ingat sekali, dan sangat menyukai hitungan math, dan juga sangat Percaya Diri. Terima kasih untuk sempoa."' },
             ];
             const activeTesti = testiData.find(t => t.id === mobileTestiId) || testiData[0];
             return (
@@ -796,9 +796,9 @@ export const HomePage: React.FC = () => {
                 {/* Card */}
                 <div className="mobile-testi-card" style={{ borderColor: activeTesti.color, background: activeTesti.bgColor }}>
                   {/* Stars */}
-                  <div className="mobile-testi-stars">
-                    {'★★★★★'.split('').map((s, i) => (
-                      <span key={i} style={{ color: '#f59e0b', fontSize: '1.3rem' }}>{s}</span>
+                  <div className="mobile-testi-stars flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <StarIcon key={i} size={18} className="text-amber-500" />
                     ))}
                   </div>
 
@@ -869,7 +869,7 @@ export const HomePage: React.FC = () => {
                   <QuoteRightIcon size={18} color="white" />
                 </div>
                 <p className="testi-text" style={{ fontSize: '0.84rem', lineHeight: 1.6, color: '#424242', marginBottom: '1rem', position: 'relative', zIndex: 1 }}>
-                  "Testimoni queenza selama belajar sempoa sangat lah bagus buk .. Alhamdulillah queenza sangat menyukai pelajaran matematika .. Sangat aktif dalam semua perlombaan baik itu matematika atau pun akademik lainnya .. Selain itu alhamdulillah nya, dari kelas 1 sampai sekarang kelas 6 queenza selalu juara 1 di sekolah .. Dan selain itu queenza dapat menghitung cepat, dan bayangan saja .. Sempoa sangat sangat bagus 👍 Terimakasih buat guru2 yang sudah mengajarkan dan mendidikan queenza,sehingga alhamdulillah queenza menjadi anak yg berprestasi dari dl sampai sekarang, mudah2an kedepannya akan lebih sukses lagi aamiin 🙏"
+                  "Testimoni queenza selama belajar sempoa sangat lah bagus buk .. Alhamdulillah queenza sangat menyukai pelajaran matematika .. Sangat aktif dalam semua perlombaan baik itu matematika atau pun akademik lainnya .. Selain itu alhamdulillah nya, dari kelas 1 sampai sekarang kelas 6 queenza selalu juara 1 di sekolah .. Dan selain itu queenza dapat menghitung cepat, dan bayangan saja .. Sempoa sangat sangat bagus. Terimakasih buat guru2 yang sudah mengajarkan dan mendidikan queenza,sehingga alhamdulillah queenza menjadi anak yg berprestasi dari dl sampai sekarang, mudah2an kedepannya akan lebih sukses lagi aamiin."
                 </p>
               </div>
               <div className="testi-author" style={{ borderTop: '1px solid #80deea', paddingTop: '0.75rem', marginTop: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -911,7 +911,7 @@ export const HomePage: React.FC = () => {
                   <QuoteRightIcon size={18} color="white" />
                 </div>
                 <p className="testi-text" style={{ fontSize: '0.84rem', lineHeight: 1.6, color: '#424242', marginBottom: '1rem', position: 'relative', zIndex: 1 }}>
-                  "Allahamdulillah sejak agis mengenal sempoa dari sejak TK B, jauh sangat manfaat yang di rasakan sejak belajar, mulai dari anak yang biasa tidak fokus, atau kurang fokus, allhamdulillah sekarng dalam belajar suah terlihat fokus, dan uang paling syanag rasakan kali dampaknya, dari segi Daya Ingat Kuat terkihat sepintas dalam proses belajar apapun mendengar sekilas kata2, tidak disadari dia ingat sekali, dan sangat menyukai hitungan math, dan juga sangat Percaya Diri: Menyelesaikan soal matematika menumbuhkan keberanian menghadapi tantangan. Disekolah sekarng guru2 sekolah pun menyampai kalo agis ini sangat aktif dan percaya diri tampil jika dia mengetahui suatu hal, Terima kasih untuk sempoa 🤝👍👍"
+                  "Allahamdulillah sejak agis mengenal sempoa dari sejak TK B, jauh sangat manfaat yang di rasakan sejak belajar, mulai dari anak yang biasa tidak fokus, atau kurang fokus, allhamdulillah sekarng dalam belajar suah terlihat fokus, dan uang paling syanag rasakan kali dampaknya, dari segi Daya Ingat Kuat terkihat sepintas dalam proses belajar apapun mendengar sekilas kata2, tidak disadari dia ingat sekali, dan sangat menyukai hitungan math, dan juga sangat Percaya Diri: Menyelesaikan soal matematika menumbuhkan keberanian menghadapi tantangan. Disekolah sekarng guru2 sekolah pun menyampai kalo agis ini sangat aktif dan percaya diri tampil jika dia mengetahui suatu hal, Terima kasih untuk sempoa."
                 </p>
               </div>
               <div className="testi-author" style={{ borderTop: '1px solid #ef9a9a', paddingTop: '0.75rem', marginTop: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>

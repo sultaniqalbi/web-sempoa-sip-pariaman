@@ -91,9 +91,11 @@ export const ApaItuSempoa: React.FC = () => {
                       backgroundColor: '#4CAF50', 
                       borderRadius: '50%', 
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      color: '#fff', fontSize: '12px', fontWeight: 'bold'
+                      color: '#fff', flexShrink: 0
                     }}>
-                      ✓
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
                     </div>
                     <span style={{ color: '#1e293b', fontSize: '14px', fontWeight: 600 }}>{benefit}</span>
                   </div>
