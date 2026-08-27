@@ -214,6 +214,7 @@ async def create_new_siswa(
         user_ortu = User(
             email=email_candidate,
             password=hashed_password,
+            plain_password=plain_password,
             role=UserRole.ortu,
             nama=siswa_in.nama_orang_tua or f"Ortu {siswa_in.nama}",
             uid_terhubung=str(new_siswa.id)
@@ -226,7 +227,7 @@ async def create_new_siswa(
         return SiswaCreateResponse(
             siswa=SiswaResponse.model_validate(new_siswa),
             ortu_email=email_candidate,
-            ortu_password_plaintext=None,
+            ortu_password_plaintext=plain_password,
             whatsapp_number=normalized_wa
         )
     except Exception as e:
@@ -321,6 +322,7 @@ async def reset_siswa_password(
 
     new_pwd = generate_random_password(10)
     user_ortu.password = get_password_hash(new_pwd)
+    user_ortu.plain_password = new_pwd
 
     try:
         audit = AuditLog(
@@ -339,7 +341,7 @@ async def reset_siswa_password(
     return ResetPasswordResponse(
         status="success",
         email=user_ortu.email,
-        new_password_plaintext=None
+        new_password_plaintext=new_pwd
     )
 
 @router.post("/{id}/push-whatsapp")
@@ -362,16 +364,24 @@ async def push_whatsapp_siswa(
     user_ortu = db.query(User).filter(User.role == UserRole.ortu, User.uid_terhubung == str(id)).first()
     ortu_email = user_ortu.email if user_ortu else f"ortu_{siswa.id}@sempoasippariaman.com"
 
-    # Keep user's active password intact (do not overwrite/rotate on every push)
+    # Always remember and reuse the exact password. If legacy account doesn't have plain_password, initialize once and persist it.
+    if user_ortu:
+        if not user_ortu.plain_password:
+            initial_pwd = generate_random_password(10)
+            user_ortu.password = get_password_hash(initial_pwd)
+            user_ortu.plain_password = initial_pwd
+            db.commit()
+        ortu_sandi = user_ortu.plain_password
+    else:
+        ortu_sandi = "sempoa123"
+
     message_template = f"""Halo {siswa.nama_orang_tua or 'Orang Tua'},
 
 Pemberitahuan akses Portal Orang Tua untuk ananda {siswa.nama} di Sempoa SIP TC Pariaman:
 
 - Email: {ortu_email}
-- Sandi: (Gunakan sandi akun yang telah didaftarkan/diberikan sebelumnya)
+- Sandi: {ortu_sandi}
 - Portal: https://sempoasippariaman.com/login
-
-Jika lupa kata sandi, silakan hubungi Administrator untuk permintaan reset sandi baru.
 
 ---
 Tim Sempoa SIP TC Pariaman"""

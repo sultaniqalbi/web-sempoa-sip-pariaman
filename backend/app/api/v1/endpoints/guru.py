@@ -108,6 +108,7 @@ async def create_new_guru(
         user_guru = User(
             email=email_candidate,
             password=hashed_password,
+            plain_password=plain_password,
             role=UserRole.guru,
             nama=guru_in.nama,
             uid_terhubung=str(new_guru.id)
@@ -120,7 +121,7 @@ async def create_new_guru(
         return GuruCreateResponse(
             guru=GuruResponse.model_validate(new_guru),
             guru_email=email_candidate,
-            guru_password_plaintext=None,
+            guru_password_plaintext=plain_password,
             whatsapp_number=normalized_wa
         )
     except Exception as e:
@@ -260,6 +261,7 @@ async def reset_guru_password(
 
     new_pwd = generate_random_password(10)
     user_guru.password = get_password_hash(new_pwd)
+    user_guru.plain_password = new_pwd
 
     try:
         audit = AuditLog(
@@ -278,7 +280,7 @@ async def reset_guru_password(
     return GuruResetPasswordResponse(
         status="success",
         email=user_guru.email,
-        new_password_plaintext=None
+        new_password_plaintext=new_pwd
     )
 
 @router.post("/{id}/push-whatsapp")
@@ -298,16 +300,24 @@ async def push_whatsapp_guru(
     user_guru = db.query(User).filter(User.role == UserRole.guru, User.uid_terhubung == str(id)).first()
     guru_email = user_guru.email if user_guru else f"guru_{guru.id}@sempoasippariaman.com"
 
-    # Keep user's active password intact (do not overwrite/rotate on every push)
+    # Always remember and reuse the exact password. If legacy account doesn't have plain_password, initialize once and persist it.
+    if user_guru:
+        if not user_guru.plain_password:
+            initial_pwd = generate_random_password(10)
+            user_guru.password = get_password_hash(initial_pwd)
+            user_guru.plain_password = initial_pwd
+            db.commit()
+        guru_sandi = user_guru.plain_password
+    else:
+        guru_sandi = "sempoa123"
+
     message_template = f"""Halo {guru.nama},
 
 Pemberitahuan akses akun Pengajar di Sempoa SIP TC Pariaman:
 
 - Email: {guru_email}
-- Sandi: (Gunakan sandi akun yang telah didaftarkan/diberikan sebelumnya)
+- Sandi: {guru_sandi}
 - Portal: https://sempoasippariaman.com/login
-
-Jika lupa kata sandi, silakan hubungi Administrator untuk permintaan reset sandi baru.
 
 ---
 Tim Sempoa SIP TC Pariaman"""

@@ -164,56 +164,6 @@ export const AbsensiInputPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Teacher Quick Action Card (Input Kehadiran Manual & Izin Pengajar) */}
-      <div className="bg-gradient-to-r from-orange-50 via-amber-50 to-white rounded-2xl border border-orange-200/80 p-3.5 sm:p-4 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center shadow-sm shrink-0">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 20h9" />
-              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-            </svg>
-          </div>
-          <div>
-            <h3 className="text-xs sm:text-sm font-black text-[#1E293B] flex items-center gap-2">
-              <span>Presensi Mandiri Pengajar</span>
-              <span className="text-[9px] font-bold text-orange-700 bg-orange-100 px-2 py-0.5 rounded-full border border-orange-200 uppercase">
-                {guruNama}
-              </span>
-            </h3>
-            <p className="text-[11px] text-[#64748B] mt-0.5">
-              Presensi dapat dilakukan via <b>Tap Kartu RFID</b> di kelas atau <b>Formulir Web</b> di bawah:
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <button
-            type="button"
-            onClick={() => setIsManualModalOpen(true)}
-            className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-black shadow-sm transition-all flex items-center justify-center gap-1.5 active:scale-98"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-            </svg>
-            <span>Input Kehadiran</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsIzinModalOpen(true)}
-            className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-black shadow-sm transition-all flex items-center justify-center gap-1.5 active:scale-98"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-            </svg>
-            <span>Izin</span>
-          </button>
-        </div>
-      </div>
-
       {/* Manual Attendance Modal */}
       <ManualAttendanceModal
         isOpen={isManualModalOpen}
@@ -404,10 +354,61 @@ export const AbsensiInputPage: React.FC = () => {
 
       {/* TAB 3: Log Absensi Saya */}
       {activeTab === 'log' && (
-        <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-[#E0E0E0] p-5 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#F5F5F5] pb-3">
-            <div>
-              <h2 className="text-sm sm:text-base font-black text-[#1E293B]">Riwayat Presensi Pengajar</h2>
+        <div className="space-y-4">
+          {/* Teacher Quick Action Card (Input Kehadiran Manual & Izin Pengajar) */}
+          <div className="bg-gradient-to-r from-orange-50 via-amber-50 to-white rounded-2xl border border-orange-200/80 p-3.5 sm:p-4 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center shadow-sm shrink-0">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 20h9" />
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xs sm:text-sm font-black text-[#1E293B] flex items-center gap-2">
+                  <span>Presensi Mandiri Pengajar</span>
+                  <span className="text-[9px] font-bold text-orange-700 bg-orange-100 px-2 py-0.5 rounded-full border border-orange-200 uppercase">
+                    {guruNama}
+                  </span>
+                </h3>
+                <p className="text-[11px] text-[#64748B] mt-0.5">
+                  Presensi dapat dilakukan via <b>Tap Kartu RFID</b> di kelas atau <b>Formulir Web</b> di bawah:
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={() => setIsManualModalOpen(true)}
+                className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-black shadow-sm transition-all flex items-center justify-center gap-1.5 active:scale-98"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+                <span>Input Kehadiran</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsIzinModalOpen(true)}
+                className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-black shadow-sm transition-all flex items-center justify-center gap-1.5 active:scale-98"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                </svg>
+                <span>Izin</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-[#E0E0E0] p-5 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#F5F5F5] pb-3">
+              <div>
+                <h2 className="text-sm sm:text-base font-black text-[#1E293B]">Riwayat Presensi Pengajar</h2>
               <p className="text-[11px] text-[#64748B] mt-0.5">
                 Riwayat kehadiran via Tap Kartu RFID TC Pariaman, Formulir Manual Web, maupun Izin
               </p>
@@ -507,6 +508,7 @@ export const AbsensiInputPage: React.FC = () => {
               </table>
             </div>
           )}
+          </div>
         </div>
       )}
     </div>
@@ -514,3 +516,4 @@ export const AbsensiInputPage: React.FC = () => {
 };
 
 export default AbsensiInputPage;
+
