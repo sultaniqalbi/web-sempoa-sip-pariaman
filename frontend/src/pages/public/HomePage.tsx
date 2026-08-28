@@ -428,8 +428,13 @@ export const HomePage: React.FC = () => {
                     ))}
                   </div>
 
-                  {/* Content Container */}
-                  <div className="mobile-program-content">
+                  {/* Content Container (Card Box with Border) */}
+                  <div
+                    className="mobile-program-card mobile-program-content"
+                    style={{
+                      borderColor: activeProg.borderColor || '#f97316',
+                    }}
+                  >
                     {/* Badge Pill */}
                     <div className="mobile-program-badges">
                       <span
