@@ -79,26 +79,14 @@ export const GaleriPage: React.FC = () => {
             <img src="/assets/logo/logo-sempoa-sip.webp" alt="Logo Sempoa SIP TC Pariaman" />
           </Link>
 
-          <div className="mobile-nav-toggle-wrap">
-            {/* Mobile-only Daftar Sekarang button */}
-            <a
-              href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak."
-              target="_blank"
-              rel="noreferrer"
-              className="btn btn-yellow mobile-only-daftar"
-            >
-              Daftar Sekarang
-            </a>
-            
-            <button
-              className="mobile-menu-btn"
-              id="mobileMenuBtn"
-              aria-label="Buka Menu Navigasi"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              {isMobileMenuOpen ? <CloseIcon size={24} /> : <MenuIcon size={24} />}
-            </button>
-          </div>
+          <button
+            className="mobile-menu-btn"
+            id="mobileMenuBtn"
+            aria-label="Buka Menu Navigasi"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? <CloseIcon size={24} /> : <MenuIcon size={24} />}
+          </button>
 
           <ul className={`nav-links ${isMobileMenuOpen ? 'active' : ''}`} id="navLinks">
             <li><Link to="/" style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>Beranda</Link></li>
@@ -107,6 +95,20 @@ export const GaleriPage: React.FC = () => {
             <li><a href="/#achievements" style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>Prestasi</a></li>
             <li><Link to="/galeri" style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>Galeri</Link></li>
             <li><a href="/#lokasi-peta" style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>Lokasi</a></li>
+
+            {/* Mobile-only Action Buttons */}
+            <li className="mobile-only-masuk" style={{ marginTop: 'auto', width: '100%', paddingTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', borderBottom: 'none' }}>
+              <a
+                href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak."
+                target="_blank"
+                rel="noreferrer"
+                className="btn btn-yellow"
+                style={{ width: '100%', justifyContent: 'center' }}
+                aria-label="Daftar Sekarang via WhatsApp"
+              >
+                Daftar Sekarang
+              </a>
+            </li>
           </ul>
 
           <div className="nav-buttons">
