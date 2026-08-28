@@ -10,7 +10,7 @@ import EmptyState from '../../components/EmptyState';
 import DayPicker from '../../components/DayPicker';
 import { JadwalIcon, TrashIcon, PresensiIcon, PengajarIcon } from '../../components/SvgIcons';
 
-const AVAILABLE_PROGRAMS = ['Sempoa SIP', 'Fonem', 'Tahfidz', 'Bahasa Inggris'];
+const AVAILABLE_PROGRAMS = ['Sempoa SIP', 'Fonem', 'Tahfidz', 'Bahasa Inggris', 'TK'];
 
 const SCHEDULE_CONFIG: Record<string, { hari_biasa: { jam_mulai: string; jam_selesai: string }; hari_libur: { jam_mulai: string; jam_selesai: string }; defaultRoom: string }> = {
   'Sempoa SIP': {
@@ -33,6 +33,11 @@ const SCHEDULE_CONFIG: Record<string, { hari_biasa: { jam_mulai: string; jam_sel
     hari_libur: { jam_mulai: '12:00', jam_selesai: '15:30' },
     defaultRoom: 'TC Pariaman - Ruang English',
   },
+  'TK': {
+    hari_biasa: { jam_mulai: '08:00', jam_selesai: '11:00' },
+    hari_libur: { jam_mulai: '08:00', jam_selesai: '10:30' },
+    defaultRoom: 'TC Pariaman - Ruang TK',
+  },
 };
 
 const getProgramBadgeStyle = (program: string) => {
@@ -45,6 +50,8 @@ const getProgramBadgeStyle = (program: string) => {
     return 'bg-[#ECFDF5] text-[#047857] border-[#A7F3D0]';
   } else if (p.includes('inggris') || p.includes('english')) {
     return 'bg-[#E0F2FE] text-[#0369A1] border-[#BAE6FD]';
+  } else if (p.includes('tk')) {
+    return 'bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]';
   }
   return 'bg-[#F1F5F9] text-[#475569] border-[#CBD5E1]';
 };

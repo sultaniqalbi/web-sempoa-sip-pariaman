@@ -59,7 +59,29 @@ export const PROGRAM_CONFIG = {
     packages: [
       { label: 'Paket Reguler: 12 Pertemuan, 60 Menit', target: 12, duration: '60 Menit', count: '12x' },
     ]
+  },
+  'TK': {
+    spp: 0,
+    packages: [
+      { label: 'Program TK', target: 0, duration: 'Fleksibel', count: 'Reguler' },
+    ]
   }
+};
+
+const getProgramBadgeStyle = (program: string) => {
+  const p = (program || '').trim().toLowerCase();
+  if (p.includes('sempoa')) {
+    return 'bg-[#FFF3E0] text-[#E65100] border-[#FFCC80]';
+  } else if (p.includes('fonem')) {
+    return 'bg-[#F3E8FF] text-[#7E22CE] border-[#D8B4FE]';
+  } else if (p.includes('tahfidz')) {
+    return 'bg-[#ECFDF5] text-[#047857] border-[#A7F3D0]';
+  } else if (p.includes('inggris') || p.includes('english')) {
+    return 'bg-[#E0F2FE] text-[#0369A1] border-[#BAE6FD]';
+  } else if (p.includes('tk')) {
+    return 'bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]';
+  }
+  return 'bg-[#F1F5F9] text-[#475569] border-[#CBD5E1]';
 };
 
 export const SiswaPage: React.FC = () => {
@@ -138,6 +160,8 @@ export const SiswaPage: React.FC = () => {
       prefix = 'td';
     } else if (progLower.includes('inggris') || progLower.includes('english')) {
       prefix = 'bi';
+    } else if (progLower.includes('tk')) {
+      prefix = 'tk';
     } else {
       prefix = 'sp';
     }
@@ -178,14 +202,18 @@ export const SiswaPage: React.FC = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['siswa'] });
       setIsAddModalOpen(false);
-      setCreatedCredential({
-        name: data.siswa.nama,
-        email: data.ortu_email,
-        pwd: data.ortu_password_plaintext,
-        wa: data.whatsapp_number
-      });
-      setIsCredentialModalOpen(true);
-      showToast('Siswa baru dan akun ortu berhasil ditambahkan');
+      if (formData.kategori_program !== 'TK' && data.ortu_email && data.ortu_password_plaintext) {
+        setCreatedCredential({
+          name: data.siswa.nama,
+          email: data.ortu_email,
+          pwd: data.ortu_password_plaintext,
+          wa: data.whatsapp_number
+        });
+        setIsCredentialModalOpen(true);
+        showToast('Siswa baru dan akun ortu berhasil ditambahkan');
+      } else {
+        showToast('Siswa baru program TK berhasil ditambahkan');
+      }
     },
     onError: (err: any) => {
       showToast(`Gagal menambah siswa: ${err.response?.data?.detail || err.message}`, 'error');
@@ -431,7 +459,7 @@ export const SiswaPage: React.FC = () => {
       header: 'Program & Hari',
       accessor: (row: Siswa) => (
         <div>
-          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FFF3E0] text-[#FF7043] border border-[#FFCC80]">
+          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border shadow-2xs ${getProgramBadgeStyle(row.kategori_program)}`}>
             {row.kategori_program}
           </span>
           {row.paket_jadwal && (
@@ -710,6 +738,7 @@ export const SiswaPage: React.FC = () => {
               <option value="Fonem">Fonem (12x 60m • Rp 200.000/bln)</option>
               <option value="Tahfidz">Tahfidz (12x 60m • Rp 200.000/bln)</option>
               <option value="Bahasa Inggris">Bahasa Inggris (2x 90m • Rp 200.000/bln)</option>
+              <option value="TK">TK (Program TK - Fleksibel)</option>
             </select>
           </div>
 
@@ -918,9 +947,15 @@ export const SiswaPage: React.FC = () => {
           </div>
 
           {!editingSiswa && (
-            <div className="p-3 bg-[#FFF3E0] border border-[#FFCC80] rounded-xl text-[11px] text-[#E65100]">
-              Sistem akan <strong>otomatis membuat akun login Ortu</strong> dengan email <code className="font-mono">{formData.nama_panggilan.toLowerCase().replace(/\s+/g, '') || 'nama'}@sempoasippariaman.com</code> dan password acak 10 karakter.
-            </div>
+            formData.kategori_program === 'TK' ? (
+              <div className="p-3 bg-[#FEF3C7] border border-[#FDE68A] rounded-xl text-[11px] text-[#B45309]">
+                ℹ️ Siswa program <strong>TK</strong> didaftarkan untuk data internal/portal guru (akun portal ortu tidak dibuat).
+              </div>
+            ) : (
+              <div className="p-3 bg-[#FFF3E0] border border-[#FFCC80] rounded-xl text-[11px] text-[#E65100]">
+                Sistem akan <strong>otomatis membuat akun login Ortu</strong> dengan email <code className="font-mono">{formData.nama_panggilan.toLowerCase().replace(/\s+/g, '') || 'nama'}@sempoasippariaman.com</code> dan password acak 10 karakter.
+              </div>
+            )
           )}
 
           <div className="flex justify-end gap-2.5 pt-4 pb-2 border-t border-[#E2E8F0] mt-2">

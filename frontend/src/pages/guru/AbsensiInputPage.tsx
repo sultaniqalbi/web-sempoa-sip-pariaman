@@ -19,16 +19,17 @@ export const AbsensiInputPage: React.FC = () => {
   // Input date filter state (defaults to today)
   const todayStr = new Date().toISOString().split('T')[0];
   const [inputDate, setInputDate] = useState<string>(todayStr);
+  const [selectedProgram, setSelectedProgram] = useState<string>('all');
 
   // Rekap date filter state (defaults to today)
   const [rekapDate, setRekapDate] = useState<string>(todayStr);
 
   // Fetch Students for Attendance
   const { data: siswaData, isLoading: isLoadingSiswa } = useQuery({
-    queryKey: ['guru-siswa-absensi', inputDate],
+    queryKey: ['guru-siswa-absensi', inputDate, selectedProgram],
     queryFn: async () => {
       const res = await apiClient.get('/portal-guru/siswa-absensi', {
-        params: { tanggal: inputDate },
+        params: { tanggal: inputDate, program: selectedProgram },
       });
       return res.data;
     },
@@ -216,6 +217,46 @@ export const AbsensiInputPage: React.FC = () => {
                   </button>
                 </div>
               </div>
+
+              {/* Multi-Program Switcher for Teachers who teach >1 program */}
+              {siswaData?.available_programs && siswaData.available_programs.length > 1 && (
+                <div className="bg-white p-3 rounded-2xl border border-[#E0E0E0] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                  <div>
+                    <p className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Pilih Program Absensi Siswa</p>
+                    <p className="text-xs font-black text-[#1E293B] mt-0.5">
+                      Anda mengajar {siswaData.available_programs.length} program (pilih untuk memfilter siswa)
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 bg-[#F8FAFC] p-1 rounded-xl border border-[#E2E8F0]">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedProgram('all')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        selectedProgram === 'all'
+                          ? 'bg-[#FF7043] text-white shadow-xs'
+                          : 'text-[#64748B] hover:bg-[#F1F5F9]'
+                      }`}
+                    >
+                      Semua Program
+                    </button>
+                    {siswaData.available_programs.map((prog: string) => (
+                      <button
+                        key={prog}
+                        type="button"
+                        onClick={() => setSelectedProgram(prog)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          selectedProgram === prog
+                            ? 'bg-[#FF7043] text-white shadow-xs'
+                            : 'text-[#64748B] hover:bg-[#F1F5F9]'
+                        }`}
+                      >
+                        {prog}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <StudentAttendanceTable
                 students={siswaData?.siswa || []}
                 tanggalTerpilih={inputDate}

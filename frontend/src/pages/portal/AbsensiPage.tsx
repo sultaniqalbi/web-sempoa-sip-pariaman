@@ -309,6 +309,7 @@ export const SharedAbsensiPage: React.FC = () => {
               <option value="fonem">Fonem</option>
               <option value="tahfidz">Tahfidz</option>
               <option value="inggris">Bahasa Inggris</option>
+              <option value="tk">TK</option>
             </select>
           </div>
         )}

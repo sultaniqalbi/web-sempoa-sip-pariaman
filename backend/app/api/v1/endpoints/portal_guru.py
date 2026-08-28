@@ -251,17 +251,31 @@ async def get_absensi_list(
 @router.get("/siswa-absensi")
 async def get_siswa_absensi(
     tanggal: Optional[str] = Query(None, description="Format YYYY-MM-DD"),
+    program: Optional[str] = Query(None, description="Filter program spesifik (Sempoa SIP, Fonem, dll)"),
     db: Session = Depends(get_db),
     current_user: User = Depends(teacher_only)
 ):
     guru = _get_current_guru(db, current_user)
-    programs = _get_guru_programs(guru)
+    raw_programs = _get_guru_programs(guru)
+    # Filter programs that have attendance (exclude TK)
+    available_programs = [p for p in raw_programs if p.lower() != 'tk']
+    if not available_programs and raw_programs:
+        available_programs = raw_programs
+
+    # Determine filter
+    if program and program.lower() != 'all':
+        filter_programs = [program.lower()]
+    elif available_programs:
+        filter_programs = [p.lower() for p in available_programs]
+    else:
+        filter_programs = [p.lower() for p in raw_programs]
 
     students = db.query(Siswa).filter(
         or_(
             Siswa.id_guru == guru.id,
-            func.lower(Siswa.kategori_program).in_(programs)
+            func.lower(Siswa.kategori_program).in_(filter_programs)
         ),
+        func.lower(Siswa.kategori_program) != 'tk',  # Exclude TK from student attendance per specs
         Siswa.is_deleted == False
     ).order_by(Siswa.nama).all()
 
@@ -350,7 +364,9 @@ async def get_siswa_absensi(
         
     return {
         "tanggal_hari_ini": target_date.strftime("%A, %d %B %Y"),
-        "siswa": result
+        "siswa": result,
+        "available_programs": available_programs,
+        "selected_program": program or (available_programs[0] if len(available_programs) == 1 else "all")
     }
 
 class SiswaAbsensiItem(BaseModel):
