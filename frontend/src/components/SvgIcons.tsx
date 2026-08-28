@@ -22,13 +22,6 @@ export const StarIcon: React.FC<IconProps> = ({ size = 24, className = 'text-cur
   </svg>
 );
 
-export const GraduationCapIcon: React.FC<IconProps> = ({ size = 24, className = 'text-current' }) => (
-  <svg width={size} height={size} className={`shrink-0 ${className}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
-    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
-    <path d="M6 12v5c3 3 9 3 12 0v-5"/>
-  </svg>
-);
-
 export const AwardIcon: React.FC<IconProps> = ({ size = 24, className = 'text-current' }) => (
   <svg width={size} height={size} className={`shrink-0 ${className}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
     <circle cx="12" cy="8" r="7"/>
