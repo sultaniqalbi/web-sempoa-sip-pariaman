@@ -10,7 +10,7 @@ import { ApaItuSempoa } from '../../components/ApaItuSempoa';
 import { LevelPembelajaran } from '../../components/LevelPembelajaran';
 import { MengapaBelajarSempoa } from '../../components/MengapaBelajarSempoa';
 import { DiakuiInternasional } from '../../components/DiakuiInternasional';
-import { MenuIcon, CloseIcon, MapPinIcon, CheckIcon, CubesIcon, ShieldCheckIcon, ArrowRightIcon, ClockIcon, GraduationCapIcon, QuoteRightIcon, ImagesIcon, WhatsAppIcon, EmailIcon, ProgramIcon, StarIcon } from '../../components/SvgIcons';
+import { MenuIcon, CloseIcon, MapPinIcon, CheckIcon, CubesIcon, ShieldCheckIcon, ArrowRightIcon, ClockIcon, GraduationCapIcon, QuoteRightIcon, ImagesIcon, WhatsAppIcon, EmailIcon, ProgramIcon, StarIcon, HomeIcon, AwardIcon, TrophyIcon, GaleriIcon } from '../../components/SvgIcons';
 
 const programsData = [
   {
@@ -209,6 +209,23 @@ export const HomePage: React.FC = () => {
     setActiveAdvCard(activeAdvCard === id ? null : id);
   };
 
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
+    setIsMobileMenuOpen(false);
+    if (targetId.startsWith('#')) {
+      const element = document.querySelector(targetId);
+      if (element) {
+        e.preventDefault();
+        const headerOffset = 70;
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+      }
+    }
+  };
+
   return (
     <div className="homepage-wrapper">
       {/* NAVIGATION BAR */}
@@ -220,21 +237,50 @@ export const HomePage: React.FC = () => {
             </Link>
 
             <ul className={`nav-links ${isMobileMenuOpen ? 'active' : ''}`} id="navLinks">
-              <li><a href="#home" onClick={() => setIsMobileMenuOpen(false)}>Beranda</a></li>
-              <li><a href="#programs" onClick={() => setIsMobileMenuOpen(false)}>Program</a></li>
-              <li><a href="#advantages" onClick={() => setIsMobileMenuOpen(false)}>Keunggulan</a></li>
-              <li><a href="#achievements" onClick={() => setIsMobileMenuOpen(false)}>Prestasi</a></li>
-              <li><Link to="/galeri" onClick={() => setIsMobileMenuOpen(false)}>Galeri</Link></li>
-              <li><a href="#lokasi-peta" onClick={() => setIsMobileMenuOpen(false)}>Lokasi</a></li>
+              <li>
+                <a href="#home" onClick={(e) => handleNavClick(e, '#home')}>
+                  <HomeIcon size={20} className="nav-item-icon" />
+                  <span>Beranda</span>
+                </a>
+              </li>
+              <li>
+                <a href="#programs" onClick={(e) => handleNavClick(e, '#programs')}>
+                  <GraduationCapIcon size={20} className="nav-item-icon" />
+                  <span>Program</span>
+                </a>
+              </li>
+              <li>
+                <a href="#advantages" onClick={(e) => handleNavClick(e, '#advantages')}>
+                  <AwardIcon size={20} className="nav-item-icon" />
+                  <span>Keunggulan</span>
+                </a>
+              </li>
+              <li>
+                <a href="#achievements" onClick={(e) => handleNavClick(e, '#achievements')}>
+                  <TrophyIcon size={20} className="nav-item-icon" />
+                  <span>Prestasi</span>
+                </a>
+              </li>
+              <li>
+                <Link to="/galeri" onClick={() => setIsMobileMenuOpen(false)}>
+                  <GaleriIcon size={20} className="nav-item-icon" />
+                  <span>Galeri</span>
+                </Link>
+              </li>
+              <li>
+                <a href="#lokasi-peta" onClick={(e) => handleNavClick(e, '#lokasi-peta')}>
+                  <MapPinIcon size={20} className="nav-item-icon" />
+                  <span>Lokasi</span>
+                </a>
+              </li>
               
-              {/* Mobile-only Masuk button at the bottom of the drawer */}
-              <li className="mobile-only-masuk" style={{ marginTop: 'auto', width: '100%', paddingTop: '2rem' }}>
+              {/* Mobile-only Masuk button pinned at bottom of drawer */}
+              <li className="mobile-only-masuk">
                 {!user ? (
                   <button
                     onClick={() => { setIsMobileMenuOpen(false); setIsLoginModalOpen(true); }}
                     className="btn btn-primary"
                     aria-label="Masuk ke Akun"
-                    style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '0.8rem' }}
                   >
                     Masuk
                   </button>
@@ -242,7 +288,7 @@ export const HomePage: React.FC = () => {
                   <Link
                     to={user.role === 'admin' || user.role === 'owner' ? '/admin' : user.role === 'guru' ? '/guru' : '/ortu'}
                     className="btn btn-primary"
-                    style={{ width: '100%', display: 'block', textAlign: 'center' }}
+                    onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Dashboard
                   </Link>

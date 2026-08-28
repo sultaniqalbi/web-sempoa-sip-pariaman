@@ -6,7 +6,7 @@ import useAuth from '../../features/auth/useAuth';
 import useMascotCursor from '../../hooks/useMascotCursor';
 import useSeoMeta from '../../hooks/useSeoMeta';
 import useBreadcrumb from '../../hooks/useBreadcrumb';
-import { MenuIcon, CloseIcon } from '../../components/SvgIcons';
+import { MenuIcon, CloseIcon, HomeIcon, GraduationCapIcon, AwardIcon, TrophyIcon, GaleriIcon, MapPinIcon } from '../../components/SvgIcons';
 
 export const GaleriPage: React.FC = () => {
   useMascotCursor();
@@ -80,12 +80,63 @@ export const GaleriPage: React.FC = () => {
           </Link>
 
           <ul className={`nav-links ${isMobileMenuOpen ? 'active' : ''}`} id="navLinks">
-            <li><Link to="/" style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>Beranda</Link></li>
-            <li><a href="/#programs" style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>Program</a></li>
-            <li><a href="/#advantages" style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>Keunggulan</a></li>
-            <li><a href="/#achievements" style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>Prestasi</a></li>
-            <li><Link to="/galeri" style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>Galeri</Link></li>
-            <li><a href="/#lokasi-peta" style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>Lokasi</a></li>
+            <li>
+              <Link to="/" onClick={() => setIsMobileMenuOpen(false)}>
+                <HomeIcon size={20} className="nav-item-icon" />
+                <span>Beranda</span>
+              </Link>
+            </li>
+            <li>
+              <a href="/#programs" onClick={() => setIsMobileMenuOpen(false)}>
+                <GraduationCapIcon size={20} className="nav-item-icon" />
+                <span>Program</span>
+              </a>
+            </li>
+            <li>
+              <a href="/#advantages" onClick={() => setIsMobileMenuOpen(false)}>
+                <AwardIcon size={20} className="nav-item-icon" />
+                <span>Keunggulan</span>
+              </a>
+            </li>
+            <li>
+              <a href="/#achievements" onClick={() => setIsMobileMenuOpen(false)}>
+                <TrophyIcon size={20} className="nav-item-icon" />
+                <span>Prestasi</span>
+              </a>
+            </li>
+            <li>
+              <Link to="/galeri" onClick={() => setIsMobileMenuOpen(false)}>
+                <GaleriIcon size={20} className="nav-item-icon" />
+                <span>Galeri</span>
+              </Link>
+            </li>
+            <li>
+              <a href="/#lokasi-peta" onClick={() => setIsMobileMenuOpen(false)}>
+                <MapPinIcon size={20} className="nav-item-icon" />
+                <span>Lokasi</span>
+              </a>
+            </li>
+
+            {/* Mobile-only Masuk button pinned at bottom of drawer */}
+            <li className="mobile-only-masuk">
+              {!user ? (
+                <Link
+                  to="/"
+                  className="btn btn-primary"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Masuk
+                </Link>
+              ) : (
+                <Link
+                  to={user.role === 'admin' || user.role === 'owner' ? '/admin' : user.role === 'guru' ? '/guru' : '/ortu'}
+                  className="btn btn-primary"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+              )}
+            </li>
           </ul>
 
           <div className="nav-buttons">
