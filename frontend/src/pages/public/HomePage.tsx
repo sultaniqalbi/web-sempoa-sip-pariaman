@@ -219,15 +219,28 @@ export const HomePage: React.FC = () => {
               <img src="/assets/logo/logo-sempoa-sip@2x.webp" alt="Logo Sempoa SIP TC Pariaman" width="100" height="61" fetchPriority="high" decoding="async" />
             </Link>
 
-            <button
-              className="mobile-menu-btn"
-              id="mobileMenuBtn"
-              aria-label={isMobileMenuOpen ? "Tutup menu navigasi" : "Buka menu navigasi"}
-              aria-expanded={isMobileMenuOpen}
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              {isMobileMenuOpen ? <CloseIcon size={24} color="#000000" /> : <MenuIcon size={24} color="#000000" />}
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+              {/* Mobile-only Daftar Sekarang button */}
+              <a
+                href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak."
+                target="_blank"
+                rel="noreferrer"
+                className="btn btn-yellow mobile-only-daftar"
+                aria-label="Daftar Sekarang via WhatsApp"
+              >
+                Daftar Sekarang
+              </a>
+              
+              <button
+                className="mobile-menu-btn"
+                id="mobileMenuBtn"
+                aria-label={isMobileMenuOpen ? "Tutup menu navigasi" : "Buka menu navigasi"}
+                aria-expanded={isMobileMenuOpen}
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
+                {isMobileMenuOpen ? <CloseIcon size={24} color="#000000" /> : <MenuIcon size={24} color="#000000" />}
+              </button>
+            </div>
 
             <ul className={`nav-links ${isMobileMenuOpen ? 'active' : ''}`} id="navLinks">
               <li><a href="#home" onClick={() => setIsMobileMenuOpen(false)}>Beranda</a></li>
@@ -237,24 +250,14 @@ export const HomePage: React.FC = () => {
               <li><Link to="/galeri" onClick={() => setIsMobileMenuOpen(false)}>Galeri</Link></li>
               <li><a href="#lokasi-peta" onClick={() => setIsMobileMenuOpen(false)}>Lokasi</a></li>
               
-              {/* Mobile-only Action Buttons at the bottom of the drawer */}
-              <li className="mobile-only-masuk" style={{ marginTop: 'auto', width: '100%', paddingTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', borderBottom: 'none' }}>
-                <a
-                  href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak."
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn btn-yellow"
-                  style={{ width: '100%', justifyContent: 'center' }}
-                  aria-label="Daftar Sekarang via WhatsApp"
-                >
-                  Daftar Sekarang
-                </a>
+              {/* Mobile-only Masuk button at the bottom of the drawer */}
+              <li className="mobile-only-masuk" style={{ marginTop: 'auto', width: '100%', paddingTop: '2rem' }}>
                 {!user ? (
                   <button
                     onClick={() => { setIsMobileMenuOpen(false); setIsLoginModalOpen(true); }}
                     className="btn btn-primary"
                     aria-label="Masuk ke Akun"
-                    style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '0.8rem', justifyContent: 'center' }}
+                    style={{ width: '100%', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '0.8rem' }}
                   >
                     Masuk
                   </button>

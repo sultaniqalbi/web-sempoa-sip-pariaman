@@ -2918,19 +2918,27 @@ html, body { overflow-x: hidden; max-width: 100vw; }
         display: flex !important;
         align-items: center;
         justify-content: center;
-        background: transparent !important;
-        color: var(--color-text-dark) !important;
+        background: linear-gradient(135deg, #f97316, #ea580c) !important;
+        color: #000000 !important;
         width: 44px !important;
         height: 44px !important;
-        border-radius: 8px !important;
-        font-size: 1.5rem !important;
+        border-radius: 12px !important;
         border: none !important;
         cursor: pointer;
-        position: relative !important;
-        left: auto !important;
-        top: auto !important;
+        position: fixed !important;
+        top: 16px !important;
+        left: 16px !important;
         z-index: 1001 !important;
-        box-shadow: none !important;
+        box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35) !important;
+        transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+    }
+
+    .mobile-menu-btn:hover {
+        transform: scale(1.05) !important;
+    }
+
+    .navbar .container {
+        padding-left: 70px !important;
     }
     
     .nav-links {
