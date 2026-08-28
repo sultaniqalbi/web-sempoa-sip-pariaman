@@ -331,7 +331,7 @@ export const ProgramDetailPage: React.FC = () => {
             position: 'fixed',
             inset: 0,
             backgroundColor: 'transparent',
-            zIndex: 1000,
+            zIndex: 1040,
           }}
           aria-hidden="true"
         />

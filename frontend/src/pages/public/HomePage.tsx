@@ -212,17 +212,19 @@ export const HomePage: React.FC = () => {
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
     setIsMobileMenuOpen(false);
     if (targetId.startsWith('#')) {
-      const element = document.querySelector(targetId);
-      if (element) {
-        e.preventDefault();
-        const headerOffset = 70;
-        const elementPosition = element.getBoundingClientRect().top;
-        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-        window.scrollTo({
-          top: offsetPosition,
-          behavior: 'smooth'
-        });
-      }
+      e.preventDefault();
+      setTimeout(() => {
+        const element = document.querySelector(targetId);
+        if (element) {
+          const headerOffset = 70;
+          const elementPosition = element.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.scrollY - headerOffset;
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+          });
+        }
+      }, 50);
     }
   };
 
@@ -360,7 +362,7 @@ export const HomePage: React.FC = () => {
               position: 'fixed',
               inset: 0,
               backgroundColor: 'transparent',
-              zIndex: 1000,
+              zIndex: 1040,
             }}
             aria-hidden="true"
           />
