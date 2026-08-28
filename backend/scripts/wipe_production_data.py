@@ -84,11 +84,15 @@ def wipe_data():
         print(f"  - Data Guru Dihapus         : {deleted_guru}")
         print(f"  - Akun Guru/Ortu Dihapus    : {deleted_users}")
 
-        admin_count = db.query(User).filter(User.role == UserRole.admin).count()
-        owner_count = db.query(User).filter(User.role == UserRole.owner).count()
-        print("\n🔒 STATUS AKUN SISTEM YANG DIPERTAHANKAN:")
-        print(f"  - Akun Admin Aktif          : {admin_count}")
-        print(f"  - Akun Direktur/Owner Aktif : {owner_count}")
+        admin_users = db.query(User).filter(User.role == UserRole.admin).all()
+        owner_users = db.query(User).filter(User.role == UserRole.owner).all()
+        print("\n🔒 STATUS & DAFTAR AKUN YANG DIPERTAHANKAN:")
+        print(f"  - Total Akun Admin          : {len(admin_users)}")
+        for u in admin_users:
+            print(f"    • {u.email} ({u.nama})")
+        print(f"  - Total Akun Direktur/Owner : {len(owner_users)}")
+        for u in owner_users:
+            print(f"    • {u.email} ({u.nama})")
         print("  - File Foto / Uploads       : AMAN & TIDAK DIHAPUS")
         print("==========================================================")
 
