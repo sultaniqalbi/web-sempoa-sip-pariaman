@@ -215,47 +215,9 @@ export const HomePage: React.FC = () => {
       <header>
         <nav className={`navbar ${isNavScrolled ? 'scrolled' : ''}`} id="navbar" aria-label="Navigasi Utama">
           <div className="container">
-            {/* 1. Left: Mobile Hamburger / Close Button */}
-            <button
-              className={`mobile-menu-btn ${isMobileMenuOpen ? 'active' : ''}`}
-              id="mobileMenuBtn"
-              aria-label={isMobileMenuOpen ? "Tutup menu navigasi" : "Buka menu navigasi"}
-              aria-expanded={isMobileMenuOpen}
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              {isMobileMenuOpen ? <CloseIcon size={26} color="#000000" /> : <MenuIcon size={24} color="#000000" />}
-            </button>
-
-            {/* 2. Center: Logo Brand */}
             <Link to="/" className="nav-brand-logo" aria-label="Halaman Utama Sempoa SIP TC Pariaman">
               <img src="/assets/logo/logo-sempoa-sip@2x.webp" alt="Logo Sempoa SIP TC Pariaman" width="100" height="61" fetchPriority="high" decoding="async" />
             </Link>
-
-            {/* 3. Right: Mobile Daftar Sekarang Button */}
-            <a
-              href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak."
-              target="_blank"
-              rel="noreferrer"
-              className="btn btn-yellow mobile-only-daftar"
-              aria-label="Daftar Sekarang via WhatsApp"
-            >
-              Daftar Sekarang
-            </a>
-
-            {/* Mobile Drawer Backdrop Overlay */}
-            {isMobileMenuOpen && (
-              <div
-                onClick={() => setIsMobileMenuOpen(false)}
-                style={{
-                  position: 'fixed',
-                  inset: 0,
-                  backgroundColor: 'rgba(0,0,0,0.45)',
-                  zIndex: 1000,
-                  backdropFilter: 'blur(2px)',
-                }}
-                aria-hidden="true"
-              />
-            )}
 
             <ul className={`nav-links ${isMobileMenuOpen ? 'active' : ''}`} id="navLinks">
               <li><a href="#home" onClick={() => setIsMobileMenuOpen(false)}>Beranda</a></li>
@@ -332,6 +294,31 @@ export const HomePage: React.FC = () => {
             </div>
           </div>
         </nav>
+
+        {/* Hamburger menu button - BELOW navbar, fixed position */}
+        <button
+          className={`mobile-menu-btn ${isMobileMenuOpen ? 'active' : ''}`}
+          id="mobileMenuBtn"
+          aria-label={isMobileMenuOpen ? "Tutup menu navigasi" : "Buka menu navigasi"}
+          aria-expanded={isMobileMenuOpen}
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        >
+          {isMobileMenuOpen ? <CloseIcon size={24} color="#1E293B" /> : <MenuIcon size={24} color="#1E293B" />}
+        </button>
+
+        {/* Mobile Drawer Backdrop Overlay */}
+        {isMobileMenuOpen && (
+          <div
+            onClick={() => setIsMobileMenuOpen(false)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(0,0,0,0.35)',
+              zIndex: 1000,
+            }}
+            aria-hidden="true"
+          />
+        )}
       </header>
 
       {/* MAIN LANDMARK WRAPPER */}
