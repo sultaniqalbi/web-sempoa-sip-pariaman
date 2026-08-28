@@ -200,10 +200,18 @@ export const GuruProfilePage: React.FC = () => {
       <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-[#E0E0E0] p-5">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
           {/* Avatar Upload Area */}
-          <div className="relative group">
-            <div className="w-20 h-20 sm:w-22 sm:h-22 rounded-full overflow-hidden border-4 border-[#FFF3E0] shadow-md bg-[#F1F5F9] flex items-center justify-center">
+          <div className="relative group flex-shrink-0">
+            <div 
+              className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4 border-[#FFF3E0] shadow-md bg-[#F1F5F9] flex items-center justify-center flex-shrink-0"
+              style={{ width: '5rem', height: '5rem', minWidth: '5rem', minHeight: '5rem' }}
+            >
               {photoPreview ? (
-                <img src={photoPreview} alt={formData.nama} className="w-full h-full object-cover" />
+                <img 
+                  src={photoPreview} 
+                  alt={formData.nama} 
+                  className="w-full h-full object-cover" 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
               ) : (
                 <PengajarIcon size={36} className="text-[#94A3B8]" />
               )}

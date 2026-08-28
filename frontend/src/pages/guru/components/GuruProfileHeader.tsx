@@ -49,20 +49,22 @@ const GuruProfileHeader: React.FC<GuruProfileHeaderProps> = ({ teacherName, prog
           {/* Avatar */}
           <div
             onClick={() => navigate('/guru/profil')}
-            className="cursor-pointer group relative flex-shrink-0"
+            className="cursor-pointer group relative flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-[3px] border-white/50 shadow-lg bg-white/20 backdrop-blur-sm"
+            style={{ width: '3.5rem', height: '3.5rem', minWidth: '3.5rem', minHeight: '3.5rem' }}
             title="Buka Profil Saya"
           >
             {avatarSrc ? (
               <img
                 src={avatarSrc}
                 alt={teacherName}
-                className="w-13 h-13 sm:w-14 sm:h-14 rounded-full border-[3px] border-white/50 shadow-lg object-cover bg-white group-hover:scale-105 transition-transform"
+                className="w-full h-full object-cover bg-white group-hover:scale-105 transition-transform"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 onError={(e) => {
                   (e.target as HTMLElement).style.display = 'none';
                 }}
               />
             ) : (
-              <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-full border-[3px] border-white/50 shadow-lg bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:scale-105 transition-transform">
+              <div className="w-full h-full flex items-center justify-center group-hover:scale-105 transition-transform">
                 <span className="text-white font-bold text-lg tracking-tight">{initials || 'G'}</span>
               </div>
             )}
