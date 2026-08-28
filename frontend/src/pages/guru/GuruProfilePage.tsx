@@ -58,7 +58,6 @@ export const GuruProfilePage: React.FC = () => {
     whatsapp_guru: '',
     alamat: '',
     bio: '',
-    mode_kelas: 'OFFLINE',
   });
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
@@ -86,7 +85,6 @@ export const GuruProfilePage: React.FC = () => {
         whatsapp_guru: profile.whatsapp_guru || '',
         alamat: profile.alamat || '',
         bio: profile.bio || '',
-        mode_kelas: profile.mode_kelas || 'OFFLINE',
       });
       if (profile.foto_profil) {
         const fullUrl = profile.foto_profil.startsWith('http')
@@ -352,32 +350,35 @@ export const GuruProfilePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Mode Kelas Mengajar */}
+        {/* Mode Kelas Mengajar (Hanya Ditetapkan oleh Admin) */}
         <div>
-          <label className="block text-[#1E293B] font-bold mb-1.5">Mode Kelas Saat Ini</label>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => setFormData({ ...formData, mode_kelas: 'OFFLINE' })}
-              className={`p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer text-center ${
-                formData.mode_kelas === 'OFFLINE'
-                  ? 'bg-[#FFF3E0] border-[#FF7043] text-[#E65100] ring-1 ring-[#FF7043] shadow-xs'
-                  : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#64748B] hover:bg-[#F1F5F9]'
-              }`}
-            >
-              🏫 Offline (Tatap Muka)
-            </button>
-            <button
-              type="button"
-              onClick={() => setFormData({ ...formData, mode_kelas: 'ONLINE' })}
-              className={`p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer text-center ${
-                formData.mode_kelas === 'ONLINE'
-                  ? 'bg-[#FFF3E0] border-[#FF7043] text-[#E65100] ring-1 ring-[#FF7043] shadow-xs'
-                  : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#64748B] hover:bg-[#F1F5F9]'
-              }`}
-            >
-              🌐 Online (Daring)
-            </button>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-[#1E293B] font-bold">Mode Kelas Saat Ini</label>
+            <span className="text-[10px] font-semibold text-[#64748B] flex items-center gap-1">
+              🔒 Hanya dapat diubah oleh Admin
+            </span>
+          </div>
+          <div className="p-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <span className="text-xl">
+                {profile?.mode_kelas === 'ONLINE' ? '🌐' : '🏫'}
+              </span>
+              <div>
+                <p className="font-bold text-xs text-[#1E293B]">
+                  {profile?.mode_kelas === 'ONLINE' ? 'Online (Daring)' : 'Offline (Tatap Muka)'}
+                </p>
+                <p className="text-[10px] text-[#64748B]">
+                  {profile?.mode_kelas === 'ONLINE' ? 'Sesi belajar diadakan via link daring' : 'Sesi belajar diadakan tatap muka di ruang kelas TC Pariaman'}
+                </p>
+              </div>
+            </div>
+            <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border shadow-2xs ${
+              profile?.mode_kelas === 'ONLINE'
+                ? 'bg-[#E0F2FE] text-[#0369A1] border-[#BAE6FD]'
+                : 'bg-[#FFF3E0] text-[#E65100] border-[#FFCC80]'
+            }`}>
+              {profile?.mode_kelas === 'ONLINE' ? 'ONLINE' : 'OFFLINE'}
+            </span>
           </div>
         </div>
 

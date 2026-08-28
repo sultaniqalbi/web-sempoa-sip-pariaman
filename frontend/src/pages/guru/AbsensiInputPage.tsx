@@ -195,26 +195,18 @@ export const AbsensiInputPage: React.FC = () => {
                 <div>
                   <p className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Mode Kelas Saat Ini</p>
                   <p className="text-xs font-black text-[#1E293B] mt-0.5">
-                    {dashboardData?.guru?.mode_kelas === 'ONLINE' ? <><i className="fas fa-globe"></i> Online (Daring)</> : <><i className="fas fa-school"></i> Offline (Tatap Muka)</>}
+                    {dashboardData?.guru?.mode_kelas === 'ONLINE' ? '🌐 Online (Daring)' : '🏫 Offline (Tatap Muka)'}
                   </p>
                 </div>
-                <div className="flex bg-slate-100 rounded-lg p-1 border border-slate-200">
-                  <button
-                    type="button"
-                    onClick={() => modeMutation.mutate('OFFLINE')}
-                    disabled={modeMutation.isPending || user?.role === 'guru'}
-                    className={`px-3 py-1.5 rounded-md text-[10px] font-bold transition-colors ${dashboardData?.guru?.mode_kelas !== 'ONLINE' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-500'} ${user?.role === 'guru' ? 'cursor-not-allowed opacity-80' : ''}`}
-                  >
-                    Offline
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => modeMutation.mutate('ONLINE')}
-                    disabled={modeMutation.isPending || user?.role === 'guru'}
-                    className={`px-3 py-1.5 rounded-md text-[10px] font-bold transition-colors ${dashboardData?.guru?.mode_kelas === 'ONLINE' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-500'} ${user?.role === 'guru' ? 'cursor-not-allowed opacity-80' : ''}`}
-                  >
-                    Online
-                  </button>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-[#64748B] font-medium hidden sm:inline">Diatur oleh Admin:</span>
+                  <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border shadow-2xs ${
+                    dashboardData?.guru?.mode_kelas === 'ONLINE'
+                      ? 'bg-[#E0F2FE] text-[#0369A1] border-[#BAE6FD]'
+                      : 'bg-[#FFF3E0] text-[#E65100] border-[#FFCC80]'
+                  }`}>
+                    {dashboardData?.guru?.mode_kelas === 'ONLINE' ? 'ONLINE' : 'OFFLINE'}
+                  </span>
                 </div>
               </div>
 

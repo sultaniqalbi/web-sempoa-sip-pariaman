@@ -169,7 +169,7 @@ class ModeKelasUpdate(BaseModel):
 async def update_mode_kelas(
     payload: ModeKelasUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(teacher_only)
+    current_user: User = Depends(RoleChecker([UserRole.admin, UserRole.owner]))
 ):
     guru = _get_current_guru(db, current_user)
 
@@ -853,7 +853,6 @@ class GuruProfilUpdate(BaseModel):
     whatsapp_guru: Optional[str] = None
     alamat: Optional[str] = None
     bio: Optional[str] = None
-    mode_kelas: Optional[str] = None
 
 @router.get("/profil")
 async def get_my_guru_profile(
@@ -924,11 +923,6 @@ async def update_my_guru_profile(
 
     if payload.bio is not None:
         guru.bio = payload.bio.strip()
-
-    if payload.mode_kelas is not None:
-        m = payload.mode_kelas.strip().upper()
-        if m in ["ONLINE", "OFFLINE"]:
-            guru.mode_kelas = m
 
     db.commit()
     db.refresh(guru)
