@@ -5,7 +5,6 @@ import apiClient from '../../features/api/apiClient';
 import GuruProfileHeader from './components/GuruProfileHeader';
 import GuruBottomNav from './components/GuruBottomNav';
 import { useAuthenticatedFontAwesome } from '../../hooks/useAuthenticatedFontAwesome';
-import '../../styles/style-admin.css';
 
 export const GuruLayout: React.FC = () => {
   useAuthenticatedFontAwesome();

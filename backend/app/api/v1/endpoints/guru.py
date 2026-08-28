@@ -212,6 +212,14 @@ async def update_existing_guru(
     for key, value in update_dict.items():
         setattr(db_guru, key, value)
 
+    if "nama" in update_dict:
+        user_guru = db.query(User).filter(
+            User.role == UserRole.guru,
+            (User.uid_terhubung == str(id)) | (User.uid_terhubung == db_guru.uid) | (func.lower(User.nama) == func.lower(db_guru.nama))
+        ).first()
+        if user_guru:
+            user_guru.nama = update_dict["nama"]
+
     db.commit()
     db.refresh(db_guru)
     return db_guru
@@ -226,8 +234,10 @@ async def delete_guru(
     if not db_guru:
         raise HTTPException(status_code=404, detail="Data guru tidak ditemukan")
 
-    # Cascade delete teacher user
-    db.query(User).filter(User.role == UserRole.guru, User.uid_terhubung == str(id)).delete()
+    db.query(User).filter(
+        User.role == UserRole.guru,
+        (User.uid_terhubung == str(id)) | (User.uid_terhubung == db_guru.uid) | (func.lower(User.nama) == func.lower(db_guru.nama))
+    ).delete()
     db.delete(db_guru)
 
     try:
@@ -255,13 +265,37 @@ async def reset_guru_password(
     if not db_guru:
         raise HTTPException(status_code=404, detail="Guru tidak ditemukan")
 
-    user_guru = db.query(User).filter(User.role == UserRole.guru, User.uid_terhubung == str(id)).first()
-    if not user_guru:
-        raise HTTPException(status_code=404, detail="Akun guru terhubung tidak ditemukan")
+    user_guru = db.query(User).filter(
+        User.role == UserRole.guru,
+        (User.uid_terhubung == str(id)) | (User.uid_terhubung == db_guru.uid) | (func.lower(User.nama) == func.lower(db_guru.nama))
+    ).first()
 
     new_pwd = generate_random_password(10)
-    user_guru.password = get_password_hash(new_pwd)
-    user_guru.plain_password = new_pwd
+    hashed_pwd = get_password_hash(new_pwd)
+
+    if not user_guru:
+        clean_prefix = "".join(c for c in db_guru.nama.lower().replace(" ", "") if c.isalnum()) or "guru"
+        email_candidate = f"{clean_prefix}@sempoasippariaman.com"
+        suffix = 1
+        while db.query(User).filter(func.lower(User.email) == email_candidate.lower()).first():
+            suffix += 1
+            email_candidate = f"{clean_prefix}{suffix}@sempoasippariaman.com"
+
+        user_guru = User(
+            email=email_candidate,
+            password=hashed_pwd,
+            plain_password=new_pwd,
+            role=UserRole.guru,
+            nama=db_guru.nama,
+            uid_terhubung=str(db_guru.id)
+        )
+        db.add(user_guru)
+    else:
+        user_guru.password = hashed_pwd
+        user_guru.plain_password = new_pwd
+        user_guru.uid_terhubung = str(db_guru.id)
+        if not user_guru.nama:
+            user_guru.nama = db_guru.nama
 
     try:
         audit = AuditLog(
@@ -297,7 +331,10 @@ async def push_whatsapp_guru(
     if not wa_num:
         raise HTTPException(status_code=400, detail="Nomor WhatsApp guru belum diisi")
 
-    user_guru = db.query(User).filter(User.role == UserRole.guru, User.uid_terhubung == str(id)).first()
+    user_guru = db.query(User).filter(
+        User.role == UserRole.guru,
+        (User.uid_terhubung == str(id)) | (User.uid_terhubung == guru.uid) | (func.lower(User.nama) == func.lower(guru.nama))
+    ).first()
     guru_email = user_guru.email if user_guru else f"guru_{guru.id}@sempoasippariaman.com"
 
     # Always remember and reuse the exact password. If legacy account doesn't have plain_password, initialize once and persist it.

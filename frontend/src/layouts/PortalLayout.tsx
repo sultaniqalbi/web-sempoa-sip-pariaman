@@ -12,7 +12,6 @@ import {
   SearchIcon,
 } from '../components/SvgIcons';
 import { useAuthenticatedFontAwesome } from '../hooks/useAuthenticatedFontAwesome';
-import '../styles/style-admin.css';
 
 interface PortalLayoutProps {
   role: 'admin' | 'owner';

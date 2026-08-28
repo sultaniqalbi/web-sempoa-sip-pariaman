@@ -1,22 +1,9 @@
-import { defineConfig, Plugin } from 'vite'
+import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
-function asyncCssPlugin(): Plugin {
-  return {
-    name: 'vite-plugin-async-css',
-    enforce: 'post',
-    transformIndexHtml(html: string) {
-      return html.replace(
-        /<link\s+rel="stylesheet"\s+crossorigin\s+href="(\/assets\/[^"]+\.css)">/g,
-        '<link rel="preload" as="style" href="$1"><link rel="stylesheet" href="$1" media="print" onload="this.media=\'all\'"><noscript><link rel="stylesheet" href="$1"></noscript>'
-      );
-    }
-  };
-}
-
 export default defineConfig({
-  plugins: [react(), asyncCssPlugin()],
+  plugins: [react()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src')
@@ -42,7 +29,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: 'hidden',
-    cssCodeSplit: true,
+    cssCodeSplit: false,
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
