@@ -1,6 +1,6 @@
 from typing import List, Dict, Any, Optional
 from datetime import datetime, date, timedelta
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_
 from pydantic import BaseModel
@@ -843,4 +843,163 @@ async def input_izin_guru(
         "message": f"Izin guru {guru.nama} ({date_msg}) berhasil dicatat!",
         "tipe": tipe
     }
+
+class GuruProfilUpdate(BaseModel):
+    nama: Optional[str] = None
+    nama_panggilan: Optional[str] = None
+    tempat_lahir: Optional[str] = None
+    tanggal_lahir: Optional[str] = None
+    asal_sekolah: Optional[str] = None
+    whatsapp_guru: Optional[str] = None
+    alamat: Optional[str] = None
+    bio: Optional[str] = None
+    mode_kelas: Optional[str] = None
+
+@router.get("/profil")
+async def get_my_guru_profile(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(teacher_only)
+):
+    guru = _get_current_guru(db, current_user)
+    return {
+        "id": guru.id,
+        "uid": guru.uid,
+        "nama": guru.nama,
+        "nama_panggilan": guru.nama_panggilan or "",
+        "tempat_lahir": guru.tempat_lahir or "",
+        "tanggal_lahir": guru.tanggal_lahir.strftime("%Y-%m-%d") if guru.tanggal_lahir else "",
+        "umur": guru.umur or 0,
+        "asal_sekolah": guru.asal_sekolah or "",
+        "kategori_program": guru.kategori_program or "Sempoa SIP",
+        "hari_wajib": guru.hari_wajib or "",
+        "mode_kelas": guru.mode_kelas or "OFFLINE",
+        "target_kehadiran": guru.target_kehadiran or 12,
+        "whatsapp_guru": guru.whatsapp_guru or "",
+        "alamat": guru.alamat or "",
+        "bio": guru.bio or "",
+        "foto_profil": guru.foto_profil,
+        "email": current_user.email
+    }
+
+@router.put("/profil")
+async def update_my_guru_profile(
+    payload: GuruProfilUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(teacher_only)
+):
+    from app.core.security import normalize_whatsapp_number
+    guru = _get_current_guru(db, current_user)
+
+    if payload.nama is not None and payload.nama.strip():
+        guru.nama = payload.nama.strip()
+        current_user.nama = payload.nama.strip()
+
+    if payload.nama_panggilan is not None:
+        guru.nama_panggilan = payload.nama_panggilan.strip()
+
+    if payload.tempat_lahir is not None:
+        guru.tempat_lahir = payload.tempat_lahir.strip()
+
+    if payload.tanggal_lahir is not None:
+        if payload.tanggal_lahir.strip():
+            try:
+                tgl = datetime.strptime(payload.tanggal_lahir.strip(), "%Y-%m-%d").date()
+                guru.tanggal_lahir = tgl
+                today = datetime.now().date()
+                age = today.year - tgl.year - ((today.month, today.day) < (tgl.month, tgl.day))
+                guru.umur = age
+            except ValueError:
+                pass
+        else:
+            guru.tanggal_lahir = None
+
+    if payload.asal_sekolah is not None:
+        guru.asal_sekolah = payload.asal_sekolah.strip()
+
+    if payload.whatsapp_guru is not None:
+        guru.whatsapp_guru = normalize_whatsapp_number(payload.whatsapp_guru.strip())
+
+    if payload.alamat is not None:
+        guru.alamat = payload.alamat.strip()
+
+    if payload.bio is not None:
+        guru.bio = payload.bio.strip()
+
+    if payload.mode_kelas is not None:
+        m = payload.mode_kelas.strip().upper()
+        if m in ["ONLINE", "OFFLINE"]:
+            guru.mode_kelas = m
+
+    db.commit()
+    db.refresh(guru)
+
+    return {
+        "status": "success",
+        "message": "Profil guru berhasil diperbarui!",
+        "guru": {
+            "id": guru.id,
+            "uid": guru.uid,
+            "nama": guru.nama,
+            "nama_panggilan": guru.nama_panggilan,
+            "tempat_lahir": guru.tempat_lahir,
+            "tanggal_lahir": str(guru.tanggal_lahir) if guru.tanggal_lahir else "",
+            "umur": guru.umur,
+            "asal_sekolah": guru.asal_sekolah,
+            "kategori_program": guru.kategori_program,
+            "whatsapp_guru": guru.whatsapp_guru,
+            "alamat": guru.alamat,
+            "bio": guru.bio,
+            "foto_profil": guru.foto_profil
+        }
+    }
+
+@router.post("/profil/upload-foto")
+async def upload_my_guru_photo(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(teacher_only)
+):
+    import io, uuid, os
+    from PIL import Image
+    guru = _get_current_guru(db, current_user)
+
+    contents = await file.read()
+    if len(contents) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Ukuran file foto maksimal 10MB.")
+
+    image = Image.open(io.BytesIO(contents))
+    if image.format not in ("JPEG", "JPG", "PNG", "WEBP", "MPO"):
+        raise HTTPException(status_code=400, detail="Format file tidak didukung. Harap gunakan format JPG, PNG, atau WebP.")
+
+    if image.mode in ("RGBA", "P"):
+        image = image.convert("RGB")
+
+    max_size = (800, 800)
+    image.thumbnail(max_size, Image.Resampling.LANCZOS)
+
+    filename = f"guru_{guru.uid}_{uuid.uuid4().hex[:8]}.webp"
+    upload_dir = os.path.join(os.path.dirname(__file__), "../../../uploads/profil")
+    os.makedirs(upload_dir, exist_ok=True)
+
+    filepath = os.path.join(upload_dir, filename)
+    image.save(filepath, "WEBP", quality=80)
+
+    file_url = f"/uploads/profil/{filename}"
+
+    if guru.foto_profil and guru.foto_profil.startswith("/uploads/profil/"):
+        old_filename = os.path.basename(guru.foto_profil)
+        old_filepath = os.path.join(upload_dir, old_filename)
+        if os.path.exists(old_filepath):
+            try:
+                os.remove(old_filepath)
+            except Exception:
+                pass
+
+    guru.foto_profil = file_url
+    current_user.foto_profil = file_url
+
+    db.commit()
+    db.refresh(guru)
+
+    return {"status": "success", "file_url": file_url, "message": "Foto profil berhasil diperbarui!"}
 

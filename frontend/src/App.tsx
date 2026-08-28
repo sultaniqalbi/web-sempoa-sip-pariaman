@@ -36,6 +36,7 @@ const GuruLayout = React.lazy(() => import('./pages/guru/GuruLayout'));
 const GuruDashboardPage = React.lazy(() => import('./pages/guru/GuruDashboardPage'));
 const KelasPage = React.lazy(() => import('./pages/guru/KelasPage'));
 const AbsensiInputPage = React.lazy(() => import('./pages/guru/AbsensiInputPage'));
+const GuruProfilePage = React.lazy(() => import('./pages/guru/GuruProfilePage'));
 
 // Parent Pages
 const OrtuLayout = React.lazy(() => import('./pages/ortu/OrtuLayout'));
@@ -162,6 +163,7 @@ export function App() {
                     <Route path="dashboard" element={<GuruDashboardPage />} />
                     <Route path="kelas" element={<KelasPage />} />
                     <Route path="absensi-input" element={<AbsensiInputPage />} />
+                    <Route path="profil" element={<GuruProfilePage />} />
                   </Route>
 
                   {/* Parent Portal Routes */}
