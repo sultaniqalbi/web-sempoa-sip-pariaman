@@ -216,7 +216,7 @@ export const HomePage: React.FC = () => {
         <nav className={`navbar ${isNavScrolled ? 'scrolled' : ''}`} id="navbar" aria-label="Navigasi Utama">
           <div className="container">
             <Link to="/" className="nav-brand-logo" aria-label="Halaman Utama Sempoa SIP TC Pariaman">
-              <img src="/assets/logo/logo-sempoa-sip@2x.webp" alt="Logo Sempoa SIP TC Pariaman" width="100" height="61" fetchpriority="high" decoding="async" />
+              <img src="/assets/logo/logo-sempoa-sip@2x.webp" alt="Logo Sempoa SIP TC Pariaman" width="100" height="61" fetchPriority="high" decoding="async" />
             </Link>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
