@@ -82,13 +82,6 @@ def on_startup():
             logger.warning(f"Auto-migration for bukti_transfer: {bt_e}")
                 
         run_seed()
-        
-        # Self-healing: ensure default Guru & Siswa are preserved if DB was reset
-        try:
-            from app.seed_default_records import restore_initial_guru_and_siswa
-            restore_initial_guru_and_siswa()
-        except Exception as seed_rec_e:
-            logger.warning(f"Default records check skipped: {seed_rec_e}")
 
         # Start SPP background reminder scheduler
         from app.services.scheduler import start_scheduler

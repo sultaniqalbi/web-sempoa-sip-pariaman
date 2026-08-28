@@ -1,59 +1,38 @@
 from app.core.database import SessionLocal
-from app.models.users import User
+from app.models.users import User, UserRole
 from app.models.siswa import Siswa
 from app.models.guru import Guru
 from app.models.absensi_log import AbsensiLog
 from app.models.jadwal import Jadwal
-from app.models.galeri import Galeri
+from app.models.pembayaran_periode import PembayaranPeriode
+from app.models.bukti_transfer import BuktiTransfer
+from app.models.catatan_pembelajaran import CatatanPembelajaran
 from app.models.keuangan import Keuangan
-
-db = SessionLocal()
+from app.models.pendaftaran_baru import PendaftaranBaru
+from app.models.audit_log import AuditLog
+from app.models.push_subscription import PushSubscription
+from app.seed_data import run_seed
 
 def clean_dummy():
+    db = SessionLocal()
     try:
-        print("Cleaning dummy data...")
-        
-        # 1. Delete AbsensiLog for GR-DUMMY and SW-DUMMY
-        db.query(AbsensiLog).filter(AbsensiLog.uid.in_(["GR-DUMMY", "SW-DUMMY"])).delete(synchronize_session=False)
-
-        # 2. Delete Jadwal where notes/nama might indicate dummy, or just linked to dummy Guru/Siswa
-        # First get dummy IDs
-        dummy_gurus = db.query(Guru).filter((Guru.uid == "GR-DUMMY") | (Guru.nama.ilike("%demo%"))).all()
-        dummy_guru_ids = [g.id for g in dummy_gurus]
-        
-        dummy_siswas = db.query(Siswa).filter((Siswa.uid == "SW-DUMMY") | (Siswa.nama.ilike("%demo%"))).all()
-        dummy_siswa_ids = [s.id for s in dummy_siswas]
-
-        if dummy_guru_ids or dummy_siswa_ids:
-            db.query(Jadwal).filter(
-                (Jadwal.id_guru.in_(dummy_guru_ids)) | 
-                (Jadwal.id_siswa.in_(dummy_siswa_ids))
-            ).delete(synchronize_session=False)
-            
-        # 3. Delete Galeri, Keuangan with 'dummy' or 'demo'
-        db.query(Galeri).filter(Galeri.judul.ilike("%dummy%")).delete(synchronize_session=False)
-        db.query(Galeri).filter(Galeri.judul.ilike("%demo%")).delete(synchronize_session=False)
-        db.query(Keuangan).filter(Keuangan.keterangan.ilike("%dummy%")).delete(synchronize_session=False)
-
-        # 4. Delete Siswa and Guru
-        db.query(Siswa).filter(Siswa.uid == "SW-DUMMY").delete(synchronize_session=False)
-        db.query(Siswa).filter(Siswa.nama.ilike("%demo%")).delete(synchronize_session=False)
-        db.query(Guru).filter(Guru.uid == "GR-DUMMY").delete(synchronize_session=False)
-        db.query(Guru).filter(Guru.nama.ilike("%demo%")).delete(synchronize_session=False)
-
-        # 5. Delete Users
-        db.query(User).filter(User.email.ilike("%@demo.com%")).delete(synchronize_session=False)
-        db.query(User).filter(User.nama.ilike("%demo%")).delete(synchronize_session=False)
-
+        print("Cleaning all dummy and transaction data (preserving Admin & Owner)...")
+        db.query(AbsensiLog).delete(synchronize_session=False)
+        db.query(CatatanPembelajaran).delete(synchronize_session=False)
+        db.query(BuktiTransfer).delete(synchronize_session=False)
+        db.query(PembayaranPeriode).delete(synchronize_session=False)
+        db.query(Keuangan).delete(synchronize_session=False)
+        db.query(Jadwal).delete(synchronize_session=False)
+        db.query(PendaftaranBaru).delete(synchronize_session=False)
+        db.query(AuditLog).delete(synchronize_session=False)
+        db.query(PushSubscription).delete(synchronize_session=False)
+        db.query(Siswa).delete(synchronize_session=False)
+        db.query(Guru).delete(synchronize_session=False)
+        db.query(User).filter(~User.role.in_([UserRole.admin, UserRole.owner])).delete(synchronize_session=False)
         db.commit()
-        print("All dummy accounts & data removed. Database cleaned for production.")
-        
-        # Verify
-        siswa_count = db.query(Siswa).filter(Siswa.nama.ilike("%demo%")).count()
-        guru_count = db.query(Guru).filter(Guru.nama.ilike("%demo%")).count()
-        print(f"Remaining dummy Siswa: {siswa_count}")
-        print(f"Remaining dummy Guru: {guru_count}")
 
+        run_seed(db)
+        print("Database wiped clean for production. Admin & Owner accounts are active.")
     except Exception as e:
         db.rollback()
         print("Error cleaning up:", str(e))
