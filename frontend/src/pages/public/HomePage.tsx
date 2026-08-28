@@ -215,32 +215,32 @@ export const HomePage: React.FC = () => {
       <header>
         <nav className={`navbar ${isNavScrolled ? 'scrolled' : ''}`} id="navbar" aria-label="Navigasi Utama">
           <div className="container">
+            {/* 1. Left: Mobile Hamburger Button */}
+            <button
+              className="mobile-menu-btn"
+              id="mobileMenuBtn"
+              aria-label={isMobileMenuOpen ? "Tutup menu navigasi" : "Buka menu navigasi"}
+              aria-expanded={isMobileMenuOpen}
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <CloseIcon size={24} color="#000000" /> : <MenuIcon size={24} color="#000000" />}
+            </button>
+
+            {/* 2. Center: Logo Brand */}
             <Link to="/" className="nav-brand-logo" aria-label="Halaman Utama Sempoa SIP TC Pariaman">
               <img src="/assets/logo/logo-sempoa-sip@2x.webp" alt="Logo Sempoa SIP TC Pariaman" width="100" height="61" fetchPriority="high" decoding="async" />
             </Link>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-              {/* Mobile-only Daftar Sekarang button */}
-              <a
-                href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak."
-                target="_blank"
-                rel="noreferrer"
-                className="btn btn-yellow mobile-only-daftar"
-                aria-label="Daftar Sekarang via WhatsApp"
-              >
-                Daftar Sekarang
-              </a>
-              
-              <button
-                className="mobile-menu-btn"
-                id="mobileMenuBtn"
-                aria-label={isMobileMenuOpen ? "Tutup menu navigasi" : "Buka menu navigasi"}
-                aria-expanded={isMobileMenuOpen}
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              >
-                {isMobileMenuOpen ? <CloseIcon size={24} color="#000000" /> : <MenuIcon size={24} color="#000000" />}
-              </button>
-            </div>
+            {/* 3. Right: Mobile Daftar Sekarang Button */}
+            <a
+              href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak."
+              target="_blank"
+              rel="noreferrer"
+              className="btn btn-yellow mobile-only-daftar"
+              aria-label="Daftar Sekarang via WhatsApp"
+            >
+              Daftar Sekarang
+            </a>
 
             <ul className={`nav-links ${isMobileMenuOpen ? 'active' : ''}`} id="navLinks">
               <li><a href="#home" onClick={() => setIsMobileMenuOpen(false)}>Beranda</a></li>

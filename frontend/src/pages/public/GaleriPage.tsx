@@ -75,30 +75,31 @@ export const GaleriPage: React.FC = () => {
       {/* NAVBAR */}
       <nav className="navbar" id="navbar" style={{ position: 'sticky', top: 0, zIndex: 1000, background: 'rgba(255,255,255,0.98)', borderBottom: '1px solid #e2e8f0' }}>
         <div className="container">
+          {/* 1. Left: Mobile Hamburger Button */}
+          <button
+            className="mobile-menu-btn"
+            id="mobileMenuBtn"
+            aria-label="Buka Menu Navigasi"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? <CloseIcon size={24} color="#000000" /> : <MenuIcon size={24} color="#000000" />}
+          </button>
+
+          {/* 2. Center: Logo Brand */}
           <Link to="/" className="nav-brand-logo">
-            <img src="/assets/logo/logo-sempoa-sip.webp" alt="Logo Sempoa SIP TC Pariaman" />
+            <img src="/assets/logo/logo-sempoa-sip@2x.webp" alt="Logo Sempoa SIP TC Pariaman" width="100" height="61" />
           </Link>
 
-          <div className="mobile-nav-toggle-wrap">
-            {/* Mobile-only Daftar Sekarang button */}
-            <a
-              href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak."
-              target="_blank"
-              rel="noreferrer"
-              className="btn btn-yellow mobile-only-daftar"
-            >
-              Daftar Sekarang
-            </a>
-            
-            <button
-              className="mobile-menu-btn"
-              id="mobileMenuBtn"
-              aria-label="Buka Menu Navigasi"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              {isMobileMenuOpen ? <CloseIcon size={24} /> : <MenuIcon size={24} />}
-            </button>
-          </div>
+          {/* 3. Right: Mobile Daftar Sekarang button */}
+          <a
+            href="https://wa.me/628126784986?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak."
+            target="_blank"
+            rel="noreferrer"
+            className="btn btn-yellow mobile-only-daftar"
+            aria-label="Daftar Sekarang via WhatsApp"
+          >
+            Daftar Sekarang
+          </a>
 
           <ul className={`nav-links ${isMobileMenuOpen ? 'active' : ''}`} id="navLinks">
             <li><Link to="/" style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>Beranda</Link></li>
