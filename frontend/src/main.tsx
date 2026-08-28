@@ -4,6 +4,12 @@ import App from './App'
 import './styles/style-main.css'
 import './index.css'
 
+// Auto reload when Vite chunk or CSS preload fails due to a new deployment
+window.addEventListener('vite:preloadError', (event) => {
+  console.warn('Deployment update detected (preload error), reloading page to load latest version...', event);
+  window.location.reload();
+});
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />

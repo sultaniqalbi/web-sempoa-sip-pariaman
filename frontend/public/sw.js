@@ -1,5 +1,5 @@
 // Service Worker for Sempoa SIP TC Pariaman - Network First Strategy
-const CACHE_NAME = 'sempoa-sip-cache-v5';
+const CACHE_NAME = 'sempoa-sip-cache-v6';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -26,8 +26,13 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Network First for HTML and JS bundles so updates are always instant
-  if (event.request.mode === 'navigate' || event.request.destination === 'document' || event.request.destination === 'script') {
+  // Network First for HTML, JS, and CSS bundles so updates are always instant
+  if (
+    event.request.mode === 'navigate' ||
+    event.request.destination === 'document' ||
+    event.request.destination === 'script' ||
+    event.request.destination === 'style'
+  ) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
