@@ -215,15 +215,15 @@ export const HomePage: React.FC = () => {
       <header>
         <nav className={`navbar ${isNavScrolled ? 'scrolled' : ''}`} id="navbar" aria-label="Navigasi Utama">
           <div className="container">
-            {/* 1. Left: Mobile Hamburger Button */}
+            {/* 1. Left: Mobile Hamburger / Close Button */}
             <button
-              className="mobile-menu-btn"
+              className={`mobile-menu-btn ${isMobileMenuOpen ? 'active' : ''}`}
               id="mobileMenuBtn"
               aria-label={isMobileMenuOpen ? "Tutup menu navigasi" : "Buka menu navigasi"}
               aria-expanded={isMobileMenuOpen}
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
-              {isMobileMenuOpen ? <CloseIcon size={24} color="#000000" /> : <MenuIcon size={24} color="#000000" />}
+              {isMobileMenuOpen ? <CloseIcon size={26} color="#000000" /> : <MenuIcon size={24} color="#000000" />}
             </button>
 
             {/* 2. Center: Logo Brand */}
@@ -241,6 +241,21 @@ export const HomePage: React.FC = () => {
             >
               Daftar Sekarang
             </a>
+
+            {/* Mobile Drawer Backdrop Overlay */}
+            {isMobileMenuOpen && (
+              <div
+                onClick={() => setIsMobileMenuOpen(false)}
+                style={{
+                  position: 'fixed',
+                  inset: 0,
+                  backgroundColor: 'rgba(0,0,0,0.45)',
+                  zIndex: 1000,
+                  backdropFilter: 'blur(2px)',
+                }}
+                aria-hidden="true"
+              />
+            )}
 
             <ul className={`nav-links ${isMobileMenuOpen ? 'active' : ''}`} id="navLinks">
               <li><a href="#home" onClick={() => setIsMobileMenuOpen(false)}>Beranda</a></li>

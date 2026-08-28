@@ -207,14 +207,15 @@ export const ProgramDetailPage: React.FC = () => {
       {/* NAVBAR */}
       <nav className="navbar" id="navbar" style={{ position: 'sticky', top: 0, zIndex: 1000, background: 'rgba(255,255,255,0.98)', borderBottom: '1px solid #e2e8f0' }}>
         <div className="container">
-          {/* 1. Left: Mobile Hamburger Button */}
+          {/* 1. Left: Mobile Hamburger / Close Button */}
           <button
-            className="mobile-menu-btn"
+            className={`mobile-menu-btn ${isMobileMenuOpen ? 'active' : ''}`}
             id="mobileMenuBtn"
-            aria-label="Buka Menu Navigasi"
+            aria-label={isMobileMenuOpen ? "Tutup menu navigasi" : "Buka menu navigasi"}
+            aria-expanded={isMobileMenuOpen}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
-            {isMobileMenuOpen ? <CloseIcon size={24} color="#000000" /> : <MenuIcon size={24} color="#000000" />}
+            {isMobileMenuOpen ? <CloseIcon size={26} color="#000000" /> : <MenuIcon size={24} color="#000000" />}
           </button>
 
           {/* 2. Center: Logo Brand */}
@@ -232,6 +233,21 @@ export const ProgramDetailPage: React.FC = () => {
           >
             Daftar Sekarang
           </a>
+
+          {/* Mobile Drawer Backdrop Overlay */}
+          {isMobileMenuOpen && (
+            <div
+              onClick={() => setIsMobileMenuOpen(false)}
+              style={{
+                position: 'fixed',
+                inset: 0,
+                backgroundColor: 'rgba(0,0,0,0.45)',
+                zIndex: 1000,
+                backdropFilter: 'blur(2px)',
+              }}
+              aria-hidden="true"
+            />
+          )}
 
           <ul className={`nav-links ${isMobileMenuOpen ? 'active' : ''}`} id="navLinks">
             <li><Link to="/" style={{ fontWeight: 600, color: '#1e293b', textDecoration: 'none' }}>Beranda</Link></li>
