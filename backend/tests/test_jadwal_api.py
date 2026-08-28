@@ -18,19 +18,22 @@ def test_create_jadwal_forbidden_role(client, guru_headers):
     assert response.status_code == 403
 
 def test_jadwal_crud_lifecycle_admin(client, admin_headers):
-    # 1. Create Jadwal
+    # 1. Create Jadwal with multiple teachers
     jadwal_data = {
         "id_guru": None,
+        "guru_ids": "1, 2",
         "id_siswa": None,
         "hari": "Senin",
         "jam_mulai": "08:00",
         "jam_selesai": "09:30",
-        "lokasi": "TC Pariaman"
+        "lokasi": "TC Pariaman - Ruang Sempoa",
+        "kategori_program": "Sempoa SIP"
     }
     response = client.post("/api/v1/jadwal/", json=jadwal_data, headers=admin_headers)
     assert response.status_code == 201
     created_jadwal = response.json()
     assert created_jadwal["hari"] == "Senin"
+    assert created_jadwal["guru_ids"] == "1, 2"
     jadwal_id = created_jadwal["id"]
 
     # 2. List Jadwal

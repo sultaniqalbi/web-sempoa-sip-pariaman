@@ -12,6 +12,22 @@ import DayPicker from '../../components/DayPicker';
 import { PhotoModal } from '../../components/PhotoModal';
 import { PengajarIcon, TrashIcon } from '../../components/SvgIcons';
 
+const AVAILABLE_PROGRAMS = ['Sempoa SIP', 'Fonem', 'Tahfidz', 'Bahasa Inggris'];
+
+const getProgramBadgeStyle = (program: string) => {
+  const p = program.trim().toLowerCase();
+  if (p.includes('sempoa')) {
+    return 'bg-[#FFF3E0] text-[#E65100] border-[#FFCC80]';
+  } else if (p.includes('fonem')) {
+    return 'bg-[#F3E8FF] text-[#7E22CE] border-[#D8B4FE]';
+  } else if (p.includes('tahfidz')) {
+    return 'bg-[#ECFDF5] text-[#047857] border-[#A7F3D0]';
+  } else if (p.includes('inggris') || p.includes('english')) {
+    return 'bg-[#E0F2FE] text-[#0369A1] border-[#BAE6FD]';
+  }
+  return 'bg-[#F1F5F9] text-[#475569] border-[#CBD5E1]';
+};
+
 interface Guru {
   id: number;
   uid: string;
@@ -422,13 +438,26 @@ export const GuruPage: React.FC = () => {
       className: 'md:w-[220px]',
     },
     {
-      header: 'KATEGORI',
-      accessor: (row: Guru) => (
-        <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-[#E3F2FD] text-[#1976D2] border border-[#90CAF9] inline-block shadow-2xs">
-          {row.kategori_program}
-        </span>
-      ),
-      className: 'md:w-[130px]',
+      header: 'KATEGORI PROGRAM',
+      accessor: (row: Guru) => {
+        const programs = (row.kategori_program || 'Sempoa SIP')
+          .split(',')
+          .map((p) => p.trim())
+          .filter(Boolean);
+        return (
+          <div className="flex flex-wrap gap-1">
+            {programs.map((p) => (
+              <span
+                key={p}
+                className={`px-2 py-0.5 rounded-md text-[10px] font-bold border shadow-2xs ${getProgramBadgeStyle(p)}`}
+              >
+                {p}
+              </span>
+            ))}
+          </div>
+        );
+      },
+      className: 'md:w-[150px]',
     },
     {
       header: 'JADWAL',
@@ -694,19 +723,59 @@ export const GuruPage: React.FC = () => {
             )}
           </div>
 
-          {/* Kategori Program* */}
+          {/* Kategori Program* (Bisa Pilih Banyak Program) */}
           <div>
-            <label className="block text-[#1E293B] font-bold mb-1">Kategori Program*</label>
-            <select
-              value={formData.kategori_program}
-              onChange={(e) => setFormData({ ...formData, kategori_program: e.target.value })}
-              className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none font-medium"
-            >
-              <option value="Sempoa SIP">Sempoa SIP</option>
-              <option value="Fonem">Fonem</option>
-              <option value="Tahfidz">Tahfidz</option>
-              <option value="Bahasa Inggris">Bahasa Inggris</option>
-            </select>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-[#1E293B] font-bold">Kategori Program yang Diajar*</label>
+              <span className="text-[10px] text-[#64748B] font-semibold bg-[#F1F5F9] px-2 py-0.5 rounded-full border border-[#E2E8F0]">
+                Bisa merangkap &gt;1 program
+              </span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {AVAILABLE_PROGRAMS.map((prog) => {
+                const selectedList = (formData.kategori_program || '')
+                  .split(',')
+                  .map((p) => p.trim())
+                  .filter(Boolean);
+                const isSelected = selectedList.includes(prog);
+                return (
+                  <button
+                    key={prog}
+                    type="button"
+                    onClick={() => {
+                      let updatedList: string[];
+                      if (isSelected) {
+                        updatedList = selectedList.filter((p) => p !== prog);
+                        if (updatedList.length === 0) {
+                          showToast('Pilih minimal 1 kategori program untuk guru ini', 'error');
+                          return;
+                        }
+                      } else {
+                        updatedList = [...selectedList, prog];
+                      }
+                      setFormData({ ...formData, kategori_program: updatedList.join(', ') });
+                    }}
+                    className={`flex items-center justify-between p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer select-none active:scale-95 ${
+                      isSelected
+                        ? 'bg-[#FFF3E0] border-[#FF7043] text-[#E65100] shadow-xs ring-1 ring-[#FF7043]'
+                        : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#64748B] hover:bg-[#F1F5F9] hover:border-[#CBD5E1]'
+                    }`}
+                  >
+                    <span>{prog}</span>
+                    <span
+                      className={`w-4 h-4 rounded-md flex items-center justify-center text-[10px] font-bold ${
+                        isSelected ? 'bg-[#FF7043] text-white' : 'border border-[#CBD5E1] bg-white text-transparent'
+                      }`}
+                    >
+                      ✓
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[10px] text-[#64748B] mt-1.5">
+              Program aktif: <span className="font-bold text-[#1E293B]">{formData.kategori_program || 'Belum dipilih'}</span>
+            </p>
           </div>
 
           {/* Hari Wajib Mengajar* [DayPicker multi-select] */}

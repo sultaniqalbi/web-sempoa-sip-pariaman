@@ -13,7 +13,7 @@ class Guru(Base):
     tanggal_lahir = Column(Date, nullable=True)
     umur = Column(Integer, nullable=True)
     asal_sekolah = Column(String(150), nullable=True)
-    kategori_program = Column(String(50), nullable=False, default="Sempoa SIP")
+    kategori_program = Column(String(255), nullable=False, default="Sempoa SIP")
     hari_wajib = Column(String(100), nullable=False)
     target_kehadiran = Column(Integer, nullable=False, default=12)
     whatsapp_guru = Column(String(20), nullable=True)

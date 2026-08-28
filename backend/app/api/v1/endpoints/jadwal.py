@@ -36,6 +36,30 @@ router = APIRouter()
 admin_or_owner = RoleChecker([UserRole.admin, UserRole.owner])
 owner_only = RoleChecker([UserRole.owner])
 
+def _enrich_jadwal(db: Session, j: Jadwal) -> JadwalResponse:
+    guru_ids_list = []
+    if j.guru_ids:
+        for part in j.guru_ids.split(","):
+            part_str = part.strip()
+            if part_str.isdigit():
+                guru_ids_list.append(int(part_str))
+    elif j.id_guru:
+        guru_ids_list.append(j.id_guru)
+
+    guru_names_str = None
+    if guru_ids_list:
+        gurus = db.query(Guru).filter(Guru.id.in_(guru_ids_list)).all()
+        guru_map = {g.id: g.nama for g in gurus}
+        ordered_names = [guru_map[gid] for gid in guru_ids_list if gid in guru_map]
+        if ordered_names:
+            guru_names_str = ", ".join(ordered_names)
+        elif gurus:
+            guru_names_str = ", ".join(g.nama for g in gurus)
+
+    resp = JadwalResponse.model_validate(j)
+    resp.guru_names = guru_names_str
+    return resp
+
 @router.get("/", response_model=List[JadwalResponse])
 async def read_jadwal_list(
     skip: int = 0,
@@ -43,7 +67,8 @@ async def read_jadwal_list(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    return crud_jadwal.get_jadwal_list(db, skip=skip, limit=limit)
+    jadwal_list = crud_jadwal.get_jadwal_list(db, skip=skip, limit=limit)
+    return [_enrich_jadwal(db, j) for j in jadwal_list]
 
 @router.post("/", response_model=JadwalResponse, status_code=status.HTTP_201_CREATED)
 async def create_new_jadwal(
@@ -59,7 +84,8 @@ async def create_new_jadwal(
     jadwal_in.jam_mulai = config[schedule_type]["jam_mulai"]
     jadwal_in.jam_selesai = config[schedule_type]["jam_selesai"]
     
-    return crud_jadwal.create_jadwal(db, jadwal=jadwal_in)
+    created_j = crud_jadwal.create_jadwal(db, jadwal=jadwal_in)
+    return _enrich_jadwal(db, created_j)
 
 @router.put("/{id}", response_model=JadwalResponse)
 async def update_existing_jadwal(
@@ -82,7 +108,8 @@ async def update_existing_jadwal(
         jadwal_in.jam_mulai = config[schedule_type]["jam_mulai"]
         jadwal_in.jam_selesai = config[schedule_type]["jam_selesai"]
         
-    return crud_jadwal.update_jadwal(db, db_jadwal=db_jadwal, update_data=jadwal_in)
+    updated_j = crud_jadwal.update_jadwal(db, db_jadwal=db_jadwal, update_data=jadwal_in)
+    return _enrich_jadwal(db, updated_j)
 
 @router.delete("/{id}")
 async def delete_jadwal(
@@ -104,13 +131,32 @@ async def export_jadwal_sheets(
     from app.services.google_sheets import send_to_google_sheet
 
     items = db.query(Jadwal).all()
-    rows = [["ID Jadwal", "Hari", "Jam Mulai", "Jam Selesai", "ID Guru", "Nama Guru", "ID Siswa", "Nama Siswa", "Lokasi"]]
+    rows = [["ID Jadwal", "Hari", "Jam Mulai", "Jam Selesai", "ID Guru", "Nama Guru / Pengajar", "ID Siswa", "Nama Siswa", "Lokasi"]]
     for j in items:
-        guru = db.query(Guru).filter(Guru.id == j.id_guru).first() if j.id_guru else None
+        guru_ids_list = []
+        if j.guru_ids:
+            for part in j.guru_ids.split(","):
+                part_str = part.strip()
+                if part_str.isdigit():
+                    guru_ids_list.append(int(part_str))
+        elif j.id_guru:
+            guru_ids_list.append(j.id_guru)
+        
+        nama_guru_str = "-"
+        if guru_ids_list:
+            gurus = db.query(Guru).filter(Guru.id.in_(guru_ids_list)).all()
+            if gurus:
+                nama_guru_str = ", ".join(g.nama for g in gurus)
+        elif j.id_guru:
+            single_g = db.query(Guru).filter(Guru.id == j.id_guru).first()
+            if single_g:
+                nama_guru_str = single_g.nama
+
         siswa = db.query(Siswa).filter(Siswa.id == j.id_siswa).first() if j.id_siswa else None
         rows.append([
             j.id, j.hari, j.jam_mulai, j.jam_selesai,
-            j.id_guru or "-", guru.nama if guru else "-",
+            j.guru_ids or (str(j.id_guru) if j.id_guru else "-"),
+            nama_guru_str,
             j.id_siswa or "-", siswa.nama if siswa else "-",
             j.lokasi or "-"
         ])

@@ -8,7 +8,46 @@ import ConfirmModal from '../../components/ConfirmModal';
 import PageHeader from '../../components/PageHeader';
 import EmptyState from '../../components/EmptyState';
 import DayPicker from '../../components/DayPicker';
-import { JadwalIcon, TrashIcon, PresensiIcon } from '../../components/SvgIcons';
+import { JadwalIcon, TrashIcon, PresensiIcon, PengajarIcon } from '../../components/SvgIcons';
+
+const AVAILABLE_PROGRAMS = ['Sempoa SIP', 'Fonem', 'Tahfidz', 'Bahasa Inggris'];
+
+const SCHEDULE_CONFIG: Record<string, { hari_biasa: { jam_mulai: string; jam_selesai: string }; hari_libur: { jam_mulai: string; jam_selesai: string }; defaultRoom: string }> = {
+  'Sempoa SIP': {
+    hari_biasa: { jam_mulai: '09:00', jam_selesai: '17:00' },
+    hari_libur: { jam_mulai: '09:00', jam_selesai: '15:30' },
+    defaultRoom: 'TC Pariaman - Ruang Sempoa',
+  },
+  'Fonem': {
+    hari_biasa: { jam_mulai: '09:00', jam_selesai: '17:00' },
+    hari_libur: { jam_mulai: '09:00', jam_selesai: '15:30' },
+    defaultRoom: 'TC Pariaman - Ruang Fonem',
+  },
+  'Tahfidz': {
+    hari_biasa: { jam_mulai: '12:00', jam_selesai: '17:00' },
+    hari_libur: { jam_mulai: '12:00', jam_selesai: '15:30' },
+    defaultRoom: 'TC Pariaman - Ruang Tahfidz',
+  },
+  'Bahasa Inggris': {
+    hari_biasa: { jam_mulai: '12:00', jam_selesai: '17:00' },
+    hari_libur: { jam_mulai: '12:00', jam_selesai: '15:30' },
+    defaultRoom: 'TC Pariaman - Ruang English',
+  },
+};
+
+const getProgramBadgeStyle = (program: string) => {
+  const p = program.trim().toLowerCase();
+  if (p.includes('sempoa')) {
+    return 'bg-[#FFF3E0] text-[#E65100] border-[#FFCC80]';
+  } else if (p.includes('fonem')) {
+    return 'bg-[#F3E8FF] text-[#7E22CE] border-[#D8B4FE]';
+  } else if (p.includes('tahfidz')) {
+    return 'bg-[#ECFDF5] text-[#047857] border-[#A7F3D0]';
+  } else if (p.includes('inggris') || p.includes('english')) {
+    return 'bg-[#E0F2FE] text-[#0369A1] border-[#BAE6FD]';
+  }
+  return 'bg-[#F1F5F9] text-[#475569] border-[#CBD5E1]';
+};
 
 interface Jadwal {
   id: number;
@@ -19,6 +58,8 @@ interface Jadwal {
   is_hari_libur: boolean;
   kategori_program: string;
   id_guru?: number;
+  guru_ids?: string;
+  guru_names?: string;
   id_siswa?: number;
   created_at: string;
 }
@@ -53,13 +94,14 @@ export const JadwalPage: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: number; info: string } | null>(null);
 
-  const [selectedGuruId, setSelectedGuruId] = useState<string>('');
+  const [selectedTeacherIds, setSelectedTeacherIds] = useState<number[]>([]);
   const [formData, setFormData] = useState({
-    hari: 'Senin',
+    hari: 'Senin, Rabu',
     jam_mulai: '09:00',
     jam_selesai: '17:00',
-    lokasi: 'TC Pariaman - Ruang Utama',
+    lokasi: 'TC Pariaman - Ruang Sempoa',
     id_guru: undefined as number | undefined,
+    guru_ids: undefined as string | undefined,
     is_hari_libur: false,
     kategori_program: 'Sempoa SIP',
   });
@@ -179,92 +221,102 @@ export const JadwalPage: React.FC = () => {
     },
   });
 
-  const handleTeacherChange = (guruIdStr: string) => {
-    setSelectedGuruId(guruIdStr);
-    const guruId = parseInt(guruIdStr, 10);
-
-    if (isNaN(guruId)) {
-      setFormData((prev) => ({
-        ...prev,
-        id_guru: undefined,
-        lokasi: 'TC Pariaman - Ruang Utama',
-        kategori_program: 'Sempoa SIP',
-      }));
-      return;
-    }
-
-    const selectedGuru = guruList.find((g) => g.id === guruId);
-    let autoRoom = 'TC Pariaman - Ruang Utama';
-    let cat = 'Sempoa SIP';
-
-    if (selectedGuru) {
-      cat = selectedGuru.kategori_program || 'Sempoa SIP';
-      if (cat === 'Sempoa SIP') autoRoom = 'TC Pariaman - Ruang Sempoa';
-      else if (cat === 'Fonem') autoRoom = 'TC Pariaman - Ruang Fonem';
-      else if (cat === 'Tahfidz') autoRoom = 'TC Pariaman - Ruang Tahfidz';
-      else if (cat === 'Bahasa Inggris') autoRoom = 'TC Pariaman - Ruang English';
-      else autoRoom = `TC Pariaman - Ruang ${cat}`;
-    }
-
-    const jam_mulai = cat === 'Bahasa Inggris' || cat === 'Tahfidz' ? '12:00' : '09:00';
-    const jam_selesai = formData.is_hari_libur ? '15:30' : '17:00';
-
+  const handleProgramChange = (newProgram: string) => {
+    const config = SCHEDULE_CONFIG[newProgram] || SCHEDULE_CONFIG['Sempoa SIP'];
+    const scheduleType = formData.is_hari_libur ? 'hari_libur' : 'hari_biasa';
     let newHari = formData.hari;
-    if (cat === 'Bahasa Inggris') {
+    if (newProgram === 'Bahasa Inggris') {
       newHari = 'Jumat, Sabtu';
     }
 
     setFormData((prev) => ({
       ...prev,
-      id_guru: guruId,
-      lokasi: autoRoom,
-      kategori_program: cat,
-      jam_mulai: jam_mulai,
-      jam_selesai: jam_selesai,
+      kategori_program: newProgram,
+      lokasi: config.defaultRoom,
+      jam_mulai: config[scheduleType].jam_mulai,
+      jam_selesai: config[scheduleType].jam_selesai,
       hari: newHari,
     }));
   };
 
+  const toggleTeacher = (guruId: number) => {
+    setSelectedTeacherIds((prev) => {
+      if (prev.includes(guruId)) {
+        return prev.filter((id) => id !== guruId);
+      } else {
+        return [...prev, guruId];
+      }
+    });
+  };
+
   const handleHariLiburToggle = (isLibur: boolean) => {
-    const jam_mulai = formData.kategori_program === 'Bahasa Inggris' || formData.kategori_program === 'Tahfidz' ? '12:00' : '09:00';
-    const jam_selesai = isLibur ? '15:30' : '17:00';
+    const config = SCHEDULE_CONFIG[formData.kategori_program] || SCHEDULE_CONFIG['Sempoa SIP'];
+    const scheduleType = isLibur ? 'hari_libur' : 'hari_biasa';
 
     setFormData((prev) => ({
       ...prev,
       is_hari_libur: isLibur,
-      jam_mulai: jam_mulai,
-      jam_selesai: jam_selesai,
+      jam_mulai: config[scheduleType].jam_mulai,
+      jam_selesai: config[scheduleType].jam_selesai,
     }));
   };
 
   const openAddModal = () => {
     setEditingJadwal(null);
-    setSelectedGuruId('');
+    setSelectedTeacherIds([]);
+    const defaultProg = 'Sempoa SIP';
+    const config = SCHEDULE_CONFIG[defaultProg];
     setFormData({
       hari: 'Senin, Rabu',
-      jam_mulai: '09:00',
-      jam_selesai: '17:00',
-      lokasi: 'TC Pariaman - Ruang Utama',
+      jam_mulai: config.hari_biasa.jam_mulai,
+      jam_selesai: config.hari_biasa.jam_selesai,
+      lokasi: config.defaultRoom,
       id_guru: undefined,
+      guru_ids: undefined,
       is_hari_libur: false,
-      kategori_program: 'Sempoa SIP',
+      kategori_program: defaultProg,
     });
     setIsAddModalOpen(true);
   };
 
   const openEditModal = (jadwal: Jadwal) => {
     setEditingJadwal(jadwal);
-    setSelectedGuruId(jadwal.id_guru ? String(jadwal.id_guru) : '');
+    let ids: number[] = [];
+    if (jadwal.guru_ids) {
+      ids = jadwal.guru_ids.split(',').map((x) => parseInt(x.trim(), 10)).filter((n) => !isNaN(n));
+    } else if (jadwal.id_guru) {
+      ids = [jadwal.id_guru];
+    }
+    setSelectedTeacherIds(ids);
     setFormData({
       hari: jadwal.hari,
       jam_mulai: jadwal.jam_mulai,
       jam_selesai: jadwal.jam_selesai,
       lokasi: jadwal.lokasi,
       id_guru: jadwal.id_guru,
+      guru_ids: jadwal.guru_ids,
       is_hari_libur: jadwal.is_hari_libur,
       kategori_program: jadwal.kategori_program || 'Sempoa SIP',
     });
     setIsAddModalOpen(true);
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (selectedTeacherIds.length === 0) {
+      showToast('Pilih minimal 1 guru / pengajar untuk kelas ini', 'error');
+      return;
+    }
+    const payload = {
+      ...formData,
+      id_guru: selectedTeacherIds[0] || null,
+      guru_ids: selectedTeacherIds.join(', '),
+    };
+    if (editingJadwal) {
+      updateMutation.mutate(payload as any);
+    } else {
+      createMutation.mutate(payload as any);
+    }
   };
 
   const jadwalColumns = [
@@ -272,7 +324,7 @@ export const JadwalPage: React.FC = () => {
       header: 'Program & Hari',
       accessor: (row: Jadwal) => (
         <div>
-          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FFF3E0] text-[#FF7043] border border-[#FFCC80] mr-2">
+          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border mr-2 shadow-2xs ${getProgramBadgeStyle(row.kategori_program || 'Sempoa SIP')}`}>
             {row.kategori_program || 'Sempoa SIP'}
           </span>
           <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#F1F5F9] text-[#475569] border border-[#CBD5E1]">
@@ -280,6 +332,44 @@ export const JadwalPage: React.FC = () => {
           </span>
         </div>
       ),
+    },
+    {
+      header: 'Pengajar / Guru',
+      accessor: (row: Jadwal) => {
+        let names: string[] = [];
+        if (row.guru_names) {
+          names = row.guru_names.split(',').map((s) => s.trim()).filter(Boolean);
+        } else if (row.guru_ids) {
+          const ids = row.guru_ids.split(',').map((x) => parseInt(x.trim(), 10)).filter((n) => !isNaN(n));
+          names = ids.map((id) => guruList.find((g) => g.id === id)?.nama).filter(Boolean) as string[];
+        } else if (row.id_guru) {
+          const g = guruList.find((x) => x.id === row.id_guru);
+          if (g) names = [g.nama];
+        }
+
+        if (names.length === 0) {
+          return <span className="text-[#94A3B8] text-xs italic">Belum ditentukan</span>;
+        }
+
+        return (
+          <div className="flex flex-wrap gap-1.5 items-center">
+            {names.map((name, idx) => (
+              <span
+                key={idx}
+                className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#E8F5E9] text-[#2E7D32] border border-[#A5D6A7] rounded-md text-xs font-bold shadow-2xs"
+              >
+                <PengajarIcon size={12} className="text-[#2E7D32]" />
+                {name}
+              </span>
+            ))}
+            {names.length > 1 && (
+              <span className="text-[10px] font-extrabold text-[#1976D2] bg-[#E3F2FD] border border-[#90CAF9] px-1.5 py-0.5 rounded-md">
+                {names.length} Guru
+              </span>
+            )}
+          </div>
+        );
+      },
     },
     {
       header: 'Waktu & Tipe',
@@ -304,7 +394,7 @@ export const JadwalPage: React.FC = () => {
         <div className="flex items-center md:justify-end gap-2">
           <button
             onClick={() => openEditModal(row)}
-            className="px-2.5 py-1 bg-[#FAFAFA] hover:bg-[#E2E8F0] text-[#334155] text-xs font-bold rounded-lg border border-[#CBD5E1] transition-colors"
+            className="px-2.5 py-1 bg-[#FAFAFA] hover:bg-[#E2E8F0] text-[#334155] text-xs font-bold rounded-lg border border-[#CBD5E1] transition-colors cursor-pointer"
             title="Edit Jadwal"
           >
             Edit
@@ -433,10 +523,16 @@ export const JadwalPage: React.FC = () => {
           <DataTable
             columns={jadwalColumns}
             data={jadwalList}
-            searchPlaceholder="Cari hari atau lokasi..."
-            searchFilter={(row, q) =>
-              row.hari.toLowerCase().includes(q.toLowerCase()) || row.lokasi.toLowerCase().includes(q.toLowerCase())
-            }
+            searchPlaceholder="Cari program, hari, guru, lokasi..."
+            searchFilter={(row, q) => {
+              const query = q.toLowerCase();
+              return (
+                row.hari.toLowerCase().includes(query) ||
+                row.lokasi.toLowerCase().includes(query) ||
+                (row.kategori_program || '').toLowerCase().includes(query) ||
+                (row.guru_names || '').toLowerCase().includes(query)
+              );
+            }}
           />
         )
       ) : (
@@ -469,33 +565,122 @@ export const JadwalPage: React.FC = () => {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         title={editingJadwal ? "Edit Data Jadwal" : "Buat Jadwal Baru"}
+        size="lg"
       >
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (editingJadwal) {
-              updateMutation.mutate(formData);
-            } else {
-              createMutation.mutate(formData);
-            }
-          }}
-          className="space-y-4 text-xs"
-        >
-          {/* Select Guru Dropdown */}
+        <form onSubmit={handleFormSubmit} className="space-y-4 text-xs">
+          {/* Program Selector */}
           <div>
-            <label className="block text-[#424242] font-bold mb-1">Nama Guru / Pengajar*</label>
-            <select
-              value={selectedGuruId}
-              onChange={(e) => handleTeacherChange(e.target.value)}
-              className="w-full bg-[#FAFAFA] border border-[#E0E0E0] rounded-lg p-2.5 text-[#424242] focus:border-[#FF7043] focus:outline-none font-medium"
-            >
-              <option value="">-- Pilih Guru / Pengajar --</option>
-              {guruList.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.nama} ({g.kategori_program})
-                </option>
-              ))}
-            </select>
+            <label className="block text-[#1E293B] font-bold mb-1.5">Program Kelas*</label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {AVAILABLE_PROGRAMS.map((prog) => {
+                const isSelected = formData.kategori_program === prog;
+                return (
+                  <button
+                    key={prog}
+                    type="button"
+                    onClick={() => handleProgramChange(prog)}
+                    className={`p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer select-none text-center active:scale-95 ${
+                      isSelected
+                        ? 'bg-[#FFF3E0] border-[#FF7043] text-[#E65100] shadow-xs ring-1 ring-[#FF7043]'
+                        : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#64748B] hover:bg-[#F1F5F9]'
+                    }`}
+                  >
+                    {prog}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Multi-Teacher Selector */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-[#1E293B] font-bold">Nama Guru / Pengajar* (Bisa Lebih dari 1)</label>
+              <div className="flex items-center gap-2">
+                {selectedTeacherIds.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedTeacherIds([])}
+                    className="text-[10px] text-[#D32F2F] hover:underline font-bold cursor-pointer"
+                  >
+                    Reset Pilihan
+                  </button>
+                )}
+                <span className="text-[10px] font-bold bg-[#E8F5E9] text-[#2E7D32] border border-[#A5D6A7] px-2 py-0.5 rounded-full">
+                  {selectedTeacherIds.length} Guru Dipilih
+                </span>
+              </div>
+            </div>
+
+            {/* Selected Teachers Chips */}
+            {selectedTeacherIds.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 p-2 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl mb-2">
+                {selectedTeacherIds.map((id) => {
+                  const g = guruList.find((guru) => guru.id === id);
+                  return (
+                    <span
+                      key={id}
+                      className="inline-flex items-center gap-1.5 bg-[#FFF3E0] text-[#E65100] border border-[#FFCC80] text-xs font-bold px-2.5 py-1 rounded-lg"
+                    >
+                      <PengajarIcon size={12} className="text-[#E65100]" />
+                      <span>{g ? g.nama : `Guru #${id}`}</span>
+                      <button
+                        type="button"
+                        onClick={() => toggleTeacher(id)}
+                        className="text-[#E65100] hover:text-[#D32F2F] font-black cursor-pointer text-xs ml-0.5"
+                        title="Hapus Guru"
+                      >
+                        ✕
+                      </button>
+                    </span>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Teacher list with checkboxes */}
+            <div className="border border-[#E2E8F0] rounded-xl max-h-48 overflow-y-auto divide-y divide-[#F1F5F9] bg-[#FAFAFA]">
+              {guruList.length === 0 ? (
+                <div className="p-4 text-center text-[#94A3B8] text-xs">Belum ada data guru terdaftar.</div>
+              ) : (
+                guruList.map((g) => {
+                  const isSelected = selectedTeacherIds.includes(g.id);
+                  const matchesProgram = (g.kategori_program || '').toLowerCase().includes(formData.kategori_program.toLowerCase());
+                  return (
+                    <div
+                      key={g.id}
+                      onClick={() => toggleTeacher(g.id)}
+                      className={`flex items-center justify-between p-2.5 cursor-pointer transition-colors ${
+                        isSelected ? 'bg-[#FFF3E0]/70' : 'hover:bg-[#F1F5F9]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => {}} // Handled by container onClick
+                          className="w-4 h-4 accent-[#FF7043] rounded cursor-pointer pointer-events-none"
+                        />
+                        <div>
+                          <p className="font-bold text-xs text-[#1E293B]">{g.nama}</p>
+                          <p className="text-[10px] text-[#64748B]">
+                            Program: {g.kategori_program || '-'} {matchesProgram && <span className="text-[#2E7D32] font-bold ml-1">★ Sesuai Program</span>}
+                          </p>
+                        </div>
+                      </div>
+                      {isSelected && (
+                        <span className="text-[10px] font-bold text-[#FF7043] bg-white border border-[#FFCC80] px-2 py-0.5 rounded-md">
+                          Terpilih
+                        </span>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+            <p className="text-[10px] text-[#64748B] mt-1">
+              Centang 1 atau beberapa guru pengajar yang bertugas pada sesi jadwal kelas ini.
+            </p>
           </div>
 
           {/* Day Picker Component (Multi Select) */}
@@ -565,7 +750,7 @@ export const JadwalPage: React.FC = () => {
               className="w-full bg-[#F5F5F5] border border-[#E0E0E0] rounded-lg p-2.5 text-[#424242] font-semibold cursor-not-allowed"
             />
             <p className="text-[10px] text-[#757575] mt-1">
-              Ruangan otomatis terisi sesuai kategori program guru yang dipilih.
+              Ruangan otomatis terisi sesuai kategori program kelas yang dipilih.
             </p>
           </div>
 
@@ -573,14 +758,14 @@ export const JadwalPage: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsAddModalOpen(false)}
-              className="px-4 py-2 bg-[#FAFAFA] text-[#757575] rounded-lg font-bold hover:bg-[#E0E0E0] border border-[#E0E0E0]"
+              className="px-4 py-2.5 bg-[#FAFAFA] text-[#757575] rounded-xl font-bold hover:bg-[#E0E0E0] border border-[#E0E0E0] cursor-pointer"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={createMutation.isPending || updateMutation.isPending}
-              className="px-4 py-2 bg-[#FF7043] text-white font-bold rounded-lg hover:bg-[#F4511E] disabled:opacity-50"
+              className="px-5 py-2.5 bg-[#FF7043] text-white font-bold rounded-xl hover:bg-[#F4511E] disabled:opacity-50 shadow-sm transition-all active:scale-95 cursor-pointer"
             >
               {createMutation.isPending || updateMutation.isPending
                 ? 'Simpan...'

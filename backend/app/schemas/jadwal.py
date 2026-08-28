@@ -4,6 +4,7 @@ from datetime import datetime
 
 class JadwalBase(BaseModel):
     id_guru: Optional[int] = None
+    guru_ids: Optional[str] = None
     id_siswa: Optional[int] = None
     hari: str
     jam_mulai: Optional[str] = None
@@ -18,6 +19,8 @@ class JadwalCreate(JadwalBase):
 
 class JadwalUpdate(BaseModel):
     id_guru: Optional[int] = None
+    guru_ids: Optional[str] = None
+    guru_names: Optional[str] = None
     id_siswa: Optional[int] = None
     hari: Optional[str] = None
     jam_mulai: Optional[str] = None
@@ -29,6 +32,7 @@ class JadwalUpdate(BaseModel):
 
 class JadwalResponse(JadwalBase):
     id: int
+    guru_names: Optional[str] = None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

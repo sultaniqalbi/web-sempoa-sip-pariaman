@@ -61,6 +61,8 @@ export interface Guru {
 export interface Jadwal {
   id: number;
   id_guru?: number;
+  guru_ids?: string;
+  guru_names?: string;
   id_siswa?: number;
   kategori_program?: string;
   hari: string;

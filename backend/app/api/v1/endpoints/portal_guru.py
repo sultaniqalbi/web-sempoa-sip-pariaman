@@ -38,18 +38,24 @@ def _get_current_guru(db: Session, current_user: User) -> Guru:
         raise HTTPException(status_code=404, detail="Data guru tidak ditemukan")
     return guru
 
+def _get_guru_programs(guru: Guru) -> List[str]:
+    if not guru or not guru.kategori_program:
+        return ["sempoa sip"]
+    return [p.strip().lower() for p in guru.kategori_program.split(",") if p.strip()]
+
 @router.get("/dashboard")
 async def get_guru_dashboard(
     db: Session = Depends(get_db),
     current_user: User = Depends(teacher_only)
 ):
     guru = _get_current_guru(db, current_user)
+    programs = _get_guru_programs(guru)
 
     # Get active students for this teacher or matching teacher's program
     active_students = db.query(Siswa).filter(
         or_(
             Siswa.id_guru == guru.id,
-            func.lower(Siswa.kategori_program) == func.lower(guru.kategori_program or "Sempoa SIP")
+            func.lower(Siswa.kategori_program).in_(programs)
         ),
         Siswa.status_spp == StatusSPP.AKTIF,
         Siswa.is_deleted == False
@@ -83,7 +89,8 @@ async def get_guru_dashboard(
     jadwal_row = db.query(Jadwal).filter(
         or_(
             Jadwal.id_guru == guru.id,
-            func.lower(Jadwal.kategori_program) == func.lower(guru.kategori_program or "Sempoa SIP")
+            Jadwal.guru_ids.like(f"%{guru.id}%"),
+            func.lower(Jadwal.kategori_program).in_(programs)
         )
     ).first()
 
@@ -121,7 +128,7 @@ async def get_guru_dashboard(
     latest_note = db.query(CatatanPembelajaran).filter(
         or_(
             CatatanPembelajaran.id_guru == guru.id,
-            func.lower(CatatanPembelajaran.kategori_program) == func.lower(guru.kategori_program or "")
+            func.lower(CatatanPembelajaran.kategori_program).in_(programs)
         )
     ).order_by(CatatanPembelajaran.created_at.desc()).first()
 
@@ -189,11 +196,12 @@ async def get_kelas_bimbingan(
     current_user: User = Depends(teacher_only)
 ):
     guru = _get_current_guru(db, current_user)
+    programs = _get_guru_programs(guru)
         
     total_siswa = db.query(Siswa).filter(
         or_(
             Siswa.id_guru == guru.id,
-            func.lower(Siswa.kategori_program) == func.lower(guru.kategori_program or "Sempoa SIP")
+            func.lower(Siswa.kategori_program).in_(programs)
         ),
         Siswa.status_spp == StatusSPP.AKTIF,
         Siswa.is_deleted == False
@@ -247,11 +255,12 @@ async def get_siswa_absensi(
     current_user: User = Depends(teacher_only)
 ):
     guru = _get_current_guru(db, current_user)
+    programs = _get_guru_programs(guru)
 
     students = db.query(Siswa).filter(
         or_(
             Siswa.id_guru == guru.id,
-            func.lower(Siswa.kategori_program) == func.lower(guru.kategori_program or "Sempoa SIP")
+            func.lower(Siswa.kategori_program).in_(programs)
         ),
         Siswa.is_deleted == False
     ).order_by(Siswa.nama).all()
@@ -378,12 +387,14 @@ async def save_siswa_absensi(
     saved_count = 0
     updated_students_data = []
 
+    programs = _get_guru_programs(guru)
+
     for item in data.siswa_absensi:
         siswa = db.query(Siswa).filter(
             Siswa.id == item.siswa_id,
             or_(
                 Siswa.id_guru == guru.id,
-                func.lower(Siswa.kategori_program) == func.lower(guru.kategori_program or "Sempoa SIP")
+                func.lower(Siswa.kategori_program).in_(programs)
             ),
             Siswa.is_deleted == False
         ).first()
@@ -515,6 +526,7 @@ async def get_rekap_absensi(
     current_user: User = Depends(teacher_only)
 ):
     guru = _get_current_guru(db, current_user)
+    programs = _get_guru_programs(guru)
 
     try:
         filter_date = datetime.strptime(tanggal, "%Y-%m-%d").date()
@@ -524,7 +536,7 @@ async def get_rekap_absensi(
     students = db.query(Siswa).filter(
         or_(
             Siswa.id_guru == guru.id,
-            func.lower(Siswa.kategori_program) == func.lower(guru.kategori_program or "Sempoa SIP")
+            func.lower(Siswa.kategori_program).in_(programs)
         ),
         Siswa.is_deleted == False
     ).order_by(Siswa.nama).all()
@@ -548,7 +560,7 @@ async def get_rekap_absensi(
     note_row = db.query(CatatanPembelajaran).filter(
         or_(
             CatatanPembelajaran.id_guru == guru.id,
-            func.lower(CatatanPembelajaran.kategori_program) == func.lower(guru.kategori_program or "")
+            func.lower(CatatanPembelajaran.kategori_program).in_(programs)
         ),
         CatatanPembelajaran.tanggal == filter_date
     ).order_by(CatatanPembelajaran.created_at.desc()).first()

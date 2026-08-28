@@ -9,11 +9,11 @@ def test_read_guru_list_forbidden_role(client, guru_headers):
     assert response.status_code == 403
 
 def test_guru_crud_lifecycle_admin(client, admin_headers):
-    # 1. Create Guru
+    # 1. Create Guru with multiple programs
     guru_data = {
         "uid": "GU-TEST-001",
         "nama": "Guru Test Satu",
-        "kategori_program": "Sempoa SIP",
+        "kategori_program": "Sempoa SIP, Fonem",
         "hari_wajib": "Senin, Selasa, Kamis",
         "target_kehadiran": 12,
         "bio": "Bio Guru",
@@ -21,8 +21,10 @@ def test_guru_crud_lifecycle_admin(client, admin_headers):
     }
     response = client.post("/api/v1/guru/", json=guru_data, headers=admin_headers)
     assert response.status_code == 201
-    created_guru = response.json()
+    created_guru = response.json().get("guru", response.json())
     assert created_guru["nama"] == "Guru Test Satu"
+    assert "Sempoa SIP" in created_guru["kategori_program"]
+    assert "Fonem" in created_guru["kategori_program"]
     assert created_guru["uid"] == "GU-TEST-001"
     guru_id = created_guru["id"]
 

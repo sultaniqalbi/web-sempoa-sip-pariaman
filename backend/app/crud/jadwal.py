@@ -10,8 +10,18 @@ def get_jadwal_list(db: Session, skip: int = 0, limit: int = 10) -> List[Jadwal]
     return db.query(Jadwal).offset(skip).limit(limit).all()
 
 def create_jadwal(db: Session, jadwal: JadwalCreate) -> Jadwal:
+    primary_guru_id = jadwal.id_guru
+    guru_ids_str = jadwal.guru_ids
+    if guru_ids_str and not primary_guru_id:
+        first_id_part = [x.strip() for x in guru_ids_str.split(",") if x.strip()]
+        if first_id_part and first_id_part[0].isdigit():
+            primary_guru_id = int(first_id_part[0])
+    elif primary_guru_id and not guru_ids_str:
+        guru_ids_str = str(primary_guru_id)
+
     db_jadwal = Jadwal(
-        id_guru=jadwal.id_guru,
+        id_guru=primary_guru_id,
+        guru_ids=guru_ids_str,
         id_siswa=jadwal.id_siswa,
         hari=jadwal.hari,
         jam_mulai=jadwal.jam_mulai,
@@ -28,8 +38,15 @@ def create_jadwal(db: Session, jadwal: JadwalCreate) -> Jadwal:
 
 def update_jadwal(db: Session, db_jadwal: Jadwal, update_data: JadwalUpdate) -> Jadwal:
     obj_data = update_data.model_dump(exclude_unset=True)
+    if "guru_ids" in obj_data:
+        guru_ids_str = obj_data["guru_ids"]
+        if guru_ids_str and "id_guru" not in obj_data:
+            first_id_part = [x.strip() for x in guru_ids_str.split(",") if x.strip()]
+            if first_id_part and first_id_part[0].isdigit():
+                obj_data["id_guru"] = int(first_id_part[0])
     for field in obj_data:
-        setattr(db_jadwal, field, obj_data[field])
+        if hasattr(db_jadwal, field):
+            setattr(db_jadwal, field, obj_data[field])
     db.add(db_jadwal)
     db.commit()
     db.refresh(db_jadwal)
