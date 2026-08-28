@@ -147,7 +147,7 @@ export const GaleriPage: React.FC = () => {
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(0,0,0,0.35)',
+            backgroundColor: 'rgba(0,0,0,0.15)',
             zIndex: 1000,
           }}
           aria-hidden="true"

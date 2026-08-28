@@ -3018,7 +3018,11 @@ html, body { overflow-x: hidden; max-width: 100vw; }
     }
     .nav-links.active { left: 0 !important; }
     .nav-links li { width: 100% !important; border-bottom: 1px solid #f1f5f9 !important; padding-bottom: 1rem !important; }
-    .nav-links a { font-size: 1.1rem !important; font-weight: 600 !important; color: #1E293B !important; display: block !important; width: 100% !important; }
+    .nav-links a { font-size: 1.1rem !important; font-weight: 600 !important; color: #334155 !important; display: block !important; width: 100% !important; transition: color 0.2s ease !important; }
+    .nav-links a:hover,
+    .nav-links a:active,
+    .nav-links a.active,
+    .nav-links li.active a { color: #f97316 !important; }
     
     .hero-grid-wrap { grid-template-columns: 1fr !important; text-align: center !important; gap: 2rem !important; }
     .hero-mascot-wrap { display: none !important; }
