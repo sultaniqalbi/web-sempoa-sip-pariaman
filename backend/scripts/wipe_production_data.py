@@ -49,14 +49,18 @@ def wipe_data():
         deleted_siswa = db.query(Siswa).delete(synchronize_session=False)
         deleted_guru = db.query(Guru).delete(synchronize_session=False)
 
-        # 3. Hapus Akun User SELAIN Admin & Owner/Direktur
+        # 3. Hapus Akun User SELAIN Akun Resmi Produksi (Admin & Owner Utama)
+        production_emails = [
+            "0b11010f8c@sempoasippariaman.com",
+            "0xa7f3b9e2@sempoasippariaman.com",
+        ]
         deleted_users = db.query(User).filter(
-            ~User.role.in_([UserRole.admin, UserRole.owner])
+            ~func.lower(User.email).in_(production_emails)
         ).delete(synchronize_session=False)
 
         db.commit()
 
-        # 4. Pastikan Akun Admin & Direktur / Owner Tetap Siap & Aktif
+        # 4. Pastikan Akun Admin & Direktur / Owner Produksi Tetap Siap & Aktif
         run_seed(db)
 
         # 5. Reset last_tap.json jika ada
