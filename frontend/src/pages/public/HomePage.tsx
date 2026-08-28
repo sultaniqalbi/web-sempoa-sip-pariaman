@@ -306,14 +306,14 @@ export const HomePage: React.FC = () => {
           {isMobileMenuOpen ? <CloseIcon size={24} color="#1E293B" /> : <MenuIcon size={24} color="#1E293B" />}
         </button>
 
-        {/* Mobile Drawer Backdrop Overlay */}
+        {/* Mobile Drawer Backdrop - Transparent (No Screen Darkening) */}
         {isMobileMenuOpen && (
           <div
             onClick={() => setIsMobileMenuOpen(false)}
             style={{
               position: 'fixed',
               inset: 0,
-              backgroundColor: 'rgba(0,0,0,0.15)',
+              backgroundColor: 'transparent',
               zIndex: 1000,
             }}
             aria-hidden="true"
