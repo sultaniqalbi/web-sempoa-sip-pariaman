@@ -449,13 +449,14 @@ async def save_siswa_absensi(
     updated_students_data = []
 
     programs = _get_guru_programs(guru)
+    prog_conditions = [func.lower(Siswa.kategori_program).like(f"%{p}%") for p in programs]
 
     for item in data.siswa_absensi:
         siswa = db.query(Siswa).filter(
             Siswa.id == item.siswa_id,
             or_(
                 Siswa.id_guru == guru.id,
-                func.lower(Siswa.kategori_program).in_(programs)
+                *prog_conditions
             ),
             Siswa.is_deleted == False
         ).first()
