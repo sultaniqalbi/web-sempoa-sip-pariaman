@@ -130,8 +130,16 @@ export const PembayaranOrtuPage: React.FC = () => {
   const selesaiPertemuan = totalPertemuan - sisaPertemuan;
   const progressPercent = Math.round((selesaiPertemuan / totalPertemuan) * 100);
 
-  const isSempoa = (child?.kategori_program || '').toLowerCase().includes('sempoa');
-  const sppAmount = isSempoa ? 350000 : 200000;
+  const childPrograms = (child?.kategori_program || 'Sempoa SIP').split(',').map((p) => p.trim()).filter(Boolean);
+  
+  const calculateProgramSPP = (progName: string) => {
+    const p = progName.toLowerCase();
+    if (p.includes('sempoa')) return 350000;
+    if (p.includes('tk')) return 0;
+    return 200000;
+  };
+
+  const sppAmount = childPrograms.reduce((sum, prog) => sum + calculateProgramSPP(prog), 0) || 200000;
   const sisaRatio = totalPertemuan > 0 ? sisaPertemuan / totalPertemuan : 1;
 
   // Cek siklus 30 hari
@@ -249,7 +257,14 @@ export const PembayaranOrtuPage: React.FC = () => {
             )}
             <div>
               <h2 className="text-base font-extrabold text-[#1E293B]">{child.nama}</h2>
-              <p className="text-xs text-[#64748B]">{child.kategori_program} &bull; UID: {child.uid}</p>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {childPrograms.map((p, idx) => (
+                  <span key={idx} className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] border border-[#FFCC80]">
+                    {p}
+                  </span>
+                ))}
+              </div>
+              <p className="text-[10px] text-[#64748B] mt-0.5">UID: {child.uid} {child.paket_jadwal ? `• ${child.paket_jadwal}` : ''}</p>
             </div>
           </div>
           <span
@@ -281,8 +296,13 @@ export const PembayaranOrtuPage: React.FC = () => {
         {/* Info SPP */}
         <div className="grid grid-cols-2 gap-3 text-center">
           <div className="bg-white/90 rounded-xl p-3 border border-white shadow-2xs">
-            <p className="text-[11px] text-[#64748B] font-bold">Biaya SPP Bulanan</p>
+            <p className="text-[11px] text-[#64748B] font-bold">Total SPP Bulanan</p>
             <p className="text-base font-black text-[#1E293B] mt-0.5">Rp {sppAmount.toLocaleString('id-ID')}</p>
+            {childPrograms.length > 1 && (
+              <p className="text-[9px] text-[#E65100] font-bold mt-0.5">
+                {childPrograms.map((p) => `${p}: Rp ${calculateProgramSPP(p).toLocaleString('id-ID')}`).join(' + ')}
+              </p>
+            )}
           </div>
           <div className="bg-white/90 rounded-xl p-3 border border-white shadow-2xs">
             <p className="text-[11px] text-[#64748B] font-bold">Status Kehadiran</p>

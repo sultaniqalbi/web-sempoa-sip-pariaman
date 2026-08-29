@@ -68,7 +68,31 @@ export const PROGRAM_CONFIG = {
   }
 };
 
-const getProgramBadgeStyle = (program: string) => {
+export const AVAILABLE_PROGRAMS = ['Sempoa SIP', 'Fonem', 'Tahfidz', 'Bahasa Inggris', 'TK'];
+
+export const calculateTotalSPP = (programStr: string) => {
+  if (!programStr) return 200000;
+  const progs = programStr.split(',').map((p) => p.trim()).filter(Boolean);
+  if (progs.length === 0) return 200000;
+  let total = 0;
+  for (const p of progs) {
+    total += (PROGRAM_CONFIG as any)[p]?.spp ?? 200000;
+  }
+  return total;
+};
+
+export const calculateDefaultTarget = (programStr: string) => {
+  if (!programStr) return 8;
+  const progs = programStr.split(',').map((p) => p.trim()).filter(Boolean);
+  if (progs.length === 0) return 8;
+  let total = 0;
+  for (const p of progs) {
+    total += (PROGRAM_CONFIG as any)[p]?.packages[0]?.target ?? 8;
+  }
+  return total > 0 ? total : 8;
+};
+
+export const getProgramBadgeStyle = (program: string) => {
   const p = (program || '').trim().toLowerCase();
   if (p.includes('sempoa')) {
     return 'bg-[#FFF3E0] text-[#E65100] border-[#FFCC80]';
@@ -154,7 +178,9 @@ export const SiswaPage: React.FC = () => {
   const generateKodeSiswa = (program: string, ageVal?: string | number | null, birthDate?: string) => {
     let prefix = 'sp';
     const progLower = (program || '').toLowerCase();
-    if (progLower.includes('fonem') || progLower.includes('baca')) {
+    if (progLower.includes('sempoa')) {
+      prefix = 'sp';
+    } else if (progLower.includes('fonem') || progLower.includes('baca')) {
       prefix = 'fn';
     } else if (progLower.includes('tahfidz') || progLower.includes('quran')) {
       prefix = 'td';
@@ -457,17 +483,27 @@ export const SiswaPage: React.FC = () => {
     },
     {
       header: 'Program & Hari',
-      accessor: (row: Siswa) => (
-        <div>
-          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border shadow-2xs ${getProgramBadgeStyle(row.kategori_program)}`}>
-            {row.kategori_program}
-          </span>
-          {row.paket_jadwal && (
-            <p className="text-[9px] font-semibold text-[#64748B] mt-0.5">{row.paket_jadwal}</p>
-          )}
-          <p className="text-[10px] text-[#94A3B8] mt-1">{row.hari_masuk}</p>
-        </div>
-      )
+      accessor: (row: Siswa) => {
+        const progs = (row.kategori_program || 'Sempoa SIP').split(',').map((p) => p.trim()).filter(Boolean);
+        return (
+          <div>
+            <div className="flex flex-wrap gap-1 mb-1">
+              {progs.map((p, idx) => (
+                <span
+                  key={idx}
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold border shadow-2xs ${getProgramBadgeStyle(p)}`}
+                >
+                  {p}
+                </span>
+              ))}
+            </div>
+            {row.paket_jadwal && (
+              <p className="text-[9px] font-semibold text-[#64748B] mt-0.5">{row.paket_jadwal}</p>
+            )}
+            <p className="text-[10px] text-[#94A3B8] mt-1">{row.hari_masuk}</p>
+          </div>
+        );
+      }
     },
     {
       header: 'Sisa Pertemuan',
@@ -706,93 +742,109 @@ export const SiswaPage: React.FC = () => {
             {editingSiswa?.foto_profil && !selectedPhoto && (
               <p className="text-[10px] text-[#64748B] mt-1">Siswa ini sudah memiliki foto. Upload baru untuk mengganti.</p>
             )}
-          </div>
-
-          {/* 3. Kategori Program & Info Biaya SPP / Pertemuan */}
+          </div>          {/* 3. Kategori Multi-Program & Info Biaya SPP Terakumulasi */}
           <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="block text-[#1E293B] font-bold">Kategori Program*</label>
-              <span className="text-[11px] font-extrabold text-[#E65100] bg-[#FFF3E0] px-2 py-0.5 rounded border border-[#FFCC80]">
-                SPP: Rp {((PROGRAM_CONFIG as any)[formData.kategori_program]?.spp || 200000).toLocaleString('id-ID')} / bulan
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-[#1E293B] font-bold text-xs sm:text-sm">Pilih Program (Bisa Pilih Lebih Dari 1)*</label>
+              <span className="text-[11px] font-extrabold text-[#E65100] bg-[#FFF3E0] px-2.5 py-0.5 rounded-lg border border-[#FFCC80]">
+                Total SPP: Rp {calculateTotalSPP(formData.kategori_program).toLocaleString('id-ID')} / bulan
               </span>
             </div>
-            <select
-              value={formData.kategori_program}
-              onChange={(e) => {
-                const newProg = e.target.value;
-                const newUid = !editingSiswa ? generateKodeSiswa(newProg, formData.umur, formData.tanggal_lahir) : formData.uid;
-                const progConf = (PROGRAM_CONFIG as any)[newProg] || PROGRAM_CONFIG['Sempoa SIP'];
-                const defaultPkg = progConf.packages[0].label;
-                const defaultTarget = progConf.packages[0].target;
-                setFormData({ 
-                  ...formData, 
-                  kategori_program: newProg, 
-                  paket_jadwal: defaultPkg,
-                  target_pertemuan: defaultTarget,
-                  uid: newUid 
-                });
-              }}
-              className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none font-medium"
-            >
-              <option value="Sempoa SIP">Sempoa SIP (8x 90m / 12x 60m • Rp 350.000/bln)</option>
-              <option value="Fonem">Fonem (12x 60m • Rp 200.000/bln)</option>
-              <option value="Tahfidz">Tahfidz (12x 60m • Rp 200.000/bln)</option>
-              <option value="Bahasa Inggris">Bahasa Inggris (2x 90m • Rp 200.000/bln)</option>
-              <option value="TK">TK (Program TK - Fleksibel)</option>
-            </select>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {AVAILABLE_PROGRAMS.map((prog) => {
+                const selectedList = formData.kategori_program.split(',').map((p) => p.trim()).filter(Boolean);
+                const isSelected = selectedList.includes(prog);
+                const progConf = (PROGRAM_CONFIG as any)[prog];
+                return (
+                  <button
+                    key={prog}
+                    type="button"
+                    onClick={() => {
+                      let nextList: string[];
+                      if (isSelected) {
+                        if (selectedList.length === 1) {
+                          showToast('Siswa minimal harus memiliki 1 program', 'error');
+                          return;
+                        }
+                        nextList = selectedList.filter((p) => p !== prog);
+                      } else {
+                        nextList = [...selectedList, prog];
+                      }
+                      const nextStr = nextList.join(', ');
+                      const nextTarget = calculateDefaultTarget(nextStr);
+                      const newUid = !editingSiswa ? generateKodeSiswa(nextStr, formData.umur, formData.tanggal_lahir) : formData.uid;
+                      const pkgLabels = nextList.map((p) => (PROGRAM_CONFIG as any)[p]?.packages[0]?.label || p).join(' + ');
+
+                      setFormData({
+                        ...formData,
+                        kategori_program: nextStr,
+                        paket_jadwal: pkgLabels,
+                        target_pertemuan: nextTarget,
+                        uid: newUid,
+                      });
+                    }}
+                    className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                      isSelected
+                        ? 'bg-[#FFF3E0] border-[#FF7043] ring-1 ring-[#FF7043] shadow-xs'
+                        : 'bg-[#F8FAFC] border-[#E2E8F0] hover:bg-[#F1F5F9]'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className={`text-xs font-bold ${isSelected ? 'text-[#E65100]' : 'text-[#1E293B]'}`}>
+                        {prog}
+                      </span>
+                      <span className={`text-xs font-bold ${isSelected ? 'text-[#E65100]' : 'text-[#94A3B8]'}`}>
+                        {isSelected ? '✓' : '+'}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-[#64748B] mt-1 font-semibold">
+                      {prog === 'TK' ? 'Program Fleksibel' : `SPP Rp ${(progConf?.spp || 0).toLocaleString('id-ID')}`}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          {/* 4. Paket Jadwal & Detail Pertemuan */}
+          {/* 4. Paket Jadwal & Detail Pertemuan Multi-Program */}
           {(() => {
-            const currentProgConfig = (PROGRAM_CONFIG as any)[formData.kategori_program] || PROGRAM_CONFIG['Sempoa SIP'];
-            const currentSelectedPackage = currentProgConfig.packages.find((p: any) => p.label === formData.paket_jadwal) || currentProgConfig.packages[0];
+            const selectedList = formData.kategori_program.split(',').map((p) => p.trim()).filter(Boolean);
 
             return (
-              <div className="p-3 bg-[#FFF3E0] border border-[#FFCC80] rounded-xl space-y-2">
+              <div className="p-3 bg-[#FFF3E0] border border-[#FFCC80] rounded-xl space-y-2.5">
                 <div className="flex items-center justify-between">
                   <label className="block text-[#E65100] font-bold text-xs">
-                    Pilih Paket & Jumlah Pertemuan ({formData.kategori_program})*
+                    Rincian Program & Sesi Terpilih ({selectedList.join(' + ')})
                   </label>
                   <span className="text-[10px] text-[#BF360C] font-semibold">
                     Siklus 30 Hari
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {currentProgConfig.packages.map((pkg: any, idx: number) => (
-                    <label 
-                      key={pkg.label}
-                      className={`flex items-center gap-2.5 p-2.5 rounded-lg border cursor-pointer transition-all ${
-                        formData.paket_jadwal === pkg.label || (!formData.paket_jadwal && idx === 0)
-                          ? 'bg-white border-[#FF7043] shadow-xs ring-1 ring-[#FF7043]'
-                          : 'bg-[#FAFAFA] border-[#E0E0E0] hover:bg-white'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="paket_jadwal"
-                        value={pkg.label}
-                        checked={formData.paket_jadwal === pkg.label || (!formData.paket_jadwal && idx === 0)}
-                        onChange={(e) => setFormData({ 
-                          ...formData, 
-                          paket_jadwal: e.target.value,
-                          target_pertemuan: pkg.target
-                        })}
-                        className="accent-[#FF7043]"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <p className="font-bold text-[#1E293B] text-xs truncate">
-                            {pkg.count} ({pkg.duration})
+                <div className="space-y-1.5">
+                  {selectedList.map((progName) => {
+                    const conf = (PROGRAM_CONFIG as any)[progName] || PROGRAM_CONFIG['Sempoa SIP'];
+                    return (
+                      <div key={progName} className="p-2.5 bg-white/90 border border-[#FFE082] rounded-xl flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getProgramBadgeStyle(progName)}`}>
+                              {progName}
+                            </span>
+                            <span className="text-xs font-bold text-[#1E293B]">
+                              {conf.packages[0]?.label}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-[#64748B] mt-0.5">
+                            {progName === 'TK' ? 'Program Internal' : `SPP Rp ${conf.spp.toLocaleString('id-ID')} / bulan`}
                           </p>
-                          <span className="text-[9px] font-extrabold text-[#E65100] bg-[#FFE0B2] px-1.5 py-0.2 rounded">
-                            {pkg.target} Pertemuan
-                          </span>
                         </div>
-                        <p className="text-[10px] text-[#64748B] mt-0.5">{pkg.label}</p>
+                        <span className="text-[11px] font-extrabold text-[#E65100] bg-[#FFE0B2] px-2 py-1 rounded-md">
+                          {conf.packages[0]?.target > 0 ? `${conf.packages[0].target} Sesi` : 'Fleksibel'}
+                        </span>
                       </div>
-                    </label>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* Toggle Switch: Input Siswa Lama / Migrasi Data Pertemuan Manual */}
@@ -812,7 +864,7 @@ export const SiswaPage: React.FC = () => {
                       <p className="text-[10px] text-[#78350F] mt-0.5 font-medium">
                         {isCustomQuota
                           ? 'Aktif: Masukkan sisa pertemuan & target dari buku absen fisik lama.'
-                          : `Otomatis: Sisa pertemuan diset 0 & Target ${formData.target_pertemuan || currentSelectedPackage.target} sesi sesuai paket ${formData.kategori_program}.`}
+                          : `Otomatis: Sisa pertemuan diset 0 & Target ${formData.target_pertemuan || defaultTarget} sesi sesuai program ${formData.kategori_program}.`}
                       </p>
                     </div>
 
@@ -873,7 +925,7 @@ export const SiswaPage: React.FC = () => {
                             setFormData({ ...formData, target_pertemuan: val === '' ? 0 : parseInt(val) || 0 });
                           }}
                           className="w-full bg-white border border-[#FFCC80] rounded-lg p-2 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none text-xs"
-                          placeholder={String(currentSelectedPackage.target)}
+                          placeholder={String(defaultTarget)}
                         />
                         <span className="text-[10px] text-[#BF360C] block mt-0.5 font-medium">Total sesi per siklus SPP</span>
                       </div>

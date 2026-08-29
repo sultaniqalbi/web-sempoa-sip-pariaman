@@ -261,11 +261,18 @@ export const SharedPembayaranPage: React.FC = () => {
     },
     {
       header: 'Program',
-      accessor: (row: ReminderItem) => (
-        <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-[#FFF3E0] text-[#FF7043] border border-[#FFCC80] inline-block shadow-2xs">
-          {row.program}
-        </span>
-      ),
+      accessor: (row: ReminderItem) => {
+        const progs = (row.program || 'Sempoa SIP').split(',').map((p) => p.trim()).filter(Boolean);
+        return (
+          <div className="flex flex-wrap gap-1">
+            {progs.map((p, idx) => (
+              <span key={idx} className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] border border-[#FFCC80] inline-block shadow-2xs">
+                {p}
+              </span>
+            ))}
+          </div>
+        );
+      },
     },
     {
       header: 'Pertemuan & Sisa',

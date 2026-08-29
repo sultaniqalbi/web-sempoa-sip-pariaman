@@ -51,12 +51,14 @@ async def get_guru_dashboard(
     guru = _get_current_guru(db, current_user)
     programs = _get_guru_programs(guru)
 
-    # Get active students for this teacher or matching teacher's program
+    # Get active students for this teacher or matching teacher's program (supports multi-program)
+    prog_conditions = [func.lower(Siswa.kategori_program).like(f"%{p}%") for p in programs]
     active_students = db.query(Siswa).filter(
         or_(
             Siswa.id_guru == guru.id,
-            func.lower(Siswa.kategori_program).in_(programs)
+            *prog_conditions
         ),
+        func.lower(func.trim(Siswa.kategori_program)) != 'tk',
         Siswa.status_spp == StatusSPP.AKTIF,
         Siswa.is_deleted == False
     ).all()
@@ -198,11 +200,13 @@ async def get_kelas_bimbingan(
     guru = _get_current_guru(db, current_user)
     programs = _get_guru_programs(guru)
         
+    prog_conditions = [func.lower(Siswa.kategori_program).like(f"%{p}%") for p in programs]
     total_siswa = db.query(Siswa).filter(
         or_(
             Siswa.id_guru == guru.id,
-            func.lower(Siswa.kategori_program).in_(programs)
+            *prog_conditions
         ),
+        func.lower(func.trim(Siswa.kategori_program)) != 'tk',
         Siswa.status_spp == StatusSPP.AKTIF,
         Siswa.is_deleted == False
     ).count()
@@ -270,12 +274,13 @@ async def get_siswa_absensi(
     else:
         filter_programs = [p.lower() for p in raw_programs]
 
+    filter_conditions = [func.lower(Siswa.kategori_program).like(f"%{p}%") for p in filter_programs]
     students = db.query(Siswa).filter(
         or_(
             Siswa.id_guru == guru.id,
-            func.lower(Siswa.kategori_program).in_(filter_programs)
+            *filter_conditions
         ),
-        func.lower(Siswa.kategori_program) != 'tk',  # Exclude TK from student attendance per specs
+        func.lower(func.trim(Siswa.kategori_program)) != 'tk',  # Exclude TK-only from student attendance
         Siswa.is_deleted == False
     ).order_by(Siswa.nama).all()
 

@@ -125,8 +125,16 @@ export const OrtuDashboardPage: React.FC = () => {
   const totalAbsensi = absensiLogs?.length || 0;
   const attendanceRate = totalAbsensi > 0 ? Math.round((hadirCount / totalAbsensi) * 100) : 0;
 
-  const isSempoa = (child.kategori_program || '').toLowerCase().includes('sempoa');
-  const sppAmount = isSempoa ? 350000 : 200000;
+  const childPrograms = (child.kategori_program || 'Sempoa SIP').split(',').map((p) => p.trim()).filter(Boolean);
+  
+  const calculateProgramSPP = (progName: string) => {
+    const p = progName.toLowerCase();
+    if (p.includes('sempoa')) return 350000;
+    if (p.includes('tk')) return 0;
+    return 200000;
+  };
+
+  const sppAmount = childPrograms.reduce((sum, prog) => sum + calculateProgramSPP(prog), 0) || 200000;
   const sisaRatio = totalPertemuan > 0 ? sisaPertemuan / totalPertemuan : 1;
 
   // Cek siklus 30 hari
@@ -557,7 +565,14 @@ export const OrtuDashboardPage: React.FC = () => {
               <div className="p-3.5 bg-[#F8FAFC] rounded-2xl border border-[#E2E8F0] flex items-center justify-between">
                 <div>
                   <p className="font-bold text-[#1E293B] text-sm">{child.nama}</p>
-                  <p className="text-[11px] text-[#64748B]">{child.kategori_program} {child.paket_jadwal ? `• ${child.paket_jadwal}` : ''}</p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {childPrograms.map((p, idx) => (
+                      <span key={idx} className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] border border-[#FFCC80]">
+                        {p}
+                      </span>
+                    ))}
+                  </div>
+                  {child.paket_jadwal && <p className="text-[10px] text-[#64748B] mt-0.5">{child.paket_jadwal}</p>}
                 </div>
                 <div className="text-right">
                   <span className="text-[10px] text-[#64748B] font-medium">Sisa Pertemuan:</span>
@@ -571,7 +586,7 @@ export const OrtuDashboardPage: React.FC = () => {
               {sppStatus === 'Peringatan' ? (
                 <div className="space-y-3">
                   <p className="text-[#334155] leading-relaxed">
-                    Halo Ayah/Bunda dari <strong>{child.nama}</strong>, kami menginformasikan bahwa sisa kuota bimbingan ananda saat ini tersisa <strong>{sisaPertemuan} pertemuan ({Math.round(sisaRatio * 100)}%)</strong>. Mohon bersiap untuk melakukan pembayaran SPP periode berikutnya.
+                    Halo Ayah/Bunda dari <strong>{child.nama}</strong>, kami menginformasikan bahwa sisa kuota bimbingan ananda untuk program <strong>{child.kategori_program}</strong> saat ini tersisa <strong>{sisaPertemuan} pertemuan ({Math.round(sisaRatio * 100)}%)</strong>. Mohon bersiap untuk melakukan pembayaran SPP periode berikutnya.
                   </p>
 
                   {/* Cara bayar ditutup sesuai instruksi */}
@@ -597,16 +612,25 @@ export const OrtuDashboardPage: React.FC = () => {
                     <AlertTriangleIcon size={16} className="text-[#C62828] shrink-0 mt-0.5" />
                     <span>
                       {isHangus
-                        ? 'Masa bimbingan 30 hari ananda telah berakhir. Sisa pertemuan dinyatakan hangus. Mohon segera melunasi SPP agar ananda dapat kembali aktif bimbingan.'
+                        ? `Masa bimbingan 30 hari ananda (${child.kategori_program}) telah berakhir. Sisa pertemuan dinyatakan hangus. Mohon segera melunasi SPP agar ananda dapat kembali aktif bimbingan.`
                         : isExpired30Hari
-                        ? 'Masa bimbingan 30 hari ananda telah berakhir. Mohon segera melunasi SPP agar ananda dapat melanjutkan sesi belajar.'
-                        : `Sisa kuota bimbingan Ananda ${child.nama} hampir habis (tinggal ${sisaPertemuan} sesi / < 20%). Mohon segera lakukan pembayaran SPP.`}
+                        ? `Masa bimbingan 30 hari ananda (${child.kategori_program}) telah berakhir. Mohon segera melunasi SPP agar ananda dapat melanjutkan sesi belajar.`
+                        : `Sisa kuota bimbingan ananda ${child.nama} untuk program ${child.kategori_program} hampir habis (tinggal ${sisaPertemuan} sesi / < 20%). Mohon segera lakukan pembayaran SPP.`}
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between px-3 py-2 bg-[#F1F8E9] rounded-xl border border-[#C8E6C9]">
-                    <span className="text-[11px] font-bold text-[#2E7D32]">Nominal SPP ({child.kategori_program}):</span>
-                    <span className="text-sm font-extrabold text-[#1E293B]">Rp {sppAmount.toLocaleString('id-ID')}</span>
+                  <div className="p-3 bg-[#F1F8E9] rounded-xl border border-[#C8E6C9] space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-[#2E7D32]">Total Tagihan SPP:</span>
+                      <span className="text-sm font-extrabold text-[#1E293B]">Rp {sppAmount.toLocaleString('id-ID')}</span>
+                    </div>
+                    {childPrograms.length > 1 && (
+                      <div className="text-[10px] text-[#558B2F] font-medium border-t border-[#C8E6C9]/60 pt-1 flex flex-wrap gap-x-2">
+                        {childPrograms.map((p, idx) => (
+                          <span key={idx}>• {p}: Rp {calculateProgramSPP(p).toLocaleString('id-ID')}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Rekening Resmi ZULHEMAWATI */}

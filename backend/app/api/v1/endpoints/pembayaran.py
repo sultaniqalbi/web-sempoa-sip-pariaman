@@ -42,10 +42,20 @@ async def read_pembayaran_list(
     )
 
 def get_spp_nominal(program: Optional[str]) -> float:
-    prog = (program or "").lower()
-    if "sempoa" in prog:
-        return 350000.00
-    return 200000.00
+    if not program:
+        return 200000.00
+    programs = [p.strip().lower() for p in program.split(",") if p.strip()]
+    if not programs:
+        return 200000.00
+    total = 0.0
+    for p in programs:
+        if "sempoa" in p:
+            total += 350000.00
+        elif "tk" in p:
+            total += 0.0
+        else:
+            total += 200000.00
+    return total if (total > 0 or not all("tk" in p for p in programs)) else 0.0
 
 @router.get("/reminder")
 @router.get("/reminder-spp")

@@ -100,10 +100,12 @@ export const OrtuLayout: React.FC = () => {
         const response = await apiClient.get('/jadwal/');
         const schedules: Jadwal[] = response.data || [];
 
+        const childProgs = (child.kategori_program || 'Sempoa SIP').toLowerCase().split(',').map((p) => p.trim()).filter(Boolean);
+
         // Try exact match for child's program + today
         const matchingSchedule = schedules.find(
           (s) =>
-            s.kategori_program?.toLowerCase() === child.kategori_program?.toLowerCase() &&
+            childProgs.some((cp) => (s.kategori_program || '').toLowerCase().includes(cp) || cp.includes((s.kategori_program || '').toLowerCase())) &&
             s.hari?.toLowerCase() === todayName.toLowerCase()
         );
 
@@ -122,7 +124,7 @@ export const OrtuLayout: React.FC = () => {
 
         // Fallback to any schedule for child's program
         const progSchedule = schedules.find(
-          (s) => s.kategori_program?.toLowerCase() === child.kategori_program?.toLowerCase()
+          (s) => childProgs.some((cp) => (s.kategori_program || '').toLowerCase().includes(cp) || cp.includes((s.kategori_program || '').toLowerCase()))
         );
 
         if (progSchedule) {
