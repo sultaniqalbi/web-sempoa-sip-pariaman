@@ -309,20 +309,17 @@ async def get_siswa_absensi(
 
     # Determine filter
     if program and program.lower() != 'all':
-        filter_programs = [program.lower()]
-    elif available_programs:
-        filter_programs = [p.lower() for p in available_programs]
+        prog_condition = func.lower(Siswa.kategori_program).like(f"%{program.lower()}%")
+        students = db.query(Siswa).filter(
+            prog_condition,
+            Siswa.is_deleted == False
+        ).order_by(Siswa.nama).all()
     else:
-        filter_programs = ["sempoa sip"]
-
-    filter_conditions = [func.lower(Siswa.kategori_program).like(f"%{p}%") for p in filter_programs]
-    students = db.query(Siswa).filter(
-        or_(
-            Siswa.id_guru == guru.id,
-            *filter_conditions
-        ),
-        Siswa.is_deleted == False
-    ).order_by(Siswa.nama).all()
+        filter_conditions = [func.lower(Siswa.kategori_program).like(f"%{p.lower()}%") for p in available_programs]
+        students = db.query(Siswa).filter(
+            or_(*filter_conditions) if filter_conditions else (Siswa.id_guru == guru.id),
+            Siswa.is_deleted == False
+        ).order_by(Siswa.nama).all()
 
     if tanggal:
         try:
@@ -652,20 +649,17 @@ async def get_rekap_absensi(
         filter_date = datetime.now().date()
 
     if program and program.lower() != 'all':
-        filter_programs = [program.lower()]
-    elif available_programs:
-        filter_programs = [p.lower() for p in available_programs]
+        prog_condition = func.lower(Siswa.kategori_program).like(f"%{program.lower()}%")
+        students = db.query(Siswa).filter(
+            prog_condition,
+            Siswa.is_deleted == False
+        ).order_by(Siswa.nama).all()
     else:
-        filter_programs = ["sempoa sip"]
-
-    filter_conditions = [func.lower(Siswa.kategori_program).like(f"%{p}%") for p in filter_programs]
-    students = db.query(Siswa).filter(
-        or_(
-            Siswa.id_guru == guru.id,
-            *filter_conditions
-        ),
-        Siswa.is_deleted == False
-    ).order_by(Siswa.nama).all()
+        filter_conditions = [func.lower(Siswa.kategori_program).like(f"%{p.lower()}%") for p in available_programs]
+        students = db.query(Siswa).filter(
+            or_(*filter_conditions) if filter_conditions else (Siswa.id_guru == guru.id),
+            Siswa.is_deleted == False
+        ).order_by(Siswa.nama).all()
 
     uids = [s.uid for s in students]
     logs_map = {}

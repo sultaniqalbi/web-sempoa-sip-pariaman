@@ -34,6 +34,8 @@ interface StudentAttendanceTableProps {
   onTanggalChange: (date: string) => void;
   onSave: (attendanceData: { siswa_id: number; status: string }[], catatan?: string) => void;
   isSaving: boolean;
+  activeProgram?: string;
+  teacherPrograms?: string[];
 }
 
 const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
@@ -42,6 +44,8 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
   onTanggalChange,
   onSave,
   isSaving,
+  activeProgram = 'all',
+  teacherPrograms = [],
 }) => {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
@@ -267,42 +271,55 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
                             siswa.kuota_program
                           );
 
-                          if (quotas.length > 1) {
-                            return (
-                              <div className="flex flex-col gap-1 items-center">
-                                {quotas.map((q, qIdx) => {
-                                  const isTk = q.program.trim().toLowerCase() === 'tk' || q.target === 0;
-                                  if (isTk) {
-                                    return (
-                                      <span key={qIdx} className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]">
-                                        TK: Harian
-                                      </span>
-                                    );
-                                  }
-                                  return (
-                                    <span key={qIdx} className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#E8F5E9] text-[#2E7D32] border border-[#C8E6C9]">
-                                      {q.program}: {q.sisa}/{q.target}
-                                    </span>
-                                  );
-                                })}
-                              </div>
+                          // Filter quotas to only show the program being taught/selected
+                          let relevantQuotas = quotas;
+                          if (activeProgram && activeProgram !== 'all') {
+                            relevantQuotas = quotas.filter((q) => 
+                              q.program.toLowerCase().includes(activeProgram.toLowerCase()) || 
+                              activeProgram.toLowerCase().includes(q.program.toLowerCase())
+                            );
+                          } else if (teacherPrograms && teacherPrograms.length > 0) {
+                            relevantQuotas = quotas.filter((q) => 
+                              teacherPrograms.some((tp) => 
+                                tp.toLowerCase().includes(q.program.toLowerCase()) || 
+                                q.program.toLowerCase().includes(tp.toLowerCase())
+                              )
                             );
                           }
 
+                          if (relevantQuotas.length === 0) {
+                            relevantQuotas = quotas;
+                          }
+
                           return (
-                            <span
-                              className={`inline-block px-2.5 py-1 rounded-full font-mono text-[11px] font-extrabold border ${
-                                siswa.is_hangus
-                                  ? 'bg-[#FFF1F2] text-[#E11D48] border-[#FECDD3]'
-                                  : siswa.is_expired
-                                  ? 'bg-[#FFF8E1] text-[#E65100] border-[#FFE082]'
-                                  : siswa.is_disabled
-                                  ? 'bg-[#FFEBEE] text-[#C62828] border-[#FFCDD2]'
-                                  : 'bg-[#E8F5E9] text-[#2E7D32] border-[#C8E6C9]'
-                              }`}
-                            >
-                              {siswa.sisa_pertemuan} / {siswa.total_pertemuan}
-                            </span>
+                            <div className="flex flex-col gap-1 items-center">
+                              {relevantQuotas.map((q, qIdx) => {
+                                const isTk = q.program.trim().toLowerCase() === 'tk' || q.target === 0;
+                                if (isTk) {
+                                  return (
+                                    <span key={qIdx} className="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A] shadow-2xs">
+                                      TK: Harian
+                                    </span>
+                                  );
+                                }
+                                return (
+                                  <span
+                                    key={qIdx}
+                                    className={`px-2.5 py-0.5 rounded-md text-[11px] font-mono font-bold border shadow-2xs ${
+                                      siswa.is_hangus
+                                        ? 'bg-[#FFF1F2] text-[#E11D48] border-[#FECDD3]'
+                                        : siswa.is_expired
+                                        ? 'bg-[#FFF8E1] text-[#E65100] border-[#FFE082]'
+                                        : siswa.is_disabled
+                                        ? 'bg-[#FFEBEE] text-[#C62828] border-[#FFCDD2]'
+                                        : 'bg-[#E8F5E9] text-[#2E7D32] border-[#C8E6C9]'
+                                    }`}
+                                  >
+                                    {relevantQuotas.length > 1 ? `${q.program}: ` : ''}{q.sisa} / {q.target}
+                                  </span>
+                                );
+                              })}
+                            </div>
                           );
                         })()}
                         <button

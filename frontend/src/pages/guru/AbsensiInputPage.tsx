@@ -281,6 +281,8 @@ export const AbsensiInputPage: React.FC = () => {
                 onTanggalChange={setInputDate}
                 onSave={handleSaveAttendance}
                 isSaving={saveMutation.isPending}
+                activeProgram={selectedProgram}
+                teacherPrograms={siswaData?.available_programs || []}
               />
             </div>
           )}
