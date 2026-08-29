@@ -36,6 +36,7 @@ class GuruSimpleInfo(BaseModel):
     nama_panggilan: Optional[str] = None
     hari_wajib: Optional[str] = None
     kategori_program: Optional[str] = None
+    whatsapp_guru: Optional[str] = None
 
 class JadwalResponse(JadwalBase):
     id: int

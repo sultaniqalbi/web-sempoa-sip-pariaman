@@ -63,6 +63,14 @@ export interface Jadwal {
   id_guru?: number;
   guru_ids?: string;
   guru_names?: string;
+  teachers?: Array<{
+    id: number;
+    nama: string;
+    nama_panggilan?: string;
+    hari_wajib?: string;
+    kategori_program?: string;
+    whatsapp_guru?: string;
+  }>;
   id_siswa?: number;
   kategori_program?: string;
   hari: string;

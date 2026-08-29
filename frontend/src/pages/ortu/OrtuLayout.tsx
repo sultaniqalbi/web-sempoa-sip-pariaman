@@ -3,9 +3,9 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import useAuth from '../../features/auth/useAuth';
 import apiClient from '../../features/api/apiClient';
-import { Siswa, Jadwal } from '../../types';
+import { Siswa, Jadwal, Guru } from '../../types';
 import OrtuHeader from './components/OrtuHeader';
-import ScheduleCard, { ScheduleData } from './components/ScheduleCard';
+import ScheduleCard, { ScheduleData, TeacherContact } from './components/ScheduleCard';
 import FeatureTiles from './components/FeatureTiles';
 import OrtuBottomNav from './components/OrtuBottomNav';
 import ProductTourModal, { TourStep } from '../../components/ProductTourModal';
@@ -106,9 +106,22 @@ export const OrtuLayout: React.FC = () => {
     },
   });
 
+  // Fetch all teachers
+  const { data: allGurus = [] } = useQuery<Guru[]>({
+    queryKey: ['all-teachers-for-ortu'],
+    queryFn: async () => {
+      try {
+        const res = await apiClient.get('/guru/');
+        return res.data || [];
+      } catch (e) {
+        return [];
+      }
+    },
+  });
+
   // Fetch schedule for today (or student's program schedule)
   const { data: scheduleToday } = useQuery<ScheduleData | null>({
-    queryKey: ['schedule-today', child?.id, child?.kategori_program],
+    queryKey: ['schedule-today', child?.id, child?.kategori_program, allGurus.length],
     queryFn: async () => {
       if (!child?.id) return null;
       try {
@@ -118,14 +131,92 @@ export const OrtuLayout: React.FC = () => {
         const response = await apiClient.get('/jadwal/');
         const schedules: Jadwal[] = response.data || [];
 
-        const childProgs = (child.kategori_program || 'Sempoa SIP').toLowerCase().split(',').map((p) => p.trim()).filter(Boolean);
+        const childProgs = (child.kategori_program || 'Sempoa SIP')
+          .split(',')
+          .map((p) => p.trim())
+          .filter(Boolean);
+
+        // Find teachers who teach child's programs or are assigned to child
+        const relevantTeachers: TeacherContact[] = [];
+        const seenGuruIds = new Set<number>();
+
+        // 1. If child has specific assigned id_guru
+        if (child.id_guru) {
+          const directGuru = allGurus.find((g) => g.id === child.id_guru);
+          if (directGuru) {
+            seenGuruIds.add(directGuru.id);
+            relevantTeachers.push({
+              id: directGuru.id,
+              nama: directGuru.nama,
+              nama_panggilan: directGuru.nama_panggilan || directGuru.nama.split(' ')[0] || directGuru.nama,
+              program: directGuru.kategori_program || child.kategori_program || 'Program Belajar',
+              no_wa_guru: directGuru.whatsapp_guru || undefined,
+            });
+          }
+        }
+
+        // 2. Match teachers by each program the child takes
+        childProgs.forEach((cp) => {
+          const cpLower = cp.toLowerCase();
+          const matchingGurus = allGurus.filter((g) => {
+            const gProgs = (g.kategori_program || '').toLowerCase();
+            return gProgs.includes(cpLower) || cpLower.includes(gProgs);
+          });
+
+          matchingGurus.forEach((g) => {
+            if (!seenGuruIds.has(g.id)) {
+              seenGuruIds.add(g.id);
+              relevantTeachers.push({
+                id: g.id,
+                nama: g.nama,
+                nama_panggilan: g.nama_panggilan || g.nama.split(' ')[0] || g.nama,
+                program: cp,
+                no_wa_guru: g.whatsapp_guru || undefined,
+              });
+            } else {
+              const existing = relevantTeachers.find((t) => t.id === g.id);
+              if (existing && !existing.program.includes(cp)) {
+                existing.program += `, ${cp}`;
+              }
+            }
+          });
+        });
 
         // Try exact match for child's program + today
         const matchingSchedule = schedules.find(
           (s) =>
-            childProgs.some((cp) => (s.kategori_program || '').toLowerCase().includes(cp) || cp.includes((s.kategori_program || '').toLowerCase())) &&
+            childProgs.some((cp) => (s.kategori_program || '').toLowerCase().includes(cp.toLowerCase()) || cp.toLowerCase().includes((s.kategori_program || '').toLowerCase())) &&
             s.hari?.toLowerCase() === todayName.toLowerCase()
         );
+
+        // Also check if schedule has embedded teachers
+        if (matchingSchedule?.teachers && matchingSchedule.teachers.length > 0) {
+          matchingSchedule.teachers.forEach((t) => {
+            if (!seenGuruIds.has(t.id)) {
+              seenGuruIds.add(t.id);
+              relevantTeachers.push({
+                id: t.id,
+                nama: t.nama,
+                nama_panggilan: t.nama_panggilan || t.nama.split(' ')[0] || t.nama,
+                program: t.kategori_program || matchingSchedule.kategori_program || 'Program Belajar',
+                no_wa_guru: t.whatsapp_guru || undefined,
+              });
+            }
+          });
+        }
+
+        const fallbackTeacher = relevantTeachers.length > 0
+          ? relevantTeachers[0]
+          : {
+              nama: 'Guru TC Pariaman',
+              nama_panggilan: 'Guru TC Pariaman',
+              program: child.kategori_program || 'Sempoa SIP',
+              no_wa_guru: '628126784986',
+            };
+
+        const teacherNicknames = relevantTeachers.length > 0
+          ? relevantTeachers.map((t) => t.nama_panggilan || t.nama).join(' | ')
+          : 'Guru TC Pariaman';
 
         if (matchingSchedule) {
           return {
@@ -135,14 +226,15 @@ export const OrtuLayout: React.FC = () => {
             jam_selesai: matchingSchedule.jam_selesai,
             ruangan: matchingSchedule.lokasi || 'TC Pariaman',
             mode_kelas: matchingSchedule.mode_kelas || 'Tatap Muka',
-            kode_guru: 'Guru TC Pariaman',
-            no_wa_guru: '628126784986',
+            kode_guru: teacherNicknames,
+            no_wa_guru: fallbackTeacher.no_wa_guru || '628126784986',
+            teachers: relevantTeachers.length > 0 ? relevantTeachers : undefined,
           };
         }
 
         // Fallback to any schedule for child's program
         const progSchedule = schedules.find(
-          (s) => childProgs.some((cp) => (s.kategori_program || '').toLowerCase().includes(cp) || cp.includes((s.kategori_program || '').toLowerCase()))
+          (s) => childProgs.some((cp) => (s.kategori_program || '').toLowerCase().includes(cp.toLowerCase()) || cp.toLowerCase().includes((s.kategori_program || '').toLowerCase()))
         );
 
         if (progSchedule) {
@@ -153,8 +245,9 @@ export const OrtuLayout: React.FC = () => {
             jam_selesai: progSchedule.jam_selesai,
             ruangan: progSchedule.lokasi || 'TC Pariaman',
             mode_kelas: progSchedule.mode_kelas || 'Tatap Muka',
-            kode_guru: 'Guru TC Pariaman',
-            no_wa_guru: '628126784986',
+            kode_guru: teacherNicknames,
+            no_wa_guru: fallbackTeacher.no_wa_guru || '628126784986',
+            teachers: relevantTeachers.length > 0 ? relevantTeachers : undefined,
           };
         }
 
@@ -163,10 +256,11 @@ export const OrtuLayout: React.FC = () => {
           nama_program: child.kategori_program || 'Sempoa SIP',
           jam_mulai: '09:00',
           jam_selesai: '17:00',
-          ruangan: 'TC Pariaman - Ruang Sempoa',
+          ruangan: 'TC Pariaman - Ruang Kelas',
           mode_kelas: 'Tatap Muka',
-          kode_guru: 'Guru TC Pariaman',
-          no_wa_guru: '628126784986',
+          kode_guru: teacherNicknames,
+          no_wa_guru: fallbackTeacher.no_wa_guru || '628126784986',
+          teachers: relevantTeachers.length > 0 ? relevantTeachers : undefined,
         };
       } catch (e) {
         return {
@@ -174,7 +268,7 @@ export const OrtuLayout: React.FC = () => {
           nama_program: child.kategori_program || 'Sempoa SIP',
           jam_mulai: '09:00',
           jam_selesai: '17:00',
-          ruangan: 'TC Pariaman - Ruang Sempoa',
+          ruangan: 'TC Pariaman - Ruang Kelas',
           mode_kelas: 'Tatap Muka',
           kode_guru: 'Guru TC Pariaman',
           no_wa_guru: '628126784986',

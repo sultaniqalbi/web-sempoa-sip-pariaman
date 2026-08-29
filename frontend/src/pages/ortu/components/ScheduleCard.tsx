@@ -1,4 +1,13 @@
 import React from 'react';
+import { WhatsAppIcon } from '../../../components/SvgIcons';
+
+export interface TeacherContact {
+  id?: number;
+  nama: string;
+  nama_panggilan?: string;
+  program: string;
+  no_wa_guru?: string;
+}
 
 export interface ScheduleData {
   kode_program: string;
@@ -9,6 +18,7 @@ export interface ScheduleData {
   kode_guru: string;
   no_wa_guru?: string;
   mode_kelas?: string;
+  teachers?: TeacherContact[];
 }
 
 interface ScheduleCardProps {
@@ -39,6 +49,7 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({ schedule }) => {
   }
 
   const isOnline = (schedule.mode_kelas || '').toUpperCase() === 'ONLINE';
+  const teachers = schedule.teachers && schedule.teachers.length > 0 ? schedule.teachers : null;
 
   return (
     <div
@@ -78,34 +89,70 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({ schedule }) => {
         <div>
           <p className="text-[10px] font-bold uppercase tracking-wider text-[#9E9E9E] mb-1">Ruangan / Tempat</p>
           <p className="text-[14px] font-bold text-[#424242]">{schedule.ruangan}</p>
-          {schedule.no_wa_guru && (
-            <a
-              href={`https://wa.me/${schedule.no_wa_guru.replace(/[^0-9]/g, '')}`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1 text-[11px] font-bold text-[#2E7D32] hover:underline mt-1 bg-[#E8F5E9] px-2 py-0.5 rounded border border-[#C8E6C9]"
-            >
-              <span>WA Guru: {schedule.no_wa_guru}</span>
-            </a>
-          )}
         </div>
 
-        <div className="col-span-2 pt-1 border-t border-[#F5F5F5] flex items-center justify-between">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#9E9E9E]">Guru Pembimbing</p>
-            <p className="text-[13px] font-extrabold text-[#FF7043] mt-0.5">{schedule.kode_guru}</p>
+        {/* Guru Pembimbing Section */}
+        {teachers && teachers.length > 1 ? (
+          <div className="col-span-2 pt-2.5 border-t border-[#F5F5F5] space-y-2">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#9E9E9E]">Guru Pembimbing ({teachers.length} Pengajar)</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {teachers.map((t, idx) => {
+                const displayName = t.nama_panggilan || t.nama.split(' ')[0] || t.nama;
+                const waUrl = t.no_wa_guru ? `https://wa.me/${t.no_wa_guru.replace(/[^0-9]/g, '')}` : null;
+
+                return (
+                  <div key={idx} className="p-2.5 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] flex items-center justify-between gap-2 shadow-2xs">
+                    <div>
+                      <p className="text-[12px] font-black text-[#1E293B]">{displayName}</p>
+                      <p className="text-[10px] text-[#FF7043] font-bold">{t.program}</p>
+                      {t.no_wa_guru && (
+                        <p className="text-[10px] text-[#64748B] font-mono">WA: {t.no_wa_guru}</p>
+                      )}
+                    </div>
+                    {waUrl && (
+                      <a
+                        href={waUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-2.5 py-1.5 bg-[#25D366] hover:bg-[#1EBE5D] text-white text-[10px] font-extrabold rounded-lg transition-all flex items-center gap-1 shadow-2xs cursor-pointer active:scale-95 shrink-0"
+                      >
+                        <WhatsAppIcon size={12} className="text-white" />
+                        <span>Hubungi</span>
+                      </a>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          {schedule.no_wa_guru && (
-            <a
-              href={`https://wa.me/${schedule.no_wa_guru.replace(/[^0-9]/g, '')}`}
-              target="_blank"
-              rel="noreferrer"
-              className="px-3 py-1 bg-[#25D366] text-white text-[11px] font-bold rounded-lg hover:bg-[#1EBE5D] transition-colors flex items-center gap-1 shadow-2xs"
-            >
-              Hubungi Guru
-            </a>
-          )}
-        </div>
+        ) : (
+          <div className="col-span-2 pt-2 border-t border-[#F5F5F5] flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[#9E9E9E]">Guru Pembimbing</p>
+              <p className="text-[13px] font-extrabold text-[#FF7043] mt-0.5">
+                {teachers && teachers.length === 1
+                  ? (teachers[0].nama_panggilan || teachers[0].nama.split(' ')[0] || teachers[0].nama)
+                  : schedule.kode_guru}
+              </p>
+              {((teachers && teachers[0]?.no_wa_guru) || schedule.no_wa_guru) && (
+                <p className="text-[10px] text-[#64748B] font-mono mt-0.5">
+                  WA: {(teachers && teachers[0]?.no_wa_guru) || schedule.no_wa_guru}
+                </p>
+              )}
+            </div>
+            {((teachers && teachers[0]?.no_wa_guru) || schedule.no_wa_guru) && (
+              <a
+                href={`https://wa.me/${(((teachers && teachers[0]?.no_wa_guru) || schedule.no_wa_guru) as string).replace(/[^0-9]/g, '')}`}
+                target="_blank"
+                rel="noreferrer"
+                className="px-3.5 py-1.5 bg-[#25D366] text-white text-[11px] font-bold rounded-lg hover:bg-[#1EBE5D] transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95"
+              >
+                <WhatsAppIcon size={14} className="text-white" />
+                <span>Hubungi Guru</span>
+              </a>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

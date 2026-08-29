@@ -64,6 +64,7 @@ def _enrich_jadwal(db: Session, j: Jadwal) -> JadwalResponse:
                     nama_panggilan=g.nama_panggilan or (g.nama.split(",")[0].strip() if g.nama else ""),
                     hari_wajib=g.hari_wajib,
                     kategori_program=g.kategori_program,
+                    whatsapp_guru=g.whatsapp_guru,
                 )
                 for g in ordered_gurus
             ]
@@ -76,6 +77,7 @@ def _enrich_jadwal(db: Session, j: Jadwal) -> JadwalResponse:
                     nama_panggilan=g.nama_panggilan or (g.nama.split(",")[0].strip() if g.nama else ""),
                     hari_wajib=g.hari_wajib,
                     kategori_program=g.kategori_program,
+                    whatsapp_guru=g.whatsapp_guru,
                 )
                 for g in gurus
             ]
