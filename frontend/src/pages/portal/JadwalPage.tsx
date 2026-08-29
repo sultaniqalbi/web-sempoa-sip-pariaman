@@ -76,6 +76,7 @@ interface Guru {
   nama: string;
   kategori_program: string;
   paket_pengajaran?: string;
+  hari_wajib?: string;
 }
 
 interface GuruAbsensiItem {
@@ -261,7 +262,7 @@ export const JadwalPage: React.FC = () => {
         const allDaysSet = new Set<string>();
         selectedGurus.forEach((g) => {
           if (g.hari_wajib) {
-            g.hari_wajib.split(',').map((d) => d.trim()).filter(Boolean).forEach((d) => allDaysSet.add(d));
+            g.hari_wajib.split(',').map((d: string) => d.trim()).filter(Boolean).forEach((d: string) => allDaysSet.add(d));
           }
         });
         if (allDaysSet.size > 0) {
