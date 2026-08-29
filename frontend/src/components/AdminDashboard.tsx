@@ -61,7 +61,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   stats = [
     { title: 'Total Murid', value: 0, aktif: 0, expired: 0, icon: 'murid' },
     { title: 'Tenaga Pengajar', value: 0, meta: 'Pengajar Terdaftar', icon: 'pengajar' },
-    { title: 'Presensi Hari Ini', value: 0, meta: 'Log RFID & Manual', metaColor: '#FF7043', icon: 'presensi' },
+    { title: 'Presensi Hari Ini', value: 0, meta: 'Presensi Guru & Siswa', metaColor: '#FF7043', icon: 'presensi' },
     { title: 'Verifikasi Transfer', value: 0, meta: 'Bukti Transfer Pending', metaColor: '#1976D2', icon: 'verifikasi' },
   ],
   features = [

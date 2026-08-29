@@ -103,7 +103,7 @@ export const DashboardPage: React.FC = () => {
     {
       title: 'Presensi Hari Ini',
       value: statsData?.absensi_hari_ini || 0,
-      meta: 'Log RFID & Manual',
+      meta: 'Presensi Guru & Siswa',
       metaColor: '#FF7043',
       icon: 'presensi',
     },

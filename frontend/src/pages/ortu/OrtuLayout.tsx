@@ -31,8 +31,8 @@ const TOUR_STEPS: TourStep[] = [
     targetId: 'tour-tab-anak',
     categoryBadge: '2. MENU ANAK SAYA',
     icon: <DocumentTextIcon size={20} className="text-[#FF7043]" />,
-    title: 'Menu Anak Saya: Absensi RFID & Catatan Guru',
-    description: 'Lihat data lengkap profil ananda, log presensi tap kartu mesin RFID secara real-time, persentase kehadiran, dan catatan evaluasi perkembangan dari guru.',
+    title: 'Menu Anak Saya: Kehadiran Siswa & Catatan Guru',
+    description: 'Lihat data lengkap profil ananda, riwayat kehadiran yang dicatat langsung oleh guru pembimbing secara real-time, persentase kehadiran, dan catatan evaluasi perkembangan dari guru.',
   },
   {
     targetId: 'tour-tab-pembayaran',

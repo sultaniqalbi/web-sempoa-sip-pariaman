@@ -59,7 +59,7 @@ export const PrivacySecurityPage: React.FC = () => {
           </h1>
 
           <p className="text-sm sm:text-base text-[#475569] max-w-2xl mx-auto leading-relaxed">
-            Kami menjunjung tinggi privasi Anda dan ananda. Setiap data pembelajaran, catatan kehadiran RFID, dan informasi keuangan dikelola dengan standar enkripsi modern dan tunduk pada <strong>UU Perlindungan Data Pribadi (UU PDP No. 27 Tahun 2022)</strong>.
+            Kami menjunjung tinggi privasi Anda dan ananda. Setiap data pembelajaran, catatan kehadiran siswa dan pengajar, dan informasi keuangan dikelola dengan standar enkripsi modern dan tunduk pada <strong>UU Perlindungan Data Pribadi (UU PDP No. 27 Tahun 2022)</strong>.
           </p>
 
           {/* Badges */}
@@ -100,7 +100,7 @@ export const PrivacySecurityPage: React.FC = () => {
                 <TargetIcon size={14} className="text-[#FF7043]" />
                 <p className="text-xs font-black">Tujuan Jelas</p>
               </div>
-              <p className="text-[11px] text-[#64748B]">Data dikumpulkan murni untuk administrasi belajar, absensi kartu RFID, dan konfirmasi tagihan SPP.</p>
+              <p className="text-[11px] text-[#64748B]">Data dikumpulkan murni untuk administrasi belajar, pencatatan presensi guru & siswa, dan konfirmasi tagihan SPP.</p>
             </div>
             <div className="p-3.5 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0]">
               <div className="flex items-center gap-1.5 mb-1 text-[#0F172A]">
@@ -141,8 +141,8 @@ export const PrivacySecurityPage: React.FC = () => {
               <tbody className="divide-y divide-[#F1F5F9] text-[#475569]">
                 <tr>
                   <td className="p-3 font-bold text-[#0F172A]">Data Siswa</td>
-                  <td className="p-3">Nama lengkap, tanggal lahir, nama sekolah, program kursus, UID RFID kartu presensi, foto profil.</td>
-                  <td className="p-3">Registrasi kelas, absensi otomatis, dan modul belajar.</td>
+                  <td className="p-3">Nama lengkap, tanggal lahir, nama sekolah, program kursus, kode siswa unik, foto profil.</td>
+                  <td className="p-3">Registrasi kelas, presensi guru, dan modul belajar.</td>
                 </tr>
                 <tr>
                   <td className="p-3 font-bold text-[#0F172A]">Data Orang Tua</td>
@@ -150,9 +150,14 @@ export const PrivacySecurityPage: React.FC = () => {
                   <td className="p-3">Pengiriman notifikasi absensi, pengingat SPP, dan akses portal.</td>
                 </tr>
                 <tr>
-                  <td className="p-3 font-bold text-[#0F172A]">Log Absensi RFID</td>
-                  <td className="p-3">Waktu tap (jam & tanggal), status kehadiran (Hadir/Izin/Alfa), ID mesin scanner.</td>
+                  <td className="p-3 font-bold text-[#0F172A]">Log Presensi Siswa</td>
+                  <td className="p-3">Waktu absensi (jam & tanggal), status kehadiran (Hadir/Izin/Alfa) yang dicatat guru.</td>
                   <td className="p-3">Pemantauan kehadiran dan keselamatan anak saat jam bimbingan.</td>
+                </tr>
+                <tr>
+                  <td className="p-3 font-bold text-[#0F172A]">Log Presensi Guru (RFID)</td>
+                  <td className="p-3">Waktu tap kartu RFID pengajar (jam & tanggal), UID kartu, status presensi.</td>
+                  <td className="p-3">Pemantauan jam kerja dan presensi tenaga pengajar TC Pariaman.</td>
                 </tr>
                 <tr>
                   <td className="p-3 font-bold text-[#0F172A]">Data Pembayaran</td>
