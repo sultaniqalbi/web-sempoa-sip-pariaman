@@ -9,7 +9,7 @@ import PageHeader from '../../components/PageHeader';
 import EmptyState from '../../components/EmptyState';
 import { DayPicker } from '../../components/DayPicker';
 import { PhotoModal } from '../../components/PhotoModal';
-import { DataSiswaIcon, TrashIcon, CheckIcon, InfoIcon } from '../../components/SvgIcons';
+import { DataSiswaIcon, TrashIcon, CheckIcon, InfoIcon, CalendarIcon } from '../../components/SvgIcons';
 
 interface Siswa {
   id: number;
