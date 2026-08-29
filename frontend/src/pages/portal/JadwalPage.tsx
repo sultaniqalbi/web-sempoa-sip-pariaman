@@ -248,11 +248,32 @@ export const JadwalPage: React.FC = () => {
 
   const toggleTeacher = (guruId: number) => {
     setSelectedTeacherIds((prev) => {
+      let nextIds: number[];
       if (prev.includes(guruId)) {
-        return prev.filter((id) => id !== guruId);
+        nextIds = prev.filter((id) => id !== guruId);
       } else {
-        return [...prev, guruId];
+        nextIds = [...prev, guruId];
       }
+
+      // Automatically sync and suggest class days from selected teachers' mandatory days
+      if (nextIds.length > 0) {
+        const selectedGurus = guruList.filter((g) => nextIds.includes(g.id));
+        const allDaysSet = new Set<string>();
+        selectedGurus.forEach((g) => {
+          if (g.hari_wajib) {
+            g.hari_wajib.split(',').map((d) => d.trim()).filter(Boolean).forEach((d) => allDaysSet.add(d));
+          }
+        });
+        if (allDaysSet.size > 0) {
+          const combinedDays = Array.from(allDaysSet).join(', ');
+          setFormData((prevForm) => ({
+            ...prevForm,
+            hari: combinedDays,
+          }));
+        }
+      }
+
+      return nextIds;
     });
   };
 
@@ -630,7 +651,7 @@ export const JadwalPage: React.FC = () => {
                       className="inline-flex items-center gap-1.5 bg-[#FFF3E0] text-[#E65100] border border-[#FFCC80] text-xs font-bold px-2.5 py-1 rounded-lg"
                     >
                       <PengajarIcon size={12} className="text-[#E65100]" />
-                      <span>{g ? g.nama : `Guru #${id}`}</span>
+                      <span>{g ? `${g.nama}${g.hari_wajib ? ` (${g.hari_wajib})` : ''}` : `Guru #${id}`}</span>
                       <button
                         type="button"
                         onClick={() => toggleTeacher(id)}
@@ -669,8 +690,15 @@ export const JadwalPage: React.FC = () => {
                           className="w-4 h-4 accent-[#FF7043] rounded cursor-pointer pointer-events-none"
                         />
                         <div>
-                          <p className="font-bold text-xs text-[#1E293B]">{g.nama}</p>
-                          <p className="text-[10px] text-[#64748B]">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-bold text-xs text-[#1E293B]">{g.nama}</p>
+                            {g.hari_wajib && (
+                              <span className="text-[9px] font-bold bg-[#E0F2FE] text-[#0369A1] border border-[#BAE6FD] px-1.5 py-0.2 rounded">
+                                📅 {g.hari_wajib}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-[#64748B] mt-0.5">
                             Program: {g.kategori_program || '-'} {matchesProgram && <span className="text-[#2E7D32] font-bold ml-1">★ Sesuai Program</span>}
                           </p>
                         </div>
@@ -685,9 +713,17 @@ export const JadwalPage: React.FC = () => {
                 })
               )}
             </div>
-            <p className="text-[10px] text-[#64748B] mt-1">
-              Centang 1 atau beberapa guru pengajar yang bertugas pada sesi jadwal kelas ini.
-            </p>
+            {selectedTeacherIds.length > 0 ? (
+              <div className="mt-1.5 p-2 bg-[#FFF8E1] border border-[#FFE082] rounded-lg text-[10px] text-[#78350F] flex items-center justify-between">
+                <span>
+                  💡 <strong>Hari mengajar otomatis disinkronkan:</strong> Pilihan hari kelas di bawah otomatis menyesuaikan hari wajib guru terpilih. Anda tetap bebas menambah/menghapus hari sesuai kebutuhan sesi.
+                </span>
+              </div>
+            ) : (
+              <p className="text-[10px] text-[#64748B] mt-1">
+                Centang 1 atau beberapa guru pengajar yang bertugas pada sesi jadwal kelas ini.
+              </p>
+            )}
           </div>
 
           {/* Day Picker Component (Multi Select) */}
