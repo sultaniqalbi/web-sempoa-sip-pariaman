@@ -307,9 +307,11 @@ async def get_siswa_absensi(
     guru = _get_current_guru(db, current_user)
     available_programs = [p.strip() for p in (guru.kategori_program or "Sempoa SIP").split(",") if p.strip()]
 
-    # Determine filter
-    if program and program.lower() != 'all':
-        prog_condition = func.lower(Siswa.kategori_program).like(f"%{program.lower()}%")
+    # Determine effective program for this view
+    current_active_prog = program if (program and program.lower() != 'all') else (available_programs[0] if available_programs else "Sempoa SIP")
+
+    if current_active_prog and current_active_prog.lower() != 'all':
+        prog_condition = func.lower(Siswa.kategori_program).like(f"%{current_active_prog.lower()}%")
         students = db.query(Siswa).filter(
             prog_condition,
             Siswa.is_deleted == False
@@ -331,14 +333,23 @@ async def get_siswa_absensi(
         
     now_str = target_date.strftime("%d %b %Y")
     
-    # Query today's logs for these students
+    # Query today's logs for these students strictly for this program
     uids = [s.uid for s in students]
     logs_map = {}
     if uids:
-        today_logs = db.query(AbsensiLog).filter(
+        log_query = db.query(AbsensiLog).filter(
             AbsensiLog.uid.in_(uids),
             func.date(AbsensiLog.waktu) == target_date
-        ).order_by(AbsensiLog.waktu.desc()).all()
+        )
+        if current_active_prog:
+            log_query = log_query.filter(
+                or_(
+                    func.lower(AbsensiLog.kategori_program) == current_active_prog.lower(),
+                    func.lower(AbsensiLog.kategori_program).like(f"%{current_active_prog.lower()}%"),
+                    AbsensiLog.kategori_program == None
+                )
+            )
+        today_logs = log_query.order_by(AbsensiLog.waktu.desc()).all()
         for l in today_logs:
             if l.uid not in logs_map:
                 s_name = l.status.value if hasattr(l.status, 'value') else str(l.status)
@@ -410,7 +421,7 @@ async def get_siswa_absensi(
         "tanggal_hari_ini": target_date.strftime("%A, %d %B %Y"),
         "siswa": result,
         "available_programs": available_programs,
-        "selected_program": program or (available_programs[0] if len(available_programs) == 1 else "all")
+        "selected_program": current_active_prog
     }
 
 class SiswaAbsensiItem(BaseModel):
@@ -500,15 +511,12 @@ async def save_siswa_absensi(
     prog_conditions = [func.lower(Siswa.kategori_program).like(f"%{p}%") for p in programs]
 
     # Effective program being marked
-    active_program = data.program or (programs[0] if len(programs) == 1 else None)
+    active_program = data.program or (programs[0] if len(programs) == 1 else "Sempoa SIP")
 
     for item in data.siswa_absensi:
         siswa = db.query(Siswa).filter(
             Siswa.id == item.siswa_id,
-            or_(
-                Siswa.id_guru == guru.id,
-                *prog_conditions
-            ),
+            func.lower(Siswa.kategori_program).like(f"%{active_program.lower()}%"),
             Siswa.is_deleted == False
         ).first()
         if not siswa:
@@ -523,10 +531,15 @@ async def save_siswa_absensi(
         except ValueError:
             mode_enum = ModeAbsensi.OFFLINE
 
-        # Check if already marked on this date to update rather than duplicate
+        # Check if already marked on this date strictly for this active_program
         existing_log = db.query(AbsensiLog).filter(
             AbsensiLog.uid == siswa.uid,
-            func.date(AbsensiLog.waktu) == now.date()
+            func.date(AbsensiLog.waktu) == now.date(),
+            or_(
+                func.lower(AbsensiLog.kategori_program) == active_program.lower(),
+                func.lower(AbsensiLog.kategori_program).like(f"%{active_program.lower()}%"),
+                AbsensiLog.kategori_program == None
+            )
         ).first()
 
         if existing_log:
@@ -534,6 +547,7 @@ async def save_siswa_absensi(
             existing_log.status = status_enum
             existing_log.waktu = now
             existing_log.mode = mode_enum
+            existing_log.kategori_program = active_program
 
             # If changed from IZIN to HADIR or ALFA: deduct remaining sessions for that program
             if prev_status == StatusAbsensi.IZIN and status_enum in [StatusAbsensi.HADIR, StatusAbsensi.ALFA]:
@@ -544,15 +558,17 @@ async def save_siswa_absensi(
             # If changed between HADIR <-> ALFA: quota unchanged
         else:
             # Student has no sessions left and no log exists today: skip unless marked IZIN or is TK
-            is_tk = "tk" in (siswa.kategori_program or "").lower()
+            is_tk = "tk" in (active_program or "").lower()
             if siswa.sisa_pertemuan <= 0 and not is_tk and status_enum in [StatusAbsensi.HADIR, StatusAbsensi.ALFA]:
                 continue
 
             log = AbsensiLog(
                 uid=siswa.uid,
+                kategori_program=active_program,
                 waktu=now,
                 mode=mode_enum,
-                status=status_enum
+                status=status_enum,
+                sumber="PORTAL_GURU"
             )
             db.add(log)
             if status_enum in [StatusAbsensi.HADIR, StatusAbsensi.ALFA]:
@@ -597,7 +613,7 @@ async def save_siswa_absensi(
     if data.catatan_pembelajaran and data.catatan_pembelajaran.strip():
         catatan_entry = CatatanPembelajaran(
             id_guru=guru.id,
-            kategori_program=guru.kategori_program or "Sempoa SIP",
+            kategori_program=active_program,
             tanggal=now.date(),
             catatan=data.catatan_pembelajaran.strip()
         )
@@ -611,7 +627,7 @@ async def save_siswa_absensi(
         "timestamp": datetime.now().isoformat(),
         "guru_id": guru.id,
         "guru_nama": guru.nama,
-        "program": guru.kategori_program or "Sempoa SIP",
+        "program": active_program,
         "tanggal": now.strftime("%Y-%m-%d"),
         "tanggal_formatted": now.strftime("%A, %d %B %Y"),
         "catatan": catatan_saved,
@@ -622,7 +638,7 @@ async def save_siswa_absensi(
         manager.broadcast_sync("CATATAN_UPDATE", {
             "guru_id": guru.id,
             "guru_nama": guru.nama,
-            "program": guru.kategori_program or "Sempoa SIP",
+            "program": active_program,
             "tanggal": now.strftime("%d %B %Y"),
             "catatan": catatan_saved,
             "waktu": now.strftime("%H:%M WIB")
@@ -630,7 +646,7 @@ async def save_siswa_absensi(
 
     return {
         "status": "success",
-        "message": f"Berhasil menyimpan absensi untuk {saved_count} siswa"
+        "message": f"Berhasil menyimpan absensi program {active_program} untuk {saved_count} siswa"
     }
 
 @router.get("/rekap-absensi")
@@ -648,8 +664,10 @@ async def get_rekap_absensi(
     except ValueError:
         filter_date = datetime.now().date()
 
-    if program and program.lower() != 'all':
-        prog_condition = func.lower(Siswa.kategori_program).like(f"%{program.lower()}%")
+    current_rekap_prog = program if (program and program.lower() != 'all') else (available_programs[0] if available_programs else "Sempoa SIP")
+
+    if current_rekap_prog and current_rekap_prog.lower() != 'all':
+        prog_condition = func.lower(Siswa.kategori_program).like(f"%{current_rekap_prog.lower()}%")
         students = db.query(Siswa).filter(
             prog_condition,
             Siswa.is_deleted == False
@@ -664,10 +682,19 @@ async def get_rekap_absensi(
     uids = [s.uid for s in students]
     logs_map = {}
     if uids:
-        date_logs = db.query(AbsensiLog).filter(
+        log_query = db.query(AbsensiLog).filter(
             AbsensiLog.uid.in_(uids),
             func.date(AbsensiLog.waktu) == filter_date
-        ).order_by(AbsensiLog.waktu.desc()).all()
+        )
+        if current_rekap_prog:
+            log_query = log_query.filter(
+                or_(
+                    func.lower(AbsensiLog.kategori_program) == current_rekap_prog.lower(),
+                    func.lower(AbsensiLog.kategori_program).like(f"%{current_rekap_prog.lower()}%"),
+                    AbsensiLog.kategori_program == None
+                )
+            )
+        date_logs = log_query.order_by(AbsensiLog.waktu.desc()).all()
         for l in date_logs:
             if l.uid not in logs_map:
                 s_name = l.status.value if hasattr(l.status, 'value') else str(l.status)

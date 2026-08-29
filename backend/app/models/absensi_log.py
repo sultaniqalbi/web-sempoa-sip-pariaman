@@ -22,6 +22,7 @@ class AbsensiLog(Base):
     mode = Column(SQLEnum(ModeAbsensi, name="absensi_mode_enum"), nullable=False, default=ModeAbsensi.ONLINE)
     status = Column(SQLEnum(StatusAbsensi, name="absensi_status_enum"), nullable=False, default=StatusAbsensi.HADIR)
     catatan = Column(Text, nullable=True)
+    kategori_program = Column(String(100), nullable=True)
     sumber = Column(String(50), nullable=True, default="RFID")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

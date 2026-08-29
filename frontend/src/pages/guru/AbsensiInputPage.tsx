@@ -21,22 +21,39 @@ export const AbsensiInputPage: React.FC = () => {
   // Input date filter state (defaults to today)
   const todayStr = new Date().toISOString().split('T')[0];
   const [inputDate, setInputDate] = useState<string>(todayStr);
-  const [selectedProgram, setSelectedProgram] = useState<string>('all');
+  const [selectedProgram, setSelectedProgram] = useState<string>('');
 
   // Rekap date filter state (defaults to today)
   const [rekapDate, setRekapDate] = useState<string>(todayStr);
-  const [selectedRekapProgram, setSelectedRekapProgram] = useState<string>('all');
+  const [selectedRekapProgram, setSelectedRekapProgram] = useState<string>('');
 
   // Fetch Students for Attendance
   const { data: siswaData, isLoading: isLoadingSiswa } = useQuery({
     queryKey: ['guru-siswa-absensi', inputDate, selectedProgram],
     queryFn: async () => {
       const res = await apiClient.get('/portal-guru/siswa-absensi', {
-        params: { tanggal: inputDate, program: selectedProgram },
+        params: { tanggal: inputDate, program: selectedProgram || undefined },
       });
       return res.data;
     },
   });
+
+  // Sync initial program once loaded
+  React.useEffect(() => {
+    if (siswaData?.available_programs && siswaData.available_programs.length > 0) {
+      if (!selectedProgram || !siswaData.available_programs.includes(selectedProgram)) {
+        setSelectedProgram(siswaData.available_programs[0]);
+      }
+    }
+  }, [siswaData?.available_programs, selectedProgram]);
+
+  React.useEffect(() => {
+    if (siswaData?.available_programs && siswaData.available_programs.length > 0) {
+      if (!selectedRekapProgram || !siswaData.available_programs.includes(selectedRekapProgram)) {
+        setSelectedRekapProgram(siswaData.available_programs[0]);
+      }
+    }
+  }, [siswaData?.available_programs, selectedRekapProgram]);
 
   // Fetch Teacher's Attendance Logs
   const { data: logData, isLoading: isLoadingLog } = useQuery({
@@ -246,23 +263,12 @@ export const AbsensiInputPage: React.FC = () => {
 
                   {/* Horizontal Slide Bar / Tabs */}
                   <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedProgram('all')}
-                      className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0 ${
-                        selectedProgram === 'all'
-                          ? 'bg-[#FF7043] text-white shadow-sm ring-2 ring-[#FF7043]/30'
-                          : 'bg-[#F8FAFC] text-[#64748B] border border-[#E2E8F0] hover:bg-[#F1F5F9]'
-                      }`}
-                    >
-                      Semua Program
-                    </button>
                     {siswaData.available_programs.map((prog: string) => (
                       <button
                         key={prog}
                         type="button"
                         onClick={() => setSelectedProgram(prog)}
-                        className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                        className={`px-4 py-2 rounded-xl text-xs font-black transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0 ${
                           selectedProgram === prog
                             ? 'bg-[#FF7043] text-white shadow-sm ring-2 ring-[#FF7043]/30'
                             : 'bg-[#F8FAFC] text-[#64748B] border border-[#E2E8F0] hover:bg-[#F1F5F9]'
@@ -315,23 +321,12 @@ export const AbsensiInputPage: React.FC = () => {
           {/* Multi-Program Slide Bar for Rekap */}
           {rekapData?.available_programs && rekapData.available_programs.length > 1 && (
             <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
-              <button
-                type="button"
-                onClick={() => setSelectedRekapProgram('all')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all whitespace-nowrap cursor-pointer shrink-0 ${
-                  selectedRekapProgram === 'all'
-                    ? 'bg-[#FF7043] text-white shadow-xs'
-                    : 'bg-[#F8FAFC] text-[#64748B] border border-[#E2E8F0] hover:bg-[#F1F5F9]'
-                }`}
-              >
-                Semua Program
-              </button>
               {rekapData.available_programs.map((prog: string) => (
                 <button
                   key={prog}
                   type="button"
                   onClick={() => setSelectedRekapProgram(prog)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all whitespace-nowrap cursor-pointer shrink-0 ${
+                  className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all whitespace-nowrap cursor-pointer shrink-0 ${
                     selectedRekapProgram === prog
                       ? 'bg-[#FF7043] text-white shadow-xs'
                       : 'bg-[#F8FAFC] text-[#64748B] border border-[#E2E8F0] hover:bg-[#F1F5F9]'
