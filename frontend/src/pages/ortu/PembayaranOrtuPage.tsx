@@ -5,6 +5,7 @@ import apiClient from '../../features/api/apiClient';
 import { Siswa, PembayaranPeriode } from '../../types';
 import { WhatsAppIcon, CameraIcon } from '../../components/SvgIcons';
 import KwitansiModal from '../../components/KwitansiModal';
+import { parseProgramDetails, getProgramBadgeStyle, parseProgramQuotas } from '../portal/SiswaPage';
 
 interface ProofItem {
   id: number;
@@ -276,21 +277,72 @@ export const PembayaranOrtuPage: React.FC = () => {
           </span>
         </div>
 
-        {/* Progress Bar Sisa Pertemuan */}
-        <div className="space-y-1.5 bg-white/80 rounded-xl p-3.5 border border-white">
-          <div className="flex justify-between text-xs font-bold text-[#1E293B]">
-            <span>Pertemuan Selesai: {selesaiPertemuan} / {totalPertemuan}</span>
-            <span style={{ color: sc.color }}>Sisa: {sisaPertemuan} kali</span>
+        {/* Progress Bar Sisa Pertemuan Per Program */}
+        <div className="space-y-2.5 bg-white/90 rounded-xl p-3.5 border border-white">
+          <div className="flex justify-between items-center text-xs font-bold text-[#1E293B]">
+            <span>Pertemuan Selesai Per Program</span>
+            <span style={{ color: sc.color }}>Total Sisa: {sisaPertemuan} / {totalPertemuan} Sesi</span>
           </div>
-          <div className="w-full bg-[#E0E0E0] rounded-full h-2.5 overflow-hidden">
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{
-                width: `${Math.min(progressPercent, 100)}%`,
-                backgroundColor: sc.color,
-              }}
-            />
-          </div>
+
+          {(() => {
+            const quotas = parseProgramQuotas(
+              child.kategori_program,
+              child.paket_jadwal,
+              child.target_pertemuan,
+              child.sisa_pertemuan,
+              (child as any).kuota_program
+            );
+
+            return (
+              <div className="space-y-2">
+                {quotas.map((q, idx) => {
+                  const isTk = q.program.trim().toLowerCase() === 'tk' || q.target === 0;
+                  if (isTk) {
+                    return (
+                      <div key={idx} className="p-2 bg-[#FFFBEB] rounded-lg border border-[#FDE68A] flex items-center justify-between">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border shadow-2xs ${getProgramBadgeStyle(q.program)}`}>
+                          {q.program}
+                        </span>
+                        <span className="text-[10px] font-extrabold text-[#B45309] bg-[#FEF3C7] px-2 py-0.5 rounded border border-[#FDE68A]">
+                          Program Harian (TK)
+                        </span>
+                      </div>
+                    );
+                  }
+
+                  const selesai = Math.max(0, q.target - q.sisa);
+                  const percent = Math.min(100, Math.round((selesai / q.target) * 100));
+
+                  return (
+                    <div key={idx} className="p-2 bg-[#F8FAFC] rounded-lg border border-[#E2E8F0] space-y-1">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border shadow-2xs ${getProgramBadgeStyle(q.program)}`}>
+                            {q.program}
+                          </span>
+                          <span className="text-[11px] font-extrabold text-[#1E293B]">
+                            {selesai} / {q.target} Selesai
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-bold text-[#2E7D32] bg-[#E8F5E9] px-2 py-0.5 rounded-full border border-[#C8E6C9]">
+                          Sisa: {q.sisa} kali ({percent}%)
+                        </span>
+                      </div>
+                      <div className="w-full bg-[#E0E0E0] rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{
+                            width: `${percent}%`,
+                            backgroundColor: sc.color,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
           <p className="text-[11px] text-[#64748B] pt-0.5">{sc.desc}</p>
         </div>
 
