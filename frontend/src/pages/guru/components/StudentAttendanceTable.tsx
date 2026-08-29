@@ -86,19 +86,26 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
   };
 
 
-  // Pre-fill existing attendance for selected date if already marked
+  // Check if attendance is already saved for this date
+  const hasSavedAttendance = students.some((s) => !!s.status_hari_ini);
+  const [isEditMode, setIsEditMode] = useState<boolean>(!hasSavedAttendance);
+
+  // Pre-fill existing attendance for selected date if already marked & lock if saved
   useEffect(() => {
     const initial: Record<number, string> = {};
+    let hasAnyRecorded = false;
     students.forEach((s) => {
       if (s.status_hari_ini) {
-        initial[s.id] = s.status_hari_ini;
+        initial[s.id] = s.status_hari_ini.toLowerCase();
+        hasAnyRecorded = true;
       }
     });
     setAttendanceState(initial);
-  }, [students]);
+    setIsEditMode(!hasAnyRecorded);
+  }, [students, tanggalTerpilih]);
 
   const handleStatusClick = (siswaId: number, status: string, isDisabled: boolean) => {
-    if (isDisabled) return;
+    if (isDisabled || !isEditMode) return;
     setAttendanceState((prev) => ({
       ...prev,
       [siswaId]: status,
@@ -116,6 +123,7 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
     }));
     onSave(data, catatanText);
     setIsNoteModalOpen(false);
+    setIsEditMode(false);
   };
 
   const filteredStudents = students.filter((s) => {
@@ -288,35 +296,69 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
                       )}
                     </td>
                     <td className="p-3.5">
-                      <div className="flex items-center justify-center gap-2">
-                        <StatusButton
-                          label="Hadir"
-                          statusKey="hadir"
-                          currentStatus={currentStatus}
-                          isDisabled={siswa.is_disabled}
-                          activeColor="bg-[#2E7D32] text-white border-[#2E7D32] shadow-sm"
-                          idleColor="bg-white text-[#2E7D32] border-[#A5D6A7] hover:bg-[#E8F5E9]"
-                          onClick={() => handleStatusClick(siswa.id, 'hadir', siswa.is_disabled)}
-                        />
-                        <StatusButton
-                          label="Absen"
-                          statusKey="absen"
-                          currentStatus={currentStatus}
-                          isDisabled={siswa.is_disabled}
-                          activeColor="bg-[#C62828] text-white border-[#C62828] shadow-sm"
-                          idleColor="bg-white text-[#C62828] border-[#FFCDD2] hover:bg-[#FFEBEE]"
-                          onClick={() => handleStatusClick(siswa.id, 'absen', siswa.is_disabled)}
-                        />
-                        <StatusButton
-                          label="Izin"
-                          statusKey="izin"
-                          currentStatus={currentStatus}
-                          isDisabled={siswa.is_disabled}
-                          activeColor="bg-[#E65100] text-white border-[#E65100] shadow-sm"
-                          idleColor="bg-white text-[#E65100] border-[#FFCC80] hover:bg-[#FFF3E0]"
-                          onClick={() => handleStatusClick(siswa.id, 'izin', siswa.is_disabled)}
-                        />
-                      </div>
+                      {!isEditMode ? (
+                        <div className="flex items-center justify-center">
+                          {(() => {
+                            const sKey = (currentStatus || '').toLowerCase();
+                            if (sKey === 'hadir') {
+                              return (
+                                <span className="inline-flex items-center justify-center px-3 py-1.5 rounded-xl text-xs font-black bg-[#E8F5E9] text-[#2E7D32] border border-[#A5D6A7] shadow-2xs min-w-[90px]">
+                                  Hadir
+                                </span>
+                              );
+                            }
+                            if (sKey === 'absen' || sKey === 'alfa') {
+                              return (
+                                <span className="inline-flex items-center justify-center px-3 py-1.5 rounded-xl text-xs font-black bg-[#FFEBEE] text-[#C62828] border border-[#FFCDD2] shadow-2xs min-w-[90px]">
+                                  Absen (Alfa)
+                                </span>
+                              );
+                            }
+                            if (sKey === 'izin') {
+                              return (
+                                <span className="inline-flex items-center justify-center px-3 py-1.5 rounded-xl text-xs font-black bg-[#FFF3E0] text-[#E65100] border border-[#FFE082] shadow-2xs min-w-[90px]">
+                                  Izin
+                                </span>
+                              );
+                            }
+                            return (
+                              <span className="inline-flex items-center justify-center px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#F1F5F9] text-[#94A3B8] border border-[#E2E8F0] min-w-[90px]">
+                                Belum Diabsen
+                              </span>
+                            );
+                          })()}
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center gap-2">
+                          <StatusButton
+                            label="Hadir"
+                            statusKey="hadir"
+                            currentStatus={currentStatus}
+                            isDisabled={siswa.is_disabled}
+                            activeColor="bg-[#2E7D32] text-white border-[#2E7D32] shadow-sm"
+                            idleColor="bg-white text-[#2E7D32] border-[#A5D6A7] hover:bg-[#E8F5E9]"
+                            onClick={() => handleStatusClick(siswa.id, 'hadir', siswa.is_disabled)}
+                          />
+                          <StatusButton
+                            label="Absen"
+                            statusKey="absen"
+                            currentStatus={currentStatus}
+                            isDisabled={siswa.is_disabled}
+                            activeColor="bg-[#C62828] text-white border-[#C62828] shadow-sm"
+                            idleColor="bg-white text-[#C62828] border-[#FFCDD2] hover:bg-[#FFEBEE]"
+                            onClick={() => handleStatusClick(siswa.id, 'absen', siswa.is_disabled)}
+                          />
+                          <StatusButton
+                            label="Izin"
+                            statusKey="izin"
+                            currentStatus={currentStatus}
+                            isDisabled={siswa.is_disabled}
+                            activeColor="bg-[#E65100] text-white border-[#E65100] shadow-sm"
+                            idleColor="bg-white text-[#E65100] border-[#FFCC80] hover:bg-[#FFF3E0]"
+                            onClick={() => handleStatusClick(siswa.id, 'izin', siswa.is_disabled)}
+                          />
+                        </div>
+                      )}
                     </td>
                   </tr>
                 );
@@ -326,19 +368,59 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
         </table>
       </div>
 
-      {/* Footer / Save Button (Sticky on mobile for quick saving) */}
-      <div className="p-3 sm:p-4 border-t border-[#E2E8F0] bg-white sm:bg-[#FAFAFA] flex items-center justify-between sticky bottom-0 sm:static z-10 shadow-md sm:shadow-none">
-        <p className="text-xs text-[#64748B]">
-          Dipilih: <strong className="text-[#FF7043] font-black">{allMarkedCount}</strong> / {filteredStudents.length} siswa
-        </p>
-        <button
-          onClick={handleOpenConfirmModal}
-          disabled={isSaving || allMarkedCount === 0}
-          className="bg-[#FF7043] hover:bg-[#F4511E] disabled:bg-[#CBD5E1] disabled:cursor-not-allowed text-white px-5 sm:px-6 py-2.5 rounded-xl text-xs sm:text-[13px] font-extrabold shadow-md transition-all active:scale-95 flex items-center gap-2 min-h-[44px] cursor-pointer"
-        >
-          {isSaving ? 'Menyimpan...' : 'Simpan Absensi'}
-        </button>
-      </div>
+      {/* Footer / Action Buttons (Sticky on mobile for quick saving) */}
+      {!isEditMode && hasSavedAttendance ? (
+        <div className="p-3 sm:p-4 border-t border-[#E2E8F0] bg-[#FAFAFA] flex flex-col sm:flex-row items-center justify-between gap-3 sticky bottom-0 sm:static z-10 shadow-md sm:shadow-none">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#2E7D32]" />
+            <p className="text-xs font-bold text-[#1E293B]">
+              Status: <span className="text-[#2E7D32] font-black">Absensi Telah Tersimpan</span> ({allMarkedCount} / {filteredStudents.length} siswa tercatat)
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsEditMode(true)}
+            className="w-full sm:w-auto bg-[#FF7043] hover:bg-[#F4511E] text-white px-5 sm:px-6 py-2.5 rounded-xl text-xs sm:text-[13px] font-extrabold shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 min-h-[44px] cursor-pointer"
+          >
+            <EditIcon size={14} />
+            <span>Edit Absensi</span>
+          </button>
+        </div>
+      ) : (
+        <div className="p-3 sm:p-4 border-t border-[#E2E8F0] bg-white sm:bg-[#FAFAFA] flex items-center justify-between sticky bottom-0 sm:static z-10 shadow-md sm:shadow-none">
+          <p className="text-xs text-[#64748B]">
+            Dipilih: <strong className="text-[#FF7043] font-black">{allMarkedCount}</strong> / {filteredStudents.length} siswa
+          </p>
+          <div className="flex items-center gap-2">
+            {hasSavedAttendance && (
+              <button
+                type="button"
+                onClick={() => {
+                  // Revert back to original saved state
+                  const initial: Record<number, string> = {};
+                  students.forEach((s) => {
+                    if (s.status_hari_ini) {
+                      initial[s.id] = s.status_hari_ini.toLowerCase();
+                    }
+                  });
+                  setAttendanceState(initial);
+                  setIsEditMode(false);
+                }}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-[#64748B] bg-white border border-[#CBD5E1] hover:bg-[#F1F5F9] transition-all cursor-pointer min-h-[44px]"
+              >
+                Batal
+              </button>
+            )}
+            <button
+              onClick={handleOpenConfirmModal}
+              disabled={isSaving || allMarkedCount === 0}
+              className="bg-[#FF7043] hover:bg-[#F4511E] disabled:bg-[#CBD5E1] disabled:cursor-not-allowed text-white px-5 sm:px-6 py-2.5 rounded-xl text-xs sm:text-[13px] font-extrabold shadow-md transition-all active:scale-95 flex items-center gap-2 min-h-[44px] cursor-pointer"
+            >
+              {isSaving ? 'Menyimpan...' : hasSavedAttendance ? 'Simpan Perubahan Absensi' : 'Simpan Absensi'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Modal Pop-up Catatan Pembelajaran (Sebelum Simpan Absensi) */}
       {isNoteModalOpen && (
