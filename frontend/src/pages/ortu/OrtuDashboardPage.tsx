@@ -6,6 +6,7 @@ import apiClient from '../../features/api/apiClient';
 import { Siswa, AbsensiLog, PembayaranPeriode } from '../../types';
 import { AlertTriangleIcon } from '../../components/SvgIcons';
 import { requestAndSubscribePush, isNotificationSupported, getNotificationPermissionStatus } from '../../utils/pushManager';
+import { parseProgramDetails, getProgramBadgeStyle, parseProgramQuotas } from '../portal/SiswaPage';
 
 export const OrtuDashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -129,12 +130,13 @@ export const OrtuDashboardPage: React.FC = () => {
   
   const calculateProgramSPP = (progName: string) => {
     const p = progName.toLowerCase();
-    if (p.includes('sempoa')) return 350000;
-    if (p.includes('tk')) return 0;
-    return 200000;
+    if (p.includes('sempoa')) {
+      return (child?.paket_jadwal || '').includes('12') ? 200000 : 150000;
+    }
+    return 150000;
   };
 
-  const sppAmount = childPrograms.reduce((sum, prog) => sum + calculateProgramSPP(prog), 0) || 200000;
+  const sppAmount = childPrograms.reduce((sum, prog) => sum + calculateProgramSPP(prog), 0) || 150000;
   const sisaRatio = totalPertemuan > 0 ? sisaPertemuan / totalPertemuan : 1;
 
   // Cek siklus 30 hari
@@ -479,26 +481,79 @@ export const OrtuDashboardPage: React.FC = () => {
           </svg>
         }
       >
-        <div className="space-y-5">
-          {/* Pertemuan Selesai */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[12px] font-semibold text-[#64748B]">Pertemuan Selesai</span>
-              <span className="text-[13px] font-bold text-[#1E293B]">{selesaiPertemuan}/{totalPertemuan}</span>
+        <div className="space-y-4">
+          {/* Pertemuan Selesai Per-Program */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[12px] font-bold text-[#64748B]">Pertemuan Selesai</span>
+              <span className="text-[12px] font-extrabold text-[#1E293B]">
+                Total: {selesaiPertemuan}/{totalPertemuan} Sesi
+              </span>
             </div>
-            <div className="w-full h-2 bg-[#F1F5F9] rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all duration-700 ease-out"
-                style={{
-                  width: `${Math.min((selesaiPertemuan / totalPertemuan) * 100, 100)}%`,
-                  background: 'linear-gradient(90deg, #FF7043, #FF5722)',
-                }}
-              />
-            </div>
+
+            {(() => {
+              const quotas = parseProgramQuotas(
+                child.kategori_program,
+                child.paket_jadwal,
+                child.target_pertemuan,
+                child.sisa_pertemuan,
+                (child as any).kuota_program
+              );
+
+              return (
+                <div className="space-y-2.5">
+                  {quotas.map((q, idx) => {
+                    const isTk = q.program.trim().toLowerCase() === 'tk' || q.target === 0;
+                    if (isTk) {
+                      return (
+                        <div key={idx} className="p-2.5 bg-[#FFFBEB] rounded-xl border border-[#FDE68A] flex items-center justify-between">
+                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border shadow-2xs ${getProgramBadgeStyle(q.program)}`}>
+                            {q.program}
+                          </span>
+                          <span className="text-[11px] font-extrabold text-[#B45309] bg-[#FEF3C7] px-2 py-0.5 rounded border border-[#FDE68A]">
+                            Program Harian (TK)
+                          </span>
+                        </div>
+                      );
+                    }
+
+                    const selesai = Math.max(0, q.target - q.sisa);
+                    const percent = Math.min(100, Math.round((selesai / q.target) * 100));
+
+                    return (
+                      <div key={idx} className="p-2.5 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border shadow-2xs ${getProgramBadgeStyle(q.program)}`}>
+                              {q.program}
+                            </span>
+                            <span className="text-[11px] font-extrabold text-[#1E293B]">
+                              {selesai} / {q.target} Selesai
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-bold text-[#2E7D32] bg-[#E8F5E9] px-2 py-0.5 rounded-full border border-[#C8E6C9]">
+                            Sisa: {q.sisa} kali ({percent}%)
+                          </span>
+                        </div>
+                        <div className="w-full h-1.5 bg-[#E2E8F0] rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-700 ease-out"
+                            style={{
+                              width: `${percent}%`,
+                              background: percent >= 100 ? '#DC2626' : percent >= 75 ? '#EA580C' : 'linear-gradient(90deg, #FF7043, #FF5722)',
+                            }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
 
           {/* Attendance Rate */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between pt-2 border-t border-[#F1F5F9]">
             <span className="text-[12px] font-semibold text-[#64748B]">Tingkat Kehadiran</span>
             <span className="text-[18px] font-black text-[#1976D2]">{attendanceRate}%</span>
           </div>
