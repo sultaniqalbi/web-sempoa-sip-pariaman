@@ -151,6 +151,56 @@ export const parseProgramDetails = (kategoriProgram?: string, paketJadwal?: stri
   });
 };
 
+export const formatDaysRange = (daysStr?: string) => {
+  if (!daysStr) return '-';
+  const clean = daysStr.trim();
+  const daysList = clean.split(',').map((d) => d.trim()).filter(Boolean);
+  if (daysList.length === 0) return '-';
+  
+  const allDaysMonSat = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+  const allDaysMonFri = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
+  
+  if (allDaysMonSat.every((d) => daysList.includes(d)) && daysList.length === 6) {
+    return 'Senin - Sabtu';
+  }
+  if (allDaysMonFri.every((d) => daysList.includes(d)) && daysList.length === 5) {
+    return 'Senin - Jumat';
+  }
+  
+  const dayOrder = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+  const indices = daysList.map((d) => dayOrder.indexOf(d)).filter((idx) => idx !== -1).sort((a, b) => a - b);
+  
+  if (indices.length >= 3) {
+    let isConsecutive = true;
+    for (let i = 0; i < indices.length - 1; i++) {
+      if (indices[i + 1] !== indices[i] + 1) {
+        isConsecutive = false;
+        break;
+      }
+    }
+    if (isConsecutive) {
+      return `${dayOrder[indices[0]]} - ${dayOrder[indices[indices.length - 1]]}`;
+    }
+  }
+
+  return daysList.join(', ');
+};
+
+export const getProgramSchedule = (progName: string, hariMasuk?: string) => {
+  if (!hariMasuk) return 'Senin - Sabtu';
+  if (!hariMasuk.includes(':')) {
+    return formatDaysRange(hariMasuk);
+  }
+  const parts = hariMasuk.split('|');
+  for (const part of parts) {
+    const [p, d] = part.split(':');
+    if (p && d && p.trim().toLowerCase() === progName.trim().toLowerCase()) {
+      return formatDaysRange(d.trim());
+    }
+  }
+  return formatDaysRange(hariMasuk);
+};
+
 export const SiswaPage: React.FC = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -616,10 +666,10 @@ export const SiswaPage: React.FC = () => {
       accessor: (row: Siswa) => {
         const details = parseProgramDetails(row.kategori_program, row.paket_jadwal);
         return (
-          <div className="space-y-1 py-1">
-            <div className="flex flex-col gap-1.5">
+          <div className="py-1">
+            <div className="flex flex-col gap-2">
               {details.map((item, idx) => (
-                <div key={idx} className="flex items-center">
+                <div key={idx} className="flex items-center h-[26px]">
                   <span
                     className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold border shadow-2xs inline-block ${getProgramBadgeStyle(item.program)}`}
                   >
@@ -628,37 +678,40 @@ export const SiswaPage: React.FC = () => {
                 </div>
               ))}
             </div>
-            <p className="text-[10px] text-[#94A3B8] pt-1 flex items-center gap-1 border-t border-[#F1F5F9] mt-1">
-              <CalendarIcon size={10} className="text-[#94A3B8]" />
-              <span className="font-medium">{row.hari_masuk}</span>
-            </p>
           </div>
         );
       },
-      className: 'md:w-[200px]'
+      className: 'md:w-[150px]'
     },
     {
-      header: 'Sesi / Pertemuan',
+      header: 'Jadwal & Sesi Pertemuan',
       accessor: (row: Siswa) => {
         const details = parseProgramDetails(row.kategori_program, row.paket_jadwal);
         return (
-          <div className="space-y-1 py-1">
-            <div className="flex flex-col gap-1.5">
-              {details.map((item, idx) => (
-                <div key={idx} className="flex items-center h-[24px]">
-                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-[#F8FAFC] text-[#334155] border border-[#CBD5E1] shadow-2xs">
-                    {item.meetingInfo}
-                  </span>
-                </div>
-              ))}
+          <div className="py-1">
+            <div className="flex flex-col gap-2">
+              {details.map((item, idx) => {
+                const schedule = getProgramSchedule(item.program, row.hari_masuk);
+                return (
+                  <div key={idx} className="flex items-center gap-1.5 h-[26px] flex-wrap">
+                    <span className="text-[11px] font-bold text-[#1E293B] bg-[#F8FAFC] border border-[#CBD5E1] px-2 py-0.5 rounded-md flex items-center gap-1 shadow-2xs">
+                      <CalendarIcon size={11} className="text-[#64748B]" />
+                      <span>{schedule}</span>
+                    </span>
+                    <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-white text-[#334155] border border-[#CBD5E1] shadow-2xs">
+                      {item.meetingInfo}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
-            <p className="text-[10px] text-[#64748B] pt-1 font-semibold border-t border-[#F1F5F9] mt-1">
-              Target: {row.target_pertemuan || 8} Sesi
+            <p className="text-[10px] text-[#64748B] pt-1.5 font-semibold border-t border-[#F1F5F9] mt-1.5">
+              Total Target: {row.target_pertemuan || 8} Sesi
             </p>
           </div>
         );
       },
-      className: 'md:w-[170px]'
+      className: 'md:w-[260px]'
     },
     {
       header: 'Sisa Pertemuan',

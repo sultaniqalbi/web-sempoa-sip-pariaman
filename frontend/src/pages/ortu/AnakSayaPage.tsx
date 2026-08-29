@@ -3,7 +3,7 @@ import useAuth from '../../features/auth/useAuth';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
 import { Siswa, AbsensiLog } from '../../types';
-import { parseProgramDetails, getProgramBadgeStyle } from '../portal/SiswaPage';
+import { parseProgramDetails, getProgramBadgeStyle, getProgramSchedule } from '../portal/SiswaPage';
 
 interface ChildFormData {
   nama: string;
@@ -259,25 +259,27 @@ export const AnakSayaPage: React.FC = () => {
           )}
 
           {/* Program & Paket Bimbingan */}
-          <div className="p-3.5 bg-[#FFF3E0] border border-[#FFE082] rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <p className="text-[11px] font-bold text-[#E65100] uppercase tracking-wider mb-1.5">Program & Paket Bimbingan</p>
-              <div className="space-y-1.5">
-                {parseProgramDetails(child.kategori_program, child.paket_jadwal).map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-1.5 flex-wrap">
-                    <span className={`px-2 py-0.5 rounded-md text-[11px] font-bold border shadow-2xs ${getProgramBadgeStyle(item.program)}`}>
-                      {item.program}
-                    </span>
-                    <span className="text-[11px] font-extrabold px-2 py-0.5 rounded bg-white text-[#334155] border border-[#FFCC80]">
+          <div className="p-3.5 bg-[#FFF3E0] border border-[#FFE082] rounded-xl space-y-2">
+            <p className="text-[11px] font-bold text-[#E65100] uppercase tracking-wider">Program & Paket Bimbingan</p>
+            <div className="space-y-1.5">
+              {parseProgramDetails(child.kategori_program, child.paket_jadwal).map((item, idx) => {
+                const schedule = getProgramSchedule(item.program, child.hari_masuk);
+                return (
+                  <div key={idx} className="flex items-center justify-between gap-2 p-2 bg-white/90 rounded-lg border border-[#FFE082] flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold border shadow-2xs ${getProgramBadgeStyle(item.program)}`}>
+                        {item.program}
+                      </span>
+                      <span className="text-[11px] font-bold text-[#1E293B]">
+                        {schedule}
+                      </span>
+                    </div>
+                    <span className="text-[11px] font-extrabold px-2 py-0.5 rounded bg-[#FFF8E1] text-[#E65100] border border-[#FFE082]">
                       {item.meetingInfo}
                     </span>
                   </div>
-                ))}
-              </div>
-            </div>
-            <div className="text-left sm:text-right shrink-0">
-              <span className="text-[10px] text-[#8D6E63] font-medium block">Hari Bimbingan:</span>
-              <span className="text-xs font-extrabold text-[#1E293B]">{child.hari_masuk || '-'}</span>
+                );
+              })}
             </div>
           </div>
 
