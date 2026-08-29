@@ -108,6 +108,45 @@ export const getProgramBadgeStyle = (program: string) => {
   return 'bg-[#F1F5F9] text-[#475569] border-[#CBD5E1]';
 };
 
+export const parseProgramDetails = (kategoriProgram?: string, paketJadwal?: string) => {
+  const progs = (kategoriProgram || 'Sempoa SIP').split(',').map((p) => p.trim()).filter(Boolean);
+  const pkgs = (paketJadwal || '').split(' + ').map((s) => s.trim()).filter(Boolean);
+
+  return progs.map((p, idx) => {
+    let meetingInfo = '';
+    const pkgStr = pkgs[idx] || '';
+    if (pkgStr) {
+      const match = pkgStr.match(/(\d+)\s*Pertemuan/i);
+      if (match) {
+        meetingInfo = `${match[1]}x Pertemuan`;
+      } else if (p.toLowerCase().includes('tk') || pkgStr.toLowerCase().includes('tk')) {
+        meetingInfo = 'Program Harian (TK)';
+      } else {
+        meetingInfo = pkgStr;
+      }
+    } else {
+      const cfg = (PROGRAM_CONFIG as any)[p];
+      if (cfg && cfg.packages && cfg.packages[0]) {
+        if (cfg.packages[0].target > 0) {
+          meetingInfo = `${cfg.packages[0].target}x Pertemuan`;
+        } else {
+          meetingInfo = 'Program Harian (TK)';
+        }
+      } else if (p.toLowerCase().includes('tk')) {
+        meetingInfo = 'Program Harian (TK)';
+      } else {
+        meetingInfo = '8x Pertemuan';
+      }
+    }
+
+    return {
+      program: p,
+      meetingInfo,
+      rawPackage: pkgStr,
+    };
+  });
+};
+
 export const SiswaPage: React.FC = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -497,25 +536,27 @@ export const SiswaPage: React.FC = () => {
       }
     },
     {
-      header: 'Program & Hari',
+      header: 'Program & Pertemuan',
       accessor: (row: Siswa) => {
-        const progs = (row.kategori_program || 'Sempoa SIP').split(',').map((p) => p.trim()).filter(Boolean);
+        const details = parseProgramDetails(row.kategori_program, row.paket_jadwal);
         return (
-          <div>
-            <div className="flex flex-wrap gap-1 mb-1">
-              {progs.map((p, idx) => (
+          <div className="space-y-1.5 py-1">
+            {details.map((item, idx) => (
+              <div key={idx} className="flex items-center gap-1.5 flex-wrap">
                 <span
-                  key={idx}
-                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold border shadow-2xs ${getProgramBadgeStyle(p)}`}
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold border shadow-2xs ${getProgramBadgeStyle(item.program)}`}
                 >
-                  {p}
+                  {item.program}
                 </span>
-              ))}
-            </div>
-            {row.paket_jadwal && (
-              <p className="text-[9px] font-semibold text-[#64748B] mt-0.5">{row.paket_jadwal}</p>
-            )}
-            <p className="text-[10px] text-[#94A3B8] mt-1">{row.hari_masuk}</p>
+                <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-[#F8FAFC] text-[#334155] border border-[#CBD5E1]">
+                  {item.meetingInfo}
+                </span>
+              </div>
+            ))}
+            <p className="text-[10px] text-[#94A3B8] pt-0.5 flex items-center gap-1">
+              <CalendarIcon size={10} className="text-[#94A3B8]" />
+              <span>{row.hari_masuk}</span>
+            </p>
           </div>
         );
       }
@@ -527,7 +568,16 @@ export const SiswaPage: React.FC = () => {
         const ratio = target > 0 ? row.sisa_pertemuan / target : 1;
         const isUrgent = ratio <= 0.20;
         const isPeringatan = ratio <= 0.40 && !isUrgent;
+        const isPureTk = (row.kategori_program || '').trim() === 'TK';
         
+        if (isPureTk) {
+          return (
+            <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]">
+              Program TK
+            </span>
+          );
+        }
+
         return (
           <div>
             <span className={`px-2.5 py-1 rounded-full text-xs font-extrabold inline-block ${
