@@ -6,6 +6,7 @@ import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
 import EmptyState from '../../components/EmptyState';
 import { AbsensiIcon, EditIcon, PengajarIcon, DataSiswaIcon } from '../../components/SvgIcons';
+import { parseProgramDetails, getProgramBadgeStyle, parseProgramQuotas } from './SiswaPage';
 
 interface SiswaItem {
   id: number;
@@ -13,6 +14,8 @@ interface SiswaItem {
   nama: string;
   nama_panggilan?: string;
   kategori_program: string;
+  paket_jadwal?: string;
+  kuota_program?: string;
   kelas_sekolah?: string;
   sisa_pertemuan: number;
   target_pertemuan: number;
@@ -125,58 +128,128 @@ export const SharedAbsensiPage: React.FC = () => {
     },
     {
       header: 'Program & Kelas',
-      accessor: (row: SiswaItem) => (
-        <div>
-          <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#FFF3E0] text-[#E65100] border border-[#FFCC80]">
-            {row.kategori_program}
-          </span>
-          <p className="text-[11px] text-[#64748B] mt-0.5 font-medium">{row.kelas_sekolah || 'Reguler'}</p>
-        </div>
-      )
+      accessor: (row: SiswaItem) => {
+        const details = parseProgramDetails(row.kategori_program, row.paket_jadwal);
+        return (
+          <div className="py-1">
+            <div className="flex flex-col gap-1.5">
+              {details.map((item, idx) => (
+                <div key={idx} className="flex items-center h-[24px]">
+                  <span
+                    className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold border shadow-2xs inline-block ${getProgramBadgeStyle(item.program)}`}
+                  >
+                    {item.program}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p className="text-[10px] text-[#64748B] mt-1 font-medium">{row.kelas_sekolah || 'Reguler'}</p>
+          </div>
+        );
+      },
     },
     {
       header: 'Progress Pertemuan',
       accessor: (row: SiswaItem) => {
-        const target = row.target_pertemuan || 8;
-        const sisa = row.sisa_pertemuan ?? 0;
-        const selesai = Math.max(0, target - sisa);
-        const percent = Math.min(100, Math.round((selesai / target) * 100));
+        const quotas = parseProgramQuotas(
+          row.kategori_program,
+          row.paket_jadwal,
+          row.target_pertemuan,
+          row.sisa_pertemuan,
+          row.kuota_program
+        );
 
         return (
-          <div className="w-40">
-            <div className="flex justify-between text-[11px] font-bold text-[#334155] mb-1">
-              <span>{selesai} / {target} Selesai</span>
-              <span>{percent}%</span>
-            </div>
-            <div className="w-full h-2 bg-[#E2E8F0] rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all ${
-                  percent >= 100 ? 'bg-[#DC2626]' : percent >= 75 ? 'bg-[#EA580C]' : 'bg-[#16A34A]'
-                }`}
-                style={{ width: `${percent}%` }}
-              />
-            </div>
+          <div className="py-1 space-y-1.5 w-44">
+            {quotas.map((q, idx) => {
+              const isTk = q.program.trim().toLowerCase() === 'tk' || q.target === 0;
+              if (isTk) {
+                return (
+                  <div key={idx} className="h-[24px] flex items-center">
+                    <span className="text-[10px] font-bold text-[#B45309] bg-[#FEF3C7] px-2 py-0.5 rounded border border-[#FDE68A]">
+                      TK: Harian
+                    </span>
+                  </div>
+                );
+              }
+
+              const selesai = Math.max(0, q.target - q.sisa);
+              const percent = Math.min(100, Math.round((selesai / q.target) * 100));
+
+              return (
+                <div key={idx} className="h-[24px] flex flex-col justify-center">
+                  <div className="flex justify-between text-[10px] font-bold text-[#334155] mb-0.5">
+                    <span>{q.program}: {selesai}/{q.target}</span>
+                    <span>{percent}%</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-[#E2E8F0] rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${
+                        percent >= 100 ? 'bg-[#DC2626]' : percent >= 75 ? 'bg-[#EA580C]' : 'bg-[#16A34A]'
+                      }`}
+                      style={{ width: `${percent}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         );
-      }
+      },
     },
     {
       header: 'Sisa Kuota',
       accessor: (row: SiswaItem) => {
-        const sisa = row.sisa_pertemuan ?? 0;
-        let badgeColor = 'bg-[#DCFCE7] text-[#16A34A] border-[#86EFAC]'; // Lancar (Hijau)
-        if (sisa === 0) {
-          badgeColor = 'bg-[#FEE2E2] text-[#DC2626] border-[#FCA5A5]'; // Habis (Merah)
-        } else if (sisa <= 2) {
-          badgeColor = 'bg-[#FFEDD5] text-[#EA580C] border-[#FDBA74]'; // Urgent (Orange)
-        }
+        const quotas = parseProgramQuotas(
+          row.kategori_program,
+          row.paket_jadwal,
+          row.target_pertemuan,
+          row.sisa_pertemuan,
+          row.kuota_program
+        );
 
         return (
-          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black border ${badgeColor}`}>
-            <span>{sisa} Sesi Tersisa</span>
-          </span>
+          <div className="py-1">
+            <div className="flex flex-col gap-1.5">
+              {quotas.map((q, idx) => {
+                const isTk = q.program.trim().toLowerCase() === 'tk' || q.target === 0;
+                if (isTk) {
+                  return (
+                    <div key={idx} className="flex items-center h-[24px]">
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A] shadow-2xs">
+                        Program TK
+                      </span>
+                    </div>
+                  );
+                }
+
+                const ratio = q.target > 0 ? q.sisa / q.target : 1;
+                const isUrgent = ratio <= 0.20;
+                const isPeringatan = ratio <= 0.40 && !isUrgent;
+
+                return (
+                  <div key={idx} className="flex items-center h-[24px]">
+                    <span
+                      className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold border shadow-2xs ${
+                        isUrgent
+                          ? 'bg-[#FFF1F2] text-[#E11D48] border-[#FECDD3]'
+                          : isPeringatan
+                          ? 'bg-[#FFF8E1] text-[#E65100] border-[#FFE082]'
+                          : 'bg-[#E8F5E9] text-[#2E7D32] border-[#A5D6A7]'
+                      }`}
+                    >
+                      {q.sisa} / {q.target} kali
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-[10px] text-[#64748B] pt-1 font-semibold border-t border-[#F1F5F9] mt-1">
+              Total: {row.sisa_pertemuan} Sesi
+            </p>
+          </div>
         );
-      }
+      },
     },
     {
       header: 'Status SPP',

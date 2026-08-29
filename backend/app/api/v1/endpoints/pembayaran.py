@@ -188,6 +188,7 @@ Tim Sempoa SIP TC Pariaman""".replace(",", ".")
             "nama_orang_tua": ortu_name,
             "whatsapp_orang_tua": wa_num,
             "program": s.kategori_program,
+            "kuota_program": s.kuota_program,
             "sisa_pertemuan": sisa,
             "target_pertemuan": target,
             "paket_jadwal": s.paket_jadwal or "",
@@ -263,13 +264,13 @@ async def read_pembayaran_by_siswa(
         return []
 
     if current_user.role in [UserRole.admin, UserRole.owner]:
-        return crud_pembayaran.get_pembayaran_by_siswa(db, siswa_id=siswa.id)
+        pass
+    elif current_user.role == UserRole.ortu and (current_user.uid_terhubung == str(siswa.id) or current_user.uid_terhubung == siswa.uid):
+        pass
+    else:
+        raise HTTPException(status_code=403, detail="Anda tidak memiliki akses ke tagihan siswa ini")
 
-    if current_user.role == UserRole.ortu:
-        if str(siswa.id) == current_user.uid_terhubung or siswa.uid == current_user.uid_terhubung:
-            return crud_pembayaran.get_pembayaran_by_siswa(db, siswa_id=siswa.id)
-
-    raise HTTPException(status_code=403, detail="Anda tidak memiliki akses ke tagihan pembayaran siswa ini")
+    return crud_pembayaran.get_pembayaran_by_siswa(db, siswa_id=siswa.id)
 
 @router.post("/", response_model=PembayaranResponse, status_code=status.HTTP_201_CREATED)
 async def create_new_pembayaran(
@@ -295,7 +296,7 @@ async def update_payment_status_endpoint(
     return crud_pembayaran.update_pembayaran_status(db, db_pembayaran=pembayaran, status=status_str)
 
 @router.put("/siswa/{siswa_id}/due-date")
-async def update_siswa_payment_due_date(
+async def update_siswa_due_date(
     siswa_id: int,
     payload: PembayaranDueDateUpdate,
     db: Session = Depends(get_db),
@@ -305,6 +306,7 @@ async def update_siswa_payment_due_date(
     Update manual tanggal jatuh tempo, status pembayaran, atau mark lunas SPP siswa
     """
     from app.models.siswa import StatusSPP
+    import json
     siswa = db.query(Siswa).filter(Siswa.id == siswa_id, Siswa.is_deleted == False).first()
     if not siswa:
         raise HTTPException(status_code=404, detail="Siswa tidak ditemukan")
@@ -337,8 +339,24 @@ async def update_siswa_payment_due_date(
         siswa.status_spp = StatusSPP.AKTIF
         if payload.tambah_kuota:
             siswa.sisa_pertemuan = (siswa.sisa_pertemuan or 0) + (siswa.target_pertemuan or 8)
-        elif siswa.sisa_pertemuan == 0:
+        else:
             siswa.sisa_pertemuan = siswa.target_pertemuan or 8
+
+        # Reset per-program quota
+        progs = [p.strip() for p in (siswa.kategori_program or "Sempoa SIP").split(",") if p.strip()]
+        kuota_dict = {}
+        for p in progs:
+            target = 8
+            if p == "Sempoa SIP":
+                target = 12 if "12" in (siswa.paket_jadwal or "") else 8
+            elif p in ["Fonem", "Tahfidz"]:
+                target = 12
+            elif p == "Bahasa Inggris":
+                target = 8
+            elif p == "TK":
+                target = 0
+            kuota_dict[p] = {"sisa": target, "target": target}
+        siswa.kuota_program = json.dumps(kuota_dict)
         db.add(siswa)
     elif payload.status in [StatusPembayaran.MENUNGGAK, StatusPembayaran.OVERDUE]:
         if siswa.sisa_pertemuan == 0:

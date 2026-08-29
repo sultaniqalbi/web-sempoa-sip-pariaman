@@ -9,6 +9,7 @@ import KwitansiModal from '../../components/KwitansiModal';
 import PageHeader from '../../components/PageHeader';
 import EmptyState from '../../components/EmptyState';
 import { PembayaranIcon, EditIcon, WhatsAppIcon, CameraIcon, DocumentTextIcon } from '../../components/SvgIcons';
+import { parseProgramDetails, getProgramBadgeStyle, parseProgramQuotas } from './SiswaPage';
 
 interface ReminderItem {
   id_siswa: number;
@@ -16,6 +17,7 @@ interface ReminderItem {
   nama_orang_tua: string;
   whatsapp_orang_tua: string;
   program: string;
+  kuota_program?: string;
   sisa_pertemuan: number;
   target_pertemuan: number;
   paket_jadwal?: string;
@@ -262,14 +264,20 @@ export const SharedPembayaranPage: React.FC = () => {
     {
       header: 'Program',
       accessor: (row: ReminderItem) => {
-        const progs = (row.program || 'Sempoa SIP').split(',').map((p) => p.trim()).filter(Boolean);
+        const details = parseProgramDetails(row.program, row.paket_jadwal);
         return (
-          <div className="flex flex-wrap gap-1">
-            {progs.map((p, idx) => (
-              <span key={idx} className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] border border-[#FFCC80] inline-block shadow-2xs">
-                {p}
-              </span>
-            ))}
+          <div className="py-1">
+            <div className="flex flex-col gap-1.5">
+              {details.map((item, idx) => (
+                <div key={idx} className="flex items-center h-[24px]">
+                  <span
+                    className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold border shadow-2xs inline-block ${getProgramBadgeStyle(item.program)}`}
+                  >
+                    {item.program}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         );
       },
@@ -277,23 +285,50 @@ export const SharedPembayaranPage: React.FC = () => {
     {
       header: 'Pertemuan & Sisa',
       accessor: (row: ReminderItem) => {
-        const target = row.target_pertemuan || 8;
-        const sisa = row.sisa_pertemuan ?? 0;
-        const selesai = Math.max(0, target - sisa);
+        const quotas = parseProgramQuotas(
+          row.program,
+          row.paket_jadwal,
+          row.target_pertemuan,
+          row.sisa_pertemuan,
+          row.kuota_program
+        );
 
         return (
-          <div>
-            <span
-              className={`px-3 py-1 rounded-full text-xs font-extrabold inline-block ${
-                sisa <= 1
-                  ? 'bg-[#FFF1F2] text-[#D32F2F] border border-[#FECDD3]'
-                  : sisa <= 3
-                  ? 'bg-[#FFF8E1] text-[#E65100] border border-[#FFE082]'
-                  : 'bg-[#E8F5E9] text-[#388E3C] border border-[#A5D6A7]'
-              }`}
-            >
-              Sisa {sisa} Sesi ({selesai}/{target})
-            </span>
+          <div className="py-1">
+            <div className="flex flex-col gap-1.5">
+              {quotas.map((q, idx) => {
+                const isTk = q.program.trim().toLowerCase() === 'tk' || q.target === 0;
+                if (isTk) {
+                  return (
+                    <div key={idx} className="flex items-center h-[24px]">
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A] shadow-2xs">
+                        Program TK
+                      </span>
+                    </div>
+                  );
+                }
+
+                const selesai = Math.max(0, q.target - q.sisa);
+                return (
+                  <div key={idx} className="flex items-center h-[24px]">
+                    <span
+                      className={`px-2.5 py-0.5 rounded-md text-[10px] font-extrabold border shadow-2xs ${
+                        q.sisa <= 1
+                          ? 'bg-[#FFF1F2] text-[#D32F2F] border-[#FECDD3]'
+                          : q.sisa <= 3
+                          ? 'bg-[#FFF8E1] text-[#E65100] border-[#FFE082]'
+                          : 'bg-[#E8F5E9] text-[#2E7D32] border-[#A5D6A7]'
+                      }`}
+                    >
+                      Sisa: {q.sisa} / {q.target} kali ({selesai} selesai)
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-[10px] text-[#64748B] pt-1 font-semibold border-t border-[#F1F5F9] mt-1">
+              Total Sisa: {row.sisa_pertemuan} / {row.target_pertemuan || 8} Sesi
+            </p>
           </div>
         );
       },

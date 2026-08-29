@@ -44,8 +44,24 @@ def approve_bukti_transfer(db: Session, db_proof: BuktiTransfer) -> BuktiTransfe
         # Reset student quota to full target and set status back to AKTIF for the new 30-day cycle
         siswa = db.query(Siswa).filter(Siswa.id == pembayaran.id_siswa).first()
         if siswa:
+            import json
             siswa.sisa_pertemuan = siswa.target_pertemuan
             siswa.status_spp = StatusSPP.AKTIF
+            
+            progs = [p.strip() for p in (siswa.kategori_program or "Sempoa SIP").split(",") if p.strip()]
+            kuota_dict = {}
+            for p in progs:
+                target = 8
+                if p == "Sempoa SIP":
+                    target = 12 if "12" in (siswa.paket_jadwal or "") else 8
+                elif p in ["Fonem", "Tahfidz"]:
+                    target = 12
+                elif p == "Bahasa Inggris":
+                    target = 8
+                elif p == "TK":
+                    target = 0
+                kuota_dict[p] = {"sisa": target, "target": target}
+            siswa.kuota_program = json.dumps(kuota_dict)
             db.add(siswa)
 
     db.commit()

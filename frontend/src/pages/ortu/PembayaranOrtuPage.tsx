@@ -134,12 +134,13 @@ export const PembayaranOrtuPage: React.FC = () => {
   
   const calculateProgramSPP = (progName: string) => {
     const p = progName.toLowerCase();
-    if (p.includes('sempoa')) return 350000;
-    if (p.includes('tk')) return 0;
-    return 200000;
+    if (p.includes('sempoa')) {
+      return (child?.paket_jadwal || '').includes('12') ? 200000 : 150000;
+    }
+    return 150000;
   };
 
-  const sppAmount = childPrograms.reduce((sum, prog) => sum + calculateProgramSPP(prog), 0) || 200000;
+  const sppAmount = childPrograms.reduce((sum, prog) => sum + calculateProgramSPP(prog), 0) || 150000;
   const sisaRatio = totalPertemuan > 0 ? sisaPertemuan / totalPertemuan : 1;
 
   // Cek siklus 30 hari
