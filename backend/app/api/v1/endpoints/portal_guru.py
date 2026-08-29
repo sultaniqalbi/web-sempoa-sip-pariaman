@@ -192,39 +192,84 @@ async def update_mode_kelas(
 
     return {"status": "success", "mode_kelas": guru.mode_kelas}
 
+def _format_days_range_py(days_str: Optional[str]) -> str:
+    if not days_str:
+        return "Senin - Sabtu"
+    days = [d.strip() for d in days_str.split(",") if d.strip()]
+    if not days:
+        return "Senin - Sabtu"
+    all_mon_sat = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"]
+    all_mon_fri = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"]
+    if len(days) == 6 and all(d in days for d in all_mon_sat):
+        return "Senin - Sabtu"
+    if len(days) == 5 and all(d in days for d in all_mon_fri):
+        return "Senin - Jumat"
+    if len(days) == 2 and days[0] == "Jumat" and days[1] == "Sabtu":
+        return "Jumat, Sabtu"
+    if len(days) == 2 and days[0] == "Senin" and days[1] == "Rabu":
+        return "Senin, Rabu"
+    return ", ".join(days)
+
 @router.get("/kelas-bimbingan")
 async def get_kelas_bimbingan(
     db: Session = Depends(get_db),
     current_user: User = Depends(teacher_only)
 ):
     guru = _get_current_guru(db, current_user)
-    programs = _get_guru_programs(guru)
-        
-    prog_conditions = [func.lower(Siswa.kategori_program).like(f"%{p}%") for p in programs]
-    total_siswa = db.query(Siswa).filter(
-        or_(
-            Siswa.id_guru == guru.id,
-            *prog_conditions
-        ),
-        func.lower(func.trim(Siswa.kategori_program)) != 'tk',
-        Siswa.status_spp == StatusSPP.AKTIF,
-        Siswa.is_deleted == False
-    ).count()
-
-    return {
-        "kelas": [
-            {
-                "kode_program": "SEMPOA",
-                "nama_program": guru.kategori_program or "Sempoa SIP",
-                "waktu": "08:30 - 11:30 WIB",
-                "ruangan": "Ruang Kelas A",
-                "hari": guru.hari_wajib or "Senin, Rabu, Kamis",
-                "jumlah_siswa": total_siswa,
-                "paket": guru.paket_pengajaran or "Reguler",
-                "mode_kelas": guru.mode_kelas or "OFFLINE"
-            }
-        ]
+    raw_programs = [p.strip() for p in (guru.kategori_program or "Sempoa SIP").split(",") if p.strip()]
+    
+    # Default schedule & room configs
+    default_schedules = {
+        "Sempoa SIP": {"waktu": "09:00 - 17:00 WIB", "ruangan": "TC Pariaman - Ruang Sempoa"},
+        "Fonem": {"waktu": "09:00 - 17:00 WIB", "ruangan": "TC Pariaman - Ruang Fonem"},
+        "Tahfidz": {"waktu": "12:00 - 17:00 WIB", "ruangan": "TC Pariaman - Ruang Tahfidz"},
+        "Bahasa Inggris": {"waktu": "12:00 - 17:00 WIB", "ruangan": "TC Pariaman - Ruang Bahasa Inggris"},
+        "TK": {"waktu": "08:00 - 11:00 WIB", "ruangan": "TC Pariaman - Ruang TK"}
     }
+
+    kelas_list = []
+    for prog in raw_programs:
+        # Query active Jadwal record from DB for this program & teacher
+        jadwal = db.query(Jadwal).filter(
+            or_(
+                Jadwal.id_guru == guru.id,
+                Jadwal.guru_ids.like(f"%{guru.id}%"),
+                func.lower(Jadwal.kategori_program).like(f"%{prog.lower()}%")
+            )
+        ).first()
+
+        def_cfg = default_schedules.get(prog, {"waktu": "09:00 - 17:00 WIB", "ruangan": f"TC Pariaman - Ruang {prog}"})
+
+        if jadwal:
+            ruangan = jadwal.lokasi or def_cfg["ruangan"]
+            waktu = f"{jadwal.jam_mulai} - {jadwal.jam_selesai} WIB" if jadwal.jam_mulai and jadwal.jam_selesai else def_cfg["waktu"]
+            hari = _format_days_range_py(jadwal.hari) if jadwal.hari else _format_days_range_py(guru.hari_wajib)
+            mode_kelas = jadwal.mode_kelas or guru.mode_kelas or "OFFLINE"
+        else:
+            ruangan = def_cfg["ruangan"]
+            waktu = def_cfg["waktu"]
+            hari = _format_days_range_py(guru.hari_wajib)
+            mode_kelas = guru.mode_kelas or "OFFLINE"
+
+        # Count active students for this specific program
+        prog_siswa_count = db.query(Siswa).filter(
+            func.lower(Siswa.kategori_program).like(f"%{prog.lower()}%"),
+            Siswa.status_spp == StatusSPP.AKTIF,
+            Siswa.is_deleted == False
+        ).count()
+
+        kelas_list.append({
+            "kode_program": prog.upper().replace(" ", "_"),
+            "nama_program": prog,
+            "waktu": waktu,
+            "ruangan": ruangan,
+            "hari": hari,
+            "jumlah_siswa": prog_siswa_count,
+            "paket": guru.paket_pengajaran or "Reguler",
+            "mode_kelas": mode_kelas
+        })
+
+    return {"kelas": kelas_list}
 
 @router.get("/absensi/list")
 async def get_absensi_list(
@@ -260,11 +305,7 @@ async def get_siswa_absensi(
     current_user: User = Depends(teacher_only)
 ):
     guru = _get_current_guru(db, current_user)
-    raw_programs = _get_guru_programs(guru)
-    # Filter programs that have attendance (exclude TK)
-    available_programs = [p for p in raw_programs if p.lower() != 'tk']
-    if not available_programs and raw_programs:
-        available_programs = raw_programs
+    available_programs = [p.strip() for p in (guru.kategori_program or "Sempoa SIP").split(",") if p.strip()]
 
     # Determine filter
     if program and program.lower() != 'all':
@@ -272,7 +313,7 @@ async def get_siswa_absensi(
     elif available_programs:
         filter_programs = [p.lower() for p in available_programs]
     else:
-        filter_programs = [p.lower() for p in raw_programs]
+        filter_programs = ["sempoa sip"]
 
     filter_conditions = [func.lower(Siswa.kategori_program).like(f"%{p}%") for p in filter_programs]
     students = db.query(Siswa).filter(
@@ -280,7 +321,6 @@ async def get_siswa_absensi(
             Siswa.id_guru == guru.id,
             *filter_conditions
         ),
-        func.lower(func.trim(Siswa.kategori_program)) != 'tk',  # Exclude TK-only from student attendance
         Siswa.is_deleted == False
     ).order_by(Siswa.nama).all()
 
@@ -543,21 +583,30 @@ async def save_siswa_absensi(
 @router.get("/rekap-absensi")
 async def get_rekap_absensi(
     tanggal: str = Query(..., description="Format YYYY-MM-DD"),
+    program: Optional[str] = Query(None, description="Filter program spesifik"),
     db: Session = Depends(get_db),
     current_user: User = Depends(teacher_only)
 ):
     guru = _get_current_guru(db, current_user)
-    programs = _get_guru_programs(guru)
+    available_programs = [p.strip() for p in (guru.kategori_program or "Sempoa SIP").split(",") if p.strip()]
 
     try:
         filter_date = datetime.strptime(tanggal, "%Y-%m-%d").date()
     except ValueError:
         filter_date = datetime.now().date()
 
+    if program and program.lower() != 'all':
+        filter_programs = [program.lower()]
+    elif available_programs:
+        filter_programs = [p.lower() for p in available_programs]
+    else:
+        filter_programs = ["sempoa sip"]
+
+    filter_conditions = [func.lower(Siswa.kategori_program).like(f"%{p}%") for p in filter_programs]
     students = db.query(Siswa).filter(
         or_(
             Siswa.id_guru == guru.id,
-            func.lower(Siswa.kategori_program).in_(programs)
+            *filter_conditions
         ),
         Siswa.is_deleted == False
     ).order_by(Siswa.nama).all()
@@ -581,7 +630,7 @@ async def get_rekap_absensi(
     note_row = db.query(CatatanPembelajaran).filter(
         or_(
             CatatanPembelajaran.id_guru == guru.id,
-            func.lower(CatatanPembelajaran.kategori_program).in_(programs)
+            *filter_conditions
         ),
         CatatanPembelajaran.tanggal == filter_date
     ).order_by(CatatanPembelajaran.created_at.desc()).first()
@@ -622,6 +671,8 @@ async def get_rekap_absensi(
     return {
         "tanggal": filter_date.strftime("%Y-%m-%d"),
         "tanggal_formatted": filter_date.strftime("%A, %d %B %Y"),
+        "available_programs": available_programs,
+        "selected_program": program or "all",
         "stats": {
             "total_siswa": len(students),
             "hadir": hadir_total,

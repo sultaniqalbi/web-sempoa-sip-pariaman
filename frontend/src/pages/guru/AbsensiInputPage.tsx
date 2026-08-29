@@ -6,6 +6,7 @@ import ManualAttendanceModal from './components/ManualAttendanceModal';
 import IzinGuruModal from './components/IzinGuruModal';
 import useAuth from '../../features/auth/useAuth';
 import { GlobeIcon, SchoolIcon } from '../../components/SvgIcons';
+import { getProgramBadgeStyle } from '../portal/SiswaPage';
 
 export const AbsensiInputPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -24,6 +25,7 @@ export const AbsensiInputPage: React.FC = () => {
 
   // Rekap date filter state (defaults to today)
   const [rekapDate, setRekapDate] = useState<string>(todayStr);
+  const [selectedRekapProgram, setSelectedRekapProgram] = useState<string>('all');
 
   // Fetch Students for Attendance
   const { data: siswaData, isLoading: isLoadingSiswa } = useQuery({
@@ -46,12 +48,12 @@ export const AbsensiInputPage: React.FC = () => {
     enabled: activeTab === 'log',
   });
 
-  // Fetch Attendance Recap for Selected Date
+  // Fetch Attendance Recap for Selected Date & Program
   const { data: rekapData, isLoading: isLoadingRekap } = useQuery({
-    queryKey: ['guru-rekap-absensi', rekapDate],
+    queryKey: ['guru-rekap-absensi', rekapDate, selectedRekapProgram],
     queryFn: async () => {
       const res = await apiClient.get('/portal-guru/rekap-absensi', {
-        params: { tanggal: rekapDate },
+        params: { tanggal: rekapDate, program: selectedRekapProgram },
       });
       return res.data;
     },
@@ -221,23 +223,35 @@ export const AbsensiInputPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Multi-Program Switcher for Teachers who teach >1 program */}
-              {siswaData?.available_programs && siswaData.available_programs.length > 1 && (
-                <div className="bg-white p-3 rounded-2xl border border-[#E0E0E0] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                  <div>
-                    <p className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Pilih Program Absensi Siswa</p>
-                    <p className="text-xs font-black text-[#1E293B] mt-0.5">
-                      Anda mengajar {siswaData.available_programs.length} program (pilih untuk memfilter siswa)
-                    </p>
+              {/* Active Program Banner & Multi-Program Slide Bar */}
+              {siswaData?.available_programs && siswaData.available_programs.length > 0 && (
+                <div className="bg-white p-3.5 rounded-2xl border border-[#E0E0E0] shadow-sm space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Sedang Mengabsen:</span>
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-[#FFF3E0] text-[#E65100] border border-[#FFE082]">
+                          {selectedProgram === 'all' ? 'Semua Program' : selectedProgram}
+                        </span>
+                      </div>
+                      <p className="text-xs text-[#1E293B] font-bold mt-1">
+                        Pilih program di slide bar untuk memfilter daftar absensi siswa:
+                      </p>
+                    </div>
+                    <span className="text-xs font-bold text-[#64748B] bg-[#F8FAFC] px-3 py-1 rounded-xl border border-[#E2E8F0] self-start sm:self-auto">
+                      {siswaData?.siswa?.length || 0} Siswa Terdaftar
+                    </span>
                   </div>
-                  <div className="flex flex-wrap gap-1.5 bg-[#F8FAFC] p-1 rounded-xl border border-[#E2E8F0]">
+
+                  {/* Horizontal Slide Bar / Tabs */}
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
                     <button
                       type="button"
                       onClick={() => setSelectedProgram('all')}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0 ${
                         selectedProgram === 'all'
-                          ? 'bg-[#FF7043] text-white shadow-xs'
-                          : 'text-[#64748B] hover:bg-[#F1F5F9]'
+                          ? 'bg-[#FF7043] text-white shadow-sm ring-2 ring-[#FF7043]/30'
+                          : 'bg-[#F8FAFC] text-[#64748B] border border-[#E2E8F0] hover:bg-[#F1F5F9]'
                       }`}
                     >
                       Semua Program
@@ -247,10 +261,10 @@ export const AbsensiInputPage: React.FC = () => {
                         key={prog}
                         type="button"
                         onClick={() => setSelectedProgram(prog)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0 ${
                           selectedProgram === prog
-                            ? 'bg-[#FF7043] text-white shadow-xs'
-                            : 'text-[#64748B] hover:bg-[#F1F5F9]'
+                            ? 'bg-[#FF7043] text-white shadow-sm ring-2 ring-[#FF7043]/30'
+                            : 'bg-[#F8FAFC] text-[#64748B] border border-[#E2E8F0] hover:bg-[#F1F5F9]'
                         }`}
                       >
                         {prog}
@@ -279,7 +293,7 @@ export const AbsensiInputPage: React.FC = () => {
             <div>
               <h2 className="text-sm sm:text-base font-black text-[#1E293B]">Rekap Absensi Siswa</h2>
               <p className="text-[11px] text-[#64748B] mt-0.5">
-                Pilih tanggal untuk melihat rekap kehadiran dan catatan pembelajaran
+                Pilih tanggal dan program untuk melihat rekap kehadiran dan catatan pembelajaran
               </p>
             </div>
 
@@ -294,6 +308,37 @@ export const AbsensiInputPage: React.FC = () => {
               />
             </div>
           </div>
+
+          {/* Multi-Program Slide Bar for Rekap */}
+          {rekapData?.available_programs && rekapData.available_programs.length > 1 && (
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+              <button
+                type="button"
+                onClick={() => setSelectedRekapProgram('all')}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all whitespace-nowrap cursor-pointer shrink-0 ${
+                  selectedRekapProgram === 'all'
+                    ? 'bg-[#FF7043] text-white shadow-xs'
+                    : 'bg-[#F8FAFC] text-[#64748B] border border-[#E2E8F0] hover:bg-[#F1F5F9]'
+                }`}
+              >
+                Semua Program
+              </button>
+              {rekapData.available_programs.map((prog: string) => (
+                <button
+                  key={prog}
+                  type="button"
+                  onClick={() => setSelectedRekapProgram(prog)}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all whitespace-nowrap cursor-pointer shrink-0 ${
+                    selectedRekapProgram === prog
+                      ? 'bg-[#FF7043] text-white shadow-xs'
+                      : 'bg-[#F8FAFC] text-[#64748B] border border-[#E2E8F0] hover:bg-[#F1F5F9]'
+                  }`}
+                >
+                  {prog}
+                </button>
+              ))}
+            </div>
+          )}
 
           {isLoadingRekap ? (
             <div className="flex flex-col items-center justify-center py-12">
@@ -344,7 +389,7 @@ export const AbsensiInputPage: React.FC = () => {
                     <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
                       <th className="p-3 font-bold text-[#64748B] w-12 text-center">No</th>
                       <th className="p-3 font-bold text-[#64748B] min-w-[180px]">Nama Siswa</th>
-                      <th className="p-3 font-bold text-[#64748B] min-w-[120px]">Program</th>
+                      <th className="p-3 font-bold text-[#64748B] min-w-[140px]">Program</th>
                       <th className="p-3 font-bold text-[#64748B] w-28 text-center">Jam Tap</th>
                       <th className="p-3 font-bold text-[#64748B] w-32 text-center">Status</th>
                     </tr>
@@ -377,7 +422,21 @@ export const AbsensiInputPage: React.FC = () => {
                                 {item.asal_sekolah || `UID: ${item.uid}`}
                               </p>
                             </td>
-                            <td className="p-3 font-medium text-[#475569]">{item.program}</td>
+                            <td className="p-3 font-medium">
+                              <div className="flex flex-wrap gap-1">
+                                {(item.program || '').split(',').map((p: string, pIdx: number) => {
+                                  const progClean = p.trim();
+                                  return (
+                                    <span
+                                      key={pIdx}
+                                      className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getProgramBadgeStyle(progClean)}`}
+                                    >
+                                      {progClean}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            </td>
                             <td className="p-3 font-mono text-center font-bold text-[#475569]">{item.waktu_tap}</td>
                             <td className="p-3 text-center">
                               <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] uppercase border ${badgeClass}`}>
