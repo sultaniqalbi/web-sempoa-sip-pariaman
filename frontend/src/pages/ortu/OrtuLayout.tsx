@@ -57,18 +57,36 @@ export const OrtuLayout: React.FC = () => {
   const isHomePage = location.pathname === '/ortu';
   const [isTourOpen, setIsTourOpen] = useState(false);
 
-  // Check if tour should auto-run on first visit
+  // Check if tour should auto-run strictly on first login only
   useEffect(() => {
-    if (isHomePage) {
-      const tourCompleted = localStorage.getItem('sempoa_ortu_tour_completed');
+    if (isHomePage && user) {
+      const userKey = user.id ? `sempoa_ortu_tour_completed_${user.id}` : `sempoa_ortu_tour_completed_${user.username || 'default'}`;
+      const legacyKey = 'sempoa_ortu_tour_completed';
+      const tourCompleted = localStorage.getItem(userKey) || localStorage.getItem(legacyKey);
       if (!tourCompleted) {
+        // Mark as completed immediately so any refresh/re-login never auto-shows again
+        localStorage.setItem(userKey, 'true');
+        localStorage.setItem(legacyKey, 'true');
         const timer = setTimeout(() => setIsTourOpen(true), 700);
         return () => clearTimeout(timer);
       }
     }
-  }, [isHomePage]);
+  }, [isHomePage, user]);
+
+  const handleTourClose = () => {
+    if (user) {
+      const userKey = user.id ? `sempoa_ortu_tour_completed_${user.id}` : `sempoa_ortu_tour_completed_${user.username || 'default'}`;
+      localStorage.setItem(userKey, 'true');
+    }
+    localStorage.setItem('sempoa_ortu_tour_completed', 'true');
+    setIsTourOpen(false);
+  };
 
   const handleTourComplete = () => {
+    if (user) {
+      const userKey = user.id ? `sempoa_ortu_tour_completed_${user.id}` : `sempoa_ortu_tour_completed_${user.username || 'default'}`;
+      localStorage.setItem(userKey, 'true');
+    }
     localStorage.setItem('sempoa_ortu_tour_completed', 'true');
     setIsTourOpen(false);
   };
@@ -209,7 +227,7 @@ export const OrtuLayout: React.FC = () => {
       <ProductTourModal
         steps={TOUR_STEPS}
         isOpen={isTourOpen}
-        onClose={() => setIsTourOpen(false)}
+        onClose={handleTourClose}
         onComplete={handleTourComplete}
       />
     </div>

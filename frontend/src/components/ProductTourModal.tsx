@@ -35,17 +35,35 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
 
   const currentStep = steps[currentStepIndex];
 
-  // Lock body scroll completely while tour is active
+  // Lock body & document scroll completely while tour is active
   useEffect(() => {
     if (isOpen) {
-      const originalOverflow = document.body.style.overflow;
-      const originalTouchAction = document.body.style.touchAction;
+      const originalBodyOverflow = document.body.style.overflow;
+      const originalBodyPosition = document.body.style.position;
+      const originalBodyTouchAction = document.body.style.touchAction;
+      const originalDocOverflow = document.documentElement.style.overflow;
+
       document.body.style.overflow = 'hidden';
       document.body.style.touchAction = 'none';
+      document.documentElement.style.overflow = 'hidden';
+
+      const preventScroll = (e: Event) => {
+        // Allow clicks on buttons, but block wheel and touch scrolls
+        if (e.type === 'wheel' || e.type === 'touchmove') {
+          e.preventDefault();
+        }
+      };
+
+      window.addEventListener('wheel', preventScroll, { passive: false, capture: true });
+      window.addEventListener('touchmove', preventScroll, { passive: false, capture: true });
 
       return () => {
-        document.body.style.overflow = originalOverflow;
-        document.body.style.touchAction = originalTouchAction;
+        document.body.style.overflow = originalBodyOverflow;
+        document.body.style.position = originalBodyPosition;
+        document.body.style.touchAction = originalBodyTouchAction;
+        document.documentElement.style.overflow = originalDocOverflow;
+        window.removeEventListener('wheel', preventScroll, { capture: true });
+        window.removeEventListener('touchmove', preventScroll, { capture: true });
       };
     }
   }, [isOpen]);
