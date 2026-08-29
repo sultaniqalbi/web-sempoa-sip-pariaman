@@ -69,10 +69,11 @@ def on_startup():
                 conn.execute(text("ALTER TABLE siswa ALTER COLUMN kategori_program TYPE VARCHAR(255);"))
                 conn.execute(text("ALTER TABLE siswa ALTER COLUMN paket_jadwal TYPE VARCHAR(255);"))
                 conn.execute(text("ALTER TABLE siswa ALTER COLUMN hari_masuk TYPE VARCHAR(255);"))
+                conn.execute(text("ALTER TABLE siswa ADD COLUMN IF NOT EXISTS kuota_program TEXT;"))
                 conn.execute(text("ALTER TABLE guru ALTER COLUMN kategori_program TYPE VARCHAR(255);"))
                 conn.execute(text("ALTER TABLE jadwal ADD COLUMN IF NOT EXISTS guru_ids VARCHAR(255);"))
                 conn.commit()
-                logger.info("Auto-migration: Expanded column lengths for multi-program in siswa, guru, and jadwal")
+                logger.info("Auto-migration: Expanded column lengths and kuota_program in siswa, guru, and jadwal")
         except Exception as mig_col_e:
             logger.warning(f"Auto-migration for expanded columns: {mig_col_e}")
 

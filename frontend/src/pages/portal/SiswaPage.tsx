@@ -151,6 +151,67 @@ export const parseProgramDetails = (kategoriProgram?: string, paketJadwal?: stri
   });
 };
 
+export const parseProgramQuotas = (
+  kategoriProgram?: string,
+  paketJadwal?: string,
+  targetPertemuan?: number,
+  sisaPertemuan?: number,
+  kuotaProgramJson?: string
+) => {
+  const progs = (kategoriProgram || 'Sempoa SIP').split(',').map((p) => p.trim()).filter(Boolean);
+  if (progs.length === 0) return [];
+
+  // 1. Try parsing stored kuota_program if available
+  if (kuotaProgramJson) {
+    try {
+      const parsed = typeof kuotaProgramJson === 'string' ? JSON.parse(kuotaProgramJson) : kuotaProgramJson;
+      if (parsed && typeof parsed === 'object') {
+        return progs.map((p) => {
+          const q = parsed[p];
+          if (q && (q.target !== undefined || q.sisa !== undefined)) {
+            return {
+              program: p,
+              target: Number(q.target) || 0,
+              sisa: Number(q.sisa) !== undefined ? Number(q.sisa) : (Number(q.target) || 0)
+            };
+          }
+          const defTarget = p === 'Sempoa SIP' ? (paketJadwal?.includes('12') ? 12 : 8) : ((PROGRAM_CONFIG as any)[p]?.packages[0]?.target ?? 8);
+          return { program: p, target: defTarget, sisa: defTarget };
+        });
+      }
+    } catch (e) {}
+  }
+
+  // 2. Fallback default target deduction / calculation for each program
+  return progs.map((p) => {
+    let progTarget = 8;
+    if (p === 'Sempoa SIP') {
+      progTarget = paketJadwal?.includes('12') ? 12 : 8;
+    } else if (p === 'Fonem' || p === 'Tahfidz') {
+      progTarget = 12;
+    } else if (p === 'Bahasa Inggris') {
+      progTarget = 8;
+    } else if (p.toLowerCase().includes('tk')) {
+      progTarget = 0;
+    } else {
+      progTarget = (PROGRAM_CONFIG as any)[p]?.packages[0]?.target ?? 8;
+    }
+
+    let progSisa = progTarget;
+    if (progs.length === 1 && sisaPertemuan !== undefined && sisaPertemuan !== null) {
+      progSisa = sisaPertemuan;
+    } else if (targetPertemuan && targetPertemuan > 0 && sisaPertemuan !== undefined) {
+      progSisa = Math.max(0, Math.min(progTarget, Math.round((sisaPertemuan / targetPertemuan) * progTarget)));
+    }
+
+    return {
+      program: p,
+      target: progTarget,
+      sisa: progSisa
+    };
+  });
+};
+
 export const formatDaysRange = (daysStr?: string) => {
   if (!daysStr) return '-';
   const clean = daysStr.trim();
@@ -581,7 +642,7 @@ export const SiswaPage: React.FC = () => {
       sisa = editingSiswa.sisa_pertemuan ?? target;
     }
 
-    // Determine combined hari_masuk
+    // Determine combined hari_masuk & kuota_program JSON
     const selectedProgs = formData.kategori_program.split(',').map((p) => p.trim()).filter(Boolean);
     let combinedHari = formData.hari_masuk;
     if (selectedProgs.length > 1 && Object.keys(programDays).length > 0) {
@@ -592,9 +653,44 @@ export const SiswaPage: React.FC = () => {
       combinedHari = programDays[selectedProgs[0]];
     }
 
+    const kuotaObj: Record<string, { sisa: number; target: number }> = {};
+    selectedProgs.forEach((p) => {
+      const q = programQuotas[p];
+      let pTarget = 8;
+      if (p === 'Sempoa SIP') {
+        pTarget = sempoaPackageIndex === 1 ? 12 : 8;
+      } else if (p === 'Fonem' || p === 'Tahfidz') {
+        pTarget = 12;
+      } else if (p === 'Bahasa Inggris') {
+        pTarget = 8;
+      } else if (p.toLowerCase().includes('tk')) {
+        pTarget = 0;
+      } else {
+        pTarget = (PROGRAM_CONFIG as any)[p]?.packages[0]?.target ?? 8;
+      }
+
+      let pSisa = pTarget;
+      if (q && q.sisa !== '' && q.sisa !== undefined && q.sisa !== null) {
+        pSisa = Number(q.sisa);
+      } else if (editingSiswa && (editingSiswa as any).kuota_program) {
+        try {
+          const parsed = JSON.parse((editingSiswa as any).kuota_program);
+          if (parsed && parsed[p] && parsed[p].sisa !== undefined) {
+            pSisa = Number(parsed[p].sisa);
+          }
+        } catch (e) {}
+      }
+
+      kuotaObj[p] = {
+        sisa: pSisa,
+        target: pTarget
+      };
+    });
+
     const payload = {
       ...formData,
       hari_masuk: combinedHari || 'Senin, Rabu',
+      kuota_program: JSON.stringify(kuotaObj),
       tanggal_lahir: formData.tanggal_lahir || null,
       umur: ageVal || (formData.umur ? parseInt(formData.umur, 10) : null),
       target_pertemuan: target,
@@ -716,34 +812,57 @@ export const SiswaPage: React.FC = () => {
     {
       header: 'Sisa Pertemuan',
       accessor: (row: Siswa) => {
-        const target = row.target_pertemuan || 8;
-        const ratio = target > 0 ? row.sisa_pertemuan / target : 1;
-        const isUrgent = ratio <= 0.20;
-        const isPeringatan = ratio <= 0.40 && !isUrgent;
-        const isPureTk = (row.kategori_program || '').trim() === 'TK';
-        
-        if (isPureTk) {
-          return (
-            <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]">
-              Program TK
-            </span>
-          );
-        }
+        const quotas = parseProgramQuotas(
+          row.kategori_program,
+          row.paket_jadwal,
+          row.target_pertemuan,
+          row.sisa_pertemuan,
+          (row as any).kuota_program
+        );
 
         return (
-          <div>
-            <span className={`px-2.5 py-1 rounded-full text-xs font-extrabold inline-block ${
-              isUrgent 
-                ? 'bg-[#FFF1F2] text-[#e11d48] border border-[#FECDD3]' 
-                : isPeringatan 
-                ? 'bg-[#FFF8E1] text-[#E65100] border border-[#FFE082]'
-                : 'bg-[#E8F5E9] text-[#388E3C] border border-[#A5D6A7]'
-            }`}>
-              {row.sisa_pertemuan} / {target} kali
-            </span>
+          <div className="py-1">
+            <div className="flex flex-col gap-2">
+              {quotas.map((q, idx) => {
+                const isTk = q.program.trim().toLowerCase() === 'tk' || q.target === 0;
+                if (isTk) {
+                  return (
+                    <div key={idx} className="flex items-center h-[26px]">
+                      <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A] shadow-2xs">
+                        Program TK
+                      </span>
+                    </div>
+                  );
+                }
+
+                const ratio = q.target > 0 ? q.sisa / q.target : 1;
+                const isUrgent = ratio <= 0.20;
+                const isPeringatan = ratio <= 0.40 && !isUrgent;
+
+                return (
+                  <div key={idx} className="flex items-center h-[26px]">
+                    <span
+                      className={`px-2.5 py-0.5 rounded-md text-[11px] font-extrabold border shadow-2xs ${
+                        isUrgent
+                          ? 'bg-[#FFF1F2] text-[#E11D48] border-[#FECDD3]'
+                          : isPeringatan
+                          ? 'bg-[#FFF8E1] text-[#E65100] border-[#FFE082]'
+                          : 'bg-[#E8F5E9] text-[#2E7D32] border-[#A5D6A7]'
+                      }`}
+                    >
+                      {q.sisa} / {q.target} kali
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-[10px] text-[#64748B] pt-1.5 font-semibold border-t border-[#F1F5F9] mt-1.5">
+              Total: {row.sisa_pertemuan} / {row.target_pertemuan || 8} Sesi
+            </p>
           </div>
         );
-      }
+      },
+      className: 'md:w-[150px]'
     },
     {
       header: 'Status SPP',

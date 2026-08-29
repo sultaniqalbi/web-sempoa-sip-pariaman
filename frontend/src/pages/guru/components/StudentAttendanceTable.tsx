@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../../features/api/apiClient';
 import { EditIcon } from '../../../components/SvgIcons';
+import { parseProgramQuotas } from '../../portal/SiswaPage';
 
 export interface SiswaAbsensi {
   no: number;
@@ -9,6 +10,8 @@ export interface SiswaAbsensi {
   uid: string;
   nama_lengkap: string;
   panggilan: string;
+  kategori_program?: string;
+  kuota_program?: string;
   pertemuan_selesai: number;
   total_pertemuan: number;
   sisa_pertemuan?: number;
@@ -254,24 +257,58 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
                       </div>
                     </td>
                     <td className="p-3.5 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <span
-                          className={`inline-block px-2.5 py-1 rounded-full font-mono text-[11px] font-extrabold border ${
-                            siswa.is_hangus
-                              ? 'bg-[#FFF1F2] text-[#E11D48] border-[#FECDD3]'
-                              : siswa.is_expired
-                              ? 'bg-[#FFF8E1] text-[#E65100] border-[#FFE082]'
-                              : siswa.is_disabled
-                              ? 'bg-[#FFEBEE] text-[#C62828] border-[#FFCDD2]'
-                              : 'bg-[#E8F5E9] text-[#2E7D32] border-[#C8E6C9]'
-                          }`}
-                        >
-                          {siswa.sisa_pertemuan} / {siswa.total_pertemuan}
-                        </span>
+                      <div className="flex flex-col items-center justify-center gap-1">
+                        {(() => {
+                          const quotas = parseProgramQuotas(
+                            siswa.kategori_program,
+                            undefined,
+                            siswa.total_pertemuan,
+                            siswa.sisa_pertemuan,
+                            siswa.kuota_program
+                          );
+
+                          if (quotas.length > 1) {
+                            return (
+                              <div className="flex flex-col gap-1 items-center">
+                                {quotas.map((q, qIdx) => {
+                                  const isTk = q.program.trim().toLowerCase() === 'tk' || q.target === 0;
+                                  if (isTk) {
+                                    return (
+                                      <span key={qIdx} className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]">
+                                        TK: Harian
+                                      </span>
+                                    );
+                                  }
+                                  return (
+                                    <span key={qIdx} className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#E8F5E9] text-[#2E7D32] border border-[#C8E6C9]">
+                                      {q.program}: {q.sisa}/{q.target}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <span
+                              className={`inline-block px-2.5 py-1 rounded-full font-mono text-[11px] font-extrabold border ${
+                                siswa.is_hangus
+                                  ? 'bg-[#FFF1F2] text-[#E11D48] border-[#FECDD3]'
+                                  : siswa.is_expired
+                                  ? 'bg-[#FFF8E1] text-[#E65100] border-[#FFE082]'
+                                  : siswa.is_disabled
+                                  ? 'bg-[#FFEBEE] text-[#C62828] border-[#FFCDD2]'
+                                  : 'bg-[#E8F5E9] text-[#2E7D32] border-[#C8E6C9]'
+                              }`}
+                            >
+                              {siswa.sisa_pertemuan} / {siswa.total_pertemuan}
+                            </span>
+                          );
+                        })()}
                         <button
                           type="button"
                           onClick={() => openEditModal(siswa)}
-                          className="p-1 rounded-md bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#FF7043] border border-[#FFCC80] text-[10px] font-bold transition-all active:scale-95 cursor-pointer shadow-2xs flex items-center justify-center"
+                          className="p-1 rounded-md bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#FF7043] border border-[#FFCC80] text-[10px] font-bold transition-all active:scale-95 cursor-pointer shadow-2xs flex items-center justify-center mt-0.5"
                           title="Edit Jumlah Pertemuan Siswa"
                         >
                           <EditIcon size={11} />

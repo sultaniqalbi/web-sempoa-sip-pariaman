@@ -97,6 +97,7 @@ export const AbsensiInputPage: React.FC = () => {
         siswa_absensi: attendance,
         catatan_pembelajaran: catatan || null,
         tanggal: tanggal,
+        program: selectedProgram !== 'all' ? selectedProgram : null,
       };
       const res = await apiClient.post('/portal-guru/absensi/simpan', payload);
       return res.data;

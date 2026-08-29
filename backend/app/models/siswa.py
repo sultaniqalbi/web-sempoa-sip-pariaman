@@ -22,6 +22,7 @@ class Siswa(Base):
     id_guru = Column(Integer, ForeignKey("guru.id", ondelete="SET NULL"), nullable=True, index=True)
     target_pertemuan = Column(Integer, nullable=False, default=8)
     sisa_pertemuan = Column(Integer, nullable=False, default=0)
+    kuota_program = Column(Text, nullable=True)
     status_spp = Column(SQLEnum(StatusSPP, name="spp_status_enum"), nullable=False, default=StatusSPP.AKTIF)
     nama_orang_tua = Column(String(100), nullable=True)
     whatsapp_orang_tua = Column(String(20), nullable=True)

@@ -391,6 +391,8 @@ async def get_siswa_absensi(
             "uid": s.uid,
             "nama_lengkap": s.nama,
             "panggilan": panggilan,
+            "kategori_program": s.kategori_program,
+            "kuota_program": s.kuota_program,
             "pertemuan_selesai": pertemuan_selesai,
             "total_pertemuan": s.target_pertemuan,
             "sisa_pertemuan": s.sisa_pertemuan,
@@ -422,6 +424,55 @@ class SiswaAbsensiSubmit(BaseModel):
     siswa_absensi: List[SiswaAbsensiItem]
     catatan_pembelajaran: Optional[str] = None
     tanggal: Optional[str] = None
+    program: Optional[str] = None
+
+def _update_student_program_quota(siswa: Siswa, program_name: Optional[str], delta: int):
+    import json
+    progs = [p.strip() for p in (siswa.kategori_program or "Sempoa SIP").split(",") if p.strip()]
+    if not progs:
+        progs = ["Sempoa SIP"]
+
+    kuota_dict = {}
+    if siswa.kuota_program:
+        try:
+            parsed = json.loads(siswa.kuota_program)
+            if isinstance(parsed, dict) and parsed:
+                kuota_dict = parsed
+        except Exception:
+            kuota_dict = {}
+
+    for p in progs:
+        if p not in kuota_dict:
+            target = 8
+            if p == "Sempoa SIP":
+                target = 12 if "12" in (siswa.paket_jadwal or "") else 8
+            elif p in ["Fonem", "Tahfidz"]:
+                target = 12
+            elif p == "Bahasa Inggris":
+                target = 8
+            elif p == "TK":
+                target = 0
+            kuota_dict[p] = {"sisa": target, "target": target}
+
+    target_p = None
+    if program_name and program_name != "all":
+        for p in progs:
+            if program_name.lower() in p.lower() or p.lower() in program_name.lower():
+                target_p = p
+                break
+    
+    if not target_p:
+        target_p = progs[0]
+
+    if target_p and target_p in kuota_dict and target_p.lower() != "tk":
+        q = kuota_dict[target_p]
+        target_val = q.get("target", 8)
+        current_sisa = q.get("sisa", target_val)
+        new_sisa = max(0, min(target_val, current_sisa + delta))
+        kuota_dict[target_p]["sisa"] = new_sisa
+
+    siswa.kuota_program = json.dumps(kuota_dict)
+    siswa.sisa_pertemuan = sum(v.get("sisa", 0) for k, v in kuota_dict.items() if k.lower() != "tk")
 
 @router.post("/absensi/simpan")
 async def save_siswa_absensi(
@@ -450,6 +501,9 @@ async def save_siswa_absensi(
 
     programs = _get_guru_programs(guru)
     prog_conditions = [func.lower(Siswa.kategori_program).like(f"%{p}%") for p in programs]
+
+    # Effective program being marked
+    active_program = data.program or (programs[0] if len(programs) == 1 else None)
 
     for item in data.siswa_absensi:
         siswa = db.query(Siswa).filter(
@@ -484,16 +538,17 @@ async def save_siswa_absensi(
             existing_log.waktu = now
             existing_log.mode = mode_enum
 
-            # If changed from IZIN to HADIR or ALFA: deduct remaining sessions
+            # If changed from IZIN to HADIR or ALFA: deduct remaining sessions for that program
             if prev_status == StatusAbsensi.IZIN and status_enum in [StatusAbsensi.HADIR, StatusAbsensi.ALFA]:
-                siswa.sisa_pertemuan = max(0, siswa.sisa_pertemuan - 1)
-            # If changed from HADIR or ALFA to IZIN: restore 1 session
+                _update_student_program_quota(siswa, active_program, -1)
+            # If changed from HADIR or ALFA to IZIN: restore 1 session for that program
             elif prev_status in [StatusAbsensi.HADIR, StatusAbsensi.ALFA] and status_enum == StatusAbsensi.IZIN:
-                siswa.sisa_pertemuan = min(siswa.target_pertemuan, siswa.sisa_pertemuan + 1)
-            # If changed between HADIR <-> ALFA: both count as 1 session used, so sisa_pertemuan remains unchanged!
+                _update_student_program_quota(siswa, active_program, +1)
+            # If changed between HADIR <-> ALFA: quota unchanged
         else:
-            # Student has no sessions left and no log exists today: skip unless marked IZIN
-            if siswa.sisa_pertemuan <= 0 and status_enum in [StatusAbsensi.HADIR, StatusAbsensi.ALFA]:
+            # Student has no sessions left and no log exists today: skip unless marked IZIN or is TK
+            is_tk = "tk" in (siswa.kategori_program or "").lower()
+            if siswa.sisa_pertemuan <= 0 and not is_tk and status_enum in [StatusAbsensi.HADIR, StatusAbsensi.ALFA]:
                 continue
 
             log = AbsensiLog(
@@ -504,7 +559,7 @@ async def save_siswa_absensi(
             )
             db.add(log)
             if status_enum in [StatusAbsensi.HADIR, StatusAbsensi.ALFA]:
-                siswa.sisa_pertemuan = max(0, siswa.sisa_pertemuan - 1)
+                _update_student_program_quota(siswa, active_program, -1)
 
         # Update SPP status based on remaining meetings
         if siswa.sisa_pertemuan == 0 and siswa.status_spp != StatusSPP.EXPIRED:

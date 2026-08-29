@@ -3,7 +3,7 @@ import useAuth from '../../features/auth/useAuth';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
 import { Siswa, AbsensiLog } from '../../types';
-import { parseProgramDetails, getProgramBadgeStyle, getProgramSchedule } from '../portal/SiswaPage';
+import { parseProgramDetails, getProgramBadgeStyle, getProgramSchedule, parseProgramQuotas } from '../portal/SiswaPage';
 
 interface ChildFormData {
   nama: string;
@@ -260,26 +260,54 @@ export const AnakSayaPage: React.FC = () => {
 
           {/* Program & Paket Bimbingan */}
           <div className="p-3.5 bg-[#FFF3E0] border border-[#FFE082] rounded-xl space-y-2">
-            <p className="text-[11px] font-bold text-[#E65100] uppercase tracking-wider">Program & Paket Bimbingan</p>
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] font-bold text-[#E65100] uppercase tracking-wider">Program & Sisa Pertemuan</p>
+              <span className="text-[11px] font-bold text-[#D97706]">
+                Total Sisa: {child.sisa_pertemuan} / {child.target_pertemuan || 8} Sesi
+              </span>
+            </div>
             <div className="space-y-1.5">
-              {parseProgramDetails(child.kategori_program, child.paket_jadwal).map((item, idx) => {
-                const schedule = getProgramSchedule(item.program, child.hari_masuk);
-                return (
-                  <div key={idx} className="flex items-center justify-between gap-2 p-2 bg-white/90 rounded-lg border border-[#FFE082] flex-wrap">
-                    <div className="flex items-center gap-2">
-                      <span className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold border shadow-2xs ${getProgramBadgeStyle(item.program)}`}>
-                        {item.program}
-                      </span>
-                      <span className="text-[11px] font-bold text-[#1E293B]">
-                        {schedule}
-                      </span>
-                    </div>
-                    <span className="text-[11px] font-extrabold px-2 py-0.5 rounded bg-[#FFF8E1] text-[#E65100] border border-[#FFE082]">
-                      {item.meetingInfo}
-                    </span>
-                  </div>
+              {(() => {
+                const quotas = parseProgramQuotas(
+                  child.kategori_program,
+                  child.paket_jadwal,
+                  child.target_pertemuan,
+                  child.sisa_pertemuan,
+                  (child as any).kuota_program
                 );
-              })}
+                return parseProgramDetails(child.kategori_program, child.paket_jadwal).map((item, idx) => {
+                  const schedule = getProgramSchedule(item.program, child.hari_masuk);
+                  const q = quotas.find((x) => x.program.toLowerCase() === item.program.toLowerCase()) || quotas[idx];
+                  const isTk = item.program.trim().toLowerCase() === 'tk' || (q && q.target === 0);
+
+                  return (
+                    <div key={idx} className="flex items-center justify-between gap-2 p-2.5 bg-white/90 rounded-lg border border-[#FFE082] flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold border shadow-2xs ${getProgramBadgeStyle(item.program)}`}>
+                          {item.program}
+                        </span>
+                        <span className="text-[11px] font-bold text-[#1E293B]">
+                          {schedule}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-white text-[#334155] border border-[#CBD5E1] shadow-2xs">
+                          {item.meetingInfo}
+                        </span>
+                        {isTk ? (
+                          <span className="text-[11px] font-extrabold px-2 py-0.5 rounded bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]">
+                            Harian (TK)
+                          </span>
+                        ) : (
+                          <span className="text-[11px] font-extrabold px-2 py-0.5 rounded bg-[#E8F5E9] text-[#2E7D32] border border-[#A5D6A7]">
+                            Sisa: {q ? q.sisa : child.sisa_pertemuan} / {q ? q.target : 8} kali
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
             </div>
           </div>
 

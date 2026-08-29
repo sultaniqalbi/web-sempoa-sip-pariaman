@@ -197,6 +197,7 @@ async def create_new_siswa(
             id_guru=siswa_in.id_guru,
             target_pertemuan=siswa_in.target_pertemuan or 8,
             sisa_pertemuan=siswa_in.sisa_pertemuan if siswa_in.sisa_pertemuan is not None else (siswa_in.target_pertemuan or 8),
+            kuota_program=siswa_in.kuota_program,
             status_spp=StatusSPP.AKTIF,
             nama_orang_tua=siswa_in.nama_orang_tua,
             whatsapp_orang_tua=normalized_wa,
