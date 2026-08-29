@@ -1232,7 +1232,7 @@ export const SiswaPage: React.FC = () => {
                                       });
                                     }}
                                     className="w-full bg-white border border-[#FFCC80] rounded-lg p-2 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none text-xs"
-                                    placeholder="Kosongkan jika 0"
+                                    placeholder=""
                                   />
                                   <span className="text-[9px] text-[#BF360C] block mt-0.5">Sisa kuota {prog} dari buku absen</span>
                                 </div>
