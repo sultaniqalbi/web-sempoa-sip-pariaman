@@ -809,6 +809,7 @@ export const SiswaPage: React.FC = () => {
           {/* 4. Paket Jadwal & Detail Pertemuan Multi-Program */}
           {(() => {
             const selectedList = formData.kategori_program.split(',').map((p) => p.trim()).filter(Boolean);
+            const defaultTarget = calculateDefaultTarget(formData.kategori_program);
 
             return (
               <div className="p-3 bg-[#FFF3E0] border border-[#FFCC80] rounded-xl space-y-2.5">
