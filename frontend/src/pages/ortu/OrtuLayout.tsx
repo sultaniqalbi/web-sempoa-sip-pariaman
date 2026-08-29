@@ -60,7 +60,7 @@ export const OrtuLayout: React.FC = () => {
   // Check if tour should auto-run strictly on first login only
   useEffect(() => {
     if (isHomePage && user) {
-      const userKey = user.id ? `sempoa_ortu_tour_completed_${user.id}` : `sempoa_ortu_tour_completed_${user.username || 'default'}`;
+      const userKey = `sempoa_ortu_tour_completed_${user.id || user.email || 'default'}`;
       const legacyKey = 'sempoa_ortu_tour_completed';
       const tourCompleted = localStorage.getItem(userKey) || localStorage.getItem(legacyKey);
       if (!tourCompleted) {
@@ -75,7 +75,7 @@ export const OrtuLayout: React.FC = () => {
 
   const handleTourClose = () => {
     if (user) {
-      const userKey = user.id ? `sempoa_ortu_tour_completed_${user.id}` : `sempoa_ortu_tour_completed_${user.username || 'default'}`;
+      const userKey = `sempoa_ortu_tour_completed_${user.id || user.email || 'default'}`;
       localStorage.setItem(userKey, 'true');
     }
     localStorage.setItem('sempoa_ortu_tour_completed', 'true');
@@ -84,7 +84,7 @@ export const OrtuLayout: React.FC = () => {
 
   const handleTourComplete = () => {
     if (user) {
-      const userKey = user.id ? `sempoa_ortu_tour_completed_${user.id}` : `sempoa_ortu_tour_completed_${user.username || 'default'}`;
+      const userKey = `sempoa_ortu_tour_completed_${user.id || user.email || 'default'}`;
       localStorage.setItem(userKey, 'true');
     }
     localStorage.setItem('sempoa_ortu_tour_completed', 'true');
