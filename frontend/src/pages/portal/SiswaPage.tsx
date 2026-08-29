@@ -174,6 +174,9 @@ export const SiswaPage: React.FC = () => {
   const [programDays, setProgramDays] = useState<Record<string, string>>({
     'Sempoa SIP': 'Senin, Rabu'
   });
+  const [programQuotas, setProgramQuotas] = useState<Record<string, { sisa: number | string; target: number }>>({
+    'Sempoa SIP': { sisa: '', target: 8 }
+  });
 
   // Form State
   const [formData, setFormData] = useState({
@@ -440,6 +443,9 @@ export const SiswaPage: React.FC = () => {
     setProgramDays({
       'Sempoa SIP': 'Senin, Rabu'
     });
+    setProgramQuotas({
+      'Sempoa SIP': { sisa: '', target: 8 }
+    });
     setSelectedPhoto(null);
     setPhoneError(null);
     setIsAddModalOpen(true);
@@ -447,7 +453,7 @@ export const SiswaPage: React.FC = () => {
 
   const openEditModal = (siswa: Siswa) => {
     setEditingSiswa(siswa);
-    setIsCustomQuota(true);
+    setIsCustomQuota(false);
     const calculatedAge = calculateAge(siswa.tanggal_lahir);
     const isSempoaPaket2 = (siswa.paket_jadwal || '').includes('12 Pertemuan') && (siswa.kategori_program || '').includes('Sempoa');
     setSempoaPackageIndex(isSempoaPaket2 ? 1 : 0);
@@ -486,6 +492,18 @@ export const SiswaPage: React.FC = () => {
       }
     });
     setProgramDays(initialProgDays);
+
+    const initialProgQuotas: Record<string, { sisa: number | string; target: number }> = {};
+    progs.forEach((p) => {
+      const defTarget = p === 'Sempoa SIP' 
+        ? (isSempoaPaket2 ? 12 : 8)
+        : ((PROGRAM_CONFIG as any)[p]?.packages[0]?.target ?? 8);
+      initialProgQuotas[p] = {
+        sisa: siswa.sisa_pertemuan !== undefined ? siswa.sisa_pertemuan : '',
+        target: defTarget
+      };
+    });
+    setProgramQuotas(initialProgQuotas);
 
     setSelectedPhoto(null);
     setPhoneError(null);
@@ -1145,44 +1163,139 @@ export const SiswaPage: React.FC = () => {
 
                   {/* Form Input Sisa & Target Pertemuan (Hanya tampil saat toggle ON) */}
                   {isCustomQuota && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-3 bg-white/80 rounded-xl border border-[#FFCC80]">
-                      <div>
-                        <label className="block text-[#E65100] font-bold text-xs mb-1">
-                          Sisa Pertemuan Awal (Saat Ini)*
-                        </label>
-                        <input
-                          type="number"
-                          min={0}
-                          max={60}
-                          required={isCustomQuota}
-                          value={formData.sisa_pertemuan === 0 ? '' : formData.sisa_pertemuan}
-                          onChange={(e) => {
-                            const val = e.target.value.replace(/^0+(?=\d)/, '');
-                            setFormData({ ...formData, sisa_pertemuan: val === '' ? 0 : parseInt(val) || 0 });
-                          }}
-                          className="w-full bg-white border border-[#FFCC80] rounded-lg p-2 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none text-xs"
-                          placeholder="Kosongkan jika 0"
-                        />
-                        <span className="text-[10px] text-[#BF360C] block mt-0.5 font-medium">Bisa diisi sisa kuota dari buku absen fisik saat ini</span>
+                    <div className="space-y-2.5 p-3 bg-white/90 rounded-xl border border-[#FFCC80]">
+                      <div className="flex items-center justify-between pb-1.5 border-b border-[#FFE082]">
+                        <span className="text-xs font-black text-[#E65100]">
+                          Input Manual Sisa & Target per Program:
+                        </span>
+                        <span className="text-[10px] text-[#64748B] font-bold">
+                          {selectedList.length} Program Terpilih ({selectedList.length * 2} Kolom Input)
+                        </span>
                       </div>
-                      <div>
-                        <label className="block text-[#E65100] font-bold text-xs mb-1">
-                          Total Target Pertemuan*
-                        </label>
-                        <input
-                          type="number"
-                          min={1}
-                          max={60}
-                          required={isCustomQuota}
-                          value={formData.target_pertemuan === 0 ? '' : formData.target_pertemuan}
-                          onChange={(e) => {
-                            const val = e.target.value.replace(/^0+(?=\d)/, '');
-                            setFormData({ ...formData, target_pertemuan: val === '' ? 0 : parseInt(val) || 0 });
-                          }}
-                          className="w-full bg-white border border-[#FFCC80] rounded-lg p-2 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none text-xs"
-                          placeholder={String(defaultTarget)}
-                        />
-                        <span className="text-[10px] text-[#BF360C] block mt-0.5 font-medium">Total target sesi per siklus SPP ({defaultTarget} Sesi)</span>
+
+                      <div className="space-y-2.5">
+                        {selectedList.map((prog) => {
+                          const defaultProgTarget = prog === 'Sempoa SIP'
+                            ? (PROGRAM_CONFIG['Sempoa SIP'].packages[sempoaPackageIndex]?.target ?? 8)
+                            : ((PROGRAM_CONFIG as any)[prog]?.packages[0]?.target ?? 8);
+
+                          const currentQuota = programQuotas[prog] || {
+                            sisa: '',
+                            target: defaultProgTarget
+                          };
+
+                          return (
+                            <div key={prog} className="p-2.5 bg-[#FFF8E1] rounded-lg border border-[#FFE082]">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getProgramBadgeStyle(prog)}`}>
+                                  {prog}
+                                </span>
+                                <span className="text-[10px] text-[#BF360C] font-semibold">
+                                  Standar: {defaultProgTarget > 0 ? `${defaultProgTarget} Sesi` : 'Fleksibel'}
+                                </span>
+                              </div>
+
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                <div>
+                                  <label className="block text-[#E65100] font-bold text-xs mb-1">
+                                    Sisa Pertemuan {prog} (Saat Ini)*
+                                  </label>
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    max={60}
+                                    value={currentQuota.sisa === 0 ? '' : currentQuota.sisa}
+                                    onChange={(e) => {
+                                      const raw = e.target.value.replace(/^0+(?=\d)/, '');
+                                      const val = raw === '' ? '' : parseInt(raw) || 0;
+                                      const updated = {
+                                        ...programQuotas,
+                                        [prog]: {
+                                          ...currentQuota,
+                                          sisa: val
+                                        }
+                                      };
+                                      setProgramQuotas(updated);
+
+                                      // Recompute total sum
+                                      let sumSisa = 0;
+                                      let sumTarget = 0;
+                                      selectedList.forEach((p) => {
+                                        const pq = updated[p] || { sisa: '', target: p === 'Sempoa SIP' ? (PROGRAM_CONFIG['Sempoa SIP'].packages[sempoaPackageIndex]?.target ?? 8) : ((PROGRAM_CONFIG as any)[p]?.packages[0]?.target ?? 8) };
+                                        sumSisa += Number(pq.sisa) || 0;
+                                        sumTarget += Number(pq.target) || 0;
+                                      });
+                                      setFormData({
+                                        ...formData,
+                                        sisa_pertemuan: sumSisa,
+                                        target_pertemuan: sumTarget > 0 ? sumTarget : defaultTarget
+                                      });
+                                    }}
+                                    className="w-full bg-white border border-[#FFCC80] rounded-lg p-2 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none text-xs"
+                                    placeholder="Kosongkan jika 0"
+                                  />
+                                  <span className="text-[9px] text-[#BF360C] block mt-0.5">Sisa kuota {prog} dari buku absen</span>
+                                </div>
+
+                                <div>
+                                  <label className="block text-[#E65100] font-bold text-xs mb-1">
+                                    Total Target Pertemuan {prog}*
+                                  </label>
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    max={60}
+                                    value={currentQuota.target === 0 ? '' : currentQuota.target}
+                                    onChange={(e) => {
+                                      const raw = e.target.value.replace(/^0+(?=\d)/, '');
+                                      const val = raw === '' ? 0 : parseInt(raw) || 0;
+                                      const updated = {
+                                        ...programQuotas,
+                                        [prog]: {
+                                          ...currentQuota,
+                                          target: val
+                                        }
+                                      };
+                                      setProgramQuotas(updated);
+
+                                      // Recompute total sum
+                                      let sumSisa = 0;
+                                      let sumTarget = 0;
+                                      selectedList.forEach((p) => {
+                                        const pq = updated[p] || { sisa: '', target: p === 'Sempoa SIP' ? (PROGRAM_CONFIG['Sempoa SIP'].packages[sempoaPackageIndex]?.target ?? 8) : ((PROGRAM_CONFIG as any)[p]?.packages[0]?.target ?? 8) };
+                                        sumSisa += Number(pq.sisa) || 0;
+                                        sumTarget += Number(pq.target) || 0;
+                                      });
+                                      setFormData({
+                                        ...formData,
+                                        sisa_pertemuan: sumSisa,
+                                        target_pertemuan: sumTarget > 0 ? sumTarget : defaultTarget
+                                      });
+                                    }}
+                                    className="w-full bg-white border border-[#FFCC80] rounded-lg p-2 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none text-xs"
+                                    placeholder={String(defaultProgTarget)}
+                                  />
+                                  <span className="text-[9px] text-[#BF360C] block mt-0.5">Target sesi SPP {prog}</span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Total Accumulation Summary */}
+                      <div className="p-2.5 bg-white rounded-lg border border-[#FFE082] flex items-center justify-between">
+                        <span className="text-xs font-bold text-[#1E293B]">
+                          Total Akumulasi Seluruh Program:
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] font-extrabold text-[#2E7D32] bg-[#E8F5E9] px-2 py-0.5 rounded border border-[#A5D6A7]">
+                            Sisa: {formData.sisa_pertemuan} Sesi
+                          </span>
+                          <span className="text-[11px] font-extrabold text-[#E65100] bg-[#FFF3E0] px-2 py-0.5 rounded border border-[#FFCC80]">
+                            Target: {formData.target_pertemuan} Sesi
+                          </span>
+                        </div>
                       </div>
                     </div>
                   )}
