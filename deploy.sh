@@ -32,16 +32,16 @@ echo "[2/5] 📥 Mengambil kode terbaru dari GitHub..."
 git pull origin master
 
 echo ""
-echo "[3/5] 🗄️ Menjalankan Migrasi Skema Database (Alembic)..."
-docker compose -f docker-compose.prod.yml exec backend alembic upgrade head || true
-
-echo ""
-echo "[4/5] 🔨 Build Frontend & Backend..."
+echo "[3/5] 🔨 Build Frontend & Backend (Container Baru)..."
 docker compose -f docker-compose.prod.yml build --no-cache frontend backend
 
 echo ""
-echo "[5/5] 🚀 Restart Service Frontend, Backend & Nginx (Database Tetap Berjalan)..."
+echo "[4/5] 🚀 Restart Service Frontend, Backend & Nginx (Database Tetap Berjalan)..."
 docker compose -f docker-compose.prod.yml up -d --force-recreate frontend backend nginx
+
+echo ""
+echo "[5/5] 🗄️ Menjalankan Migrasi Skema Database Terbaru (Alembic)..."
+docker compose -f docker-compose.prod.yml exec backend alembic upgrade head || true
 
 echo ""
 echo "🧹 Membersihkan cache image lama..."
@@ -52,4 +52,3 @@ echo "=========================================================="
 echo "  ✅ DEPLOY BERHASIL & SEMUA DATA DATABASE TETAP AMAN!"
 echo "  Web: https://sempoasippariaman.com"
 echo "=========================================================="
-

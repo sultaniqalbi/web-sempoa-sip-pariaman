@@ -63,6 +63,19 @@ def on_startup():
             if "duplicate column name" not in str(mig_e).lower() and "already exists" not in str(mig_e).lower():
                 logger.warning(f"Auto-migration skipped or failed: {mig_e}")
 
+        # Auto-migration for multi-program expanded columns (ensure PostgreSQL types are VARCHAR(255))
+        try:
+            with engine.connect() as conn:
+                conn.execute(text("ALTER TABLE siswa ALTER COLUMN kategori_program TYPE VARCHAR(255);"))
+                conn.execute(text("ALTER TABLE siswa ALTER COLUMN paket_jadwal TYPE VARCHAR(255);"))
+                conn.execute(text("ALTER TABLE siswa ALTER COLUMN hari_masuk TYPE VARCHAR(255);"))
+                conn.execute(text("ALTER TABLE guru ALTER COLUMN kategori_program TYPE VARCHAR(255);"))
+                conn.execute(text("ALTER TABLE jadwal ADD COLUMN IF NOT EXISTS guru_ids VARCHAR(255);"))
+                conn.commit()
+                logger.info("Auto-migration: Expanded column lengths for multi-program in siswa, guru, and jadwal")
+        except Exception as mig_col_e:
+            logger.warning(f"Auto-migration for expanded columns: {mig_col_e}")
+
         # Auto-migration for bukti_transfer (ensure table exists on any DB engine)
         try:
             with engine.connect() as conn:
