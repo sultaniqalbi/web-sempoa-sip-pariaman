@@ -51,7 +51,7 @@ export const PROGRAM_CONFIG = {
   'Bahasa Inggris': {
     spp: 200000,
     packages: [
-      { label: 'Paket Reguler: 2 Pertemuan, 90 Menit', target: 2, duration: '90 Menit', count: '2x' },
+      { label: 'Paket Reguler: 8 Pertemuan, 90 Menit', target: 8, duration: '90 Menit', count: '8x' },
     ]
   },
   'Tahfidz': {
@@ -81,13 +81,17 @@ export const calculateTotalSPP = (programStr: string) => {
   return total;
 };
 
-export const calculateDefaultTarget = (programStr: string) => {
+export const calculateDefaultTarget = (programStr: string, sempoaIndex: number = 0) => {
   if (!programStr) return 8;
   const progs = programStr.split(',').map((p) => p.trim()).filter(Boolean);
   if (progs.length === 0) return 8;
   let total = 0;
   for (const p of progs) {
-    total += (PROGRAM_CONFIG as any)[p]?.packages[0]?.target ?? 8;
+    if (p === 'Sempoa SIP') {
+      total += (PROGRAM_CONFIG['Sempoa SIP'].packages[sempoaIndex]?.target ?? 8);
+    } else {
+      total += (PROGRAM_CONFIG as any)[p]?.packages[0]?.target ?? 8;
+    }
   }
   return total > 0 ? total : 8;
 };
@@ -120,7 +124,7 @@ export const parseProgramDetails = (kategoriProgram?: string, paketJadwal?: stri
       if (match) {
         meetingInfo = `${match[1]}x Pertemuan`;
       } else if (p.toLowerCase().includes('tk') || pkgStr.toLowerCase().includes('tk')) {
-        meetingInfo = 'Program Harian (TK)';
+        meetingInfo = 'Program TK (Harian)';
       } else {
         meetingInfo = pkgStr;
       }
@@ -130,10 +134,10 @@ export const parseProgramDetails = (kategoriProgram?: string, paketJadwal?: stri
         if (cfg.packages[0].target > 0) {
           meetingInfo = `${cfg.packages[0].target}x Pertemuan`;
         } else {
-          meetingInfo = 'Program Harian (TK)';
+          meetingInfo = 'Program TK (Harian)';
         }
       } else if (p.toLowerCase().includes('tk')) {
-        meetingInfo = 'Program Harian (TK)';
+        meetingInfo = 'Program TK (Harian)';
       } else {
         meetingInfo = '8x Pertemuan';
       }
@@ -166,6 +170,10 @@ export const SiswaPage: React.FC = () => {
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: number; nama: string } | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [isCustomQuota, setIsCustomQuota] = useState(false);
+  const [sempoaPackageIndex, setSempoaPackageIndex] = useState(0);
+  const [programDays, setProgramDays] = useState<Record<string, string>>({
+    'Sempoa SIP': 'Senin, Rabu'
+  });
 
   // Form State
   const [formData, setFormData] = useState({
@@ -184,7 +192,7 @@ export const SiswaPage: React.FC = () => {
     tanggal_lahir: '',
     asal_sekolah: '',
     target_pertemuan: 8,
-    sisa_pertemuan: 0
+    sisa_pertemuan: 8
   });
 
   const showToast = (text: string, type: 'success' | 'error' = 'success') => {
@@ -246,7 +254,17 @@ export const SiswaPage: React.FC = () => {
     }
 
     const currentYear = new Date().getFullYear().toString().slice(-2);
-    return `${prefix}-${ageStr}${currentYear}`;
+    
+    // 4 additional random chars: 2 uppercase letters + 2 alphanumeric chars (making total suffix 8 chars)
+    const letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+    const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+    const r1 = letters.charAt(Math.floor(Math.random() * letters.length));
+    const r2 = letters.charAt(Math.floor(Math.random() * letters.length));
+    const r3 = chars.charAt(Math.floor(Math.random() * chars.length));
+    const r4 = chars.charAt(Math.floor(Math.random() * chars.length));
+    const suffix = `${ageStr}${currentYear}${r1}${r2}${r3}${r4}`;
+
+    return `${prefix}-${suffix}`;
   };
 
   // Fetch Siswa List
@@ -398,8 +416,11 @@ export const SiswaPage: React.FC = () => {
   const openCreateModal = () => {
     setEditingSiswa(null);
     setIsCustomQuota(false);
+    setSempoaPackageIndex(0);
+    const initialUid = generateKodeSiswa('Sempoa SIP', '', '');
+    const initialTarget = 8;
     setFormData({
-      uid: `SW-${Math.floor(1000 + Math.random() * 9000)}`,
+      uid: initialUid,
       nama: '',
       nama_panggilan: '',
       umur: '',
@@ -413,8 +434,11 @@ export const SiswaPage: React.FC = () => {
       tempat_lahir: '',
       tanggal_lahir: '',
       asal_sekolah: '',
-      target_pertemuan: 8,
-      sisa_pertemuan: 0
+      target_pertemuan: initialTarget,
+      sisa_pertemuan: initialTarget
+    });
+    setProgramDays({
+      'Sempoa SIP': 'Senin, Rabu'
     });
     setSelectedPhoto(null);
     setPhoneError(null);
@@ -425,6 +449,8 @@ export const SiswaPage: React.FC = () => {
     setEditingSiswa(siswa);
     setIsCustomQuota(true);
     const calculatedAge = calculateAge(siswa.tanggal_lahir);
+    const isSempoaPaket2 = (siswa.paket_jadwal || '').includes('12 Pertemuan') && (siswa.kategori_program || '').includes('Sempoa');
+    setSempoaPackageIndex(isSempoaPaket2 ? 1 : 0);
     setFormData({
       uid: siswa.uid,
       nama: siswa.nama,
@@ -441,8 +467,26 @@ export const SiswaPage: React.FC = () => {
       tanggal_lahir: siswa.tanggal_lahir || '',
       asal_sekolah: siswa.asal_sekolah || '',
       target_pertemuan: siswa.target_pertemuan || 8,
-      sisa_pertemuan: siswa.sisa_pertemuan ?? 0
+      sisa_pertemuan: siswa.sisa_pertemuan ?? (siswa.target_pertemuan || 8)
     });
+
+    const progs = (siswa.kategori_program || 'Sempoa SIP').split(',').map((p) => p.trim()).filter(Boolean);
+    const initialProgDays: Record<string, string> = {};
+    if (siswa.hari_masuk && siswa.hari_masuk.includes(':')) {
+      siswa.hari_masuk.split('|').forEach((part) => {
+        const [prog, days] = part.split(':');
+        if (prog && days) {
+          initialProgDays[prog.trim()] = days.trim();
+        }
+      });
+    }
+    progs.forEach((p) => {
+      if (!initialProgDays[p]) {
+        initialProgDays[p] = siswa.hari_masuk && !siswa.hari_masuk.includes(':') ? siswa.hari_masuk : (p === 'Bahasa Inggris' ? 'Jumat, Sabtu' : 'Senin, Rabu');
+      }
+    });
+    setProgramDays(initialProgDays);
+
     setSelectedPhoto(null);
     setPhoneError(null);
     setIsAddModalOpen(true);
@@ -454,20 +498,35 @@ export const SiswaPage: React.FC = () => {
       return;
     }
     const ageVal = calculateAge(formData.tanggal_lahir);
-    const defaultTarget = calculateDefaultTarget(formData.kategori_program);
+    const defaultTarget = calculateDefaultTarget(formData.kategori_program, sempoaPackageIndex);
     
-    // Total target pertemuan (otomatis dari paket yang dipilih atau input manual jika diedit)
+    // Total target pertemuan
     const target = formData.target_pertemuan !== undefined && formData.target_pertemuan !== null && Number(formData.target_pertemuan) > 0
       ? Number(formData.target_pertemuan)
       : defaultTarget;
 
-    // Sisa pertemuan (menggunakan angka yang diinputkan user secara presisi)
-    const sisa = formData.sisa_pertemuan !== undefined && formData.sisa_pertemuan !== null
-      ? Number(formData.sisa_pertemuan)
-      : (editingSiswa ? (editingSiswa.sisa_pertemuan ?? 0) : (target || 8));
+    // Sisa pertemuan (jika siswa baru dan custom quota false, samakan dengan target pertemuan)
+    let sisa = target;
+    if (isCustomQuota && formData.sisa_pertemuan !== undefined && formData.sisa_pertemuan !== null) {
+      sisa = Number(formData.sisa_pertemuan);
+    } else if (editingSiswa) {
+      sisa = editingSiswa.sisa_pertemuan ?? target;
+    }
+
+    // Determine combined hari_masuk
+    const selectedProgs = formData.kategori_program.split(',').map((p) => p.trim()).filter(Boolean);
+    let combinedHari = formData.hari_masuk;
+    if (selectedProgs.length > 1 && Object.keys(programDays).length > 0) {
+      combinedHari = selectedProgs
+        .map((p) => `${p}: ${programDays[p] || 'Senin, Rabu'}`)
+        .join(' | ');
+    } else if (selectedProgs.length === 1 && programDays[selectedProgs[0]]) {
+      combinedHari = programDays[selectedProgs[0]];
+    }
 
     const payload = {
       ...formData,
+      hari_masuk: combinedHari || 'Senin, Rabu',
       tanggal_lahir: formData.tanggal_lahir || null,
       umur: ageVal || (formData.umur ? parseInt(formData.umur, 10) : null),
       target_pertemuan: target,
@@ -478,7 +537,6 @@ export const SiswaPage: React.FC = () => {
       tempat_lahir: formData.tempat_lahir || null,
       asal_sekolah: formData.asal_sekolah || null,
       kelas_sekolah: formData.kelas_sekolah || null,
-      hari_masuk: formData.hari_masuk || 'Senin, Rabu',
     };
     if (editingSiswa) {
       updateMutation.mutate(payload as any);
@@ -536,30 +594,53 @@ export const SiswaPage: React.FC = () => {
       }
     },
     {
-      header: 'Program & Pertemuan',
+      header: 'Program Belajar',
       accessor: (row: Siswa) => {
         const details = parseProgramDetails(row.kategori_program, row.paket_jadwal);
         return (
-          <div className="space-y-1.5 py-1">
-            {details.map((item, idx) => (
-              <div key={idx} className="flex items-center gap-1.5 flex-wrap">
-                <span
-                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold border shadow-2xs ${getProgramBadgeStyle(item.program)}`}
-                >
-                  {item.program}
-                </span>
-                <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-[#F8FAFC] text-[#334155] border border-[#CBD5E1]">
-                  {item.meetingInfo}
-                </span>
-              </div>
-            ))}
-            <p className="text-[10px] text-[#94A3B8] pt-0.5 flex items-center gap-1">
+          <div className="space-y-1 py-1">
+            <div className="flex flex-col gap-1.5">
+              {details.map((item, idx) => (
+                <div key={idx} className="flex items-center">
+                  <span
+                    className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold border shadow-2xs inline-block ${getProgramBadgeStyle(item.program)}`}
+                  >
+                    {item.program}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p className="text-[10px] text-[#94A3B8] pt-1 flex items-center gap-1 border-t border-[#F1F5F9] mt-1">
               <CalendarIcon size={10} className="text-[#94A3B8]" />
-              <span>{row.hari_masuk}</span>
+              <span className="font-medium">{row.hari_masuk}</span>
             </p>
           </div>
         );
-      }
+      },
+      className: 'md:w-[200px]'
+    },
+    {
+      header: 'Sesi / Pertemuan',
+      accessor: (row: Siswa) => {
+        const details = parseProgramDetails(row.kategori_program, row.paket_jadwal);
+        return (
+          <div className="space-y-1 py-1">
+            <div className="flex flex-col gap-1.5">
+              {details.map((item, idx) => (
+                <div key={idx} className="flex items-center h-[24px]">
+                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-[#F8FAFC] text-[#334155] border border-[#CBD5E1] shadow-2xs">
+                    {item.meetingInfo}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p className="text-[10px] text-[#64748B] pt-1 font-semibold border-t border-[#F1F5F9] mt-1">
+              Target: {row.target_pertemuan || 8} Sesi
+            </p>
+          </div>
+        );
+      },
+      className: 'md:w-[170px]'
     },
     {
       header: 'Sisa Pertemuan',
@@ -836,15 +917,29 @@ export const SiswaPage: React.FC = () => {
                         nextList = [...selectedList, prog];
                       }
                       const nextStr = nextList.join(', ');
-                      const nextTarget = calculateDefaultTarget(nextStr);
+                      const nextTarget = calculateDefaultTarget(nextStr, sempoaPackageIndex);
                       const newUid = !editingSiswa ? generateKodeSiswa(nextStr, formData.umur, formData.tanggal_lahir) : formData.uid;
-                      const pkgLabels = nextList.map((p) => (PROGRAM_CONFIG as any)[p]?.packages[0]?.label || p).join(' + ');
+                      
+                      const pkgLabels = nextList.map((p) => {
+                        if (p === 'Sempoa SIP') {
+                          return PROGRAM_CONFIG['Sempoa SIP'].packages[sempoaPackageIndex]?.label || p;
+                        }
+                        return (PROGRAM_CONFIG as any)[p]?.packages[0]?.label || p;
+                      }).join(' + ');
+
+                      // Update program days
+                      const updatedProgDays = { ...programDays };
+                      if (!isSelected && !updatedProgDays[prog]) {
+                        updatedProgDays[prog] = prog === 'Bahasa Inggris' ? 'Jumat, Sabtu' : 'Senin, Rabu';
+                      }
+                      setProgramDays(updatedProgDays);
 
                       setFormData({
                         ...formData,
                         kategori_program: nextStr,
                         paket_jadwal: pkgLabels,
                         target_pertemuan: nextTarget,
+                        sisa_pertemuan: isCustomQuota ? formData.sisa_pertemuan : nextTarget,
                         uid: newUid,
                       });
                     }}
@@ -874,22 +969,105 @@ export const SiswaPage: React.FC = () => {
           {/* 4. Paket Jadwal & Detail Pertemuan Multi-Program */}
           {(() => {
             const selectedList = formData.kategori_program.split(',').map((p) => p.trim()).filter(Boolean);
-            const defaultTarget = calculateDefaultTarget(formData.kategori_program);
+            const defaultTarget = calculateDefaultTarget(formData.kategori_program, sempoaPackageIndex);
 
             return (
-              <div className="p-3 bg-[#FFF3E0] border border-[#FFCC80] rounded-xl space-y-2.5">
+              <div className="p-3.5 bg-[#FFF8E1] border border-[#FFE082] rounded-xl space-y-3">
                 <div className="flex items-center justify-between">
                   <label className="block text-[#E65100] font-bold text-xs">
                     Rincian Program & Sesi Terpilih ({selectedList.join(' + ')})
                   </label>
-                  <span className="text-[10px] text-[#BF360C] font-semibold">
+                  <span className="text-[10px] text-[#BF360C] font-extrabold bg-white px-2 py-0.5 rounded-full border border-[#FFCC80]">
                     Siklus 30 Hari
                   </span>
                 </div>
 
+                {/* Sempoa SIP Package Choices (2 Box Options: 8x vs 12x) */}
+                {selectedList.includes('Sempoa SIP') && (
+                  <div className="p-3 bg-white rounded-xl border border-[#FFCC80] space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-extrabold text-[#E65100]">
+                        Pilihan Paket Pertemuan Sempoa SIP*:
+                      </span>
+                      <span className="text-[10px] font-bold text-[#64748B]">
+                        Pilih 8x atau 12x
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSempoaPackageIndex(0);
+                          const nextTarget = calculateDefaultTarget(formData.kategori_program, 0);
+                          const pkgLabels = selectedList.map((p) => {
+                            if (p === 'Sempoa SIP') return PROGRAM_CONFIG['Sempoa SIP'].packages[0].label;
+                            return (PROGRAM_CONFIG as any)[p]?.packages[0]?.label || p;
+                          }).join(' + ');
+
+                          setFormData({
+                            ...formData,
+                            paket_jadwal: pkgLabels,
+                            target_pertemuan: nextTarget,
+                            sisa_pertemuan: isCustomQuota ? formData.sisa_pertemuan : nextTarget,
+                          });
+                        }}
+                        className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all ${
+                          sempoaPackageIndex === 0
+                            ? 'bg-[#FFF3E0] border-[#FF7043] ring-2 ring-[#FF7043] shadow-xs'
+                            : 'bg-[#FAFAFA] border-[#E2E8F0] hover:bg-[#F1F5F9]'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-black text-[#1E293B]">Paket 1: 8 Pertemuan</p>
+                          <span className={`text-[10px] font-black px-1.5 py-0.2 rounded ${sempoaPackageIndex === 0 ? 'bg-[#FF7043] text-white' : 'bg-gray-100 text-gray-500'}`}>
+                            8 Sesi
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-[#64748B] mt-0.5 font-medium">Durasi 90 Menit • 2x Seminggu</p>
+                        <p className="text-[10px] text-[#E65100] font-bold mt-1">SPP Rp 350.000 / bulan</p>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSempoaPackageIndex(1);
+                          const nextTarget = calculateDefaultTarget(formData.kategori_program, 1);
+                          const pkgLabels = selectedList.map((p) => {
+                            if (p === 'Sempoa SIP') return PROGRAM_CONFIG['Sempoa SIP'].packages[1].label;
+                            return (PROGRAM_CONFIG as any)[p]?.packages[0]?.label || p;
+                          }).join(' + ');
+
+                          setFormData({
+                            ...formData,
+                            paket_jadwal: pkgLabels,
+                            target_pertemuan: nextTarget,
+                            sisa_pertemuan: isCustomQuota ? formData.sisa_pertemuan : nextTarget,
+                          });
+                        }}
+                        className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all ${
+                          sempoaPackageIndex === 1
+                            ? 'bg-[#FFF3E0] border-[#FF7043] ring-2 ring-[#FF7043] shadow-xs'
+                            : 'bg-[#FAFAFA] border-[#E2E8F0] hover:bg-[#F1F5F9]'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-black text-[#1E293B]">Paket 2: 12 Pertemuan</p>
+                          <span className={`text-[10px] font-black px-1.5 py-0.2 rounded ${sempoaPackageIndex === 1 ? 'bg-[#FF7043] text-white' : 'bg-gray-100 text-gray-500'}`}>
+                            12 Sesi
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-[#64748B] mt-0.5 font-medium">Durasi 60 Menit • 3x Seminggu</p>
+                        <p className="text-[10px] text-[#E65100] font-bold mt-1">SPP Rp 350.000 / bulan</p>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* List of Active Programs Summary */}
                 <div className="space-y-1.5">
                   {selectedList.map((progName) => {
                     const conf = (PROGRAM_CONFIG as any)[progName] || PROGRAM_CONFIG['Sempoa SIP'];
+                    const pkg = progName === 'Sempoa SIP' ? conf.packages[sempoaPackageIndex] : conf.packages[0];
                     return (
                       <div key={progName} className="p-2.5 bg-white/90 border border-[#FFE082] rounded-xl flex items-center justify-between">
                         <div>
@@ -898,15 +1076,15 @@ export const SiswaPage: React.FC = () => {
                               {progName}
                             </span>
                             <span className="text-xs font-bold text-[#1E293B]">
-                              {conf.packages[0]?.label}
+                              {pkg?.label}
                             </span>
                           </div>
-                          <p className="text-[10px] text-[#64748B] mt-0.5">
+                          <p className="text-[10px] text-[#64748B] mt-0.5 font-medium">
                             {progName === 'TK' ? 'Program Internal' : `SPP Rp ${conf.spp.toLocaleString('id-ID')} / bulan`}
                           </p>
                         </div>
                         <span className="text-[11px] font-extrabold text-[#E65100] bg-[#FFE0B2] px-2 py-1 rounded-md">
-                          {conf.packages[0]?.target > 0 ? `${conf.packages[0].target} Sesi` : 'Fleksibel'}
+                          {pkg?.target > 0 ? `${pkg.target} Sesi` : 'Fleksibel'}
                         </span>
                       </div>
                     );
@@ -924,20 +1102,31 @@ export const SiswaPage: React.FC = () => {
                             ? 'bg-[#E8F5E9] text-[#2E7D32] border-[#A5D6A7]' 
                             : 'bg-[#F1F5F9] text-[#64748B] border-[#CBD5E1]'
                         }`}>
-                          {isCustomQuota ? 'Siswa Lama' : 'Siswa Baru'}
+                          {isCustomQuota ? 'Siswa Lama (Manual)' : 'Siswa Baru (Otomatis)'}
                         </span>
                       </div>
                       <p className="text-[10px] text-[#78350F] mt-0.5 font-medium">
                         {isCustomQuota
                           ? 'Aktif: Masukkan sisa pertemuan & target dari buku absen fisik lama.'
-                          : `Otomatis: Sisa pertemuan diset 0 & Target ${formData.target_pertemuan || defaultTarget} sesi sesuai program ${formData.kategori_program}.`}
+                          : `Otomatis: Sisa pertemuan terisi penuh (${formData.target_pertemuan || defaultTarget} Sesi) sesuai paket ${formData.kategori_program}.`}
                       </p>
                     </div>
 
                     {/* Modern Tactile Toggle Switch (Green ON / Slate OFF) */}
                     <button
                       type="button"
-                      onClick={() => setIsCustomQuota(!isCustomQuota)}
+                      onClick={() => {
+                        const nextVal = !isCustomQuota;
+                        setIsCustomQuota(nextVal);
+                        if (!nextVal) {
+                          // When toggling OFF, reset to full default target
+                          setFormData({
+                            ...formData,
+                            sisa_pertemuan: defaultTarget,
+                            target_pertemuan: defaultTarget
+                          });
+                        }
+                      }}
                       className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none shadow-inner ${
                         isCustomQuota ? 'bg-[#4CAF50]' : 'bg-[#CBD5E1]'
                       }`}
@@ -964,7 +1153,7 @@ export const SiswaPage: React.FC = () => {
                         <input
                           type="number"
                           min={0}
-                          max={30}
+                          max={60}
                           required={isCustomQuota}
                           value={formData.sisa_pertemuan === 0 ? '' : formData.sisa_pertemuan}
                           onChange={(e) => {
@@ -972,7 +1161,7 @@ export const SiswaPage: React.FC = () => {
                             setFormData({ ...formData, sisa_pertemuan: val === '' ? 0 : parseInt(val) || 0 });
                           }}
                           className="w-full bg-white border border-[#FFCC80] rounded-lg p-2 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none text-xs"
-                          placeholder="0"
+                          placeholder="Kosongkan jika 0"
                         />
                         <span className="text-[10px] text-[#BF360C] block mt-0.5 font-medium">Bisa diisi sisa kuota dari buku absen fisik saat ini</span>
                       </div>
@@ -983,7 +1172,7 @@ export const SiswaPage: React.FC = () => {
                         <input
                           type="number"
                           min={1}
-                          max={30}
+                          max={60}
                           required={isCustomQuota}
                           value={formData.target_pertemuan === 0 ? '' : formData.target_pertemuan}
                           onChange={(e) => {
@@ -993,7 +1182,7 @@ export const SiswaPage: React.FC = () => {
                           className="w-full bg-white border border-[#FFCC80] rounded-lg p-2 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none text-xs"
                           placeholder={String(defaultTarget)}
                         />
-                        <span className="text-[10px] text-[#BF360C] block mt-0.5 font-medium">Total sesi per siklus SPP</span>
+                        <span className="text-[10px] text-[#BF360C] block mt-0.5 font-medium">Total target sesi per siklus SPP ({defaultTarget} Sesi)</span>
                       </div>
                     </div>
                   )}
@@ -1002,14 +1191,65 @@ export const SiswaPage: React.FC = () => {
             );
           })()}
 
-          {/* 5. Hari Masuk Kelas* [DayPicker multi-select] */}
-          <DayPicker
-            label="Hari Masuk Kelas*"
-            selectedDays={formData.hari_masuk}
-            onChange={(val) => setFormData({ ...formData, hari_masuk: val })}
-            multiSelect={true}
-            required={true}
-          />
+          {/* 5. Hari Masuk Kelas per Program */}
+          {(() => {
+            const selectedList = formData.kategori_program.split(',').map((p) => p.trim()).filter(Boolean);
+            if (selectedList.length <= 1) {
+              return (
+                <DayPicker
+                  label={`Hari Masuk Kelas (${selectedList[0] || 'Sempoa SIP'})*`}
+                  selectedDays={programDays[selectedList[0] || 'Sempoa SIP'] || formData.hari_masuk}
+                  onChange={(val) => {
+                    const prog = selectedList[0] || 'Sempoa SIP';
+                    const updated = { ...programDays, [prog]: val };
+                    setProgramDays(updated);
+                    setFormData({ ...formData, hari_masuk: val });
+                  }}
+                  multiSelect={true}
+                  required={true}
+                />
+              );
+            }
+
+            return (
+              <div className="space-y-3 p-3.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl">
+                <div className="flex items-center justify-between">
+                  <label className="block text-[#1E293B] font-bold text-xs sm:text-sm">
+                    Jadwal Hari Masuk per Program*
+                  </label>
+                  <span className="text-[10px] text-[#64748B] font-semibold">
+                    Atur hari masuk masing-masing program
+                  </span>
+                </div>
+                <div className="space-y-3">
+                  {selectedList.map((prog) => (
+                    <div key={prog} className="p-2.5 bg-white rounded-lg border border-[#E2E8F0]">
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getProgramBadgeStyle(prog)}`}>
+                          {prog}
+                        </span>
+                        <span className="text-xs font-bold text-[#334155]">
+                          {prog === 'Bahasa Inggris' ? 'Hari Masuk (Rekomendasi: Jumat, Sabtu)' : 'Hari Masuk'}
+                        </span>
+                      </div>
+                      <DayPicker
+                        label=""
+                        selectedDays={programDays[prog] || (prog === 'Bahasa Inggris' ? 'Jumat, Sabtu' : 'Senin, Rabu')}
+                        onChange={(val) => {
+                          const updated = { ...programDays, [prog]: val };
+                          setProgramDays(updated);
+                          const combined = selectedList.map((p) => `${p}: ${updated[p] || 'Senin, Rabu'}`).join(' | ');
+                          setFormData({ ...formData, hari_masuk: combined });
+                        }}
+                        multiSelect={true}
+                        required={true}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* 6 & 7. Nama Orang Tua & No. WhatsApp */}
           <div className="border-t border-[#E2E8F0] pt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
