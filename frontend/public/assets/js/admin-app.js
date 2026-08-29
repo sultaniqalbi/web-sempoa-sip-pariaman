@@ -1117,7 +1117,7 @@ window.loadAdminReminderList = function() {
 
 window.openWaReminderModal = function(namaOrtu, namaSiswa, program, sisa, total, nominal, norek, an, bank) {
     const formattedNominal = parseInt(nominal || 150000).toLocaleString('id-ID');
-    const template = `Assalamualaikum Ibu/Bapak ${namaOrtu},\n\nAnak Anda *${namaSiswa}* telah menyelesaikan sesi belajar program *${program}* di Sempoa SIP TC Pariaman.\nSisa pertemuan: *${sisa} / ${total}*\n\nUntuk melanjutkan kelas bimbingan, mohon lakukan pembayaran perpanjangan SPP:\n💰 Nominal: *Rp ${formattedNominal}*\n🏦 Rekening: *${norek}* a.n. *${an}*\n🏧 Bank: *${bank}*\n\nTerima kasih,\nSempoa SIP TC Pariaman`;
+    const template = `Assalamualaikum Ibu/Bapak ${namaOrtu},\n\nAnak Anda *${namaSiswa}* telah menyelesaikan sesi belajar program *${program}* di Sempoa SIP TC Pariaman.\nSisa pertemuan: *${sisa} / ${total}*\n\nUntuk melanjutkan kelas bimbingan, mohon lakukan pembayaran perpanjangan SPP:\n- Nominal: *Rp ${formattedNominal}*\n- Rekening: *${norek}* a.n. *${an}*\n- Bank: *${bank}*\n\nTerima kasih,\nSempoa SIP TC Pariaman`;
     
     document.getElementById('waMessageContent').textContent = template;
     document.getElementById('modalWaReminder').classList.add('active');

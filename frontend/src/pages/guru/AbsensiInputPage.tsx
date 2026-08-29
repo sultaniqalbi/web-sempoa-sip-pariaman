@@ -5,6 +5,7 @@ import StudentAttendanceTable from './components/StudentAttendanceTable';
 import ManualAttendanceModal from './components/ManualAttendanceModal';
 import IzinGuruModal from './components/IzinGuruModal';
 import useAuth from '../../features/auth/useAuth';
+import { GlobeIcon, SchoolIcon } from '../../components/SvgIcons';
 
 export const AbsensiInputPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -194,8 +195,18 @@ export const AbsensiInputPage: React.FC = () => {
               <div className="bg-white p-3 rounded-2xl border border-[#E0E0E0] shadow-sm flex items-center justify-between">
                 <div>
                   <p className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Mode Kelas Saat Ini</p>
-                  <p className="text-xs font-black text-[#1E293B] mt-0.5">
-                    {dashboardData?.guru?.mode_kelas === 'ONLINE' ? '🌐 Online (Daring)' : '🏫 Offline (Tatap Muka)'}
+                  <p className="text-xs font-black text-[#1E293B] mt-0.5 flex items-center gap-1.5">
+                    {dashboardData?.guru?.mode_kelas === 'ONLINE' ? (
+                      <>
+                        <GlobeIcon size={14} className="text-[#0284C7]" />
+                        <span>Online (Daring)</span>
+                      </>
+                    ) : (
+                      <>
+                        <SchoolIcon size={14} className="text-[#E65100]" />
+                        <span>Offline (Tatap Muka)</span>
+                      </>
+                    )}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">

@@ -8,7 +8,7 @@ import ConfirmModal from '../../components/ConfirmModal';
 import PageHeader from '../../components/PageHeader';
 import EmptyState from '../../components/EmptyState';
 import DayPicker from '../../components/DayPicker';
-import { JadwalIcon, TrashIcon, PresensiIcon, PengajarIcon } from '../../components/SvgIcons';
+import { JadwalIcon, TrashIcon, PresensiIcon, PengajarIcon, CalendarIcon, StarIcon, LightbulbIcon, CloseIcon } from '../../components/SvgIcons';
 
 const AVAILABLE_PROGRAMS = ['Sempoa SIP', 'Fonem', 'Tahfidz', 'Bahasa Inggris', 'TK'];
 
@@ -655,10 +655,10 @@ export const JadwalPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => toggleTeacher(id)}
-                        className="text-[#E65100] hover:text-[#D32F2F] font-black cursor-pointer text-xs ml-0.5"
+                        className="text-[#E65100] hover:text-[#D32F2F] font-black cursor-pointer ml-0.5 flex items-center justify-center"
                         title="Hapus Guru"
                       >
-                        ✕
+                        <CloseIcon size={11} />
                       </button>
                     </span>
                   );
@@ -693,13 +693,20 @@ export const JadwalPage: React.FC = () => {
                           <div className="flex items-center gap-2 flex-wrap">
                             <p className="font-bold text-xs text-[#1E293B]">{g.nama}</p>
                             {g.hari_wajib && (
-                              <span className="text-[9px] font-bold bg-[#E0F2FE] text-[#0369A1] border border-[#BAE6FD] px-1.5 py-0.2 rounded">
-                                📅 {g.hari_wajib}
+                              <span className="text-[9px] font-bold bg-[#E0F2FE] text-[#0369A1] border border-[#BAE6FD] px-1.5 py-0.5 rounded inline-flex items-center gap-1">
+                                <CalendarIcon size={10} className="text-[#0369A1]" />
+                                <span>{g.hari_wajib}</span>
                               </span>
                             )}
                           </div>
-                          <p className="text-[10px] text-[#64748B] mt-0.5">
-                            Program: {g.kategori_program || '-'} {matchesProgram && <span className="text-[#2E7D32] font-bold ml-1">★ Sesuai Program</span>}
+                          <p className="text-[10px] text-[#64748B] mt-0.5 flex items-center gap-1">
+                            <span>Program: {g.kategori_program || '-'}</span>
+                            {matchesProgram && (
+                              <span className="text-[#2E7D32] font-bold inline-flex items-center gap-0.5 ml-1">
+                                <StarIcon size={10} className="text-[#2E7D32]" />
+                                <span>Sesuai Program</span>
+                              </span>
+                            )}
                           </p>
                         </div>
                       </div>
@@ -714,9 +721,10 @@ export const JadwalPage: React.FC = () => {
               )}
             </div>
             {selectedTeacherIds.length > 0 ? (
-              <div className="mt-1.5 p-2 bg-[#FFF8E1] border border-[#FFE082] rounded-lg text-[10px] text-[#78350F] flex items-center justify-between">
+              <div className="mt-1.5 p-2 bg-[#FFF8E1] border border-[#FFE082] rounded-lg text-[10px] text-[#78350F] flex items-start gap-1.5">
+                <LightbulbIcon size={14} className="text-[#D97706] shrink-0 mt-0.5" />
                 <span>
-                  💡 <strong>Hari mengajar otomatis disinkronkan:</strong> Pilihan hari kelas di bawah otomatis menyesuaikan hari wajib guru terpilih. Anda tetap bebas menambah/menghapus hari sesuai kebutuhan sesi.
+                  <strong>Hari mengajar otomatis disinkronkan:</strong> Pilihan hari kelas di bawah otomatis menyesuaikan hari wajib guru terpilih. Anda tetap bebas menambah/menghapus hari sesuai kebutuhan sesi.
                 </span>
               </div>
             ) : (

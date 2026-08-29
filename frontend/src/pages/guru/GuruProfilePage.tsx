@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
 import useAuth from '../../features/auth/useAuth';
-import { PengajarIcon } from '../../components/SvgIcons';
+import { PengajarIcon, LockIcon, GlobeIcon, SchoolIcon } from '../../components/SvgIcons';
 
 interface GuruProfileData {
   id: number;
@@ -363,14 +363,15 @@ export const GuruProfilePage: React.FC = () => {
           <div className="flex items-center justify-between mb-1.5">
             <label className="block text-[#1E293B] font-bold">Mode Kelas Saat Ini</label>
             <span className="text-[10px] font-semibold text-[#64748B] flex items-center gap-1">
-              🔒 Hanya dapat diubah oleh Admin
+              <LockIcon size={12} className="text-[#64748B]" />
+              <span>Hanya dapat diubah oleh Admin</span>
             </span>
           </div>
           <div className="p-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <span className="text-xl">
-                {profile?.mode_kelas === 'ONLINE' ? '🌐' : '🏫'}
-              </span>
+              <div className="w-8 h-8 rounded-lg bg-white border border-[#E2E8F0] flex items-center justify-center text-[#E65100]">
+                {profile?.mode_kelas === 'ONLINE' ? <GlobeIcon size={18} className="text-[#0284C7]" /> : <SchoolIcon size={18} className="text-[#E65100]" />}
+              </div>
               <div>
                 <p className="font-bold text-xs text-[#1E293B]">
                   {profile?.mode_kelas === 'ONLINE' ? 'Online (Daring)' : 'Offline (Tatap Muka)'}

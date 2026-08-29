@@ -127,7 +127,7 @@ function loadOrtuChildDetail() {
                 for (let j = 1; j <= terpakai; j++) {
                     const box = document.createElement('div');
                     box.className = 'tracker-box tracker-red';
-                    box.textContent = '✓ Hadir';
+                    box.textContent = 'Hadir';
                     box.title = `Sesi Ke-${sisa + j} Terpakai (Siswa Hadir)`;
                     trackerContainer.appendChild(box);
                 }

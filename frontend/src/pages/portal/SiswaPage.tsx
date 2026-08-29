@@ -9,7 +9,7 @@ import PageHeader from '../../components/PageHeader';
 import EmptyState from '../../components/EmptyState';
 import { DayPicker } from '../../components/DayPicker';
 import { PhotoModal } from '../../components/PhotoModal';
-import { DataSiswaIcon, TrashIcon } from '../../components/SvgIcons';
+import { DataSiswaIcon, TrashIcon, CheckIcon, InfoIcon } from '../../components/SvgIcons';
 
 interface Siswa {
   id: number;
@@ -794,7 +794,7 @@ export const SiswaPage: React.FC = () => {
                         {prog}
                       </span>
                       <span className={`text-xs font-bold ${isSelected ? 'text-[#E65100]' : 'text-[#94A3B8]'}`}>
-                        {isSelected ? '✓' : '+'}
+                        {isSelected ? <CheckIcon size={12} className="text-[#E65100]" /> : '+'}
                       </span>
                     </div>
                     <span className="text-[10px] text-[#64748B] mt-1 font-semibold">
@@ -1001,8 +1001,9 @@ export const SiswaPage: React.FC = () => {
 
           {!editingSiswa && (
             formData.kategori_program === 'TK' ? (
-              <div className="p-3 bg-[#FEF3C7] border border-[#FDE68A] rounded-xl text-[11px] text-[#B45309]">
-                ℹ️ Siswa program <strong>TK</strong> didaftarkan untuk data internal/portal guru (akun portal ortu tidak dibuat).
+              <div className="p-3 bg-[#FEF3C7] border border-[#FDE68A] rounded-xl text-[11px] text-[#B45309] flex items-start gap-2">
+                <InfoIcon size={16} className="text-[#B45309] shrink-0 mt-0.5" />
+                <span>Siswa program <strong>TK</strong> didaftarkan untuk data internal/portal guru (akun portal ortu tidak dibuat).</span>
               </div>
             ) : (
               <div className="p-3 bg-[#FFF3E0] border border-[#FFCC80] rounded-xl text-[11px] text-[#E65100]">

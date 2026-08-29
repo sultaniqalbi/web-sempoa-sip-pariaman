@@ -10,7 +10,7 @@ import PageHeader from '../../components/PageHeader';
 import EmptyState from '../../components/EmptyState';
 import DayPicker from '../../components/DayPicker';
 import { PhotoModal } from '../../components/PhotoModal';
-import { PengajarIcon, TrashIcon } from '../../components/SvgIcons';
+import { PengajarIcon, TrashIcon, CheckIcon } from '../../components/SvgIcons';
 
 const AVAILABLE_PROGRAMS = ['Sempoa SIP', 'Fonem', 'Tahfidz', 'Bahasa Inggris', 'TK'];
 
@@ -769,7 +769,7 @@ export const GuruPage: React.FC = () => {
                         isSelected ? 'bg-[#FF7043] text-white' : 'border border-[#CBD5E1] bg-white text-transparent'
                       }`}
                     >
-                      ✓
+                      {isSelected ? <CheckIcon size={11} className="text-white" /> : null}
                     </span>
                   </button>
                 );

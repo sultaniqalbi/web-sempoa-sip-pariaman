@@ -44,11 +44,11 @@ function loadGuruDashboard() {
                         const statusBadge = document.getElementById('guru-today-tap-badge');
                         if (statusBadge) {
                             if (r.data.status === 'Hadir') {
-                                statusBadge.innerHTML = `<span class="status-badge status-active"><i class="fas fa-check-circle"></i> ✅ Presensi RFID Hadir Jam ${escHtml(r.data.jam_masuk)}</span>`;
+                                statusBadge.innerHTML = `<span class="status-badge status-active"><i class="fas fa-check-circle"></i> Presensi RFID Hadir Jam ${escHtml(r.data.jam_masuk)}</span>`;
                             } else if (r.data.status === 'Terlambat') {
-                                statusBadge.innerHTML = `<span class="status-badge status-pending" style="background:#fff7ed; color:#c2410c;"><i class="fas fa-clock"></i> ⏰ Presensi RFID Terlambat Jam ${escHtml(r.data.jam_masuk)}</span>`;
+                                statusBadge.innerHTML = `<span class="status-badge status-pending" style="background:#fff7ed; color:#c2410c;"><i class="fas fa-clock"></i> Presensi RFID Terlambat Jam ${escHtml(r.data.jam_masuk)}</span>`;
                             } else {
-                                statusBadge.innerHTML = `<span class="status-badge status-pending"><i class="fas fa-exclamation-circle"></i> ⚠️ Belum Presensi Tap RFID Hari Ini</span>`;
+                                statusBadge.innerHTML = `<span class="status-badge status-pending"><i class="fas fa-exclamation-circle"></i> Belum Presensi Tap RFID Hari Ini</span>`;
                             }
                         }
                     }
