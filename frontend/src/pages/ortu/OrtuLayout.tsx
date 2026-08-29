@@ -136,67 +136,50 @@ export const OrtuLayout: React.FC = () => {
           .map((p) => p.trim())
           .filter(Boolean);
 
-        // Find strictly assigned teacher for EACH program the child enrolled in
+        // Find teachers who teach child's programs or are assigned to child
         const relevantTeachers: TeacherContact[] = [];
         const seenGuruIds = new Set<number>();
 
+        // 1. If child has specific assigned id_guru
+        if (child.id_guru) {
+          const directGuru = allGurus.find((g) => g.id === child.id_guru);
+          if (directGuru) {
+            seenGuruIds.add(directGuru.id);
+            relevantTeachers.push({
+              id: directGuru.id,
+              nama: directGuru.nama,
+              nama_panggilan: directGuru.nama_panggilan || directGuru.nama.split(' ')[0] || directGuru.nama,
+              program: directGuru.kategori_program || child.kategori_program || 'Program Belajar',
+              no_wa_guru: directGuru.whatsapp_guru || undefined,
+            });
+          }
+        }
+
+        // 2. Match teachers by each program the child takes
         childProgs.forEach((cp) => {
           const cpLower = cp.toLowerCase();
+          const matchingGurus = allGurus.filter((g) => {
+            const gProgs = (g.kategori_program || '').toLowerCase();
+            return gProgs.includes(cpLower) || cpLower.includes(gProgs);
+          });
 
-          // 1. Check if schedule has specific assigned teacher for this program
-          const progSchedules = schedules.filter(
-            (s) => (s.kategori_program || '').toLowerCase() === cpLower || (s.kategori_program || '').toLowerCase().includes(cpLower)
-          );
-
-          // Priority: schedule on today or on child's hari_masuk
-          const bestSchedule =
-            progSchedules.find((s) => s.hari?.toLowerCase() === todayName.toLowerCase()) ||
-            progSchedules.find((s) => (child.hari_masuk || '').toLowerCase().includes((s.hari || '').toLowerCase())) ||
-            progSchedules[0];
-
-          let teacherForProg: { id: number; nama: string; nama_panggilan?: string; whatsapp_guru?: string } | null = null;
-
-          if (bestSchedule?.teachers && bestSchedule.teachers.length > 0) {
-            teacherForProg = bestSchedule.teachers[0];
-          } else if (bestSchedule?.id_guru) {
-            const g = allGurus.find((x) => x.id === bestSchedule.id_guru);
-            if (g) teacherForProg = g;
-          }
-
-          // 2. If no schedule teacher, check child's direct assigned guru
-          if (!teacherForProg && child.id_guru) {
-            const directGuru = allGurus.find((g) => g.id === child.id_guru);
-            if (directGuru && (directGuru.kategori_program || '').toLowerCase().includes(cpLower)) {
-              teacherForProg = directGuru;
-            }
-          }
-
-          // 3. If still not found, pick the single primary teacher for this program
-          if (!teacherForProg) {
-            const matchedGuru = allGurus.find((g) => (g.kategori_program || '').toLowerCase().includes(cpLower));
-            if (matchedGuru) {
-              teacherForProg = matchedGuru;
-            }
-          }
-
-          // Add or merge teacher
-          if (teacherForProg) {
-            if (!seenGuruIds.has(teacherForProg.id)) {
-              seenGuruIds.add(teacherForProg.id);
+          matchingGurus.forEach((g) => {
+            if (!seenGuruIds.has(g.id)) {
+              seenGuruIds.add(g.id);
               relevantTeachers.push({
-                id: teacherForProg.id,
-                nama: teacherForProg.nama,
-                nama_panggilan: teacherForProg.nama_panggilan || teacherForProg.nama.split(' ')[0] || teacherForProg.nama,
+                id: g.id,
+                nama: g.nama,
+                nama_panggilan: g.nama_panggilan || g.nama.split(' ')[0] || g.nama,
                 program: cp,
-                no_wa_guru: teacherForProg.whatsapp_guru || undefined,
+                no_wa_guru: g.whatsapp_guru || undefined,
               });
             } else {
-              const existing = relevantTeachers.find((t) => t.id === teacherForProg!.id);
+              const existing = relevantTeachers.find((t) => t.id === g.id);
               if (existing && !existing.program.includes(cp)) {
                 existing.program += `, ${cp}`;
               }
             }
-          }
+          });
         });
 
         // Try exact match for child's program + today
@@ -205,6 +188,22 @@ export const OrtuLayout: React.FC = () => {
             childProgs.some((cp) => (s.kategori_program || '').toLowerCase().includes(cp.toLowerCase()) || cp.toLowerCase().includes((s.kategori_program || '').toLowerCase())) &&
             s.hari?.toLowerCase() === todayName.toLowerCase()
         );
+
+        // Also check if schedule has embedded teachers
+        if (matchingSchedule?.teachers && matchingSchedule.teachers.length > 0) {
+          matchingSchedule.teachers.forEach((t) => {
+            if (!seenGuruIds.has(t.id)) {
+              seenGuruIds.add(t.id);
+              relevantTeachers.push({
+                id: t.id,
+                nama: t.nama,
+                nama_panggilan: t.nama_panggilan || t.nama.split(' ')[0] || t.nama,
+                program: t.kategori_program || matchingSchedule.kategori_program || 'Program Belajar',
+                no_wa_guru: t.whatsapp_guru || undefined,
+              });
+            }
+          });
+        }
 
         const fallbackTeacher = relevantTeachers.length > 0
           ? relevantTeachers[0]
