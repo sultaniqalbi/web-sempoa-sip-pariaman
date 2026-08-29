@@ -59,6 +59,7 @@ const getProgramBadgeStyle = (program: string) => {
 interface TeacherInfo {
   id: number;
   nama: string;
+  nama_panggilan?: string;
   hari_wajib?: string;
   kategori_program?: string;
 }
@@ -82,10 +83,21 @@ interface Jadwal {
 interface Guru {
   id: number;
   nama: string;
+  nama_panggilan?: string;
   kategori_program: string;
   paket_pengajaran?: string;
   hari_wajib?: string;
 }
+
+const getGuruDisplayName = (t?: { nama?: string; nama_panggilan?: string }) => {
+  if (!t) return 'Guru';
+  if (t.nama_panggilan && t.nama_panggilan.trim()) {
+    return t.nama_panggilan.trim();
+  }
+  if (!t.nama) return 'Guru';
+  const withoutDegree = t.nama.split(',')[0].trim();
+  return withoutDegree;
+};
 
 interface GuruAbsensiItem {
   id_guru: number;
@@ -413,7 +425,7 @@ export const JadwalPage: React.FC = () => {
                   <PengajarIcon size={11} className="text-[#16A34A]" />
                   <span>Pengajar {idx + 1}</span>
                 </span>
-                <span className="text-xs font-bold text-[#1E293B]">{t.nama}</span>
+                <span className="text-xs font-bold text-[#1E293B]">{getGuruDisplayName(t)}</span>
                 {t.hari_wajib && (
                   <span className="text-[10px] font-semibold text-[#0369A1] bg-[#E0F2FE] border border-[#BAE6FD] px-1.5 py-0.5 rounded shrink-0 inline-flex items-center gap-1">
                     <CalendarIcon size={10} className="text-[#0369A1]" />
@@ -678,7 +690,7 @@ export const JadwalPage: React.FC = () => {
                       className="inline-flex items-center gap-1.5 bg-[#FFF3E0] text-[#E65100] border border-[#FFCC80] text-xs font-bold px-2.5 py-1 rounded-lg"
                     >
                       <PengajarIcon size={12} className="text-[#E65100]" />
-                      <span>{g ? `${g.nama}${g.hari_wajib ? ` (${g.hari_wajib})` : ''}` : `Guru #${id}`}</span>
+                      <span>{g ? `${getGuruDisplayName(g)}${g.hari_wajib ? ` (${g.hari_wajib})` : ''}` : `Guru #${id}`}</span>
                       <button
                         type="button"
                         onClick={() => toggleTeacher(id)}
@@ -718,7 +730,7 @@ export const JadwalPage: React.FC = () => {
                         />
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
-                            <p className="font-bold text-xs text-[#1E293B]">{g.nama}</p>
+                            <p className="font-bold text-xs text-[#1E293B]">{getGuruDisplayName(g)}</p>
                             {g.hari_wajib && (
                               <span className="text-[9px] font-bold bg-[#E0F2FE] text-[#0369A1] border border-[#BAE6FD] px-1.5 py-0.5 rounded inline-flex items-center gap-1">
                                 <CalendarIcon size={10} className="text-[#0369A1]" />

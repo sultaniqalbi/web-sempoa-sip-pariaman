@@ -33,6 +33,7 @@ class JadwalUpdate(BaseModel):
 class GuruSimpleInfo(BaseModel):
     id: int
     nama: str
+    nama_panggilan: Optional[str] = None
     hari_wajib: Optional[str] = None
     kategori_program: Optional[str] = None
 

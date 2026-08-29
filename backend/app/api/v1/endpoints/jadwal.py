@@ -61,23 +61,25 @@ def _enrich_jadwal(db: Session, j: Jadwal) -> JadwalResponse:
                 GuruSimpleInfo(
                     id=g.id,
                     nama=g.nama,
+                    nama_panggilan=g.nama_panggilan or (g.nama.split(",")[0].strip() if g.nama else ""),
                     hari_wajib=g.hari_wajib,
                     kategori_program=g.kategori_program,
                 )
                 for g in ordered_gurus
             ]
-            guru_names_str = " | ".join(g.nama for g in ordered_gurus)
+            guru_names_str = " | ".join(g.nama_panggilan or g.nama for g in ordered_gurus)
         elif gurus:
             teachers_list = [
                 GuruSimpleInfo(
                     id=g.id,
                     nama=g.nama,
+                    nama_panggilan=g.nama_panggilan or (g.nama.split(",")[0].strip() if g.nama else ""),
                     hari_wajib=g.hari_wajib,
                     kategori_program=g.kategori_program,
                 )
                 for g in gurus
             ]
-            guru_names_str = " | ".join(g.nama for g in gurus)
+            guru_names_str = " | ".join(g.nama_panggilan or g.nama for g in gurus)
 
     resp = JadwalResponse.model_validate(j)
     resp.guru_names = guru_names_str
