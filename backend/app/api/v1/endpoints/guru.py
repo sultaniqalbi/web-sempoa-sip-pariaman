@@ -397,9 +397,9 @@ async def export_guru_sheets(
     from app.services.google_sheets import send_to_google_sheet
 
     guru_list = db.query(Guru).all()
-    rows = [["ID", "UID (RFID)", "Nama Guru", "Kategori Program", "Hari Wajib Mengajar", "No WhatsApp", "Target Kehadiran"]]
+    rows = [["UID (RFID)", "Nama Guru", "Kategori Program", "Hari Wajib Mengajar", "No WhatsApp"]]
     for g in guru_list:
-        rows.append([g.id, g.uid or "-", g.nama, g.kategori_program or "-", g.hari_wajib or "-", g.whatsapp_guru or "-", g.target_kehadiran])
+        rows.append([g.uid or "-", g.nama, g.kategori_program or "-", g.hari_wajib or "-", g.whatsapp_guru or "-"])
 
     tab_name = "Data Guru"
     return send_to_google_sheet(tab_name=tab_name, rows=rows, title="Data Guru")
