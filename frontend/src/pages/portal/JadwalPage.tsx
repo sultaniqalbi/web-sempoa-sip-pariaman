@@ -56,6 +56,13 @@ const getProgramBadgeStyle = (program: string) => {
   return 'bg-[#F1F5F9] text-[#475569] border-[#CBD5E1]';
 };
 
+interface TeacherInfo {
+  id: number;
+  nama: string;
+  hari_wajib?: string;
+  kategori_program?: string;
+}
+
 interface Jadwal {
   id: number;
   hari: string;
@@ -67,6 +74,7 @@ interface Jadwal {
   id_guru?: number;
   guru_ids?: string;
   guru_names?: string;
+  teachers?: TeacherInfo[];
   id_siswa?: number;
   created_at: string;
 }
@@ -365,37 +373,55 @@ export const JadwalPage: React.FC = () => {
     {
       header: 'Pengajar / Guru',
       accessor: (row: Jadwal) => {
-        let names: string[] = [];
-        if (row.guru_names) {
-          names = row.guru_names.split(',').map((s) => s.trim()).filter(Boolean);
+        let teachers: TeacherInfo[] = [];
+
+        if (row.teachers && row.teachers.length > 0) {
+          teachers = row.teachers;
         } else if (row.guru_ids) {
           const ids = row.guru_ids.split(',').map((x) => parseInt(x.trim(), 10)).filter((n) => !isNaN(n));
-          names = ids.map((id) => guruList.find((g) => g.id === id)?.nama).filter(Boolean) as string[];
+          teachers = ids
+            .map((id) => guruList.find((g) => g.id === id))
+            .filter(Boolean)
+            .map((g) => ({
+              id: g!.id,
+              nama: g!.nama,
+              hari_wajib: g!.hari_wajib,
+              kategori_program: g!.kategori_program,
+            }));
         } else if (row.id_guru) {
           const g = guruList.find((x) => x.id === row.id_guru);
-          if (g) names = [g.nama];
+          if (g) {
+            teachers = [{ id: g.id, nama: g.nama, hari_wajib: g.hari_wajib, kategori_program: g.kategori_program }];
+          } else if (row.guru_names) {
+            const sep = row.guru_names.includes(' | ') ? ' | ' : ', ';
+            teachers = row.guru_names.split(sep).map((n, i) => ({ id: i, nama: n.trim() }));
+          }
+        } else if (row.guru_names) {
+          const sep = row.guru_names.includes(' | ') ? ' | ' : ', ';
+          teachers = row.guru_names.split(sep).map((n, i) => ({ id: i, nama: n.trim() }));
         }
 
-        if (names.length === 0) {
+        if (teachers.length === 0) {
           return <span className="text-[#94A3B8] text-xs italic">Belum ditentukan</span>;
         }
 
         return (
-          <div className="flex flex-wrap gap-1.5 items-center">
-            {names.map((name, idx) => (
-              <span
-                key={idx}
-                className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#E8F5E9] text-[#2E7D32] border border-[#A5D6A7] rounded-md text-xs font-bold shadow-2xs"
-              >
-                <PengajarIcon size={12} className="text-[#2E7D32]" />
-                {name}
-              </span>
+          <div className="space-y-1.5 py-1">
+            {teachers.map((t, idx) => (
+              <div key={t.id || idx} className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-extrabold text-[#15803D] bg-[#DCFCE7] border border-[#86EFAC] px-1.5 py-0.5 rounded shadow-2xs shrink-0 inline-flex items-center gap-1">
+                  <PengajarIcon size={11} className="text-[#16A34A]" />
+                  <span>Pengajar {idx + 1}</span>
+                </span>
+                <span className="text-xs font-bold text-[#1E293B]">{t.nama}</span>
+                {t.hari_wajib && (
+                  <span className="text-[10px] font-semibold text-[#0369A1] bg-[#E0F2FE] border border-[#BAE6FD] px-1.5 py-0.5 rounded shrink-0 inline-flex items-center gap-1">
+                    <CalendarIcon size={10} className="text-[#0369A1]" />
+                    <span>{t.hari_wajib}</span>
+                  </span>
+                )}
+              </div>
             ))}
-            {names.length > 1 && (
-              <span className="text-[10px] font-extrabold text-[#1976D2] bg-[#E3F2FD] border border-[#90CAF9] px-1.5 py-0.5 rounded-md">
-                {names.length} Guru
-              </span>
-            )}
           </div>
         );
       },

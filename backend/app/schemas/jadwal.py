@@ -30,9 +30,16 @@ class JadwalUpdate(BaseModel):
     kategori_program: Optional[str] = None
     mode_kelas: Optional[str] = None
 
+class GuruSimpleInfo(BaseModel):
+    id: int
+    nama: str
+    hari_wajib: Optional[str] = None
+    kategori_program: Optional[str] = None
+
 class JadwalResponse(JadwalBase):
     id: int
     guru_names: Optional[str] = None
+    teachers: Optional[list[GuruSimpleInfo]] = None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

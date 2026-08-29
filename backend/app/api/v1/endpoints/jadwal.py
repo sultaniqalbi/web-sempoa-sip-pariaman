@@ -10,7 +10,7 @@ from app.models.users import User, UserRole
 from app.models.jadwal import Jadwal
 from app.models.guru import Guru
 from app.models.siswa import Siswa
-from app.schemas.jadwal import JadwalCreate, JadwalUpdate, JadwalResponse
+from app.schemas.jadwal import JadwalCreate, JadwalUpdate, JadwalResponse, GuruSimpleInfo
 from app.crud import jadwal as crud_jadwal
 
 SCHEDULE_CONFIG = {
@@ -51,17 +51,37 @@ def _enrich_jadwal(db: Session, j: Jadwal) -> JadwalResponse:
         guru_ids_list.append(j.id_guru)
 
     guru_names_str = None
+    teachers_list = []
     if guru_ids_list:
         gurus = db.query(Guru).filter(Guru.id.in_(guru_ids_list)).all()
-        guru_map = {g.id: g.nama for g in gurus}
-        ordered_names = [guru_map[gid] for gid in guru_ids_list if gid in guru_map]
-        if ordered_names:
-            guru_names_str = ", ".join(ordered_names)
+        guru_map = {g.id: g for g in gurus}
+        ordered_gurus = [guru_map[gid] for gid in guru_ids_list if gid in guru_map]
+        if ordered_gurus:
+            teachers_list = [
+                GuruSimpleInfo(
+                    id=g.id,
+                    nama=g.nama,
+                    hari_wajib=g.hari_wajib,
+                    kategori_program=g.kategori_program,
+                )
+                for g in ordered_gurus
+            ]
+            guru_names_str = " | ".join(g.nama for g in ordered_gurus)
         elif gurus:
-            guru_names_str = ", ".join(g.nama for g in gurus)
+            teachers_list = [
+                GuruSimpleInfo(
+                    id=g.id,
+                    nama=g.nama,
+                    hari_wajib=g.hari_wajib,
+                    kategori_program=g.kategori_program,
+                )
+                for g in gurus
+            ]
+            guru_names_str = " | ".join(g.nama for g in gurus)
 
     resp = JadwalResponse.model_validate(j)
     resp.guru_names = guru_names_str
+    resp.teachers = teachers_list
     return resp
 
 @router.get("/", response_model=List[JadwalResponse])
