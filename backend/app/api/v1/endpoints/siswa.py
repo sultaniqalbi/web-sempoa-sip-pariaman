@@ -183,6 +183,7 @@ async def create_new_siswa(
     nominal_spp = get_spp_nominal(siswa_in.kategori_program)
 
     # Execute DB Transaction
+    is_pure_tk = siswa_in.kategori_program.strip() == "TK"
     try:
         new_siswa = Siswa(
             uid=siswa_in.uid,
@@ -192,7 +193,7 @@ async def create_new_siswa(
             kelas_sekolah=siswa_in.kelas_sekolah,
             kategori_program=siswa_in.kategori_program,
             paket_jadwal=siswa_in.paket_jadwal,
-            hari_masuk=siswa_in.hari_masuk,
+            hari_masuk=siswa_in.hari_masuk or "Senin, Rabu",
             id_guru=siswa_in.id_guru,
             target_pertemuan=siswa_in.target_pertemuan or 8,
             sisa_pertemuan=siswa_in.sisa_pertemuan if siswa_in.sisa_pertemuan is not None else (siswa_in.target_pertemuan or 8),
@@ -220,16 +221,20 @@ async def create_new_siswa(
         )
         db.add(pembayaran_awal)
 
-        # Auto-provision parent account
-        user_ortu = User(
-            email=email_candidate,
-            password=hashed_password,
-            plain_password=plain_password,
-            role=UserRole.ortu,
-            nama=siswa_in.nama_orang_tua or f"Ortu {siswa_in.nama}",
-            uid_terhubung=str(new_siswa.id)
-        )
-        db.add(user_ortu)
+        # Auto-provision parent account if not pure TK
+        if not is_pure_tk:
+            user_ortu = User(
+                email=email_candidate,
+                password=hashed_password,
+                plain_password=plain_password,
+                role=UserRole.ortu,
+                nama=siswa_in.nama_orang_tua or f"Ortu {siswa_in.nama}",
+                uid_terhubung=str(new_siswa.id)
+            )
+            db.add(user_ortu)
+        else:
+            email_candidate = None
+            plain_password = None
 
         db.commit()
         db.refresh(new_siswa)
@@ -243,9 +248,7 @@ async def create_new_siswa(
     except Exception as e:
         db.rollback()
         logger.error(f"Gagal menambah siswa & akun ortu: {e}", exc_info=True)
-        if settings.fastapi_env == "production":
-            raise HTTPException(status_code=500, detail="Terjadi kesalahan internal server saat memproses data siswa.")
-        raise HTTPException(status_code=400, detail=f"Gagal menambah siswa & akun ortu: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Gagal menyimpan data siswa: {str(e)}")
 
 @router.put("/{id}", response_model=SiswaResponse)
 async def update_existing_siswa(

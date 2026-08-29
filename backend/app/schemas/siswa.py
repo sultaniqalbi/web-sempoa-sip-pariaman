@@ -1,5 +1,5 @@
-from pydantic import BaseModel, ConfigDict
-from typing import Optional
+from pydantic import BaseModel, ConfigDict, field_validator
+from typing import Optional, Any
 from datetime import datetime, date
 from app.models.siswa import StatusSPP
 
@@ -12,9 +12,9 @@ class SiswaBase(BaseModel):
     tempat_lahir: Optional[str] = None
     tanggal_lahir: Optional[date] = None
     asal_sekolah: Optional[str] = None
-    kategori_program: str
+    kategori_program: str = "Sempoa SIP"
     paket_jadwal: Optional[str] = None
-    hari_masuk: str
+    hari_masuk: str = "Senin, Rabu"
     id_guru: Optional[int] = None
     target_pertemuan: int = 8
     sisa_pertemuan: int = 8
@@ -24,6 +24,28 @@ class SiswaBase(BaseModel):
     alamat: Optional[str] = None
     bio: Optional[str] = None
     foto_profil: Optional[str] = None
+
+    @field_validator("tanggal_lahir", mode="before")
+    @classmethod
+    def parse_tanggal_lahir(cls, v: Any) -> Optional[date]:
+        if v == "" or v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                return datetime.strptime(v.strip(), "%Y-%m-%d").date()
+            except ValueError:
+                return None
+        return v
+
+    @field_validator("umur", "id_guru", "target_pertemuan", "sisa_pertemuan", mode="before")
+    @classmethod
+    def parse_optional_int(cls, v: Any) -> Optional[int]:
+        if v == "" or v is None:
+            return None
+        try:
+            return int(v)
+        except (ValueError, TypeError):
+            return None
 
 class SiswaCreate(SiswaBase):
     pass
@@ -50,6 +72,28 @@ class SiswaUpdate(BaseModel):
     bio: Optional[str] = None
     foto_profil: Optional[str] = None
 
+    @field_validator("tanggal_lahir", mode="before")
+    @classmethod
+    def parse_tanggal_lahir(cls, v: Any) -> Optional[date]:
+        if v == "" or v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                return datetime.strptime(v.strip(), "%Y-%m-%d").date()
+            except ValueError:
+                return None
+        return v
+
+    @field_validator("umur", "id_guru", "target_pertemuan", "sisa_pertemuan", mode="before")
+    @classmethod
+    def parse_optional_int(cls, v: Any) -> Optional[int]:
+        if v == "" or v is None:
+            return None
+        try:
+            return int(v)
+        except (ValueError, TypeError):
+            return None
+
 class SiswaResponse(SiswaBase):
     id: int
     created_at: datetime
@@ -59,8 +103,8 @@ class SiswaResponse(SiswaBase):
 
 class SiswaCreateResponse(BaseModel):
     siswa: SiswaResponse
-    ortu_email: str
-    password_sent_via: str = "whatsapp"
+    ortu_email: Optional[str] = None
+    password_sent_via: Optional[str] = "whatsapp"
     ortu_password_plaintext: Optional[str] = None
     whatsapp_number: Optional[str] = None
 

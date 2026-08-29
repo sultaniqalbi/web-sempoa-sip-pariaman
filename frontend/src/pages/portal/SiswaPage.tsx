@@ -154,6 +154,14 @@ export const SiswaPage: React.FC = () => {
   };
 
   const validatePhone = (num: string): boolean => {
+    if (!num || !num.trim()) {
+      if (formData.kategori_program.includes('TK') && !formData.kategori_program.includes('Sempoa') && !formData.kategori_program.includes('Fonem')) {
+        setPhoneError(null);
+        return true;
+      }
+      setPhoneError('Nomor WhatsApp orang tua wajib diisi');
+      return false;
+    }
     const clean = num.replace(/[^0-9]/g, '');
     if (!clean || clean.length < 9 || clean.length > 14) {
       setPhoneError('Masukkan 9-14 digit angka');
@@ -407,24 +415,31 @@ export const SiswaPage: React.FC = () => {
       return;
     }
     const ageVal = calculateAge(formData.tanggal_lahir);
-    const progData = (PROGRAM_CONFIG as any)[formData.kategori_program] || PROGRAM_CONFIG['Sempoa SIP'];
-    const matchedPkg = progData.packages.find((p: any) => p.label === formData.paket_jadwal) || progData.packages[0];
+    const defaultTarget = calculateDefaultTarget(formData.kategori_program);
     
     // Total target pertemuan (otomatis dari paket yang dipilih atau input manual jika diedit)
     const target = formData.target_pertemuan !== undefined && formData.target_pertemuan !== null && Number(formData.target_pertemuan) > 0
       ? Number(formData.target_pertemuan)
-      : matchedPkg.target;
+      : defaultTarget;
 
     // Sisa pertemuan (menggunakan angka yang diinputkan user secara presisi)
     const sisa = formData.sisa_pertemuan !== undefined && formData.sisa_pertemuan !== null
       ? Number(formData.sisa_pertemuan)
-      : (editingSiswa ? (editingSiswa.sisa_pertemuan ?? 0) : 0);
+      : (editingSiswa ? (editingSiswa.sisa_pertemuan ?? 0) : (target || 8));
 
     const payload = {
       ...formData,
-      umur: ageVal,
+      tanggal_lahir: formData.tanggal_lahir || null,
+      umur: ageVal || (formData.umur ? parseInt(formData.umur, 10) : null),
       target_pertemuan: target,
-      sisa_pertemuan: sisa
+      sisa_pertemuan: sisa,
+      nama_orang_tua: formData.nama_orang_tua || null,
+      whatsapp_orang_tua: formData.whatsapp_orang_tua || null,
+      alamat: formData.alamat || null,
+      tempat_lahir: formData.tempat_lahir || null,
+      asal_sekolah: formData.asal_sekolah || null,
+      kelas_sekolah: formData.kelas_sekolah || null,
+      hari_masuk: formData.hari_masuk || 'Senin, Rabu',
     };
     if (editingSiswa) {
       updateMutation.mutate(payload as any);
