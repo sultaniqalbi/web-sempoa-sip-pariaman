@@ -3,17 +3,21 @@
   SISTEM ABSENSI RFID ESP32 BERBASIS IoT (LCD 16x2)
   SEMPOA SIP TC PARIAMAN - ULTRA REALTIME & MULTI-USER HIGH SPEED
   
-  Peningkatan Stabilitas & Performa Realtime:
-  1. Instant Haptic & Audio Feedback (< 10ms):
-     - Begitu kartu menempel pada RFID RC522, buzzer langsung berbunyi bip (80ms)
-       dan LCD langsung menampilkan nama guru/UID dari cache lokal NVS tanpa jeda.
-  2. FreeRTOS Non-Blocking Tap Queue (Core 1 -> Core 0):
-     - Tap kartu tidak lagi diblokir oleh request HTTPS server (yang sebelumnya memakan 2-4s).
-     - Data tap dimasukkan ke FreeRTOS Queue dalam 0.01ms sehingga Core 1 langsung
-       siap membaca guru berikutnya dalam waktu singkat (mampu menangani 5 guru dalam 10 detik).
-  3. Background HTTPS Worker (Core 0):
-     - Mengirim antrean tap secara asynchronous ke server web tanpa mengganggu scanner RFID.
-  4. 3-Layer Offline Fallback (Server Online -> MicroSD Card -> NVS Flash Internal).
+  Peningkatan Stabilitas & Fitur Terbaru:
+  1. Pola Buzzer Khusus:
+     - Kartu Terdaftar (Guru ada di sistem/NVS cache): Bip 1x panjang 1 detik (1000ms).
+     - Kartu Baru (Belum terdaftar): Bip 3x cepat dalam 1 detik.
+  2. Penguatan Ekstrem Ketajaman & Sensitivitas Antena RFID:
+     - Gain Antena Maksimal (RxGain_max = 48dB).
+     - Modulasi 100% ASK (TxASKReg = 0x40).
+     - Deteksi Agresif (PICC_WakeupA) agar kartu terbaca cepat dari sudut mana pun.
+  3. Sinkronisasi Waktu Akurat WIB (UTC+7):
+     - Sinkronisasi otomatis dengan server NTP Indonesia (id.pool.ntp.org, time.google.com).
+     - Auto-kalibrasi hardware RTC DS1302 setiap WiFi terkoneksi.
+     - Proteksi waktu presisi untuk push data online maupun offline.
+  4. FreeRTOS Non-Blocking Tap Queue (Core 1 -> Core 0):
+     - Mampu membaca banyak kartu berturut-turut tanpa jeda (5 guru dalam 10 detik).
+  5. 3-Layer Offline Fallback (Server Online -> MicroSD Card -> NVS Flash Internal).
   =========================================================
 */
 
@@ -109,7 +113,7 @@ SemaphoreHandle_t lcdMutex  = NULL;
 
 String uidTerakhir = "";
 unsigned long waktuTapTerakhir = 0;
-const unsigned long DEBOUNCE_SAME_CARD_MS = 1500; // Hanya untuk kartu yang persis sama
+const unsigned long DEBOUNCE_SAME_CARD_MS = 1500; // Hanya untuk kartu yang sama
 
 enum StandbyState { TEKS_1_JUDUL, TEKS_2_AJAKAN, TEKS_3_ALAT, TEKS_4_WAKTU };
 StandbyState standbyState      = TEKS_1_JUDUL;
@@ -125,9 +129,13 @@ void syncGuruCacheFromServer();
 void simpanGuruCache(const String& uid, const String& nama);
 String ambilGuruCache(const String& uid);
 void syncNTPWaktu();
+RtcDateTime ambilWaktuValidWIB();
 void prosesTap(const RtcDateTime& now);
 void beepBoot();
-void beepInstant();
+void beepKartuTerdaftar();
+void beepKartuBaru();
+bool deteksiKartuAgresif();
+void optimasiAntenaRFID();
 void jalankanStandby();
 void tampilkanTeks1();
 void tampilkanTeks2();
@@ -177,11 +185,52 @@ void beepBoot() {
   digitalWrite(BUZZER_PIN, LOW);
 }
 
-// 2. Instant Feedback Tap: Bip cepat 80ms seketika saat kartu terbaca
-void beepInstant() {
+// 2. Kartu Terdaftar: Bip panjang 1 detik (1000ms)
+void beepKartuTerdaftar() {
   digitalWrite(BUZZER_PIN, HIGH);
-  delay(80);
+  delay(1000);
   digitalWrite(BUZZER_PIN, LOW);
+}
+
+// 3. Kartu Belum Terdaftar / Baru: Bip 3x cepat dalam 1 detik
+void beepKartuBaru() {
+  for (int i = 0; i < 3; i++) {
+    digitalWrite(BUZZER_PIN, HIGH);
+    delay(120);
+    digitalWrite(BUZZER_PIN, LOW);
+    if (i < 2) delay(100);
+  }
+}
+
+// =========================================================
+// OPTIMASI KETAJAMAN & SENSITIVITAS ANTENA RFID RC522
+// =========================================================
+void optimasiAntenaRFID() {
+  // 1. Set Gain Receiver Maksimal (48 dB)
+  rfid.PCD_SetAntennaGain(MFRC522::RxGain_max);
+  
+  // 2. Force 100% ASK Modulation untuk memperkuat penetrasi gelombang medan magnet
+  rfid.PCD_WriteRegister(MFRC522::TxASKReg, 0x40);
+
+  // 3. Aktifkan driver pemancar antena
+  rfid.PCD_AntennaOn();
+
+  Serial.println("[BOOT] Penguatan Antena RFID RC522: MAX 48dB + 100% ASK Modulation OK");
+}
+
+// Deteksi kartu agresif (Wake-Up All / WUPA 0x52) - membaca kartu di posisi / kemiringan apapun
+bool deteksiKartuAgresif() {
+  byte bufferATQA[2];
+  byte bufferSize = sizeof(bufferATQA);
+
+  // Reset baud rate registers
+  rfid.PCD_WriteRegister(MFRC522::TxModeReg, 0x00);
+  rfid.PCD_WriteRegister(MFRC522::RxModeReg, 0x00);
+  rfid.PCD_WriteRegister(MFRC522::ModWidthReg, 0x26);
+
+  // Kirim command WUPA (0x52) untuk menangkap kartu pada seluruh area antena
+  MFRC522::StatusCode status = rfid.PICC_WakeupA(bufferATQA, &bufferSize);
+  return (status == MFRC522::STATUS_OK || status == MFRC522::STATUS_COLLISION);
 }
 
 // =========================================================
@@ -207,6 +256,46 @@ String ambilGuruCache(const String& uid) {
   String nama = preferences.getString(cleanUid.c_str(), "");
   preferences.end();
   return nama;
+}
+
+// =========================================================
+// WAKTU VALID WIB (UTC+7) & AUTO-KALIBRASI RTC
+// =========================================================
+RtcDateTime ambilWaktuValidWIB() {
+  RtcDateTime dt;
+  bool rtcOk = false;
+  if (Rtc.IsDateTimeValid()) {
+    dt = Rtc.GetDateTime();
+    if (dt.Year() >= 2024 && dt.Year() <= 2050) {
+      rtcOk = true;
+    }
+  }
+
+  // Cek apakah waktu NTP ESP32 sudah sinkron (> 1 Jan 2024)
+  time_t nowSec = time(nullptr);
+  if (nowSec > 1704067200) {
+    struct tm* tinfo = localtime(&nowSec);
+    RtcDateTime ntpDt(
+      tinfo->tm_year + 1900,
+      tinfo->tm_mon + 1,
+      tinfo->tm_mday,
+      tinfo->tm_hour,
+      tinfo->tm_min,
+      tinfo->tm_sec
+    );
+
+    // Jika RTC mati, invalid, atau selisih > 5 detik dengan NTP, kalibrasi RTC
+    if (!rtcOk || abs((int)(dt.TotalSeconds() - ntpDt.TotalSeconds())) > 5) {
+      if (!Rtc.GetIsRunning()) Rtc.SetIsRunning(true);
+      if (Rtc.GetIsWriteProtected()) Rtc.SetIsWriteProtected(false);
+      Rtc.SetDateTime(ntpDt);
+      Serial.println("[RTC] Hardware RTC DS1302 otomatis disinkronkan ke WIB.");
+    }
+    return ntpDt;
+  }
+
+  if (rtcOk) return dt;
+  return RtcDateTime(__DATE__, __TIME__);
 }
 
 // =========================================================
@@ -239,22 +328,22 @@ void setup() {
   lcd.backlight();
   cetakDuaBarisCenter("SEMPOA SIP", "TC PARIAMAN");
 
-  // 3. Inisialisasi RFID RC522 & BOOST SENSITIVITAS ANTENA (48dB)
+  // 3. Inisialisasi RFID RC522 & BOOST SENSITIVITAS ANTENA MAKSIMAL
   SPI.begin();
   rfid.PCD_Init();
   delay(10);
-  rfid.PCD_SetAntennaGain(MFRC522::RxGain_max);
-  Serial.println("[BOOT] RFID RC522 OK (Antenna Gain: MAX 48dB)");
+  optimasiAntenaRFID();
 
-  // 4. Inisialisasi RTC DS1302
+  // 4. Inisialisasi RTC DS1302 & Set Timezone WIB (UTC+7)
+  configTime(7 * 3600, 0, "0.id.pool.ntp.org", "pool.ntp.org", "time.google.com");
   Rtc.Begin();
+  if (Rtc.GetIsWriteProtected()) Rtc.SetIsWriteProtected(false);
+  if (!Rtc.GetIsRunning()) Rtc.SetIsRunning(true);
   if (!Rtc.IsDateTimeValid()) {
     RtcDateTime compiled = RtcDateTime(__DATE__, __TIME__);
     Rtc.SetDateTime(compiled);
     Serial.println("[BOOT] RTC diset ke waktu compile.");
   }
-  if (Rtc.GetIsWriteProtected()) Rtc.SetIsWriteProtected(false);
-  if (!Rtc.GetIsRunning()) Rtc.SetIsRunning(true);
 
   // 5. Inisialisasi SD Card (Lapis 2)
   sdSPI.begin(SD_SCK_PIN, SD_MISO_PIN, SD_MOSI_PIN, SD_CS_PIN);
@@ -322,23 +411,19 @@ void loop() {
     }
   }
 
-  RtcDateTime now;
-  if (Rtc.IsDateTimeValid()) {
-    now = Rtc.GetDateTime();
-  } else {
-    now = RtcDateTime(__DATE__, __TIME__);
-  }
+  // Ambil waktu WIB yang valid
+  RtcDateTime now = ambilWaktuValidWIB();
 
-  // DETEKSI TAP KARTU RFID (Ultra Non-blocking & Fast Detection)
-  if (rfid.PICC_IsNewCardPresent() && rfid.PICC_ReadCardSerial()) {
+  // DETEKSI TAP KARTU RFID (Agresif + Non-blocking)
+  if ((deteksiKartuAgresif() || rfid.PICC_IsNewCardPresent()) && rfid.PICC_ReadCardSerial()) {
     prosesTap(now);
     rfid.PICC_HaltA();
     rfid.PCD_StopCrypto1();
-    delay(30);
+    delay(20);
   }
 
   jalankanStandby();
-  delay(15);
+  delay(10);
 }
 
 // =========================================================
@@ -363,21 +448,24 @@ void prosesTap(const RtcDateTime& now) {
   waktuTapTerakhir = msNow;
   String waktu = formatWaktu(now);
 
-  // 1. INSTANT AUDIO FEEDBACK (< 10ms) - Langsung bunyi bip seketika
-  beepInstant();
-
-  // 2. INSTANT LOCAL CACHE LOOKUP (< 1ms) & LCD UPDATE
+  // 1. INSTANT LOCAL CACHE LOOKUP & POLA SUARA BUZZER
   String cachedNama = ambilGuruCache(uid);
+
   if (cachedNama.length() > 0) {
+    // A. KARTU GURU TERDAFTAR: Tampilkan Nama Guru & Bip 1x Panjang (1 Detik)
     String dispNama = cachedNama;
     if (dispNama.length() > 16) dispNama = dispNama.substring(0, 16);
     cetakDuaBarisCenter("Selamat Datang", dispNama.c_str());
+    beepKartuTerdaftar(); // Bip 1x panjang 1 detik
   } else {
-    cetakDuaBarisCenter("KARTU RFID OK", uid.c_str());
+    // B. KARTU BARU: Tampilkan Status Baru & Bip 3x Cepat dalam 1 detik
+    cetakDuaBarisCenter("KARTU BARU", uid.c_str());
+    beepKartuBaru(); // Bip 3x cepat
   }
-  lcdDisplayUntil = msNow + 1800; // Tampilkan nama di LCD selama 1.8 detik
 
-  // 3. MASUKKAN KE ANTREAN ASYNC BACKGROUND (0.01ms - Non Blocking)
+  lcdDisplayUntil = millis() + 2000; // Tampilkan status di LCD selama 2 detik
+
+  // 2. MASUKKAN KE ANTREAN ASYNC BACKGROUND (0.01ms - Non Blocking)
   if (tapQueue != NULL) {
     TapEvent evt;
     memset(&evt, 0, sizeof(evt));
@@ -386,7 +474,7 @@ void prosesTap(const RtcDateTime& now) {
     xQueueSend(tapQueue, &evt, 0);
   }
 
-  Serial.println("[Tap Instant] UID: " + uid + " | Waktu: " + waktu + (cachedNama.length() > 0 ? " (" + cachedNama + ")" : ""));
+  Serial.println("[Tap Instant] UID: " + uid + " | Waktu (WIB): " + waktu + (cachedNama.length() > 0 ? " (" + cachedNama + ")" : " [BARU]"));
 }
 
 // =========================================================
@@ -588,14 +676,9 @@ void tampilkanTeks3() {
 
 // TEKS 4 (5 Detik):
 // Atas: "20-08-2026" (Tanggal-Bulan-Tahun)
-// Bawah: "13:15:30" (Jam:Menit:Detik)
+// Bawah: "13:15:30" (Jam:Menit:Detik WIB)
 void tampilkanTeks4() {
-  RtcDateTime now;
-  if (Rtc.IsDateTimeValid()) {
-    now = Rtc.GetDateTime();
-  } else {
-    now = RtcDateTime(__DATE__, __TIME__);
-  }
+  RtcDateTime now = ambilWaktuValidWIB();
 
   if (now.Second() == detikTerakhir) return;
   detikTerakhir = now.Second();
@@ -621,15 +704,24 @@ void wifiSyncTask(void *pvParameters) {
   WiFi.begin(WIFI_SSID.c_str(), WIFI_PASSWORD.c_str());
   WiFi.setAutoReconnect(true);
 
-  unsigned long lastNtpSync   = 0;
-  unsigned long lastWifiRetry = millis();
-  unsigned long lastPingSync  = 0;
-  unsigned long lastNvsSync   = 0;
-  unsigned long lastCacheSync = 0;
+  unsigned long lastNtpSync     = 0;
+  unsigned long lastWifiRetry   = millis();
+  unsigned long lastPingSync    = 0;
+  unsigned long lastNvsSync     = 0;
+  unsigned long lastCacheSync   = 0;
+  bool lastWifiConnectedStatus = false;
 
   while (true) {
     bool currentWifi = (WiFi.status() == WL_CONNECTED);
     wifiConnected = currentWifi;
+
+    // Saat baru tersambung WiFi -> Langsung Sync Waktu WIB (NTP) & Cache Guru
+    if (!lastWifiConnectedStatus && currentWifi) {
+      Serial.println("[WiFi] Terkoneksi ke Hotspot/WiFi! Mengambil Waktu WIB (NTP)...");
+      syncNTPWaktu();
+      syncGuruCacheFromServer();
+    }
+    lastWifiConnectedStatus = currentWifi;
 
     // 1. PROSES ANTREAN TAP REALTIME DARI CORE 1 (FIFO ASYNC QUEUE)
     TapEvent evt;
@@ -712,8 +804,8 @@ void wifiSyncTask(void *pvParameters) {
         }
       }
 
-      // 5. Sync NTP Time sekali sehari
-      if (lastNtpSync == 0 || millis() - lastNtpSync >= 24UL * 3600000UL) {
+      // 5. Sync NTP Time berkala setiap 1 jam
+      if (lastNtpSync == 0 || millis() - lastNtpSync >= 3600000UL) {
         syncNTPWaktu();
         lastNtpSync = millis();
       }
@@ -802,14 +894,20 @@ void wifiSyncTask(void *pvParameters) {
 }
 
 // =========================================================
-// SYNC WAKTU NTP KE RTC
+// SYNC WAKTU NTP KE RTC (WIB UTC+7)
 // =========================================================
 void syncNTPWaktu() {
-  configTime(7 * 3600, 0, "pool.ntp.org", "time.nist.gov");
-  delay(1000);
-
+  configTime(7 * 3600, 0, "0.id.pool.ntp.org", "pool.ntp.org", "time.google.com");
+  
   time_t now = time(nullptr);
-  if (now > 24 * 3600) {
+  int retry = 0;
+  while (now < 1704067200 && retry < 8) {
+    delay(250);
+    now = time(nullptr);
+    retry++;
+  }
+
+  if (now >= 1704067200) {
     struct tm* timeinfo = localtime(&now);
     RtcDateTime newTime(
       timeinfo->tm_year + 1900,
@@ -819,8 +917,13 @@ void syncNTPWaktu() {
       timeinfo->tm_min,
       timeinfo->tm_sec
     );
+    if (!Rtc.GetIsRunning()) Rtc.SetIsRunning(true);
+    if (Rtc.GetIsWriteProtected()) Rtc.SetIsWriteProtected(false);
     Rtc.SetDateTime(newTime);
-    Serial.println("[NTP] Waktu RTC berhasil disinkronkan.");
+    Serial.printf("[NTP WIB] Waktu RTC DS1302 berhasil dikalibrasi: %04d-%02d-%02d %02d:%02d:%02d WIB\n",
+      newTime.Year(), newTime.Month(), newTime.Day(),
+      newTime.Hour(), newTime.Minute(), newTime.Second()
+    );
   }
 }
 
