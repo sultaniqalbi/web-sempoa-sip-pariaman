@@ -156,16 +156,6 @@ export const SharedAbsensiPage: React.FC = () => {
       showToast(`Gagal input izin: ${err.response?.data?.detail || err.message}`, 'error');
     }
   });
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['siswa'] });
-      queryClient.invalidateQueries({ queryKey: ['pembayaran'] });
-      setEditingSiswa(null);
-      showToast(`Jumlah pertemuan untuk ${data.nama} berhasil diperbarui (${data.sisa_pertemuan}/${data.target_pertemuan} sesi)`);
-    },
-    onError: (err: any) => {
-      showToast(`Gagal update pertemuan: ${err.response?.data?.detail || err.message}`, 'error');
-    }
-  });
 
   // Mutation Delete Log Absensi
   const deleteLogMutation = useMutation({

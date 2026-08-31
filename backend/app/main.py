@@ -63,20 +63,39 @@ def on_startup():
             if "duplicate column name" not in str(mig_e).lower() and "already exists" not in str(mig_e).lower():
                 logger.warning(f"Auto-migration skipped or failed: {mig_e}")
 
-        # Auto-migration for multi-program expanded columns (ensure PostgreSQL types are VARCHAR(255))
+        # Auto-migration for multi-program expanded columns and schema updates
         try:
             with engine.connect() as conn:
+                # Siswa table updates
                 conn.execute(text("ALTER TABLE siswa ALTER COLUMN kategori_program TYPE VARCHAR(255);"))
                 conn.execute(text("ALTER TABLE siswa ALTER COLUMN paket_jadwal TYPE VARCHAR(255);"))
                 conn.execute(text("ALTER TABLE siswa ALTER COLUMN hari_masuk TYPE VARCHAR(255);"))
                 conn.execute(text("ALTER TABLE siswa ADD COLUMN IF NOT EXISTS kuota_program TEXT;"))
-                conn.execute(text("ALTER TABLE absensi_log ADD COLUMN IF NOT EXISTS kategori_program VARCHAR(100);"))
-                conn.execute(text("ALTER TABLE guru ALTER COLUMN kategori_program TYPE VARCHAR(255);"))
+                conn.execute(text("ALTER TABLE siswa ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;"))
+
+                # Users table updates (vital for parent auto-provisioning)
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS plain_password VARCHAR(100);"))
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS uid_terhubung VARCHAR(50);"))
+
+                # Jadwal table updates
                 conn.execute(text("ALTER TABLE jadwal ADD COLUMN IF NOT EXISTS guru_ids VARCHAR(255);"))
+                conn.execute(text("ALTER TABLE jadwal ADD COLUMN IF NOT EXISTS siswa_ids VARCHAR(500);"))
+                conn.execute(text("ALTER TABLE jadwal ADD COLUMN IF NOT EXISTS mode_kelas VARCHAR(20) DEFAULT 'OFFLINE';"))
+
+                # Guru table updates
+                conn.execute(text("ALTER TABLE guru ALTER COLUMN kategori_program TYPE VARCHAR(255);"))
+                conn.execute(text("ALTER TABLE guru ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;"))
+
+                # Absensi Log table updates
+                conn.execute(text("ALTER TABLE absensi_log ADD COLUMN IF NOT EXISTS kategori_program VARCHAR(100);"))
+                conn.execute(text("ALTER TABLE absensi_log ADD COLUMN IF NOT EXISTS sumber VARCHAR(50);"))
+                conn.execute(text("ALTER TABLE absensi_log ADD COLUMN IF NOT EXISTS catatan TEXT;"))
+                conn.execute(text("ALTER TABLE absensi_log ADD COLUMN IF NOT EXISTS jumlah_sesi INTEGER DEFAULT 1;"))
+
                 conn.commit()
-                logger.info("Auto-migration: Expanded column lengths, kuota_program, and absensi_log kategori_program")
+                logger.info("Auto-migration: Successfully checked and updated all PostgreSQL columns and tables")
         except Exception as mig_col_e:
-            logger.warning(f"Auto-migration for expanded columns: {mig_col_e}")
+            logger.warning(f"Auto-migration for columns: {mig_col_e}")
 
         # Auto-migration for bukti_transfer (ensure table exists on any DB engine)
         try:
