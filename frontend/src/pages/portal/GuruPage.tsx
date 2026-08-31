@@ -586,7 +586,7 @@ export const GuruPage: React.FC = () => {
           columns={columns}
           data={guruList}
           searchPlaceholder="Cari nama guru, UID RFID, program, hari..."
-          searchFilter={(row, q) =>
+          searchFilter={(row: Guru, q: string) =>
             row.nama.toLowerCase().includes(q.toLowerCase()) ||
             row.uid.toLowerCase().includes(q.toLowerCase()) ||
             row.kategori_program.toLowerCase().includes(q.toLowerCase()) ||

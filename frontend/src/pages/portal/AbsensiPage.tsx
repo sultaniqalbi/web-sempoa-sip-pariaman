@@ -105,17 +105,17 @@ export const SharedAbsensiPage: React.FC = () => {
     }
   });
 
-  const getGuruInfo = (uid: string, fallbackNama?: string, fallbackProgram?: string) => {
+  const getGuruInfo = (uid: string, fallbackNama?: string, fallbackProgram?: string): { nama: string; program: string } => {
     if (!uid) return { nama: fallbackNama || 'Guru Belum Terdaftar', program: fallbackProgram || 'Sempoa SIP' };
     const cleanUid = uid.trim().toUpperCase();
     const nospaceUid = cleanUid.replace(/\s+/g, '');
     const found = guruList.find((g: any) => {
       if (!g.uid) return false;
-      const gUid = g.uid.trim().toUpperCase();
+      const gUid = String(g.uid).trim().toUpperCase();
       return gUid === cleanUid || gUid.replace(/\s+/g, '') === nospaceUid;
     });
     if (found) {
-      return { nama: found.nama, program: found.kategori_program || 'Sempoa SIP' };
+      return { nama: String(found.nama || ''), program: String(found.kategori_program || 'Sempoa SIP') };
     }
     return {
       nama: fallbackNama || 'Guru Belum Terdaftar',
@@ -346,10 +346,10 @@ export const SharedAbsensiPage: React.FC = () => {
       header: 'Program yang Diajar',
       accessor: (row: AbsensiGuruLog) => {
         const info = getGuruInfo(row.uid, row.guru_nama, row.kategori_program);
-        const programs = (info.program || 'Sempoa SIP').split(',').map(p => p.trim()).filter(Boolean);
+        const programs: string[] = (info.program || 'Sempoa SIP').split(',').map((p: string) => p.trim()).filter(Boolean);
         return (
           <div className="flex flex-wrap gap-1.5 py-1">
-            {programs.map((p, idx) => (
+            {programs.map((p: string, idx: number) => (
               <span
                 key={idx}
                 className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold border shadow-2xs inline-block ${getProgramBadgeStyle(p)}`}
@@ -551,7 +551,7 @@ export const SharedAbsensiPage: React.FC = () => {
               data={guruLogs}
               isLoading={isGuruLoading}
               searchPlaceholder="Cari nama guru, UID kartu, program, atau status..."
-              searchFilter={(row, q) => {
+              searchFilter={(row: AbsensiGuruLog, q: string) => {
                 const info = getGuruInfo(row.uid, row.guru_nama, row.kategori_program);
                 return (
                   info.nama.toLowerCase().includes(q.toLowerCase()) ||
