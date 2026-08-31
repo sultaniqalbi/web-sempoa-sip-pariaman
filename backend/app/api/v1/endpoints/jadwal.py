@@ -10,7 +10,7 @@ from app.models.users import User, UserRole
 from app.models.jadwal import Jadwal
 from app.models.guru import Guru
 from app.models.siswa import Siswa
-from app.schemas.jadwal import JadwalCreate, JadwalUpdate, JadwalResponse, GuruSimpleInfo
+from app.schemas.jadwal import JadwalCreate, JadwalUpdate, JadwalResponse, GuruSimpleInfo, SiswaSimpleInfo
 from app.crud import jadwal as crud_jadwal
 
 SCHEDULE_CONFIG = {
@@ -83,9 +83,41 @@ def _enrich_jadwal(db: Session, j: Jadwal) -> JadwalResponse:
             ]
             guru_names_str = " | ".join(g.nama_panggilan or g.nama for g in gurus)
 
+    # Students Enrichment
+    siswa_ids_list = []
+    if j.siswa_ids:
+        for part in j.siswa_ids.split(","):
+            part_str = part.strip()
+            if part_str.isdigit():
+                siswa_ids_list.append(int(part_str))
+    elif j.id_siswa:
+        siswa_ids_list.append(j.id_siswa)
+
+    siswa_names_str = None
+    students_list = []
+    if siswa_ids_list:
+        siswas = db.query(Siswa).filter(Siswa.id.in_(siswa_ids_list), Siswa.is_deleted == False).all()
+        siswa_map = {s.id: s for s in siswas}
+        ordered_siswas = [siswa_map[sid] for sid in siswa_ids_list if sid in siswa_map]
+        if ordered_siswas:
+            students_list = [
+                SiswaSimpleInfo(
+                    id=s.id,
+                    uid=s.uid,
+                    nama=s.nama,
+                    nama_panggilan=s.nama_panggilan or (s.nama.split()[0] if s.nama else ""),
+                    kategori_program=s.kategori_program,
+                    foto_profil=s.foto_profil,
+                )
+                for s in ordered_siswas
+            ]
+            siswa_names_str = ", ".join(s.nama_panggilan or s.nama for s in ordered_siswas)
+
     resp = JadwalResponse.model_validate(j)
     resp.guru_names = guru_names_str
     resp.teachers = teachers_list
+    resp.siswa_names = siswa_names_str
+    resp.students = students_list
     return resp
 
 @router.get("/", response_model=List[JadwalResponse])

@@ -26,13 +26,14 @@ export interface SiswaAbsensi {
   tanggal_lengkap?: string;
   status_hari_ini?: string;
   jam_tap_hari_ini?: string;
+  jumlah_sesi_hari_ini?: number;
 }
 
 interface StudentAttendanceTableProps {
   students: SiswaAbsensi[];
   tanggalTerpilih: string;
   onTanggalChange: (date: string) => void;
-  onSave: (attendanceData: { siswa_id: number; status: string }[], catatan?: string) => void;
+  onSave: (attendanceData: { siswa_id: number; status: string; jumlah_sesi: number }[], catatan?: string) => void;
   isSaving: boolean;
   activeProgram?: string;
   teacherPrograms?: string[];
@@ -50,6 +51,9 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [attendanceState, setAttendanceState] = useState<Record<number, string>>({});
+  const [sessionCounts, setSessionCounts] = useState<Record<number, number>>({});
+  const [customModal, setCustomModal] = useState<{ siswaId: number; nama: string; currentVal: number } | null>(null);
+  const [customInputVal, setCustomInputVal] = useState<number>(1);
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [catatanText, setCatatanText] = useState('');
 
@@ -100,14 +104,17 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
   // Pre-fill existing attendance for selected date if already marked & lock if saved
   useEffect(() => {
     const initial: Record<number, string> = {};
+    const initialSessions: Record<number, number> = {};
     let hasAnyRecorded = false;
     students.forEach((s) => {
       if (s.status_hari_ini) {
         initial[s.id] = s.status_hari_ini.toLowerCase();
         hasAnyRecorded = true;
       }
+      initialSessions[s.id] = s.jumlah_sesi_hari_ini || 1;
     });
     setAttendanceState(initial);
+    setSessionCounts(initialSessions);
     setIsEditMode(!hasAnyRecorded);
   }, [students, tanggalTerpilih]);
 
@@ -124,10 +131,14 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
   };
 
   const handleConfirmSave = () => {
-    const data = Object.entries(attendanceState).map(([id, status]) => ({
-      siswa_id: parseInt(id),
-      status,
-    }));
+    const data = Object.entries(attendanceState).map(([id, status]) => {
+      const sId = parseInt(id);
+      return {
+        siswa_id: sId,
+        status,
+        jumlah_sesi: sessionCounts[sId] || 1,
+      };
+    });
     onSave(data, catatanText);
     setIsNoteModalOpen(false);
     setIsEditMode(false);
@@ -199,7 +210,7 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
               <th className="p-3.5 text-[10px] font-bold text-[#64748B] uppercase tracking-wider min-w-[200px]">Nama Siswa</th>
               <th className="p-3.5 text-[10px] font-bold text-[#64748B] uppercase tracking-wider w-24 text-center">Pertemuan</th>
               <th className="p-3.5 text-[10px] font-bold text-[#64748B] uppercase tracking-wider min-w-[150px]">Tanggal Lengkap</th>
-              <th className="p-3.5 text-[10px] font-bold text-[#64748B] uppercase tracking-wider min-w-[220px] text-center">Status</th>
+              <th className="p-3.5 text-[10px] font-bold text-[#64748B] uppercase tracking-wider min-w-[310px] text-center">Sesi & Status Presensi</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#F5F5F5]">
@@ -354,23 +365,36 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
                         <div className="flex items-center justify-center">
                           {(() => {
                             const sKey = (currentStatus || '').toLowerCase();
+                            const sesi = sessionCounts[siswa.id] || 1;
+                            const sesiBadge = sesi > 1 ? (
+                              <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-[#FFF3E0] text-[#E65100] border border-[#FFB74D] shadow-2xs">
+                                {sesi}x Sesi
+                              </span>
+                            ) : null;
+
                             if (sKey === 'hadir') {
                               return (
-                                <span className="inline-flex items-center justify-center px-3 py-1.5 rounded-xl text-xs font-black bg-[#E8F5E9] text-[#2E7D32] border border-[#A5D6A7] shadow-2xs min-w-[90px]">
-                                  Hadir
-                                </span>
+                                <div className="flex items-center gap-1.5">
+                                  {sesiBadge}
+                                  <span className="inline-flex items-center justify-center px-3 py-1.5 rounded-xl text-xs font-black bg-[#E8F5E9] text-[#2E7D32] border border-[#A5D6A7] shadow-2xs min-w-[80px]">
+                                    Hadir
+                                  </span>
+                                </div>
                               );
                             }
                             if (sKey === 'absen' || sKey === 'alfa') {
                               return (
-                                <span className="inline-flex items-center justify-center px-3 py-1.5 rounded-xl text-xs font-black bg-[#FFEBEE] text-[#C62828] border border-[#FFCDD2] shadow-2xs min-w-[90px]">
-                                  Absen (Alfa)
-                                </span>
+                                <div className="flex items-center gap-1.5">
+                                  {sesiBadge}
+                                  <span className="inline-flex items-center justify-center px-3 py-1.5 rounded-xl text-xs font-black bg-[#FFEBEE] text-[#C62828] border border-[#FFCDD2] shadow-2xs min-w-[80px]">
+                                    Absen (Alfa)
+                                  </span>
+                                </div>
                               );
                             }
                             if (sKey === 'izin') {
                               return (
-                                <span className="inline-flex items-center justify-center px-3 py-1.5 rounded-xl text-xs font-black bg-[#FFF3E0] text-[#E65100] border border-[#FFE082] shadow-2xs min-w-[90px]">
+                                <span className="inline-flex items-center justify-center px-3 py-1.5 rounded-xl text-xs font-black bg-[#FFF3E0] text-[#E65100] border border-[#FFE082] shadow-2xs min-w-[80px]">
                                   Izin
                                 </span>
                               );
@@ -383,34 +407,82 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
                           })()}
                         </div>
                       ) : (
-                        <div className="flex items-center justify-center gap-2">
-                          <StatusButton
-                            label="Hadir"
-                            statusKey="hadir"
-                            currentStatus={currentStatus}
-                            isDisabled={siswa.is_disabled}
-                            activeColor="bg-[#2E7D32] text-white border-[#2E7D32] shadow-sm"
-                            idleColor="bg-white text-[#2E7D32] border-[#A5D6A7] hover:bg-[#E8F5E9]"
-                            onClick={() => handleStatusClick(siswa.id, 'hadir', siswa.is_disabled)}
-                          />
-                          <StatusButton
-                            label="Absen"
-                            statusKey="absen"
-                            currentStatus={currentStatus}
-                            isDisabled={siswa.is_disabled}
-                            activeColor="bg-[#C62828] text-white border-[#C62828] shadow-sm"
-                            idleColor="bg-white text-[#C62828] border-[#FFCDD2] hover:bg-[#FFEBEE]"
-                            onClick={() => handleStatusClick(siswa.id, 'absen', siswa.is_disabled)}
-                          />
-                          <StatusButton
-                            label="Izin"
-                            statusKey="izin"
-                            currentStatus={currentStatus}
-                            isDisabled={siswa.is_disabled}
-                            activeColor="bg-[#E65100] text-white border-[#E65100] shadow-sm"
-                            idleColor="bg-white text-[#E65100] border-[#FFCC80] hover:bg-[#FFF3E0]"
-                            onClick={() => handleStatusClick(siswa.id, 'izin', siswa.is_disabled)}
-                          />
+                        <div className="flex items-center justify-center gap-2 flex-wrap sm:flex-nowrap">
+                          {/* Dropdown Sesi Presensi */}
+                          <div className="relative shrink-0">
+                            <select
+                              value={
+                                (sessionCounts[siswa.id] || 1) <= 3
+                                  ? String(sessionCounts[siswa.id] || 1)
+                                  : 'custom'
+                              }
+                              disabled={siswa.is_disabled || !isEditMode}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (val === 'custom') {
+                                  setCustomModal({
+                                    siswaId: siswa.id,
+                                    nama: siswa.nama_lengkap,
+                                    currentVal: sessionCounts[siswa.id] || 1,
+                                  });
+                                  setCustomInputVal(sessionCounts[siswa.id] || 1);
+                                } else {
+                                  setSessionCounts((prev) => ({
+                                    ...prev,
+                                    [siswa.id]: parseInt(val),
+                                  }));
+                                }
+                              }}
+                              className={`h-9 text-xs font-bold rounded-xl border px-2 py-1 outline-none transition-all cursor-pointer ${
+                                (sessionCounts[siswa.id] || 1) === 1
+                                  ? 'bg-[#F8FAFC] border-[#CBD5E1] text-[#334155] hover:border-[#94A3B8]'
+                                  : (sessionCounts[siswa.id] || 1) === 2
+                                  ? 'bg-[#FFF3E0] border-[#FFB74D] text-[#E65100] font-black shadow-2xs'
+                                  : 'bg-[#F3E8FF] border-[#D8B4FE] text-[#7E22CE] font-black shadow-2xs'
+                              }`}
+                              title="Pilih Mode Sesi (1 Sesi Harian / 2 Sesi Gabungan / Kustom)"
+                            >
+                              <option value="1">1 Sesi (Harian)</option>
+                              <option value="2">2 Sesi (Gabungan)</option>
+                              <option value="3">3 Sesi (Triple)</option>
+                              <option value="custom">
+                                {(sessionCounts[siswa.id] || 1) > 3
+                                  ? `${sessionCounts[siswa.id]} Sesi (Kustom)`
+                                  : 'Isi Sendiri...'}
+                              </option>
+                            </select>
+                          </div>
+
+                          {/* 3 Tombol Presensi */}
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <StatusButton
+                              label="Hadir"
+                              statusKey="hadir"
+                              currentStatus={currentStatus}
+                              isDisabled={siswa.is_disabled}
+                              activeColor="bg-[#2E7D32] text-white border-[#2E7D32] shadow-sm"
+                              idleColor="bg-white text-[#2E7D32] border-[#A5D6A7] hover:bg-[#E8F5E9]"
+                              onClick={() => handleStatusClick(siswa.id, 'hadir', siswa.is_disabled)}
+                            />
+                            <StatusButton
+                              label="Absen"
+                              statusKey="absen"
+                              currentStatus={currentStatus}
+                              isDisabled={siswa.is_disabled}
+                              activeColor="bg-[#C62828] text-white border-[#C62828] shadow-sm"
+                              idleColor="bg-white text-[#C62828] border-[#FFCDD2] hover:bg-[#FFEBEE]"
+                              onClick={() => handleStatusClick(siswa.id, 'absen', siswa.is_disabled)}
+                            />
+                            <StatusButton
+                              label="Izin"
+                              statusKey="izin"
+                              currentStatus={currentStatus}
+                              isDisabled={siswa.is_disabled}
+                              activeColor="bg-[#E65100] text-white border-[#E65100] shadow-sm"
+                              idleColor="bg-white text-[#E65100] border-[#FFCC80] hover:bg-[#FFF3E0]"
+                              onClick={() => handleStatusClick(siswa.id, 'izin', siswa.is_disabled)}
+                            />
+                          </div>
                         </div>
                       )}
                     </td>
@@ -602,6 +674,74 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Session Multiplier Modal */}
+      {customModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl shadow-xl border border-[#E0E0E0] max-w-sm w-full p-5 space-y-4 animate-in fade-in zoom-in duration-150">
+            <div className="flex items-center justify-between border-b border-[#F5F5F5] pb-2">
+              <div>
+                <h3 className="text-sm font-black text-[#1E293B]">Input Jumlah Sesi Absensi</h3>
+                <p className="text-[11px] text-[#64748B] font-medium">{customModal.nama}</p>
+              </div>
+              <button
+                onClick={() => setCustomModal(null)}
+                className="w-7 h-7 rounded-full bg-[#F1F5F9] text-[#475569] hover:bg-[#E2E8F0] flex items-center justify-center cursor-pointer transition-colors"
+                title="Tutup"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block text-[#1E293B] font-bold mb-1">Jumlah Sesi Pertemuan (1 - 10)*</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={10}
+                  required
+                  value={customInputVal}
+                  onChange={(e) => setCustomInputVal(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="w-full bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl p-2.5 font-bold text-sm text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
+                  placeholder="Contoh: 2 atau 3"
+                />
+                <p className="text-[10px] text-[#64748B] mt-1">
+                  Sistem akan memotong kuota pertemuan siswa sebanyak <strong>{customInputVal} sesi</strong> dalam 1x presensi ini.
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-[#F5F5F5]">
+                <button
+                  type="button"
+                  onClick={() => setCustomModal(null)}
+                  className="px-3.5 py-2 bg-[#F1F5F9] text-[#475569] font-bold rounded-xl hover:bg-slate-200 cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (customModal) {
+                      setSessionCounts((prev) => ({
+                        ...prev,
+                        [customModal.siswaId]: customInputVal,
+                      }));
+                      setCustomModal(null);
+                    }
+                  }}
+                  className="px-4 py-2 bg-[#FF7043] hover:bg-[#F4511E] text-white font-bold rounded-xl shadow-sm cursor-pointer"
+                >
+                  Terapkan Sesi
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -1,11 +1,12 @@
 from pydantic import BaseModel, ConfigDict
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 class JadwalBase(BaseModel):
     id_guru: Optional[int] = None
     guru_ids: Optional[str] = None
     id_siswa: Optional[int] = None
+    siswa_ids: Optional[str] = None
     hari: str
     jam_mulai: Optional[str] = None
     jam_selesai: Optional[str] = None
@@ -22,6 +23,7 @@ class JadwalUpdate(BaseModel):
     guru_ids: Optional[str] = None
     guru_names: Optional[str] = None
     id_siswa: Optional[int] = None
+    siswa_ids: Optional[str] = None
     hari: Optional[str] = None
     jam_mulai: Optional[str] = None
     jam_selesai: Optional[str] = None
@@ -38,10 +40,20 @@ class GuruSimpleInfo(BaseModel):
     kategori_program: Optional[str] = None
     whatsapp_guru: Optional[str] = None
 
+class SiswaSimpleInfo(BaseModel):
+    id: int
+    uid: str
+    nama: str
+    nama_panggilan: Optional[str] = None
+    kategori_program: Optional[str] = None
+    foto_profil: Optional[str] = None
+
 class JadwalResponse(JadwalBase):
     id: int
     guru_names: Optional[str] = None
-    teachers: Optional[list[GuruSimpleInfo]] = None
+    siswa_names: Optional[str] = None
+    teachers: Optional[List[GuruSimpleInfo]] = None
+    students: Optional[List[SiswaSimpleInfo]] = None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

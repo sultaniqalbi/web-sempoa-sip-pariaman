@@ -106,7 +106,7 @@ export const AbsensiInputPage: React.FC = () => {
       catatan,
       tanggal,
     }: {
-      attendance: { siswa_id: number; status: string }[];
+      attendance: { siswa_id: number; status: string; jumlah_sesi?: number }[];
       catatan?: string;
       tanggal: string;
     }) => {
@@ -132,7 +132,7 @@ export const AbsensiInputPage: React.FC = () => {
     },
   });
 
-  const handleSaveAttendance = (data: { siswa_id: number; status: string }[], catatan?: string) => {
+  const handleSaveAttendance = (data: { siswa_id: number; status: string; jumlah_sesi?: number }[], catatan?: string) => {
     saveMutation.mutate({ attendance: data, catatan, tanggal: inputDate });
   };
 

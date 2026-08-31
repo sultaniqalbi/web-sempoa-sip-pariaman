@@ -11,7 +11,7 @@ from app.core.websocket import manager
 from app.models.users import User, UserRole
 from app.models.guru import Guru
 from app.models.siswa import Siswa, StatusSPP
-from app.models.absensi_log import AbsensiLog, StatusAbsensi
+from app.models.absensi_log import AbsensiLog, StatusAbsensi, ModeAbsensi
 from app.models.pembayaran_periode import PembayaranPeriode, StatusPembayaran
 from app.schemas.absensi import AbsensiCreate, AbsensiResponse
 from app.crud import absensi as crud_absensi
@@ -19,6 +19,21 @@ from pydantic import BaseModel
 
 router = APIRouter()
 admin_or_owner = RoleChecker([UserRole.admin, UserRole.owner])
+
+class GuruManualAbsensiRequest(BaseModel):
+    id_guru: int
+    tanggal: str
+    jam: Optional[str] = "08:00"
+    status: StatusAbsensi = StatusAbsensi.HADIR
+    mode: Optional[str] = "OFFLINE"
+    catatan: Optional[str] = None
+
+class GuruIzinRequest(BaseModel):
+    id_guru: int
+    tanggal_mulai: str
+    tanggal_selesai: str
+    jenis_izin: str = "Izin"
+    keterangan: Optional[str] = None
 
 class BulkSiswaAbsensiItem(BaseModel):
     id_siswa: int
@@ -306,6 +321,114 @@ async def delete_absensi_log(
     db.delete(log)
     db.commit()
     return {"status": "success", "message": "Log absensi berhasil dihapus"}
+
+
+@router.post("/guru-manual")
+async def create_guru_manual_absensi(
+    req: GuruManualAbsensiRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(admin_or_owner)
+):
+    guru = db.query(Guru).filter(Guru.id == req.id_guru).first()
+    if not guru:
+        raise HTTPException(status_code=404, detail="Data guru tidak ditemukan")
+    if not guru.uid:
+        raise HTTPException(status_code=400, detail="Guru ini belum memiliki UID RFID yang terdaftar")
+
+    try:
+        t_date = datetime.strptime(req.tanggal, "%Y-%m-%d").date()
+    except Exception:
+        t_date = datetime.now().date()
+
+    try:
+        t_time = datetime.strptime(req.jam or "08:00", "%H:%M").time()
+    except Exception:
+        t_time = datetime.now().time()
+
+    waktu_target = datetime.combine(t_date, t_time)
+
+    try:
+        mode_val = ModeAbsensi(req.mode.upper() if req.mode else "OFFLINE")
+    except Exception:
+        mode_val = ModeAbsensi.OFFLINE
+
+    existing_log = db.query(AbsensiLog).filter(
+        AbsensiLog.uid == guru.uid,
+        func.date(AbsensiLog.waktu) == t_date
+    ).first()
+
+    if existing_log:
+        existing_log.status = req.status
+        existing_log.waktu = waktu_target
+        existing_log.mode = mode_val
+        existing_log.catatan = req.catatan or "Presensi manual admin"
+        existing_log.sumber = "PORTAL_ADMIN"
+    else:
+        new_log = AbsensiLog(
+            uid=guru.uid,
+            waktu=waktu_target,
+            mode=mode_val,
+            status=req.status,
+            catatan=req.catatan or "Presensi manual admin",
+            sumber="PORTAL_ADMIN"
+        )
+        db.add(new_log)
+
+    db.commit()
+    return {"status": "success", "message": f"Presensi untuk {guru.nama} berhasil dicatat pada {req.tanggal}"}
+
+
+@router.post("/guru-izin")
+async def create_guru_izin(
+    req: GuruIzinRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(admin_or_owner)
+):
+    guru = db.query(Guru).filter(Guru.id == req.id_guru).first()
+    if not guru:
+        raise HTTPException(status_code=404, detail="Data guru tidak ditemukan")
+    if not guru.uid:
+        raise HTTPException(status_code=400, detail="Guru ini belum memiliki UID RFID yang terdaftar")
+
+    try:
+        start_date = datetime.strptime(req.tanggal_mulai, "%Y-%m-%d").date()
+        end_date = datetime.strptime(req.tanggal_selesai, "%Y-%m-%d").date()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Format tanggal tidak valid (YYYY-MM-DD)")
+
+    if end_date < start_date:
+        raise HTTPException(status_code=400, detail="Tanggal selesai tidak boleh sebelum tanggal mulai")
+
+    curr = start_date
+    count = 0
+    while curr <= end_date:
+        waktu_target = datetime.combine(curr, datetime.strptime("08:00", "%H:%M").time())
+        existing = db.query(AbsensiLog).filter(
+            AbsensiLog.uid == guru.uid,
+            func.date(AbsensiLog.waktu) == curr
+        ).first()
+
+        catatan_str = f"[{req.jenis_izin}] {req.keterangan}" if req.keterangan else f"[{req.jenis_izin}]"
+        if existing:
+            existing.status = StatusAbsensi.IZIN
+            existing.waktu = waktu_target
+            existing.catatan = catatan_str
+            existing.sumber = "PORTAL_ADMIN"
+        else:
+            new_log = AbsensiLog(
+                uid=guru.uid,
+                waktu=waktu_target,
+                mode=ModeAbsensi.OFFLINE,
+                status=StatusAbsensi.IZIN,
+                catatan=catatan_str,
+                sumber="PORTAL_ADMIN"
+            )
+            db.add(new_log)
+        curr += timedelta(days=1)
+        count += 1
+
+    db.commit()
+    return {"status": "success", "message": f"Izin untuk {guru.nama} berhasil dicatat selama {count} hari"}
 
 
 @router.post("/export-sheets")

@@ -353,9 +353,20 @@ async def get_siswa_absensi(
         for l in today_logs:
             if l.uid not in logs_map:
                 s_name = l.status.value if hasattr(l.status, 'value') else str(l.status)
+                sesi_val = 1
+                if l.catatan:
+                    import re
+                    match = re.search(r'(\d+)\s*Sesi', l.catatan, re.IGNORECASE)
+                    if match:
+                        try:
+                            sesi_val = int(match.group(1))
+                        except Exception:
+                            sesi_val = 1
                 logs_map[l.uid] = {
                     "status": s_name.lower(),
-                    "jam": l.waktu.strftime("%H:%M WIB")
+                    "jam": l.waktu.strftime("%H:%M WIB"),
+                    "jumlah_sesi": sesi_val,
+                    "catatan": l.catatan
                 }
     
     result = []
@@ -414,7 +425,8 @@ async def get_siswa_absensi(
             "asal_sekolah": s.asal_sekolah,
             "tanggal_lengkap": now_str,
             "status_hari_ini": today_log["status"] if today_log else None,
-            "jam_tap_hari_ini": today_log["jam"] if today_log else None
+            "jam_tap_hari_ini": today_log["jam"] if today_log else None,
+            "jumlah_sesi_hari_ini": today_log["jumlah_sesi"] if today_log else 1
         })
         
     return {
@@ -427,6 +439,7 @@ async def get_siswa_absensi(
 class SiswaAbsensiItem(BaseModel):
     siswa_id: int
     status: str
+    jumlah_sesi: Optional[int] = 1
 
 class SiswaAbsensiSubmit(BaseModel):
     siswa_absensi: List[SiswaAbsensiItem]
@@ -542,20 +555,38 @@ async def save_siswa_absensi(
             )
         ).first()
 
+        sesi_count = max(1, item.jumlah_sesi or 1)
+        catatan_text = f"{sesi_count} Sesi Gabungan" if sesi_count > 1 else None
+
         if existing_log:
             prev_status = existing_log.status
+            prev_sesi = 1
+            if existing_log.catatan:
+                import re
+                match = re.search(r'(\d+)\s*Sesi', existing_log.catatan, re.IGNORECASE)
+                if match:
+                    try:
+                        prev_sesi = int(match.group(1))
+                    except Exception:
+                        prev_sesi = 1
+
             existing_log.status = status_enum
             existing_log.waktu = now
             existing_log.mode = mode_enum
             existing_log.kategori_program = active_program
+            existing_log.catatan = catatan_text
 
-            # If changed from IZIN to HADIR or ALFA: deduct remaining sessions for that program
+            # If changed from IZIN to HADIR or ALFA: deduct remaining sessions by sesi_count
             if prev_status == StatusAbsensi.IZIN and status_enum in [StatusAbsensi.HADIR, StatusAbsensi.ALFA]:
-                _update_student_program_quota(siswa, active_program, -1)
-            # If changed from HADIR or ALFA to IZIN: restore 1 session for that program
+                _update_student_program_quota(siswa, active_program, -sesi_count)
+            # If changed from HADIR or ALFA to IZIN: restore prev_sesi sessions
             elif prev_status in [StatusAbsensi.HADIR, StatusAbsensi.ALFA] and status_enum == StatusAbsensi.IZIN:
-                _update_student_program_quota(siswa, active_program, +1)
-            # If changed between HADIR <-> ALFA: quota unchanged
+                _update_student_program_quota(siswa, active_program, +prev_sesi)
+            # If still in HADIR or ALFA, but session count changed
+            elif prev_status in [StatusAbsensi.HADIR, StatusAbsensi.ALFA] and status_enum in [StatusAbsensi.HADIR, StatusAbsensi.ALFA]:
+                sesi_diff = sesi_count - prev_sesi
+                if sesi_diff != 0:
+                    _update_student_program_quota(siswa, active_program, -sesi_diff)
         else:
             # Student has no sessions left and no log exists today: skip unless marked IZIN or is TK
             is_tk = "tk" in (active_program or "").lower()
@@ -568,11 +599,12 @@ async def save_siswa_absensi(
                 waktu=now,
                 mode=mode_enum,
                 status=status_enum,
+                catatan=catatan_text,
                 sumber="PORTAL_GURU"
             )
             db.add(log)
             if status_enum in [StatusAbsensi.HADIR, StatusAbsensi.ALFA]:
-                _update_student_program_quota(siswa, active_program, -1)
+                _update_student_program_quota(siswa, active_program, -sesi_count)
 
         # Update SPP status based on remaining meetings
         if siswa.sisa_pertemuan == 0 and siswa.status_spp != StatusSPP.EXPIRED:
@@ -698,6 +730,8 @@ async def get_rekap_absensi(
         for l in date_logs:
             if l.uid not in logs_map:
                 s_name = l.status.value if hasattr(l.status, 'value') else str(l.status)
+                if l.catatan and "Sesi" in l.catatan:
+                    s_name = f"{s_name} ({l.catatan})"
                 logs_map[l.uid] = {
                     "status": s_name,
                     "jam": l.waktu.strftime("%H:%M WIB")

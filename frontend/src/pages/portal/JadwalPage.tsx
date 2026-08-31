@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
 import { useAuth } from '../../features/auth/useAuth';
@@ -8,7 +8,7 @@ import ConfirmModal from '../../components/ConfirmModal';
 import PageHeader from '../../components/PageHeader';
 import EmptyState from '../../components/EmptyState';
 import DayPicker from '../../components/DayPicker';
-import { JadwalIcon, TrashIcon, PresensiIcon, PengajarIcon, CalendarIcon, StarIcon, LightbulbIcon, CloseIcon } from '../../components/SvgIcons';
+import { JadwalIcon, TrashIcon, PresensiIcon, PengajarIcon, CalendarIcon, StarIcon, LightbulbIcon, CloseIcon, DataSiswaIcon } from '../../components/SvgIcons';
 
 const AVAILABLE_PROGRAMS = ['Sempoa SIP', 'Fonem', 'Tahfidz', 'Bahasa Inggris', 'TK'];
 
@@ -64,6 +64,15 @@ interface TeacherInfo {
   kategori_program?: string;
 }
 
+interface StudentInfo {
+  id: number;
+  uid: string;
+  nama: string;
+  nama_panggilan?: string;
+  kategori_program?: string;
+  foto_profil?: string;
+}
+
 interface Jadwal {
   id: number;
   hari: string;
@@ -77,6 +86,9 @@ interface Jadwal {
   guru_names?: string;
   teachers?: TeacherInfo[];
   id_siswa?: number;
+  siswa_ids?: string;
+  siswa_names?: string;
+  students?: StudentInfo[];
   created_at: string;
 }
 
@@ -123,6 +135,9 @@ export const JadwalPage: React.FC = () => {
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: number; info: string } | null>(null);
 
   const [selectedTeacherIds, setSelectedTeacherIds] = useState<number[]>([]);
+  const [selectedStudentIds, setSelectedStudentIds] = useState<number[]>([]);
+  const [studentSearch, setStudentSearch] = useState<string>('');
+
   const [formData, setFormData] = useState({
     hari: 'Senin, Rabu',
     jam_mulai: '09:00',
@@ -130,6 +145,8 @@ export const JadwalPage: React.FC = () => {
     lokasi: 'TC Pariaman - Ruang Sempoa',
     id_guru: undefined as number | undefined,
     guru_ids: undefined as string | undefined,
+    id_siswa: undefined as number | undefined,
+    siswa_ids: undefined as string | undefined,
     is_hari_libur: false,
     kategori_program: 'Sempoa SIP',
   });
@@ -156,6 +173,14 @@ export const JadwalPage: React.FC = () => {
     },
   });
 
+  const { data: siswaList = [] } = useQuery<any[]>({
+    queryKey: ['siswa', 'list'],
+    queryFn: async () => {
+      const res = await apiClient.get('/siswa/');
+      return res.data;
+    },
+  });
+
   const { data: logs = [], isLoading: isLoadingAbsensi, refetch: refetchAbsensi } = useQuery<GuruAbsensiItem[]>({
     queryKey: ['absensi', 'guru-log'],
     queryFn: async () => {
@@ -164,6 +189,25 @@ export const JadwalPage: React.FC = () => {
     },
     enabled: activeTab === 'absensi',
   });
+
+  const programStudents = useMemo(() => {
+    if (!siswaList || !Array.isArray(siswaList)) return [];
+    return siswaList.filter((s: any) => {
+      const prog = (s.kategori_program || '').toLowerCase();
+      const targetProg = (formData.kategori_program || '').toLowerCase();
+      return prog.includes(targetProg) || targetProg.includes(prog);
+    });
+  }, [siswaList, formData.kategori_program]);
+
+  const filteredProgramStudents = useMemo(() => {
+    if (!studentSearch.trim()) return programStudents;
+    const q = studentSearch.toLowerCase();
+    return programStudents.filter((s: any) =>
+      s.nama.toLowerCase().includes(q) ||
+      (s.nama_panggilan && s.nama_panggilan.toLowerCase().includes(q)) ||
+      (s.uid && s.uid.toLowerCase().includes(q))
+    );
+  }, [programStudents, studentSearch]);
 
   // Mutations
   const createMutation = useMutation({
@@ -313,6 +357,8 @@ export const JadwalPage: React.FC = () => {
   const openAddModal = () => {
     setEditingJadwal(null);
     setSelectedTeacherIds([]);
+    setSelectedStudentIds([]);
+    setStudentSearch('');
     const defaultProg = 'Sempoa SIP';
     const config = SCHEDULE_CONFIG[defaultProg];
     setFormData({
@@ -322,6 +368,8 @@ export const JadwalPage: React.FC = () => {
       lokasi: config.defaultRoom,
       id_guru: undefined,
       guru_ids: undefined,
+      id_siswa: undefined,
+      siswa_ids: undefined,
       is_hari_libur: false,
       kategori_program: defaultProg,
     });
@@ -337,6 +385,16 @@ export const JadwalPage: React.FC = () => {
       ids = [jadwal.id_guru];
     }
     setSelectedTeacherIds(ids);
+
+    let sIds: number[] = [];
+    if (jadwal.siswa_ids) {
+      sIds = jadwal.siswa_ids.split(',').map((x) => parseInt(x.trim(), 10)).filter((n) => !isNaN(n));
+    } else if (jadwal.id_siswa) {
+      sIds = [jadwal.id_siswa];
+    }
+    setSelectedStudentIds(sIds);
+    setStudentSearch('');
+
     setFormData({
       hari: jadwal.hari,
       jam_mulai: jadwal.jam_mulai,
@@ -344,6 +402,8 @@ export const JadwalPage: React.FC = () => {
       lokasi: jadwal.lokasi,
       id_guru: jadwal.id_guru,
       guru_ids: jadwal.guru_ids,
+      id_siswa: jadwal.id_siswa,
+      siswa_ids: jadwal.siswa_ids,
       is_hari_libur: jadwal.is_hari_libur,
       kategori_program: jadwal.kategori_program || 'Sempoa SIP',
     });
@@ -360,6 +420,8 @@ export const JadwalPage: React.FC = () => {
       ...formData,
       id_guru: selectedTeacherIds[0] || null,
       guru_ids: selectedTeacherIds.join(', '),
+      id_siswa: selectedStudentIds[0] || null,
+      siswa_ids: selectedStudentIds.join(', '),
     };
     if (editingJadwal) {
       updateMutation.mutate(payload as any);
@@ -454,6 +516,44 @@ export const JadwalPage: React.FC = () => {
     {
       header: 'Lokasi Kelas',
       accessor: (row: Jadwal) => <span className="text-[#757575] text-xs font-medium">{row.lokasi}</span>,
+    },
+    {
+      header: 'Murid / Siswa',
+      accessor: (row: Jadwal) => {
+        let count = 0;
+        let names = '';
+        if (row.students && row.students.length > 0) {
+          count = row.students.length;
+          names = row.students.map((s) => s.nama_panggilan || s.nama).join(', ');
+        } else if (row.siswa_names) {
+          names = row.siswa_names;
+          count = names.split(',').length;
+        } else if (row.siswa_ids) {
+          count = row.siswa_ids.split(',').filter(Boolean).length;
+        }
+
+        if (count === 0) {
+          return (
+            <span className="text-[11px] text-[#94A3B8] italic">
+              Semua Siswa Program
+            </span>
+          );
+        }
+
+        return (
+          <div className="space-y-1">
+            <span className="text-[10px] font-extrabold text-[#D97706] bg-[#FEF3C7] border border-[#FDE68A] px-2 py-0.5 rounded-full inline-flex items-center gap-1 shadow-2xs">
+              <DataSiswaIcon size={11} className="text-[#D97706]" />
+              <span>{count} Murid Terdaftar</span>
+            </span>
+            {names && (
+              <p className="text-[11px] font-medium text-[#475569] max-w-[200px] truncate" title={names}>
+                {names}
+              </p>
+            )}
+          </div>
+        );
+      },
     },
     {
       header: 'Aksi',
@@ -767,6 +867,108 @@ export const JadwalPage: React.FC = () => {
                 Centang 1 atau beberapa guru pengajar yang bertugas pada sesi jadwal kelas ini.
               </p>
             )}
+          </div>
+
+          {/* Section: Pilih Murid / Siswa di Kelas Ini */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <label className="block text-[#1E293B] font-bold text-xs">
+                Pilih Murid / Siswa di Kelas Ini (Program: {formData.kategori_program})
+              </label>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold bg-[#E8F5E9] text-[#2E7D32] border border-[#A5D6A7] px-2 py-0.5 rounded-full inline-flex items-center gap-1 shadow-2xs">
+                  <DataSiswaIcon size={10} className="text-[#2E7D32]" />
+                  <span>{selectedStudentIds.length} Murid Terpilih</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (selectedStudentIds.length === programStudents.length && programStudents.length > 0) {
+                      setSelectedStudentIds([]);
+                    } else {
+                      setSelectedStudentIds(programStudents.map((s: any) => s.id));
+                    }
+                  }}
+                  className="text-[11px] font-bold text-[#FF7043] hover:underline cursor-pointer"
+                >
+                  {selectedStudentIds.length === programStudents.length && programStudents.length > 0
+                    ? 'Batal Pilih Semua'
+                    : 'Pilih Semua'}
+                </button>
+              </div>
+            </div>
+
+            {/* Search filter for students */}
+            <div>
+              <input
+                type="text"
+                value={studentSearch}
+                onChange={(e) => setStudentSearch(e.target.value)}
+                placeholder={`Cari nama murid ${formData.kategori_program}...`}
+                className="w-full bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl px-3 py-2 text-xs text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
+              />
+            </div>
+
+            {/* Student list with checkboxes */}
+            <div className="border border-[#E2E8F0] rounded-xl max-h-48 overflow-y-auto divide-y divide-[#F1F5F9] bg-[#FAFAFA]">
+              {filteredProgramStudents.length === 0 ? (
+                <div className="p-4 text-center text-[#94A3B8] text-xs">
+                  Tidak ada data murid yang cocok di program {formData.kategori_program}.
+                </div>
+              ) : (
+                filteredProgramStudents.map((s: any) => {
+                  const isSelected = selectedStudentIds.includes(s.id);
+                  return (
+                    <div
+                      key={s.id}
+                      onClick={() => {
+                        setSelectedStudentIds((prev) =>
+                          prev.includes(s.id) ? prev.filter((id) => id !== s.id) : [...prev, s.id]
+                        );
+                      }}
+                      className={`flex items-center justify-between p-2.5 cursor-pointer transition-colors ${
+                        isSelected ? 'bg-[#FFF3E0]/70' : 'hover:bg-[#F1F5F9]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => {}} // Handled by container onClick
+                          className="w-4 h-4 accent-[#FF7043] rounded cursor-pointer pointer-events-none"
+                        />
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-bold text-xs text-[#1E293B]">
+                              {s.nama}{' '}
+                              {s.nama_panggilan ? (
+                                <span className="text-[11px] font-normal text-[#64748B]">({s.nama_panggilan})</span>
+                              ) : null}
+                            </p>
+                            {s.hari_masuk && (
+                              <span className="text-[9px] font-bold bg-[#E0F2FE] text-[#0369A1] border border-[#BAE6FD] px-1.5 py-0.5 rounded">
+                                {s.hari_masuk}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-[#64748B] mt-0.5">
+                            UID: {s.uid} • Paket: {s.paket_jadwal || 'Reguler'}
+                          </p>
+                        </div>
+                      </div>
+                      {isSelected && (
+                        <span className="text-[10px] font-bold text-[#FF7043] bg-white border border-[#FFCC80] px-2 py-0.5 rounded-md">
+                          Terpilih
+                        </span>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+            <p className="text-[10px] text-[#64748B]">
+              Centang murid yang diajar pada sesi kelas ini untuk membagi murid per-guru/jadwal secara terstruktur.
+            </p>
           </div>
 
           {/* Day Picker Component (Multi Select) */}

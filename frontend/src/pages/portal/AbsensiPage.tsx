@@ -5,7 +5,7 @@ import PageHeader from '../../components/PageHeader';
 import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
 import EmptyState from '../../components/EmptyState';
-import { AbsensiIcon, EditIcon, PengajarIcon, DataSiswaIcon, TrashIcon } from '../../components/SvgIcons';
+import { AbsensiIcon, EditIcon, PengajarIcon, DataSiswaIcon, TrashIcon, PresensiIcon, CalendarIcon, CheckIcon } from '../../components/SvgIcons';
 import { parseProgramDetails, getProgramBadgeStyle, parseProgramQuotas } from './SiswaPage';
 
 interface SiswaItem {
@@ -49,6 +49,27 @@ export const SharedAbsensiPage: React.FC = () => {
     catatan: ''
   });
 
+  // Manual Guru Attendance Modal State
+  const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+  const [manualForm, setManualForm] = useState({
+    id_guru: '',
+    tanggal: new Date().toISOString().split('T')[0],
+    jam: '08:00',
+    status: 'HADIR',
+    mode: 'OFFLINE',
+    catatan: ''
+  });
+
+  // Guru Izin Modal State
+  const [isIzinModalOpen, setIsIzinModalOpen] = useState(false);
+  const [izinForm, setIzinForm] = useState({
+    id_guru: '',
+    tanggal_mulai: new Date().toISOString().split('T')[0],
+    tanggal_selesai: new Date().toISOString().split('T')[0],
+    jenis_izin: 'Izin',
+    keterangan: ''
+  });
+
   const showToast = (text: string, type: 'success' | 'error' = 'success') => {
     setToastMessage({ text, type });
     setTimeout(() => setToastMessage(null), 4000);
@@ -73,12 +94,68 @@ export const SharedAbsensiPage: React.FC = () => {
     refetchInterval: 10000
   });
 
+  // 3. Fetch List Guru
+  const { data: guruList = [] } = useQuery<any[]>({
+    queryKey: ['guru', 'list'],
+    queryFn: async () => {
+      const res = await apiClient.get('/guru/');
+      return res.data;
+    }
+  });
+
   // Mutation Edit Pertemuan Siswa
   const editPertemuanMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: typeof editForm }) => {
       const res = await apiClient.put(`/siswa/${id}/pertemuan`, data);
       return res.data;
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['siswa'] });
+      setEditingSiswa(null);
+      showToast('Data pertemuan siswa berhasil diperbarui');
+    },
+    onError: (err: any) => {
+      showToast(`Gagal update pertemuan: ${err.response?.data?.detail || err.message}`, 'error');
+    }
+  });
+
+  // Mutation Manual Guru Absensi
+  const manualGuruMutation = useMutation({
+    mutationFn: async (data: typeof manualForm) => {
+      const res = await apiClient.post('/absensi/guru-manual', {
+        ...data,
+        id_guru: parseInt(data.id_guru, 10)
+      });
+      return res.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['absensi'] });
+      setIsManualModalOpen(false);
+      showToast(data.message || 'Presensi guru manual berhasil dicatat');
+    },
+    onError: (err: any) => {
+      showToast(`Gagal input presensi guru: ${err.response?.data?.detail || err.message}`, 'error');
+    }
+  });
+
+  // Mutation Guru Izin
+  const izinGuruMutation = useMutation({
+    mutationFn: async (data: typeof izinForm) => {
+      const res = await apiClient.post('/absensi/guru-izin', {
+        ...data,
+        id_guru: parseInt(data.id_guru, 10)
+      });
+      return res.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['absensi'] });
+      setIsIzinModalOpen(false);
+      showToast(data.message || 'Izin pengajar berhasil dicatat');
+    },
+    onError: (err: any) => {
+      showToast(`Gagal input izin: ${err.response?.data?.detail || err.message}`, 'error');
+    }
+  });
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['siswa'] });
       queryClient.invalidateQueries({ queryKey: ['pembayaran'] });
@@ -413,6 +490,45 @@ export const SharedAbsensiPage: React.FC = () => {
             </select>
           </div>
         )}
+
+        {/* Action Buttons (khusus tab guru) */}
+        {activeTab === 'guru' && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => {
+                setManualForm({
+                  id_guru: guruList[0]?.id ? String(guruList[0].id) : '',
+                  tanggal: new Date().toISOString().split('T')[0],
+                  jam: '08:00',
+                  status: 'HADIR',
+                  mode: 'OFFLINE',
+                  catatan: ''
+                });
+                setIsManualModalOpen(true);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#E8F5E9] hover:bg-[#C8E6C9] text-[#2E7D32] border border-[#A5D6A7] rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer active:scale-95"
+            >
+              <PresensiIcon size={14} className="text-[#2E7D32]" />
+              <span>Input Presensi Guru</span>
+            </button>
+            <button
+              onClick={() => {
+                setIzinForm({
+                  id_guru: guruList[0]?.id ? String(guruList[0].id) : '',
+                  tanggal_mulai: new Date().toISOString().split('T')[0],
+                  tanggal_selesai: new Date().toISOString().split('T')[0],
+                  jenis_izin: 'Izin',
+                  keterangan: ''
+                });
+                setIsIzinModalOpen(true);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#E65100] border border-[#FFCC80] rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer active:scale-95"
+            >
+              <CalendarIcon size={14} className="text-[#E65100]" />
+              <span>Input Izin Guru</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Tab 1: Absensi Siswa */}
@@ -573,6 +689,242 @@ export const SharedAbsensiPage: React.FC = () => {
           </form>
         </Modal>
       )}
+
+      {/* Modal Input Presensi Guru Manual */}
+      <Modal
+        isOpen={isManualModalOpen}
+        onClose={() => setIsManualModalOpen(false)}
+        title="Input Presensi Guru (Manual)"
+      >
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!manualForm.id_guru) {
+              showToast('Pilih guru terlebih dahulu', 'error');
+              return;
+            }
+            manualGuruMutation.mutate(manualForm);
+          }}
+          className="space-y-4 text-xs"
+        >
+          <div>
+            <label className="block text-[#1E293B] font-bold mb-1">
+              Nama Guru / Pengajar*
+            </label>
+            <select
+              required
+              value={manualForm.id_guru}
+              onChange={(e) => setManualForm({ ...manualForm, id_guru: e.target.value })}
+              className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold text-sm focus:border-[#FF7043] focus:outline-none"
+            >
+              <option value="">-- Pilih Guru --</option>
+              {guruList.map((g: any) => (
+                <option key={g.id} value={g.id}>
+                  {g.nama} {g.kategori_program ? `(${g.kategori_program})` : ''} - UID: {g.uid || 'Belum ada UID'}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">
+                Tanggal Kehadiran*
+              </label>
+              <input
+                type="date"
+                required
+                value={manualForm.tanggal}
+                onChange={(e) => setManualForm({ ...manualForm, tanggal: e.target.value })}
+                className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">
+                Jam Masuk*
+              </label>
+              <input
+                type="time"
+                required
+                value={manualForm.jam}
+                onChange={(e) => setManualForm({ ...manualForm, jam: e.target.value })}
+                className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-mono font-bold focus:border-[#FF7043] focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">
+                Status Kehadiran*
+              </label>
+              <select
+                value={manualForm.status}
+                onChange={(e) => setManualForm({ ...manualForm, status: e.target.value })}
+                className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none"
+              >
+                <option value="HADIR">HADIR</option>
+                <option value="IZIN">IZIN</option>
+                <option value="ALFA">ALFA</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">
+                Mode Presensi*
+              </label>
+              <select
+                value={manualForm.mode}
+                onChange={(e) => setManualForm({ ...manualForm, mode: e.target.value })}
+                className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none"
+              >
+                <option value="OFFLINE">OFFLINE (Di Tempat)</option>
+                <option value="ONLINE">ONLINE</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[#1E293B] font-bold mb-1">
+              Catatan / Keterangan (Opsional)
+            </label>
+            <input
+              type="text"
+              value={manualForm.catatan}
+              onChange={(e) => setManualForm({ ...manualForm, catatan: e.target.value })}
+              placeholder="Contoh: Tap RFID bermasalah / Presensi diinputkan Admin"
+              className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E2E8F0]">
+            <button
+              type="button"
+              onClick={() => setIsManualModalOpen(false)}
+              className="px-4 py-2 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#475569] font-bold rounded-lg transition-colors cursor-pointer"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              disabled={manualGuruMutation.isPending}
+              className="px-5 py-2 bg-[#FF7043] hover:bg-[#F4511E] text-white font-bold rounded-lg transition-colors shadow-sm cursor-pointer disabled:opacity-50"
+            >
+              {manualGuruMutation.isPending ? 'Menyimpan...' : 'Simpan Presensi'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modal Input Izin Guru */}
+      <Modal
+        isOpen={isIzinModalOpen}
+        onClose={() => setIsIzinModalOpen(false)}
+        title="Input Izin / Cuti Pengajar"
+      >
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!izinForm.id_guru) {
+              showToast('Pilih guru terlebih dahulu', 'error');
+              return;
+            }
+            izinGuruMutation.mutate(izinForm);
+          }}
+          className="space-y-4 text-xs"
+        >
+          <div>
+            <label className="block text-[#1E293B] font-bold mb-1">
+              Nama Guru / Pengajar*
+            </label>
+            <select
+              required
+              value={izinForm.id_guru}
+              onChange={(e) => setIzinForm({ ...izinForm, id_guru: e.target.value })}
+              className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold text-sm focus:border-[#FF7043] focus:outline-none"
+            >
+              <option value="">-- Pilih Guru --</option>
+              {guruList.map((g: any) => (
+                <option key={g.id} value={g.id}>
+                  {g.nama} {g.kategori_program ? `(${g.kategori_program})` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">
+                Tanggal Mulai*
+              </label>
+              <input
+                type="date"
+                required
+                value={izinForm.tanggal_mulai}
+                onChange={(e) => setIzinForm({ ...izinForm, tanggal_mulai: e.target.value })}
+                className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">
+                Tanggal Selesai*
+              </label>
+              <input
+                type="date"
+                required
+                value={izinForm.tanggal_selesai}
+                onChange={(e) => setIzinForm({ ...izinForm, tanggal_selesai: e.target.value })}
+                className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[#1E293B] font-bold mb-1">
+              Jenis Izin*
+            </label>
+            <select
+              value={izinForm.jenis_izin}
+              onChange={(e) => setIzinForm({ ...izinForm, jenis_izin: e.target.value })}
+              className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none"
+            >
+              <option value="Sakit">Sakit</option>
+              <option value="Izin Pribadi">Izin Pribadi / Acara Keluarga</option>
+              <option value="Cuti">Cuti</option>
+              <option value="Tugas Luar">Tugas Luar / Pelatihan</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[#1E293B] font-bold mb-1">
+              Keterangan / Alasan
+            </label>
+            <textarea
+              rows={3}
+              value={izinForm.keterangan}
+              onChange={(e) => setIzinForm({ ...izinForm, keterangan: e.target.value })}
+              placeholder="Jelaskan alasan izin / cuti..."
+              className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E2E8F0]">
+            <button
+              type="button"
+              onClick={() => setIsIzinModalOpen(false)}
+              className="px-4 py-2 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#475569] font-bold rounded-lg transition-colors cursor-pointer"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              disabled={izinGuruMutation.isPending}
+              className="px-5 py-2 bg-[#FF7043] hover:bg-[#F4511E] text-white font-bold rounded-lg transition-colors shadow-sm cursor-pointer disabled:opacity-50"
+            >
+              {izinGuruMutation.isPending ? 'Menyimpan...' : 'Simpan Izin'}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

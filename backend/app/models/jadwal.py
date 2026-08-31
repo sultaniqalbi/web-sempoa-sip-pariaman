@@ -9,6 +9,7 @@ class Jadwal(Base):
     id_guru = Column(Integer, ForeignKey("guru.id", ondelete="CASCADE"), nullable=True, index=True)
     guru_ids = Column(String(255), nullable=True)
     id_siswa = Column(Integer, ForeignKey("siswa.id", ondelete="CASCADE"), nullable=True, index=True)
+    siswa_ids = Column(String(500), nullable=True)
     hari = Column(String(100), nullable=False)
     jam_mulai = Column(String(10), nullable=False)
     jam_selesai = Column(String(10), nullable=False)

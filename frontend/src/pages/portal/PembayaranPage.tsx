@@ -181,6 +181,22 @@ export const SharedPembayaranPage: React.FC = () => {
     },
   });
 
+  // Mutation Delete Student Reminder
+  const deleteReminderMutation = useMutation({
+    mutationFn: async (siswaId: number) => {
+      const res = await apiClient.delete(`/pembayaran/reminder/${siswaId}`);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['pembayaran'] });
+      queryClient.invalidateQueries({ queryKey: ['siswa'] });
+      showToast(data.message || 'Tagihan & reminder berhasil dibersihkan');
+    },
+    onError: (err: any) => {
+      showToast(`Gagal menghapus tagihan: ${err.response?.data?.detail || err.message}`, 'error');
+    },
+  });
+
   const exportSheetsMutation = useMutation({
     mutationFn: async () => {
       const res = await apiClient.post('/pembayaran/export-sheets');
@@ -421,6 +437,15 @@ export const SharedPembayaranPage: React.FC = () => {
               <span>Draf WA</span>
             </button>
           )}
+
+          {/* Tombol Hapus Tagihan / Reset Reminder */}
+          <button
+            onClick={() => deleteReminderMutation.mutate(row.id_siswa)}
+            className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center cursor-pointer active:scale-95"
+            title="Hapus Tagihan / Bersihkan Data Reminder"
+          >
+            <TrashIcon size={13} />
+          </button>
         </div>
       ),
     },

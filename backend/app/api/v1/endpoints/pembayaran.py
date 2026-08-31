@@ -10,7 +10,7 @@ from app.core.dependencies import get_current_user, RoleChecker
 from app.models.users import User, UserRole
 from app.models.pembayaran_periode import PembayaranPeriode, StatusPembayaran
 from app.models.bukti_transfer import BuktiTransfer
-from app.models.siswa import Siswa
+from app.models.siswa import Siswa, StatusSPP
 from app.schemas.pembayaran import PembayaranCreate, PembayaranResponse, PembayaranDueDateUpdate
 from app.crud import pembayaran as crud_pembayaran
 
@@ -404,6 +404,31 @@ async def delete_pembayaran(
         raise HTTPException(status_code=400, detail=f"Gagal menghapus tagihan: {str(e)}")
 
     return {"status": "success", "message": "Tagihan pembayaran berhasil dihapus"}
+
+
+@router.delete("/reminder/{siswa_id}")
+async def delete_siswa_reminder(
+    siswa_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(admin_or_owner)
+):
+    siswa = db.query(Siswa).filter(Siswa.id == siswa_id).first()
+    if not siswa:
+        raise HTTPException(status_code=404, detail="Data siswa tidak ditemukan")
+
+    pending_bills = db.query(PembayaranPeriode).filter(
+        PembayaranPeriode.id_siswa == siswa_id,
+        PembayaranPeriode.status.in_([StatusPembayaran.MENUNGGAK, StatusPembayaran.OVERDUE, StatusPembayaran.PENDING_VERIFIKASI])
+    ).all()
+
+    for bill in pending_bills:
+        db.query(BuktiTransfer).filter(BuktiTransfer.id_pembayaran == bill.id).delete()
+        db.delete(bill)
+
+    siswa.status_spp = StatusSPP.AKTIF
+    db.commit()
+
+    return {"status": "success", "message": f"Tagihan/reminder SPP untuk siswa {siswa.nama} berhasil dihapus"}
 
 
 @router.post("/export-sheets")
