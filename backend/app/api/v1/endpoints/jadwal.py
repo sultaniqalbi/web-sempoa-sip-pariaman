@@ -143,7 +143,7 @@ async def update_existing_jadwal(
 async def delete_jadwal(
     id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(owner_only)
+    current_user: User = Depends(admin_or_owner)
 ):
     db_jadwal = crud_jadwal.get_jadwal(db, jadwal_id=id)
     if not db_jadwal:

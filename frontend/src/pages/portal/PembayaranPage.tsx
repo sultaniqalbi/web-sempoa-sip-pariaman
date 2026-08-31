@@ -8,7 +8,7 @@ import ConfirmModal from '../../components/ConfirmModal';
 import KwitansiModal from '../../components/KwitansiModal';
 import PageHeader from '../../components/PageHeader';
 import EmptyState from '../../components/EmptyState';
-import { PembayaranIcon, EditIcon, WhatsAppIcon, CameraIcon, DocumentTextIcon } from '../../components/SvgIcons';
+import { PembayaranIcon, EditIcon, WhatsAppIcon, CameraIcon, DocumentTextIcon, TrashIcon } from '../../components/SvgIcons';
 import { parseProgramDetails, getProgramBadgeStyle, parseProgramQuotas } from './SiswaPage';
 
 interface ReminderItem {
@@ -162,6 +162,22 @@ export const SharedPembayaranPage: React.FC = () => {
     },
     onError: (err: any) => {
       showToast(`Proses penolakan gagal: ${err.response?.data?.detail || err.message}`, 'error');
+    },
+  });
+
+  // Mutation Delete Proof
+  const deleteBuktiMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiClient.delete(`/bukti-transfer/${id}`);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bukti-transfer'] });
+      queryClient.invalidateQueries({ queryKey: ['pembayaran'] });
+      showToast('Bukti pembayaran berhasil dihapus');
+    },
+    onError: (err: any) => {
+      showToast(`Gagal menghapus bukti: ${err.response?.data?.detail || err.message}`, 'error');
     },
   });
 
@@ -510,41 +526,66 @@ export const SharedPembayaranPage: React.FC = () => {
         const status = row.status?.toLowerCase() || 'pending';
         if (status === 'pending') {
           return (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <button
                 onClick={() => handleApproveProof(row.id, row.nama_siswa)}
                 disabled={approveMutation.isPending}
-                className="px-3 py-1.5 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-lg transition-all shadow-2xs active:scale-95 cursor-pointer disabled:opacity-50"
+                className="px-2.5 py-1 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-lg transition-all shadow-2xs active:scale-95 cursor-pointer disabled:opacity-50"
               >
                 Setujui
               </button>
               <button
                 onClick={() => handleRejectProof(row.id, row.nama_siswa)}
                 disabled={rejectMutation.isPending}
-                className="px-3 py-1.5 bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-bold rounded-lg transition-all shadow-2xs active:scale-95 cursor-pointer disabled:opacity-50"
+                className="px-2.5 py-1 bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-bold rounded-lg transition-all shadow-2xs active:scale-95 cursor-pointer disabled:opacity-50"
               >
                 Tolak
+              </button>
+              <button
+                onClick={() => deleteBuktiMutation.mutate(row.id)}
+                className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center cursor-pointer active:scale-95"
+                title="Hapus Bukti"
+              >
+                <TrashIcon size={14} />
               </button>
             </div>
           );
         }
         if (status === 'approved') {
           return (
-            <button
-              onClick={() => handleOpenKwitansi(row.id)}
-              className="px-3 py-1.5 bg-[#FF7043] hover:bg-[#F4511E] text-white text-xs font-bold rounded-lg transition-all shadow-2xs active:scale-95 cursor-pointer flex items-center gap-1.5"
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="6 9 6 2 18 2 18 9" />
-                <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" />
-                <rect x="6" y="14" width="12" height="8" />
-              </svg>
-              Cetak Kwitansi
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => handleOpenKwitansi(row.id)}
+                className="px-2.5 py-1 bg-[#FF7043] hover:bg-[#F4511E] text-white text-xs font-bold rounded-lg transition-all shadow-2xs active:scale-95 cursor-pointer flex items-center gap-1.5"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 6 2 18 2 18 9" />
+                  <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" />
+                  <rect x="6" y="14" width="12" height="8" />
+                </svg>
+                Cetak Kwitansi
+              </button>
+              <button
+                onClick={() => deleteBuktiMutation.mutate(row.id)}
+                className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center cursor-pointer active:scale-95"
+                title="Hapus Bukti"
+              >
+                <TrashIcon size={14} />
+              </button>
+            </div>
           );
         }
         return (
-          <span className="text-[11px] text-[#94A3B8] font-bold">Sudah Diproses</span>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-[#94A3B8] font-bold">Sudah Diproses</span>
+            <button
+              onClick={() => deleteBuktiMutation.mutate(row.id)}
+              className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center cursor-pointer active:scale-95"
+              title="Hapus Bukti"
+            >
+              <TrashIcon size={14} />
+            </button>
+          </div>
         );
       },
     },

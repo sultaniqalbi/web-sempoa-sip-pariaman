@@ -391,3 +391,31 @@ async def verify_proof(
         logger.warning(f"Gagal broadcast WebSocket PAYMENT_PROOF_VERIFIED: {ws_err}")
 
     return _format_proof_row(proof, pay, siswa)
+
+
+@router.delete("/{id}")
+async def delete_bukti_transfer(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(RoleChecker([UserRole.admin, UserRole.owner]))
+):
+    proof = db.query(BuktiTransfer).filter(BuktiTransfer.id == id).first()
+    if not proof:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Bukti transfer tidak ditemukan"
+        )
+
+    # Clean up file if exists
+    if proof.file_path and proof.file_path.startswith("/uploads/bukti_transfer/"):
+        fname = os.path.basename(proof.file_path)
+        fpath = os.path.join(UPLOAD_DIR, fname)
+        if os.path.exists(fpath):
+            try:
+                os.remove(fpath)
+            except Exception:
+                pass
+
+    db.delete(proof)
+    db.commit()
+    return {"status": "success", "message": "Bukti transfer berhasil dihapus"}

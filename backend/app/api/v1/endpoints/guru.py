@@ -15,6 +15,9 @@ from app.core.dependencies import get_current_user, RoleChecker
 from app.core.security import get_password_hash, generate_random_password, normalize_whatsapp_number
 from app.models.users import User, UserRole
 from app.models.guru import Guru
+from app.models.siswa import Siswa
+from app.models.jadwal import Jadwal
+from app.models.catatan_pembelajaran import CatatanPembelajaran
 from app.models.audit_log import AuditLog
 from app.schemas.guru import GuruCreate, GuruUpdate, GuruResponse, GuruCreateResponse
 from pydantic import BaseModel
@@ -228,19 +231,40 @@ async def update_existing_guru(
 async def delete_guru(
     id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(owner_only)
+    current_user: User = Depends(admin_or_owner)
 ):
     db_guru = db.query(Guru).filter(Guru.id == id).first()
     if not db_guru:
         raise HTTPException(status_code=404, detail="Data guru tidak ditemukan")
 
-    db.query(User).filter(
-        User.role == UserRole.guru,
-        (User.uid_terhubung == str(id)) | (User.uid_terhubung == db_guru.uid) | (func.lower(User.nama) == func.lower(db_guru.nama))
-    ).delete()
-    db.delete(db_guru)
-
     try:
+        # 1. Unlink siswa referencing this guru
+        db.query(Siswa).filter(Siswa.id_guru == id).update({Siswa.id_guru: None})
+
+        # 2. Clean up jadwal referencing this guru
+        jadwals = db.query(Jadwal).filter(
+            (Jadwal.id_guru == id) | (Jadwal.guru_ids.contains(str(id)))
+        ).all()
+        for j in jadwals:
+            if j.id_guru == id:
+                j.id_guru = None
+            if j.guru_ids:
+                ids = [x.strip() for x in j.guru_ids.split(",") if x.strip() and x.strip() != str(id)]
+                j.guru_ids = ",".join(ids) if ids else None
+            db.add(j)
+
+        # 3. Clean up catatan pembelajaran
+        db.query(CatatanPembelajaran).filter(CatatanPembelajaran.id_guru == id).delete()
+
+        # 4. Clean up user login account
+        db.query(User).filter(
+            User.role == UserRole.guru,
+            (User.uid_terhubung == str(id)) | (User.uid_terhubung == db_guru.uid) | (func.lower(User.nama) == func.lower(db_guru.nama))
+        ).delete()
+
+        # 5. Delete guru
+        db.delete(db_guru)
+
         audit = AuditLog(
             action="DELETE_GURU",
             role=current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
@@ -249,8 +273,8 @@ async def delete_guru(
             status="SUCCESS"
         )
         db.add(audit)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.error(f"Error during delete_guru cleanup: {e}", exc_info=True)
 
     db.commit()
     return {"status": "success", "message": "Guru dan akun terhubung berhasil dihapus"}

@@ -517,13 +517,15 @@ export const SiswaPage: React.FC = () => {
   // Delete Mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiClient.delete(`/siswa/${id}`);
+      const res = await apiClient.delete(`/siswa/${id}`);
+      return res.data;
     },
-    onSuccess: (data: any) => {
-      showToast(data.message || 'Sinkronisasi ke Google Sheets berhasil!');
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['siswa'] });
+      showToast('Data siswa berhasil dihapus');
     },
     onError: (err: any) => {
-      showToast(`Gagal sinkronisasi: ${err.response?.data?.detail || err.message}`, 'error');
+      showToast(`Delete gagal: ${err.response?.data?.detail || err.message}`, 'error');
     }
   });
 
@@ -903,17 +905,13 @@ export const SiswaPage: React.FC = () => {
           >
             Reset
           </button>
-          {user?.role !== 'admin' && (
-            <button
-              onClick={() => {
-                setDeleteConfirm({ isOpen: true, id: row.id, nama: row.nama });
-              }}
-              className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center cursor-pointer active:scale-95"
-              title="Hapus Siswa"
-            >
-              <TrashIcon size={14} />
-            </button>
-          )}
+          <button
+            onClick={() => deleteMutation.mutate(row.id)}
+            className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center cursor-pointer active:scale-95"
+            title="Hapus Data Siswa"
+          >
+            <TrashIcon size={14} />
+          </button>
         </div>
       )
     }

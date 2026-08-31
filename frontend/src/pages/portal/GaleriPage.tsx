@@ -26,6 +26,10 @@ export const GaleriPage: React.FC = () => {
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingGaleri, setEditingGaleri] = useState<GaleriItem | null>(null);
+  const [editJudul, setEditJudul] = useState<string>('');
+  const [editDeskripsi, setEditDeskripsi] = useState<string>('');
   const [viewPhotoModal, setViewPhotoModal] = useState<{
     isOpen: boolean;
     item: GaleriItem | null;
@@ -114,6 +118,22 @@ export const GaleriPage: React.FC = () => {
         }
       } catch {}
       showToast(`Gagal mengunggah foto: ${err.response?.data?.detail || err.message}`, 'error');
+    },
+  });
+
+  const updateGaleriMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: { judul: string; deskripsi?: string } }) => {
+      const res = await apiClient.put(`/galeri/${id}`, data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['galeri'] });
+      setIsEditModalOpen(false);
+      setEditingGaleri(null);
+      showToast('Data foto galeri berhasil diperbarui');
+    },
+    onError: (err: any) => {
+      showToast(`Gagal update galeri: ${err.response?.data?.detail || err.message}`, 'error');
     },
   });
 
@@ -506,19 +526,32 @@ export const GaleriPage: React.FC = () => {
                       </span>
                     </button>
 
-                    <div className="flex items-center gap-2">
-                      <span className="text-[11px] text-[#94A3B8]">{new Date(item.created_at).toLocaleDateString('id-ID')}</span>
-                      {user?.role !== 'admin' && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDeleteConfirm({ isOpen: true, id: item.id, title: item.judul });
-                          }}
-                          className="text-[#D32F2F] hover:underline font-bold text-[11px]"
-                        >
-                          Hapus
-                        </button>
-                      )}
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingGaleri(item);
+                          setEditJudul(item.judul);
+                          setEditDeskripsi(item.deskripsi || '');
+                          setIsEditModalOpen(true);
+                        }}
+                        className="px-2.5 py-1 bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#FF7043] font-bold text-[11px] rounded-lg border border-[#FFCC80] transition-colors cursor-pointer"
+                        title="Edit Informasi Foto"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteMutation.mutate(item.id);
+                        }}
+                        className="px-2.5 py-1 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#D32F2F] font-bold text-[11px] rounded-lg border border-[#FECDD3] transition-colors cursor-pointer"
+                        title="Hapus Foto"
+                      >
+                        Hapus
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -920,6 +953,84 @@ export const GaleriPage: React.FC = () => {
           </div>
         )}
       </Modal>
+
+      {/* Edit Galeri Modal */}
+      {isEditModalOpen && (
+        <Modal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setEditingGaleri(null);
+          }}
+          title="Edit Informasi Foto Galeri"
+        >
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (editingGaleri) {
+                updateGaleriMutation.mutate({
+                  id: editingGaleri.id,
+                  data: {
+                    judul: editJudul,
+                    deskripsi: editDeskripsi,
+                  },
+                });
+              }
+            }}
+            className="space-y-4 text-xs"
+          >
+            {editingGaleri && (
+              <div className="w-full h-40 bg-slate-100 rounded-xl overflow-hidden mb-3 border border-slate-200">
+                <img
+                  src={editingGaleri.file_path}
+                  alt={editingGaleri.judul}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            )}
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">Judul Foto / Kegiatan*</label>
+              <input
+                type="text"
+                required
+                value={editJudul}
+                onChange={(e) => setEditJudul(e.target.value)}
+                className="w-full bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl p-2.5 text-xs text-[#1E293B] font-semibold focus:border-[#FF7043] focus:outline-none"
+                placeholder="Judul kegiatan..."
+              />
+            </div>
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">Deskripsi Kegiatan</label>
+              <textarea
+                rows={3}
+                value={editDeskripsi}
+                onChange={(e) => setEditDeskripsi(e.target.value)}
+                className="w-full bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl p-2.5 text-xs text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
+                placeholder="Deskripsi dokumentasi kegiatan..."
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsEditModalOpen(false);
+                  setEditingGaleri(null);
+                }}
+                className="px-4 py-2 bg-[#F1F5F9] text-[#475569] font-bold rounded-xl hover:bg-slate-200"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                disabled={updateGaleriMutation.isPending}
+                className="px-5 py-2 bg-[#FF7043] hover:bg-[#F4511E] text-white font-bold rounded-xl shadow-sm transition-all"
+              >
+                {updateGaleriMutation.isPending ? 'Menyimpan...' : 'Simpan Perubahan'}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
 
       {/* Delete Confirmation Modal (Rich In-App Dialog) */}
       <ConfirmModal

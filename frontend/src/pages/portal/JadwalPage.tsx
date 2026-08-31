@@ -466,17 +466,13 @@ export const JadwalPage: React.FC = () => {
           >
             Edit
           </button>
-          {user?.role !== 'admin' && (
-            <button
-              onClick={() => {
-                setDeleteConfirm({ isOpen: true, id: row.id, info: `${row.hari} jam ${row.jam_mulai}` });
-              }}
-              className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center cursor-pointer active:scale-95"
-              title="Hapus Jadwal"
-            >
-              <TrashIcon size={14} />
-            </button>
-          )}
+          <button
+            onClick={() => deleteMutation.mutate(row.id)}
+            className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center cursor-pointer active:scale-95"
+            title="Hapus Jadwal"
+          >
+            <TrashIcon size={14} />
+          </button>
         </div>
       ),
       className: 'md:w-[140px] text-right',

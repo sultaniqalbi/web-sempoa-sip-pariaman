@@ -29,6 +29,7 @@ class BulkSiswaAbsensiRequest(BaseModel):
     absensi: List[BulkSiswaAbsensiItem]
 
 @router.get("/", response_model=List[AbsensiResponse])
+@router.get("/logs", response_model=List[AbsensiResponse])
 async def read_absensi_list(
     skip: int = 0,
     limit: int = 100,
@@ -265,6 +266,47 @@ async def create_new_absensi_log(
     })
 
     return log
+
+
+class AbsensiUpdate(BaseModel):
+    status: Optional[StatusAbsensi] = None
+    catatan: Optional[str] = None
+
+
+@router.put("/{id}", response_model=AbsensiResponse)
+async def update_absensi_log(
+    id: int,
+    absensi_in: AbsensiUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(admin_or_owner)
+):
+    log = db.query(AbsensiLog).filter(AbsensiLog.id == id).first()
+    if not log:
+        raise HTTPException(status_code=404, detail="Log absensi tidak ditemukan")
+
+    update_dict = absensi_in.model_dump(exclude_unset=True)
+    for key, value in update_dict.items():
+        setattr(log, key, value)
+
+    db.commit()
+    db.refresh(log)
+    return log
+
+
+@router.delete("/{id}")
+async def delete_absensi_log(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(admin_or_owner)
+):
+    log = db.query(AbsensiLog).filter(AbsensiLog.id == id).first()
+    if not log:
+        raise HTTPException(status_code=404, detail="Log absensi tidak ditemukan")
+
+    db.delete(log)
+    db.commit()
+    return {"status": "success", "message": "Log absensi berhasil dihapus"}
+
 
 @router.post("/export-sheets")
 async def export_absensi_sheets(

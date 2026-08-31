@@ -9,6 +9,7 @@ from app.core.database import get_db
 from app.core.dependencies import get_current_user, RoleChecker
 from app.models.users import User, UserRole
 from app.models.pembayaran_periode import PembayaranPeriode, StatusPembayaran
+from app.models.bukti_transfer import BuktiTransfer
 from app.models.siswa import Siswa
 from app.schemas.pembayaran import PembayaranCreate, PembayaranResponse, PembayaranDueDateUpdate
 from app.crud import pembayaran as crud_pembayaran
@@ -381,6 +382,28 @@ async def update_siswa_due_date(
             "jumlah": float(bill.jumlah)
         }
     }
+
+
+@router.delete("/{id}")
+async def delete_pembayaran(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(admin_or_owner)
+):
+    pembayaran = db.query(PembayaranPeriode).filter(PembayaranPeriode.id == id).first()
+    if not pembayaran:
+        raise HTTPException(status_code=404, detail="Tagihan pembayaran tidak ditemukan")
+
+    try:
+        # Delete related bukti transfer first
+        db.query(BuktiTransfer).filter(BuktiTransfer.id_pembayaran == id).delete()
+        db.delete(pembayaran)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Gagal menghapus tagihan: {str(e)}")
+
+    return {"status": "success", "message": "Tagihan pembayaran berhasil dihapus"}
 
 
 @router.post("/export-sheets")

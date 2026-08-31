@@ -26,6 +26,12 @@ class GaleriCreate(BaseModel):
     file_path: str
     deskripsi: Optional[str] = None
 
+class GaleriUpdate(BaseModel):
+    judul: Optional[str] = None
+    deskripsi: Optional[str] = None
+    file_path: Optional[str] = None
+    is_highlighted: Optional[bool] = None
+
 class GaleriResponse(BaseModel):
     id: int
     judul: str
@@ -164,11 +170,47 @@ async def create_galeri(
     db.refresh(new_item)
     return new_item
 
+@router.put("/{id}", response_model=GaleriResponse)
+async def update_galeri(
+    id: int,
+    galeri_in: GaleriUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(admin_or_owner)
+):
+    item = db.query(Galeri).filter(Galeri.id == id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Foto galeri tidak ditemukan")
+
+    update_dict = galeri_in.model_dump(exclude_unset=True)
+    if "file_path" in update_dict and update_dict["file_path"]:
+        file_path = update_dict["file_path"].strip()
+        if file_path.startswith("data:image/"):
+            try:
+                header, encoded = file_path.split(",", 1)
+                decoded_bytes = base64.b64decode(encoded)
+                update_dict["file_path"] = save_base64_or_image_to_disk(decoded_bytes, filename_prefix="galeri")
+            except Exception as e:
+                logger.error(f"Gagal memproses gambar galeri: {e}")
+        elif not file_path.startswith("/uploads/"):
+            raise HTTPException(status_code=400, detail="Path file tidak valid")
+
+    for key, value in update_dict.items():
+        if key == "judul" and value:
+            setattr(item, key, value.strip())
+        elif key == "deskripsi":
+            setattr(item, key, value.strip() if value else None)
+        else:
+            setattr(item, key, value)
+
+    db.commit()
+    db.refresh(item)
+    return item
+
 @router.delete("/{id}")
 async def delete_galeri(
     id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(owner_only)
+    current_user: User = Depends(admin_or_owner)
 ):
     item = db.query(Galeri).filter(Galeri.id == id).first()
     if not item:

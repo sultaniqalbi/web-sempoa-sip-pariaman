@@ -514,17 +514,13 @@ export const GuruPage: React.FC = () => {
           >
             Chat WA
           </button>
-          {user?.role !== 'admin' && (
-            <button
-              onClick={() => {
-                setDeleteConfirm({ isOpen: true, id: row.id, nama: row.nama });
-              }}
-              className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center cursor-pointer active:scale-95"
-              title="Hapus Guru"
-            >
-              <TrashIcon size={14} />
-            </button>
-          )}
+          <button
+            onClick={() => deleteMutation.mutate(row.id)}
+            className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center cursor-pointer active:scale-95"
+            title="Hapus Data Guru"
+          >
+            <TrashIcon size={14} />
+          </button>
         </div>
       ),
       className: 'md:w-[200px] text-right',

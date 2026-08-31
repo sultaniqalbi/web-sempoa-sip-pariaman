@@ -292,7 +292,7 @@ async def update_existing_siswa(
 async def delete_siswa(
     id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(owner_only)
+    current_user: User = Depends(admin_or_owner)
 ):
     db_siswa = db.query(Siswa).filter(Siswa.id == id).first()
     if not db_siswa:
@@ -300,7 +300,13 @@ async def delete_siswa(
 
     db_siswa.is_deleted = True
     # Cascade delete ortu account
-    db.query(User).filter(User.role == UserRole.ortu, User.uid_terhubung == str(id)).delete()
+    try:
+        db.query(User).filter(
+            User.role == UserRole.ortu,
+            (User.uid_terhubung == str(id)) | (User.uid_terhubung == db_siswa.uid)
+        ).delete()
+    except Exception:
+        pass
     
     try:
         audit = AuditLog(

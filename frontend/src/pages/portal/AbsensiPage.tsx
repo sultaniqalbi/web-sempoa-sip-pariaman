@@ -5,7 +5,7 @@ import PageHeader from '../../components/PageHeader';
 import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
 import EmptyState from '../../components/EmptyState';
-import { AbsensiIcon, EditIcon, PengajarIcon, DataSiswaIcon } from '../../components/SvgIcons';
+import { AbsensiIcon, EditIcon, PengajarIcon, DataSiswaIcon, TrashIcon } from '../../components/SvgIcons';
 import { parseProgramDetails, getProgramBadgeStyle, parseProgramQuotas } from './SiswaPage';
 
 interface SiswaItem {
@@ -87,6 +87,21 @@ export const SharedAbsensiPage: React.FC = () => {
     },
     onError: (err: any) => {
       showToast(`Gagal update pertemuan: ${err.response?.data?.detail || err.message}`, 'error');
+    }
+  });
+
+  // Mutation Delete Log Absensi
+  const deleteLogMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiClient.delete(`/absensi/${id}`);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['absensi'] });
+      showToast('Log absensi berhasil dihapus');
+    },
+    onError: (err: any) => {
+      showToast(`Gagal hapus log: ${err.response?.data?.detail || err.message}`, 'error');
     }
   });
 
@@ -318,6 +333,18 @@ export const SharedAbsensiPage: React.FC = () => {
         }`}>
           {row.status}
         </span>
+      )
+    },
+    {
+      header: 'Aksi',
+      accessor: (row: AbsensiGuruLog) => (
+        <button
+          onClick={() => deleteLogMutation.mutate(row.id)}
+          className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center cursor-pointer active:scale-95"
+          title="Hapus Log Absensi"
+        >
+          <TrashIcon size={14} />
+        </button>
       )
     }
   ];
