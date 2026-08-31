@@ -51,7 +51,44 @@ async def read_absensi_list(
     db: Session = Depends(get_db),
     current_user: User = Depends(RoleChecker([UserRole.admin, UserRole.owner, UserRole.guru]))
 ):
-    return crud_absensi.get_absensi_list(db, skip=skip, limit=limit)
+    logs = crud_absensi.get_absensi_list(db, skip=skip, limit=limit)
+    gurus = db.query(Guru).all()
+    guru_map = {}
+    for g in gurus:
+        if g.uid:
+            guru_map[g.uid.strip().upper()] = g
+            guru_map[g.uid.strip().upper().replace(" ", "")] = g
+
+    siswas = db.query(Siswa).filter(Siswa.is_deleted == False).all()
+    siswa_map = {}
+    for s in siswas:
+        if s.uid:
+            siswa_map[s.uid.strip().upper()] = s
+            siswa_map[s.uid.strip().upper().replace(" ", "")] = s
+
+    result = []
+    for log in logs:
+        clean_uid = log.uid.strip().upper() if log.uid else ""
+        nospace_uid = clean_uid.replace(" ", "")
+        g = guru_map.get(clean_uid) or guru_map.get(nospace_uid)
+        s = siswa_map.get(clean_uid) or siswa_map.get(nospace_uid)
+
+        resp = AbsensiResponse.model_validate(log)
+        if g:
+            resp.guru_nama = g.nama
+            resp.kategori_program = g.kategori_program
+            resp.role = "guru"
+        elif s:
+            resp.guru_nama = s.nama
+            resp.kategori_program = s.kategori_program
+            resp.role = "siswa"
+        else:
+            resp.guru_nama = "Kartu Belum Terdaftar"
+            resp.kategori_program = "-"
+            resp.role = "unregistered"
+        result.append(resp)
+
+    return result
 
 @router.get("/guru-log")
 async def get_laporan_absensi_guru(

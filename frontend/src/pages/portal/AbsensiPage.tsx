@@ -32,6 +32,8 @@ interface AbsensiGuruLog {
   mode: string;
   status: string;
   guru_nama?: string;
+  kategori_program?: string;
+  role?: string;
 }
 
 export const SharedAbsensiPage: React.FC = () => {
@@ -102,6 +104,24 @@ export const SharedAbsensiPage: React.FC = () => {
       return res.data;
     }
   });
+
+  const getGuruInfo = (uid: string, fallbackNama?: string, fallbackProgram?: string) => {
+    if (!uid) return { nama: fallbackNama || 'Guru Belum Terdaftar', program: fallbackProgram || 'Sempoa SIP' };
+    const cleanUid = uid.trim().toUpperCase();
+    const nospaceUid = cleanUid.replace(/\s+/g, '');
+    const found = guruList.find((g: any) => {
+      if (!g.uid) return false;
+      const gUid = g.uid.trim().toUpperCase();
+      return gUid === cleanUid || gUid.replace(/\s+/g, '') === nospaceUid;
+    });
+    if (found) {
+      return { nama: found.nama, program: found.kategori_program || 'Sempoa SIP' };
+    }
+    return {
+      nama: fallbackNama || 'Guru Belum Terdaftar',
+      program: fallbackProgram || 'Sempoa SIP'
+    };
+  };
 
   // Mutation Edit Pertemuan Siswa
   const editPertemuanMutation = useMutation({
@@ -248,28 +268,23 @@ export const SharedAbsensiPage: React.FC = () => {
               if (isTk) {
                 return (
                   <div key={idx} className="h-[24px] flex items-center">
-                    <span className="text-[10px] font-bold text-[#B45309] bg-[#FEF3C7] px-2 py-0.5 rounded border border-[#FDE68A]">
-                      TK: Harian
-                    </span>
+                    <span className="text-[11px] text-[#64748B] italic">Harian / Bulanan</span>
                   </div>
                 );
               }
-
-              const selesai = Math.max(0, q.target - q.sisa);
-              const percent = Math.min(100, Math.round((selesai / q.target) * 100));
-
+              const pct = q.target > 0 ? Math.min(100, Math.round(((q.target - q.sisa) / q.target) * 100)) : 0;
               return (
                 <div key={idx} className="h-[24px] flex flex-col justify-center">
-                  <div className="flex justify-between text-[10px] font-bold text-[#334155] mb-0.5">
-                    <span>{q.program}: {selesai}/{q.target}</span>
-                    <span>{percent}%</span>
+                  <div className="flex justify-between text-[11px] font-bold mb-1">
+                    <span className="text-[#1E293B]">Sisa: {q.sisa} / {q.target}</span>
+                    <span className={q.sisa === 0 ? 'text-[#e11d48]' : 'text-[#388E3C]'}>{pct}%</span>
                   </div>
-                  <div className="w-full h-1.5 bg-[#E2E8F0] rounded-full overflow-hidden">
+                  <div className="w-full bg-[#E2E8F0] h-1.5 rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full transition-all ${
-                        percent >= 100 ? 'bg-[#DC2626]' : percent >= 75 ? 'bg-[#EA580C]' : 'bg-[#16A34A]'
+                      className={`h-full rounded-full transition-all duration-300 ${
+                        q.sisa === 0 ? 'bg-[#e11d48]' : 'bg-[#FF7043]'
                       }`}
-                      style={{ width: `${percent}%` }}
+                      style={{ width: `${pct}%` }}
                     />
                   </div>
                 </div>
@@ -280,66 +295,12 @@ export const SharedAbsensiPage: React.FC = () => {
       },
     },
     {
-      header: 'Sisa Kuota',
-      accessor: (row: SiswaItem) => {
-        const quotas = parseProgramQuotas(
-          row.kategori_program,
-          row.paket_jadwal,
-          row.target_pertemuan,
-          row.sisa_pertemuan,
-          row.kuota_program
-        );
-
-        return (
-          <div className="py-1">
-            <div className="flex flex-col gap-1.5">
-              {quotas.map((q, idx) => {
-                const isTk = q.program.trim().toLowerCase() === 'tk' || q.target === 0;
-                if (isTk) {
-                  return (
-                    <div key={idx} className="flex items-center h-[24px]">
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A] shadow-2xs">
-                        Program TK
-                      </span>
-                    </div>
-                  );
-                }
-
-                const ratio = q.target > 0 ? q.sisa / q.target : 1;
-                const isUrgent = ratio <= 0.20;
-                const isPeringatan = ratio <= 0.40 && !isUrgent;
-
-                return (
-                  <div key={idx} className="flex items-center h-[24px]">
-                    <span
-                      className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold border shadow-2xs ${
-                        isUrgent
-                          ? 'bg-[#FFF1F2] text-[#E11D48] border-[#FECDD3]'
-                          : isPeringatan
-                          ? 'bg-[#FFF8E1] text-[#E65100] border-[#FFE082]'
-                          : 'bg-[#E8F5E9] text-[#2E7D32] border-[#A5D6A7]'
-                      }`}
-                    >
-                      {q.sisa} / {q.target} kali
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-            <p className="text-[10px] text-[#64748B] pt-1 font-semibold border-t border-[#F1F5F9] mt-1">
-              Total: {row.sisa_pertemuan} Sesi
-            </p>
-          </div>
-        );
-      },
-    },
-    {
       header: 'Status SPP',
       accessor: (row: SiswaItem) => (
-        <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+        <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase border ${
           row.status_spp === 'AKTIF'
-            ? 'bg-[#E8F5E9] text-[#2E7D32] border border-[#A5D6A7]'
-            : 'bg-[#FFEBEE] text-[#C62828] border border-[#FFCDD2]'
+            ? 'bg-[#DCFCE7] text-[#16A34A] border-[#86EFAC]'
+            : 'bg-[#FEE2E2] text-[#DC2626] border-[#FCA5A5]'
         }`}>
           {row.status_spp}
         </span>
@@ -363,14 +324,42 @@ export const SharedAbsensiPage: React.FC = () => {
   // Columns for Guru Table
   const guruColumns = [
     {
-      header: 'No',
-      accessor: (_row: AbsensiGuruLog, idx?: number) => (idx !== undefined ? idx + 1 : '-')
+      header: 'Nama Lengkap Guru',
+      accessor: (row: AbsensiGuruLog) => {
+        const info = getGuruInfo(row.uid, row.guru_nama, row.kategori_program);
+        return (
+          <div className="flex items-center gap-3 py-1">
+            <div className="w-8 h-8 rounded-full bg-[#FFF3E0] text-[#FF7043] border border-[#FFCC80] flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+              {info.nama.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <p className="font-bold text-[#1E293B] text-xs sm:text-sm">{info.nama}</p>
+              <span className="font-mono text-[10px] text-[#64748B] font-medium tracking-wide">
+                UID: {row.uid}
+              </span>
+            </div>
+          </div>
+        );
+      }
     },
     {
-      header: 'UID Kartu RFID',
-      accessor: (row: AbsensiGuruLog) => (
-        <span className="font-mono text-xs font-bold text-[#FF7043]">{row.uid}</span>
-      )
+      header: 'Program yang Diajar',
+      accessor: (row: AbsensiGuruLog) => {
+        const info = getGuruInfo(row.uid, row.guru_nama, row.kategori_program);
+        const programs = (info.program || 'Sempoa SIP').split(',').map(p => p.trim()).filter(Boolean);
+        return (
+          <div className="flex flex-wrap gap-1.5 py-1">
+            {programs.map((p, idx) => (
+              <span
+                key={idx}
+                className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold border shadow-2xs inline-block ${getProgramBadgeStyle(p)}`}
+              >
+                {p}
+              </span>
+            ))}
+          </div>
+        );
+      }
     },
     {
       header: 'Waktu Ketuk (Tap)',
@@ -561,12 +550,17 @@ export const SharedAbsensiPage: React.FC = () => {
               columns={guruColumns}
               data={guruLogs}
               isLoading={isGuruLoading}
-              searchPlaceholder="Cari UID kartu guru atau status..."
-              searchFilter={(row, q) =>
-                row.uid.toLowerCase().includes(q.toLowerCase()) ||
-                row.status.toLowerCase().includes(q.toLowerCase()) ||
-                row.mode.toLowerCase().includes(q.toLowerCase())
-              }
+              searchPlaceholder="Cari nama guru, UID kartu, program, atau status..."
+              searchFilter={(row, q) => {
+                const info = getGuruInfo(row.uid, row.guru_nama, row.kategori_program);
+                return (
+                  info.nama.toLowerCase().includes(q.toLowerCase()) ||
+                  info.program.toLowerCase().includes(q.toLowerCase()) ||
+                  row.uid.toLowerCase().includes(q.toLowerCase()) ||
+                  row.status.toLowerCase().includes(q.toLowerCase()) ||
+                  row.mode.toLowerCase().includes(q.toLowerCase())
+                );
+              }}
             />
           )}
         </div>

@@ -1,3 +1,5 @@
+import os
+import json
 from datetime import datetime
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import PlainTextResponse
@@ -86,6 +88,17 @@ async def post_absensi(request: Request, db: Session = Depends(get_db)):
         nama_guru = guru.nama
         matched_uid = guru.uid
 
+        write_last_tap(uid_clean, waktu_str, "REGISTERED", nama=nama_guru)
+
+        # Broadcast card tap event for real-time listeners
+        manager.broadcast_sync("CARD_TAP", {
+            "timestamp": datetime.now().isoformat(),
+            "uid": uid_clean,
+            "waktu": waktu_str,
+            "status": "REGISTERED",
+            "nama": nama_guru
+        })
+
         # Cek duplikasi tap hari ini (Idempotency)
         today_date = waktu_dt.date()
         duplicate = db.query(AbsensiLog).filter(
@@ -94,7 +107,6 @@ async def post_absensi(request: Request, db: Session = Depends(get_db)):
         ).first()
 
         if duplicate:
-            write_last_tap(uid_clean, waktu_str, "REGISTERED", nama=nama_guru)
             return PlainTextResponse(f"OK|{nama_guru}", status_code=200)
 
         # Catat Log Absensi Kehadiran Guru
@@ -107,8 +119,6 @@ async def post_absensi(request: Request, db: Session = Depends(get_db)):
         )
         db.add(new_log)
         db.commit()
-
-        write_last_tap(uid_clean, waktu_str, "REGISTERED", nama=nama_guru)
 
         manager.broadcast_sync("ABSENSI_UPDATE", {
             "timestamp": datetime.now().isoformat(),
@@ -156,9 +166,7 @@ async def get_last_tap(
     db: Session = Depends(get_db)
 ):
     """
-    Mengambil data tap kartu terakhir untuk auto-fill form pendaftaran guru.
-    Hanya mengembalikan UID jika statusnya UNREGISTERED dan belum pernah disimpan di tabel Guru.
-    Dilindungi dengan validasi API Key / JWT Token sesuai SECURITY_STANDARDS.md.
+    Mengambil data tap kartu terakhir untuk auto-fill form pendaftaran & edit guru secara realtime.
     """
     client_ip = request.client.host if request.client else "unknown"
     if hardware_limiter.is_auth_blocked(client_ip) or hardware_limiter.is_rate_limited(client_ip):
@@ -173,8 +181,10 @@ async def get_last_tap(
             data = json.load(f)
             uid = data.get("uid")
             status = data.get("status")
+            waktu = data.get("waktu")
+            nama = data.get("nama")
 
-            if not uid or status != "UNREGISTERED":
+            if not uid:
                 return {"uid": None, "is_new": False}
 
             uid_clean = uid.strip().upper()
@@ -186,13 +196,14 @@ async def get_last_tap(
                 (func.replace(func.upper(Guru.uid), " ", "") == uid_nospace)
             ).first()
 
-            if existing:
-                return {"uid": None, "is_new": False}
-
             return {
                 "uid": uid_clean,
-                "waktu": data.get("waktu"),
-                "is_new": True
+                "waktu": waktu,
+                "status": status,
+                "nama": existing.nama if existing else nama,
+                "is_registered": existing is not None,
+                "is_new": existing is None,
+                "timestamp": datetime.now().isoformat()
             }
     except Exception as e:
         return {"uid": None, "is_new": False}

@@ -15,5 +15,8 @@ class AbsensiCreate(AbsensiBase):
 class AbsensiResponse(AbsensiBase):
     id: int
     created_at: datetime
+    guru_nama: Optional[str] = None
+    kategori_program: Optional[str] = None
+    role: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)

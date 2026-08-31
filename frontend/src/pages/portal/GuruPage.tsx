@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
 import { useAuth } from '../../features/auth/useAuth';
@@ -30,23 +30,23 @@ const getProgramBadgeStyle = (program: string) => {
   return 'bg-[#F1F5F9] text-[#475569] border-[#CBD5E1]';
 };
 
-interface Guru {
+export interface Guru {
   id: number;
   uid: string;
   nama: string;
   nama_panggilan?: string;
-  tempat_lahir?: string;
-  tanggal_lahir?: string;
   umur?: number;
-  asal_sekolah?: string;
   kategori_program: string;
+  paket_pengajaran?: string;
   hari_wajib: string;
   mode_kelas?: string;
   target_kehadiran?: number;
   whatsapp_guru?: string;
   alamat?: string;
+  tempat_lahir?: string;
+  tanggal_lahir?: string;
+  asal_sekolah?: string;
   riwayat_pendidikan?: string;
-  paket_pengajaran?: string;
   bio?: string;
   foto_profil?: string;
   created_at: string;
@@ -71,6 +71,7 @@ export const GuruPage: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: number; nama: string } | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
+  const lastProcessedTapRef = useRef<string>('');
 
   const [formData, setFormData] = useState({
     uid: '',
@@ -102,45 +103,60 @@ export const GuruPage: React.FC = () => {
     refetchInterval: 10000
   });
 
+  // Cek tap kartu terakhir dari endpoint backend secara realtime
+  const checkLatestTap = async () => {
+    try {
+      const res = await apiClient.get('/last-tap');
+      if (res.data?.uid) {
+        const newUid = String(res.data.uid).trim().toUpperCase();
+        const tapKey = `${newUid}_${res.data.waktu || ''}`;
+        if (lastProcessedTapRef.current !== tapKey) {
+          lastProcessedTapRef.current = tapKey;
+          setFormData(prev => ({ ...prev, uid: newUid }));
+          showToast(`Kartu RFID terdeteksi Realtime: ${newUid}`, 'success');
+        }
+      }
+    } catch (e) {
+      try {
+        const res2 = await apiClient.get('/hardware/last-tap');
+        if (res2.data?.uid) {
+          const newUid2 = String(res2.data.uid).trim().toUpperCase();
+          const tapKey2 = `${newUid2}_${res2.data.waktu || ''}`;
+          if (lastProcessedTapRef.current !== tapKey2) {
+            lastProcessedTapRef.current = tapKey2;
+            setFormData(prev => ({ ...prev, uid: newUid2 }));
+            showToast(`Kartu RFID terdeteksi Realtime: ${newUid2}`, 'success');
+          }
+        }
+      } catch (err) {}
+    }
+  };
+
   // Realtime card tap listener via WebSocket
   useEffect(() => {
     if (lastEvent?.event === 'CARD_TAP' && lastEvent.data?.uid) {
       const tappedUid = String(lastEvent.data.uid).trim().toUpperCase();
+      const tapKey = `${tappedUid}_${lastEvent.data.waktu || ''}`;
       
-      // Cek apakah UID sudah terdaftar di daftar guru
-      const isAlreadyRegistered = guruList.some(
-        g => g.uid.trim().toUpperCase() === tappedUid ||
-             g.uid.replace(/\s+/g, '').toUpperCase() === tappedUid.replace(/\s+/g, '')
-      );
-
-      if (!isAlreadyRegistered) {
+      if (isAddModalOpen) {
+        lastProcessedTapRef.current = tapKey;
         setFormData(prev => ({ ...prev, uid: tappedUid }));
-        showToast(`Kartu RFID baru terdeteksi: ${tappedUid}`, 'success');
+        showToast(`Kartu RFID terdeteksi Realtime: ${tappedUid}`, 'success');
       }
     }
-  }, [lastEvent, guruList]);
+  }, [lastEvent, isAddModalOpen]);
 
-  // Cek tap kartu terakhir dari endpoint backend
-  const checkLatestUnregisteredTap = async () => {
-    try {
-      const res = await apiClient.get('/api/last-tap');
-      if (res.data?.uid && res.data?.is_new) {
-        const newUid = String(res.data.uid).trim().toUpperCase();
-        const isAlreadyRegistered = guruList.some(
-          g => g.uid.trim().toUpperCase() === newUid ||
-               g.uid.replace(/\s+/g, '').toUpperCase() === newUid.replace(/\s+/g, '')
-        );
-        if (!isAlreadyRegistered) {
-          setFormData(prev => {
-            if (!prev.uid) {
-              return { ...prev, uid: newUid };
-            }
-            return prev;
-          });
-        }
-      }
-    } catch (e) {}
-  };
+  // Active Realtime Poller (1 detik) saat Modal Tambah / Edit Guru terbuka (failsafe jika WebSocket terputus)
+  useEffect(() => {
+    if (!isAddModalOpen) return;
+
+    checkLatestTap();
+    const intervalId = setInterval(() => {
+      checkLatestTap();
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [isAddModalOpen]);
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -292,6 +308,7 @@ export const GuruPage: React.FC = () => {
   };
 
   const openAddModal = () => {
+    lastProcessedTapRef.current = '';
     setEditingGuru(null);
     setFormData({
       uid: '', // Default Kosong
@@ -311,10 +328,11 @@ export const GuruPage: React.FC = () => {
     setSelectedPhoto(null);
     setPhoneError(null);
     setIsAddModalOpen(true);
-    checkLatestUnregisteredTap();
+    checkLatestTap();
   };
 
   const openEditModal = (guru: Guru) => {
+    lastProcessedTapRef.current = guru.uid ? `${guru.uid}_initial` : '';
     setEditingGuru(guru);
     const calculatedAge = calculateAge(guru.tanggal_lahir);
     setFormData({
