@@ -4,7 +4,7 @@ from typing import List, Optional
 from datetime import date
 
 from app.core.database import get_db
-from app.core.security import get_current_user
+from app.core.dependencies import get_current_user
 from app.models.users import User, UserRole
 from app.models.buku_siswa import BukuSiswa, StatusBuku
 from app.models.siswa import Siswa
