@@ -669,16 +669,7 @@ export const EvaluasiIcon: React.FC<IconProps> = ({ size = 20, className = 'text
   </svg>
 );
 
-// 46. Google Sheets Official Icon
-export const SheetsIcon: React.FC<IconProps> = ({ size = 20, className = 'text-current' }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={`shrink-0 ${className}`}>
-    <path fill="#0F9D58" d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/>
-    <path fill="#87CEAC" d="M14 2v6h6l-6-6z"/>
-    <path fill="#FFF" d="M8 11h8v2H8zm0 3h8v2H8zm0 3h5v2H8z"/>
-  </svg>
-);
-
-// 47. Calendar Navigation Icon
+// 46. Calendar Navigation Icon
 export const CalendarNavIcon: React.FC<IconProps> = ({ size = 20, className = 'text-current' }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 ${className}`}>
     <rect x="3" y="4" width="18" height="18" rx="3" ry="3"/>
@@ -691,20 +682,6 @@ export const CalendarNavIcon: React.FC<IconProps> = ({ size = 20, className = 't
     <circle cx="8" cy="18" r="1.2" fill="currentColor"/>
     <circle cx="12" cy="18" r="1.2" fill="currentColor"/>
     <circle cx="16" cy="18" r="1.2" fill="currentColor"/>
-  </svg>
-);
-
-// 48. Chevron Left Icon
-export const ChevronLeftIcon: React.FC<IconProps> = ({ size = 20, className = 'text-current' }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 ${className}`}>
-    <polyline points="15 18 9 12 15 6"/>
-  </svg>
-);
-
-// 49. Chevron Right Icon
-export const ChevronRightIcon: React.FC<IconProps> = ({ size = 20, className = 'text-current' }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 ${className}`}>
-    <polyline points="9 18 15 12 9 6"/>
   </svg>
 );
 
