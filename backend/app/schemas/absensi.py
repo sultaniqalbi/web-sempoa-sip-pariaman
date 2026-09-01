@@ -18,5 +18,7 @@ class AbsensiResponse(AbsensiBase):
     guru_nama: Optional[str] = None
     kategori_program: Optional[str] = None
     role: Optional[str] = None
+    catatan: Optional[str] = None
+    sumber: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)

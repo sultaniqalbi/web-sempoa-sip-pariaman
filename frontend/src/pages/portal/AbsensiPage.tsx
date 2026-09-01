@@ -4,6 +4,7 @@ import apiClient from '../../features/api/apiClient';
 import PageHeader from '../../components/PageHeader';
 import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
+import ConfirmModal from '../../components/ConfirmModal';
 import EmptyState from '../../components/EmptyState';
 import { AbsensiIcon, EditIcon, PengajarIcon, DataSiswaIcon, TrashIcon, PresensiIcon, CalendarIcon, CheckIcon } from '../../components/SvgIcons';
 import { parseProgramDetails, getProgramBadgeStyle, parseProgramQuotas } from './SiswaPage';
@@ -34,6 +35,7 @@ interface AbsensiGuruLog {
   guru_nama?: string;
   kategori_program?: string;
   role?: string;
+  catatan?: string;
 }
 
 export const SharedAbsensiPage: React.FC = () => {
@@ -50,6 +52,20 @@ export const SharedAbsensiPage: React.FC = () => {
     status_spp: 'AKTIF',
     catatan: ''
   });
+
+  // Edit Log Absensi State
+  const [editingLog, setEditingLog] = useState<AbsensiGuruLog | null>(null);
+  const [editLogForm, setEditLogForm] = useState({
+    uid: '',
+    tanggal: new Date().toISOString().split('T')[0],
+    jam: '08:00',
+    status: 'HADIR',
+    mode: 'ONLINE',
+    catatan: ''
+  });
+
+  // Delete Log Confirm State
+  const [deleteLogConfirm, setDeleteLogConfirm] = useState<{ id: number; nama: string; waktu: string } | null>(null);
 
   // Manual Guru Attendance Modal State
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
@@ -75,6 +91,27 @@ export const SharedAbsensiPage: React.FC = () => {
   const showToast = (text: string, type: 'success' | 'error' = 'success') => {
     setToastMessage({ text, type });
     setTimeout(() => setToastMessage(null), 4000);
+  };
+
+  const formatWaktuTap = (waktuStr: string) => {
+    if (!waktuStr) return '-';
+    try {
+      const d = new Date(waktuStr);
+      if (isNaN(d.getTime())) return waktuStr;
+      return (
+        d.toLocaleString('id-ID', {
+          timeZone: 'Asia/Jakarta',
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false,
+        }).replace(/\./g, ':') + ' WIB'
+      );
+    } catch (e) {
+      return waktuStr;
+    }
   };
 
   // 1. Fetch Data Siswa
@@ -177,6 +214,29 @@ export const SharedAbsensiPage: React.FC = () => {
     }
   });
 
+  // Mutation Edit Log Absensi Guru
+  const editLogMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: typeof editLogForm }) => {
+      const payload = {
+        uid: data.uid,
+        waktu: `${data.tanggal} ${data.jam}:00`,
+        status: data.status,
+        mode: data.mode,
+        catatan: data.catatan
+      };
+      const res = await apiClient.put(`/absensi/${id}`, payload);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['absensi'] });
+      setEditingLog(null);
+      showToast('Log absensi guru berhasil diperbarui');
+    },
+    onError: (err: any) => {
+      showToast(`Gagal update log: ${err.response?.data?.detail || err.message}`, 'error');
+    }
+  });
+
   // Mutation Delete Log Absensi
   const deleteLogMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -185,6 +245,7 @@ export const SharedAbsensiPage: React.FC = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['absensi'] });
+      setDeleteLogConfirm(null);
       showToast('Log absensi berhasil dihapus');
     },
     onError: (err: any) => {
@@ -202,12 +263,48 @@ export const SharedAbsensiPage: React.FC = () => {
     });
   };
 
+  const openEditLogModal = (log: AbsensiGuruLog) => {
+    setEditingLog(log);
+    let tgl = new Date().toISOString().split('T')[0];
+    let jam = '08:00';
+    try {
+      const d = new Date(log.waktu);
+      if (!isNaN(d.getTime())) {
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        tgl = `${year}-${month}-${day}`;
+        const hours = String(d.getHours()).padStart(2, '0');
+        const mins = String(d.getMinutes()).padStart(2, '0');
+        jam = `${hours}:${mins}`;
+      }
+    } catch (e) {}
+
+    setEditLogForm({
+      uid: log.uid || '',
+      tanggal: tgl,
+      jam: jam,
+      status: log.status || 'HADIR',
+      mode: log.mode || 'ONLINE',
+      catatan: log.catatan || ''
+    });
+  };
+
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingSiswa) return;
     editPertemuanMutation.mutate({
       id: editingSiswa.id,
       data: editForm
+    });
+  };
+
+  const handleEditLogSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingLog) return;
+    editLogMutation.mutate({
+      id: editingLog.id,
+      data: editLogForm
     });
   };
 
@@ -365,7 +462,7 @@ export const SharedAbsensiPage: React.FC = () => {
       header: 'Waktu Ketuk (Tap)',
       accessor: (row: AbsensiGuruLog) => (
         <span className="text-xs text-[#334155] font-semibold">
-          {new Date(row.waktu).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })} WIB
+          {formatWaktuTap(row.waktu)}
         </span>
       )
     },
@@ -393,15 +490,28 @@ export const SharedAbsensiPage: React.FC = () => {
     },
     {
       header: 'Aksi',
-      accessor: (row: AbsensiGuruLog) => (
-        <button
-          onClick={() => deleteLogMutation.mutate(row.id)}
-          className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center cursor-pointer active:scale-95"
-          title="Hapus Log Absensi"
-        >
-          <TrashIcon size={14} />
-        </button>
-      )
+      accessor: (row: AbsensiGuruLog) => {
+        const info = getGuruInfo(row.uid, row.guru_nama, row.kategori_program);
+        return (
+          <div className="flex items-center gap-1.5 justify-end">
+            <button
+              onClick={() => openEditLogModal(row)}
+              className="p-1.5 bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#FF7043] rounded-lg border border-[#FFCC80] transition-colors flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
+              title="Edit Log Absensi"
+            >
+              <EditIcon size={14} />
+            </button>
+            <button
+              onClick={() => setDeleteLogConfirm({ id: row.id, nama: info.nama, waktu: formatWaktuTap(row.waktu) })}
+              className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
+              title="Hapus Log Absensi"
+            >
+              <TrashIcon size={14} />
+            </button>
+          </div>
+        );
+      },
+      className: 'text-right'
     }
   ];
 
@@ -909,6 +1019,157 @@ export const SharedAbsensiPage: React.FC = () => {
           </div>
         </form>
       </Modal>
+
+      {/* Modal Edit Log Presensi Guru */}
+      {editingLog && (
+        <Modal
+          isOpen={!!editingLog}
+          onClose={() => setEditingLog(null)}
+          title="Edit Data Riwayat Absensi Guru"
+          size="md"
+        >
+          <form onSubmit={handleEditLogSubmit} className="space-y-4 text-xs">
+            {/* Info Guru Saat Ini */}
+            <div className="p-3 bg-[#FFF3E0] border border-[#FFCC80] rounded-xl flex items-center justify-between">
+              <div>
+                <p className="font-bold text-[#E65100] text-sm">
+                  {getGuruInfo(editingLog.uid, editingLog.guru_nama, editingLog.kategori_program).nama}
+                </p>
+                <p className="text-[11px] text-[#BF360C] mt-0.5">
+                  UID: <span className="font-mono font-bold">{editingLog.uid}</span> • Program: {editingLog.kategori_program || 'Sempoa SIP'}
+                </p>
+              </div>
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-white text-[#FF7043] border border-[#FFCC80] shadow-2xs uppercase">
+                {editingLog.mode}
+              </span>
+            </div>
+
+            {/* Ubah Guru / UID */}
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">
+                Pilih Guru / UID RFID*
+              </label>
+              <select
+                value={editLogForm.uid}
+                onChange={(e) => setEditLogForm({ ...editLogForm, uid: e.target.value })}
+                className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold text-xs focus:border-[#FF7043] focus:outline-none"
+              >
+                {guruList.map((g: any) => (
+                  <option key={g.id} value={g.uid || ''}>
+                    {g.nama} {g.kategori_program ? `(${g.kategori_program})` : ''} - UID: {g.uid || 'Tanpa UID'}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Tanggal & Jam */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[#1E293B] font-bold mb-1">
+                  Tanggal Presensi*
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={editLogForm.tanggal}
+                  onChange={(e) => setEditLogForm({ ...editLogForm, tanggal: e.target.value })}
+                  className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[#1E293B] font-bold mb-1">
+                  Jam Tap (WIB)*
+                </label>
+                <input
+                  type="time"
+                  required
+                  value={editLogForm.jam}
+                  onChange={(e) => setEditLogForm({ ...editLogForm, jam: e.target.value })}
+                  className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-mono font-bold focus:border-[#FF7043] focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Status & Mode */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[#1E293B] font-bold mb-1">
+                  Status Presensi*
+                </label>
+                <select
+                  value={editLogForm.status}
+                  onChange={(e) => setEditLogForm({ ...editLogForm, status: e.target.value })}
+                  className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none"
+                >
+                  <option value="HADIR">HADIR</option>
+                  <option value="IZIN">IZIN</option>
+                  <option value="ALFA">ALFA</option>
+                  <option value="TERLAMBAT">TERLAMBAT</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-[#1E293B] font-bold mb-1">
+                  Jalur Sinkronisasi*
+                </label>
+                <select
+                  value={editLogForm.mode}
+                  onChange={(e) => setEditLogForm({ ...editLogForm, mode: e.target.value })}
+                  className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none"
+                >
+                  <option value="ONLINE">ONLINE</option>
+                  <option value="OFFLINE">OFFLINE (Di Tempat)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Catatan */}
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">
+                Catatan / Keterangan Penyesuaian
+              </label>
+              <input
+                type="text"
+                value={editLogForm.catatan}
+                onChange={(e) => setEditLogForm({ ...editLogForm, catatan: e.target.value })}
+                placeholder="Contoh: Koreksi waktu tap RFID / Penyesuaian admin"
+                className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E2E8F0]">
+              <button
+                type="button"
+                onClick={() => setEditingLog(null)}
+                className="px-4 py-2 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#475569] font-bold rounded-lg transition-colors cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                disabled={editLogMutation.isPending}
+                className="px-5 py-2 bg-[#FF7043] hover:bg-[#F4511E] text-white font-bold rounded-lg transition-colors shadow-sm cursor-pointer disabled:opacity-50"
+              >
+                {editLogMutation.isPending ? 'Menyimpan...' : 'Simpan Perubahan'}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* Confirm Modal Hapus Log Absensi */}
+      {deleteLogConfirm && (
+        <ConfirmModal
+          isOpen={!!deleteLogConfirm}
+          onClose={() => setDeleteLogConfirm(null)}
+          onConfirm={() => deleteLogMutation.mutate(deleteLogConfirm.id)}
+          title="Hapus Log Absensi"
+          description={`Apakah Anda yakin ingin menghapus catatan riwayat absensi untuk "${deleteLogConfirm.nama}" pada ${deleteLogConfirm.waktu}? Tindakan ini tidak dapat dibatalkan.`}
+          confirmText="Ya, Hapus Log"
+          cancelText="Batal"
+          variant="danger"
+          isLoading={deleteLogMutation.isPending}
+        />
+      )}
     </div>
   );
 };

@@ -29,7 +29,18 @@ def _get_current_guru(db: Session, current_user: User) -> Guru:
             guru = db.query(Guru).filter(Guru.uid == str(current_user.uid_terhubung)).first()
 
     if not guru and current_user.nama:
-        guru = db.query(Guru).filter(func.lower(Guru.nama) == current_user.nama.lower()).first()
+        guru = db.query(Guru).filter(
+            (func.lower(Guru.nama) == current_user.nama.lower().strip()) |
+            (func.lower(Guru.nama_panggilan) == current_user.nama.lower().strip()) |
+            (func.lower(Guru.nama).contains(current_user.nama.lower().strip()))
+        ).first()
+
+    if not guru and current_user.email:
+        email_name = current_user.email.split("@")[0].lower()
+        guru = db.query(Guru).filter(
+            (func.lower(Guru.nama).contains(email_name)) |
+            (func.lower(Guru.nama_panggilan).contains(email_name))
+        ).first()
 
     if not guru:
         guru = db.query(Guru).first()
@@ -51,13 +62,10 @@ async def get_guru_dashboard(
     guru = _get_current_guru(db, current_user)
     programs = _get_guru_programs(guru)
 
-    # Get active students for this teacher or matching teacher's program (supports multi-program)
+    # Get active students strictly matching the teacher's taught programs
     prog_conditions = [func.lower(Siswa.kategori_program).like(f"%{p}%") for p in programs]
     active_students = db.query(Siswa).filter(
-        or_(
-            Siswa.id_guru == guru.id,
-            *prog_conditions
-        ),
+        or_(*prog_conditions),
         func.lower(func.trim(Siswa.kategori_program)) != 'tk',
         Siswa.status_spp == StatusSPP.AKTIF,
         Siswa.is_deleted == False
@@ -307,21 +315,18 @@ async def get_siswa_absensi(
     guru = _get_current_guru(db, current_user)
     available_programs = [p.strip() for p in (guru.kategori_program or "Sempoa SIP").split(",") if p.strip()]
 
-    # Determine effective program for this view
-    current_active_prog = program if (program and program.lower() != 'all') else (available_programs[0] if available_programs else "Sempoa SIP")
-
-    if current_active_prog and current_active_prog.lower() != 'all':
-        prog_condition = func.lower(Siswa.kategori_program).like(f"%{current_active_prog.lower()}%")
-        students = db.query(Siswa).filter(
-            prog_condition,
-            Siswa.is_deleted == False
-        ).order_by(Siswa.nama).all()
+    # Determine effective program strictly from teacher's authorized programs
+    if program and program.lower() != 'all':
+        matching_p = [p for p in available_programs if program.lower() in p.lower() or p.lower() in program.lower()]
+        current_active_prog = matching_p[0] if matching_p else available_programs[0]
     else:
-        filter_conditions = [func.lower(Siswa.kategori_program).like(f"%{p.lower()}%") for p in available_programs]
-        students = db.query(Siswa).filter(
-            or_(*filter_conditions) if filter_conditions else (Siswa.id_guru == guru.id),
-            Siswa.is_deleted == False
-        ).order_by(Siswa.nama).all()
+        current_active_prog = available_programs[0] if available_programs else "Sempoa SIP"
+
+    prog_condition = func.lower(Siswa.kategori_program).like(f"%{current_active_prog.lower()}%")
+    students = db.query(Siswa).filter(
+        prog_condition,
+        Siswa.is_deleted == False
+    ).order_by(Siswa.nama).all()
 
     if tanggal:
         try:
@@ -696,20 +701,18 @@ async def get_rekap_absensi(
     except ValueError:
         filter_date = datetime.now().date()
 
-    current_rekap_prog = program if (program and program.lower() != 'all') else (available_programs[0] if available_programs else "Sempoa SIP")
-
-    if current_rekap_prog and current_rekap_prog.lower() != 'all':
-        prog_condition = func.lower(Siswa.kategori_program).like(f"%{current_rekap_prog.lower()}%")
-        students = db.query(Siswa).filter(
-            prog_condition,
-            Siswa.is_deleted == False
-        ).order_by(Siswa.nama).all()
+    # Determine effective program strictly from teacher's authorized programs
+    if program and program.lower() != 'all':
+        matching_p = [p for p in available_programs if program.lower() in p.lower() or p.lower() in program.lower()]
+        current_rekap_prog = matching_p[0] if matching_p else available_programs[0]
     else:
-        filter_conditions = [func.lower(Siswa.kategori_program).like(f"%{p.lower()}%") for p in available_programs]
-        students = db.query(Siswa).filter(
-            or_(*filter_conditions) if filter_conditions else (Siswa.id_guru == guru.id),
-            Siswa.is_deleted == False
-        ).order_by(Siswa.nama).all()
+        current_rekap_prog = available_programs[0] if available_programs else "Sempoa SIP"
+
+    prog_condition = func.lower(Siswa.kategori_program).like(f"%{current_rekap_prog.lower()}%")
+    students = db.query(Siswa).filter(
+        prog_condition,
+        Siswa.is_deleted == False
+    ).order_by(Siswa.nama).all()
 
     uids = [s.uid for s in students]
     logs_map = {}

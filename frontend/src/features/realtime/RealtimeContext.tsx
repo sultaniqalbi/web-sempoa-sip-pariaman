@@ -126,6 +126,8 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
             if (
               data.event === 'ABSENSI_UPDATE' ||
+              data.event === 'CARD_TAP' ||
+              data.event === 'MANUAL_SYNC' ||
               data.event === 'CATATAN_UPDATE' ||
               data.event === 'MODE_KELAS_UPDATE' ||
               data.event === 'DATA_UPDATE' ||

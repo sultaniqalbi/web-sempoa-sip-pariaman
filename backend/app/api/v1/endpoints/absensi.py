@@ -321,6 +321,9 @@ async def create_new_absensi_log(
 
 
 class AbsensiUpdate(BaseModel):
+    uid: Optional[str] = None
+    waktu: Optional[str] = None
+    mode: Optional[ModeAbsensi] = None
     status: Optional[StatusAbsensi] = None
     catatan: Optional[str] = None
 
@@ -337,12 +340,58 @@ async def update_absensi_log(
         raise HTTPException(status_code=404, detail="Log absensi tidak ditemukan")
 
     update_dict = absensi_in.model_dump(exclude_unset=True)
+    if "waktu" in update_dict and update_dict["waktu"]:
+        w_val = update_dict["waktu"]
+        if isinstance(w_val, str):
+            try:
+                if "T" in w_val:
+                    w_dt = datetime.fromisoformat(w_val.replace("Z", "+00:00"))
+                else:
+                    w_dt = datetime.strptime(w_val.strip(), "%Y-%m-%d %H:%M:%S")
+                update_dict["waktu"] = w_dt
+            except Exception:
+                pass
+
+    if "uid" in update_dict and update_dict["uid"]:
+        update_dict["uid"] = update_dict["uid"].strip().upper()
+
     for key, value in update_dict.items():
         setattr(log, key, value)
 
     db.commit()
     db.refresh(log)
-    return log
+
+    manager.broadcast_sync("ABSENSI_UPDATE", {
+        "timestamp": datetime.now().isoformat(),
+        "source": "update_absensi",
+        "id": log.id,
+        "uid": log.uid,
+        "status": log.status.value if hasattr(log.status, 'value') else str(log.status)
+    })
+
+    g = db.query(Guru).filter(
+        (func.upper(Guru.uid) == log.uid.upper()) |
+        (func.replace(func.upper(Guru.uid), " ", "") == log.uid.upper().replace(" ", ""))
+    ).first()
+    s = db.query(Siswa).filter(
+        (func.upper(Siswa.uid) == log.uid.upper()) |
+        (func.replace(func.upper(Siswa.uid), " ", "") == log.uid.upper().replace(" ", "")),
+        Siswa.is_deleted == False
+    ).first()
+    resp = AbsensiResponse.model_validate(log)
+    if g:
+        resp.guru_nama = g.nama
+        resp.kategori_program = g.kategori_program
+        resp.role = "guru"
+    elif s:
+        resp.guru_nama = s.nama
+        resp.kategori_program = s.kategori_program
+        resp.role = "siswa"
+    else:
+        resp.guru_nama = "Kartu Belum Terdaftar"
+        resp.kategori_program = "-"
+        resp.role = "unregistered"
+    return resp
 
 
 @router.delete("/{id}")
@@ -355,8 +404,17 @@ async def delete_absensi_log(
     if not log:
         raise HTTPException(status_code=404, detail="Log absensi tidak ditemukan")
 
+    deleted_id = log.id
+    deleted_uid = log.uid
     db.delete(log)
     db.commit()
+
+    manager.broadcast_sync("ABSENSI_UPDATE", {
+        "timestamp": datetime.now().isoformat(),
+        "source": "delete_absensi",
+        "id": deleted_id,
+        "uid": deleted_uid
+    })
     return {"status": "success", "message": "Log absensi berhasil dihapus"}
 
 

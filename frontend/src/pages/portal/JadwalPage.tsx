@@ -111,22 +111,9 @@ const getGuruDisplayName = (t?: { nama?: string; nama_panggilan?: string }) => {
   return withoutDegree;
 };
 
-interface GuruAbsensiItem {
-  id_guru: number;
-  uid: string;
-  nama_guru: string;
-  kategori_program: string;
-  hari_wajib: string;
-  is_wajib_today: boolean;
-  status_hari_ini: string;
-  jam_tap_terakhir: string;
-  total_tap_bulan_ini: number;
-}
-
 export const JadwalPage: React.FC = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'jadwal' | 'absensi'>('jadwal');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingJadwal, setEditingJadwal] = useState<Jadwal | null>(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -179,15 +166,6 @@ export const JadwalPage: React.FC = () => {
       const res = await apiClient.get('/siswa/');
       return res.data;
     },
-  });
-
-  const { data: logs = [], isLoading: isLoadingAbsensi, refetch: refetchAbsensi } = useQuery<GuruAbsensiItem[]>({
-    queryKey: ['absensi', 'guru-log'],
-    queryFn: async () => {
-      const res = await apiClient.get('/absensi/guru-log');
-      return res.data;
-    },
-    enabled: activeTab === 'absensi',
   });
 
   const programStudents = useMemo(() => {
@@ -252,25 +230,6 @@ export const JadwalPage: React.FC = () => {
       setIsExportModalOpen(true);
       if (data.status === 'success') {
         showToast('Data jadwal terkirim ke Google Sheets');
-      } else {
-        showToast(`Info: ${data.message}`, 'error');
-      }
-    },
-    onError: (err: any) => {
-      showToast(`Gagal export: ${err.message}`, 'error');
-    },
-  });
-
-  const exportAbsensiSheetsMutation = useMutation({
-    mutationFn: async () => {
-      const res = await apiClient.post('/absensi/export-sheets');
-      return res.data;
-    },
-    onSuccess: (data) => {
-      setExportResult(data);
-      setIsExportModalOpen(true);
-      if (data.status === 'success') {
-        showToast('Data absensi terkirim ke Google Sheets');
       } else {
         showToast(`Info: ${data.message}`, 'error');
       }
@@ -579,48 +538,6 @@ export const JadwalPage: React.FC = () => {
     },
   ];
 
-  const absensiColumns = [
-    {
-      header: 'UID RFID',
-      accessor: (row: GuruAbsensiItem) => <span className="font-mono text-[#FF7043] font-bold">{row.uid}</span>,
-    },
-    {
-      header: 'Nama Pengajar',
-      accessor: (row: GuruAbsensiItem) => (
-        <div>
-          <p className="font-bold text-[#424242]">{row.nama_guru}</p>
-          <p className="text-[10px] text-[#757575]">Program: {row.kategori_program}</p>
-        </div>
-      ),
-    },
-    {
-      header: 'Hari Wajib',
-      accessor: (row: GuruAbsensiItem) => <span className="text-[#757575] text-xs">{row.hari_wajib}</span>,
-    },
-    {
-      header: 'Status Presensi Hari Ini',
-      accessor: (row: GuruAbsensiItem) => {
-        let badgeStyle = 'bg-[#FAFAFA] text-[#757575] border-[#E0E0E0]';
-        let label = row.status_hari_ini;
-        if (row.status_hari_ini === 'HADIR') {
-          badgeStyle = 'bg-[#E8F5E9] text-[#388E3C] border-[#A5D6A7]';
-          label = `HADIR (${row.jam_tap_terakhir})`;
-        } else if (row.status_hari_ini === 'TIDAK_HADIR') {
-          badgeStyle = 'bg-[#FFF1F2] text-[#D32F2F] border-[#FECDD3]';
-          label = 'TIDAK HADIR (WAJIB)';
-        } else if (row.status_hari_ini === 'LIBUR') {
-          badgeStyle = 'bg-[#FAFAFA] text-[#757575] border-[#E0E0E0]';
-          label = 'LIBUR HARI INI';
-        }
-        return <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${badgeStyle}`}>{label}</span>;
-      },
-    },
-    {
-      header: 'Kehadiran Bulan Ini',
-      accessor: (row: GuruAbsensiItem) => <span className="font-mono font-bold text-[#1976D2]">{row.total_tap_bulan_ini}x tap RFID</span>,
-    },
-  ];
-
   return (
     <div className="space-y-6">
       {toastMessage && (
@@ -637,90 +554,42 @@ export const JadwalPage: React.FC = () => {
 
       {/* Standardized Page Header */}
       <PageHeader
-        icon={activeTab === 'jadwal' ? <JadwalIcon size={24} className="text-[#FF7043]" /> : <PresensiIcon size={24} className="text-[#388E3C]" />}
+        icon={<JadwalIcon size={24} className="text-[#FF7043]" />}
         title="Jadwal & Kelas"
-        subtitle={activeTab === 'jadwal' ? "Manajemen jadwal sesi mengajar dan alokasi ruang kelas" : "Monitoring tap RFID kehadiran pengajar & auto-detect guru tidak hadir"}
-        iconColorBg={activeTab === 'jadwal' ? "bg-[#FFF3E0] text-[#FF7043]" : "bg-[#E8F5E9] text-[#388E3C]"}
-        onExportSheets={activeTab === 'jadwal' ? () => exportJadwalSheetsMutation.mutate() : () => exportAbsensiSheetsMutation.mutate()}
-        isExporting={activeTab === 'jadwal' ? exportJadwalSheetsMutation.isPending : exportAbsensiSheetsMutation.isPending}
-        actionLabel={activeTab === 'jadwal' ? "Buat Jadwal Baru" : "Segarkan"}
-        onAction={activeTab === 'jadwal' ? openAddModal : () => refetchAbsensi()}
+        subtitle="Manajemen jadwal sesi mengajar, alokasi pengajar, dan ruang kelas bimbingan"
+        iconColorBg="bg-[#FFF3E0] text-[#FF7043]"
+        onExportSheets={() => exportJadwalSheetsMutation.mutate()}
+        isExporting={exportJadwalSheetsMutation.isPending}
+        actionLabel="Buat Jadwal Baru"
+        onAction={openAddModal}
       />
 
-      {/* Navigation Tabs */}
-      <div className="flex border-b border-[#E0E0E0] gap-2">
-        <button
-          onClick={() => setActiveTab('jadwal')}
-          className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-colors cursor-pointer ${
-            activeTab === 'jadwal'
-              ? 'border-[#FF7043] text-[#FF7043] bg-[#FFF3E0]/50'
-              : 'border-transparent text-[#757575] hover:text-[#424242]'
-          }`}
-        >
-          Jadwal Kelas
-        </button>
-        <button
-          onClick={() => setActiveTab('absensi')}
-          className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-colors cursor-pointer ${
-            activeTab === 'absensi'
-              ? 'border-[#388E3C] text-[#388E3C] bg-[#E8F5E9]/50'
-              : 'border-transparent text-[#757575] hover:text-[#424242]'
-          }`}
-        >
-          Riwayat Absensi
-        </button>
-      </div>
-
-      {activeTab === 'jadwal' ? (
-        isLoadingJadwal ? (
-          <div className="py-16 text-center text-[#757575] text-xs">Memuat daftar jadwal...</div>
-        ) : jadwalList.length === 0 ? (
-          <EmptyState
-            icon={<JadwalIcon size={40} className="text-[#757575]" />}
-            title="Belum ada jadwal kelas"
-            description="Tambahkan jadwal kelas baru untuk melihat daftar sesi yang tersedia."
-            actionLabel="Buat Jadwal Baru"
-            onAction={openAddModal}
-          />
-        ) : (
-          <DataTable
-            columns={jadwalColumns}
-            data={jadwalList}
-            searchPlaceholder="Cari program, hari, guru, lokasi..."
-            searchFilter={(row, q) => {
-              const query = q.toLowerCase();
-              return (
-                row.hari.toLowerCase().includes(query) ||
-                row.lokasi.toLowerCase().includes(query) ||
-                (row.kategori_program || '').toLowerCase().includes(query) ||
-                (row.guru_names || '').toLowerCase().includes(query)
-              );
-            }}
-          />
-        )
+      {/* Jadwal Kelas Content */}
+      {isLoadingJadwal ? (
+        <div className="py-16 text-center text-[#757575] text-xs">Memuat daftar jadwal...</div>
+      ) : jadwalList.length === 0 ? (
+        <EmptyState
+          icon={<JadwalIcon size={40} className="text-[#757575]" />}
+          title="Belum ada jadwal kelas"
+          description="Tambahkan jadwal kelas baru untuk melihat daftar sesi yang tersedia."
+          actionLabel="Buat Jadwal Baru"
+          onAction={openAddModal}
+        />
       ) : (
-        isLoadingAbsensi ? (
-          <div className="py-16 text-center text-[#757575] text-xs">Memuat laporan absensi guru...</div>
-        ) : logs.length === 0 ? (
-          <EmptyState
-            icon={<PresensiIcon size={40} className="text-[#757575]" />}
-            title="Belum ada riwayat absensi guru"
-            description="Presensi kehadiran pengajar via scan kartu RFID atau input manual akan dicatat otomatis di sini."
-            actionLabel="Segarkan Data"
-            onAction={() => refetchAbsensi()}
-          />
-        ) : (
-          <DataTable
-            columns={absensiColumns}
-            data={logs}
-            searchPlaceholder="Cari nama guru, UID, status..."
-            searchFilter={(row, q) =>
-              row.nama_guru.toLowerCase().includes(q.toLowerCase()) ||
-              row.uid.toLowerCase().includes(q.toLowerCase()) ||
-              row.status_hari_ini.toLowerCase().includes(q.toLowerCase())
-            }
-          />
-        )
+        <DataTable
+          columns={jadwalColumns}
+          data={jadwalList}
+          searchPlaceholder="Cari program, hari, guru, lokasi..."
+          searchFilter={(row, q) => {
+            const query = q.toLowerCase();
+            return (
+              row.hari.toLowerCase().includes(query) ||
+              row.lokasi.toLowerCase().includes(query) ||
+              (row.kategori_program || '').toLowerCase().includes(query) ||
+              (row.guru_names || '').toLowerCase().includes(query)
+            );
+          }}
+        />
       )}
 
       {/* Add / Edit Modal */}
