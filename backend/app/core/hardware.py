@@ -1,7 +1,9 @@
 import hmac
 import json
 import os
+import threading
 from datetime import datetime
+from typing import Optional, Dict, Any
 from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.models.pendaftaran_baru import PendaftaranBaru, StatusPendaftaran
@@ -9,24 +11,56 @@ from app.models.pendaftaran_baru import PendaftaranBaru, StatusPendaftaran
 LAST_TAP_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../last_tap.json"))
 RESET_FLAG_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../reset_flag.txt"))
 
+_tap_lock = threading.Lock()
+_latest_tap_cache: Dict[str, Any] = {
+    "uid": None,
+    "waktu": None,
+    "status": None,
+    "nama": None,
+    "timestamp": None
+}
+
 def verify_api_key(api_key: str) -> bool:
     if not api_key:
         return False
     return hmac.compare_digest(api_key.strip(), settings.esp32_api_key.strip())
 
 def write_last_tap(uid: str, waktu: str, status: str, nama: str = None) -> None:
+    global _latest_tap_cache
+    uid_clean = uid.upper().strip()
     tap_data = {
-        "uid": uid.upper().strip(),
+        "uid": uid_clean,
         "waktu": waktu.strip(),
-        "status": status
+        "status": status,
+        "nama": nama,
+        "timestamp": datetime.now().isoformat()
     }
-    if nama:
-        tap_data["nama"] = nama
+    with _tap_lock:
+        _latest_tap_cache = tap_data.copy()
+
     try:
         with open(LAST_TAP_FILE, "w", encoding="utf-8") as f:
             json.dump(tap_data, f, indent=4)
     except Exception as e:
         print(f"Error writing last_tap.json: {e}")
+
+def get_latest_tap_data() -> Dict[str, Any]:
+    global _latest_tap_cache
+    with _tap_lock:
+        if _latest_tap_cache.get("uid"):
+            return _latest_tap_cache.copy()
+
+    if os.path.exists(LAST_TAP_FILE):
+        try:
+            with open(LAST_TAP_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                with _tap_lock:
+                    _latest_tap_cache = data.copy()
+                return data
+        except Exception as e:
+            print(f"Error reading last_tap.json: {e}")
+
+    return {"uid": None, "is_new": False}
 
 def save_unregistered_card(db: Session, uid: str, waktu_str: str) -> None:
     catatan_prefix = f"Unregistered card tapped: {uid.upper().strip()}"

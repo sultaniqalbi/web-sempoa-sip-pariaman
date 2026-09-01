@@ -13,6 +13,7 @@ from app.core.websocket import manager
 from app.core.hardware import (
     verify_api_key,
     write_last_tap,
+    get_latest_tap_data,
     save_unregistered_card,
     get_reset_command,
     acknowledge_reset_command
@@ -170,45 +171,33 @@ async def get_last_tap(
     """
     Mengambil data tap kartu terakhir untuk auto-fill form pendaftaran & edit guru secara realtime.
     """
-    client_ip = request.client.host if request.client else "unknown"
-    if hardware_limiter.is_auth_blocked(client_ip) or hardware_limiter.is_rate_limited(client_ip):
+    data = get_latest_tap_data()
+    uid = data.get("uid")
+    status = data.get("status")
+    waktu = data.get("waktu")
+    nama = data.get("nama")
+
+    if not uid:
         return {"uid": None, "is_new": False}
 
-    last_tap_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../last_tap.json"))
-    if not os.path.exists(last_tap_file):
-        return {"uid": None, "is_new": False}
+    uid_clean = uid.strip().upper()
+    uid_nospace = uid_clean.replace(" ", "")
 
-    try:
-        with open(last_tap_file, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            uid = data.get("uid")
-            status = data.get("status")
-            waktu = data.get("waktu")
-            nama = data.get("nama")
+    # Cek apakah sudah ada guru dengan UID ini di database
+    existing = db.query(Guru).filter(
+        (func.upper(Guru.uid) == uid_clean) |
+        (func.replace(func.upper(Guru.uid), " ", "") == uid_nospace)
+    ).first()
 
-            if not uid:
-                return {"uid": None, "is_new": False}
-
-            uid_clean = uid.strip().upper()
-            uid_nospace = uid_clean.replace(" ", "")
-
-            # Cek apakah sudah ada guru dengan UID ini di database
-            existing = db.query(Guru).filter(
-                (func.upper(Guru.uid) == uid_clean) |
-                (func.replace(func.upper(Guru.uid), " ", "") == uid_nospace)
-            ).first()
-
-            return {
-                "uid": uid_clean,
-                "waktu": waktu,
-                "status": status,
-                "nama": existing.nama if existing else nama,
-                "is_registered": existing is not None,
-                "is_new": existing is None,
-                "timestamp": datetime.now().isoformat()
-            }
-    except Exception as e:
-        return {"uid": None, "is_new": False}
+    return {
+        "uid": uid_clean,
+        "waktu": waktu,
+        "status": status,
+        "nama": existing.nama if existing else nama,
+        "is_registered": existing is not None,
+        "is_new": existing is None,
+        "timestamp": data.get("timestamp") or datetime.now().isoformat()
+    }
 
 @router.get("/guru-cache", response_class=PlainTextResponse)
 async def get_guru_cache(request: Request, db: Session = Depends(get_db)):
