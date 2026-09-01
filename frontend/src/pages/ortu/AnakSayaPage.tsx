@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import useAuth from '../../features/auth/useAuth';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
+import { BookIcon, TrophyIcon, StarIcon, InfoIcon, AwardIcon, CalendarIcon } from '../../components/SvgIcons';
 import { Siswa, AbsensiLog } from '../../types';
 import { parseProgramDetails, getProgramBadgeStyle, getProgramSchedule, parseProgramQuotas } from '../portal/SiswaPage';
 
@@ -590,8 +591,9 @@ export const AnakSayaPage: React.FC = () => {
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="px-2.5 py-1 rounded-xl text-xs font-black bg-[#FFF3E0] text-[#E65100] border border-[#FFCC80] shadow-2xs inline-flex items-center gap-1">
-                              📖 Buku: {buku.level_anak}
+                            <span className="px-2.5 py-1 rounded-xl text-xs font-black bg-[#FFF3E0] text-[#E65100] border border-[#FFCC80] shadow-2xs inline-flex items-center gap-1.5">
+                              <BookIcon size={13} className="text-[#FF7043]" />
+                              <span>Buku: {buku.level_anak}</span>
                             </span>
                             {buku.nomor_buku && (
                               <span className="font-bold text-xs text-[#0F172A] bg-white px-2 py-0.5 rounded-md border border-[#E2E8F0]">
@@ -610,13 +612,14 @@ export const AnakSayaPage: React.FC = () => {
                         </div>
 
                         <span
-                          className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase shrink-0 border ${
+                          className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase shrink-0 border inline-flex items-center gap-1 shadow-2xs ${
                             isSelesai
                               ? 'bg-[#DCFCE7] text-[#16A34A] border-[#86EFAC]'
-                              : 'bg-[#FF7043] text-white border-[#FF7043] shadow-2xs'
+                              : 'bg-[#FF7043] text-white border-[#FF7043]'
                           }`}
                         >
-                          {isSelesai ? '🏆 Lulus / Selesai' : '📖 Sedang Dipelajari'}
+                          {isSelesai ? <TrophyIcon size={12} /> : <BookIcon size={12} />}
+                          <span>{isSelesai ? 'Lulus / Selesai' : 'Sedang Dipelajari'}</span>
                         </span>
                       </div>
 
@@ -677,8 +680,9 @@ export const AnakSayaPage: React.FC = () => {
                         </p>
                       </div>
 
-                      <span className="px-3 py-1 bg-white text-[#1D4ED8] border border-[#BFDBFE] rounded-full text-xs font-black shadow-2xs">
-                        ⭐ Predikat: {ev.predikat_keseluruhan}
+                      <span className="px-3 py-1 bg-white text-[#1D4ED8] border border-[#BFDBFE] rounded-full text-xs font-black shadow-2xs inline-flex items-center gap-1.5">
+                        <StarIcon size={13} className="text-[#F59E0B]" />
+                        <span>Predikat: {ev.predikat_keseluruhan}</span>
                       </span>
                     </div>
 
@@ -713,7 +717,10 @@ export const AnakSayaPage: React.FC = () => {
                     {/* Saran Latihan di Rumah */}
                     {ev.saran_untuk_ortu && (
                       <div className="p-3 bg-[#FFFBEB] rounded-xl border border-[#FDE68A] space-y-1">
-                        <p className="text-[11px] font-bold text-[#92400E]">💡 Tips Latihan di Rumah untuk Orang Tua:</p>
+                        <p className="text-[11px] font-bold text-[#92400E] inline-flex items-center gap-1.5">
+                          <InfoIcon size={14} className="text-[#D97706] shrink-0" />
+                          <span>Tips Latihan di Rumah untuk Orang Tua:</span>
+                        </p>
                         <p className="text-xs text-[#78350F] leading-relaxed">
                           {ev.saran_untuk_ortu}
                         </p>

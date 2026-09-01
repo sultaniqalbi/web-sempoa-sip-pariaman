@@ -18,7 +18,12 @@
 >         cd /opt/sempoa-sip
 >         bash deploy.sh
 >         ```
-> 4. **DATABASE BACKUP & RESTORE**:
+> 4. **ATURAN MUTLAK UI/UX (DILARANG MENGGUNAKAN EMOJI & WAJIB SVG ASLI)**:
+>    - **Dilarang keras menggunakan karakter emoji Unicode (misal 📖, 🏆, ⭐, 💡, 🚀, dll.) di seluruh antarmuka web**.
+>    - **Semua ikon harus menggunakan komponen icon SVG asli** dari `frontend/src/components/SvgIcons.tsx` atau file SVG di `frontend/public/assets/icons/`.
+> 5. **INTEGRASI OTOMATIS DATA SISWA & DATA BUKU**:
+>    - Setiap kali siswa baru dibuat atau diubah di menu Data Siswa, sistem harus selalu otomatis mengaitkan dan mensinkronkan buku ke tabel `buku_siswa`.
+> 6. **DATABASE BACKUP & RESTORE**:
 >    - Skrip `deploy.sh` otomatis menyimpan snapshot backup ke `/opt/sempoa-sip/backend/backups/auto_pre_deploy_*.sql.gz`.
 >    - Perintah restore darurat jika diperlukan:
 >      ```bash

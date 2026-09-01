@@ -25,8 +25,11 @@ class SiswaBase(BaseModel):
     alamat: Optional[str] = None
     bio: Optional[str] = None
     foto_profil: Optional[str] = None
+    buku_saat_ini: Optional[str] = None
+    nomor_buku: Optional[str] = None
+    tanggal_mulai_buku: Optional[date] = None
 
-    @field_validator("tanggal_lahir", mode="before")
+    @field_validator("tanggal_lahir", "tanggal_mulai_buku", mode="before")
     @classmethod
     def parse_tanggal_lahir(cls, v: Any) -> Optional[date]:
         if v == "" or v is None:
@@ -73,8 +76,11 @@ class SiswaUpdate(BaseModel):
     alamat: Optional[str] = None
     bio: Optional[str] = None
     foto_profil: Optional[str] = None
+    buku_saat_ini: Optional[str] = None
+    nomor_buku: Optional[str] = None
+    tanggal_mulai_buku: Optional[date] = None
 
-    @field_validator("tanggal_lahir", mode="before")
+    @field_validator("tanggal_lahir", "tanggal_mulai_buku", mode="before")
     @classmethod
     def parse_tanggal_lahir(cls, v: Any) -> Optional[date]:
         if v == "" or v is None:

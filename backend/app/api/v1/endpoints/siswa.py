@@ -1,7 +1,7 @@
 import os
 import logging
 from typing import List, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 import io
 import uuid
@@ -15,6 +15,7 @@ from app.core.dependencies import get_current_user, RoleChecker
 from app.core.security import get_password_hash, generate_random_password, normalize_whatsapp_number
 from app.models.users import User, UserRole
 from app.models.siswa import Siswa, StatusSPP
+from app.models.buku_siswa import BukuSiswa
 from app.models.pembayaran_periode import PembayaranPeriode, StatusPembayaran
 from app.models.audit_log import AuditLog
 from app.schemas.siswa import SiswaCreate, SiswaUpdate, SiswaResponse, SiswaCreateResponse, SiswaPertemuanUpdate
@@ -222,6 +223,19 @@ async def create_new_siswa(
         )
         db.add(pembayaran_awal)
 
+        # Auto-create initial book in buku_siswa
+        buku_level = siswa_in.buku_saat_ini or "Junior"
+        buku_program = siswa_in.kategori_program.split(",")[0].strip() if siswa_in.kategori_program else "Sempoa SIP"
+        new_buku = BukuSiswa(
+            id_siswa=new_siswa.id,
+            kategori_program=buku_program,
+            level_anak=buku_level,
+            nomor_buku=siswa_in.nomor_buku or "",
+            status_buku="SEDANG_DIPELAJARI",
+            tanggal_mulai=siswa_in.tanggal_mulai_buku or date.today()
+        )
+        db.add(new_buku)
+
         # Auto-provision parent account if not pure TK
         if not is_pure_tk:
             user_ortu = User(
@@ -273,8 +287,38 @@ async def update_existing_siswa(
     if "whatsapp_orang_tua" in update_dict and update_dict["whatsapp_orang_tua"]:
         update_dict["whatsapp_orang_tua"] = normalize_whatsapp_number(update_dict["whatsapp_orang_tua"])
 
+    # Extract buku fields so they don't get directly set on Siswa model
+    buku_saat_ini = update_dict.pop("buku_saat_ini", None)
+    nomor_buku = update_dict.pop("nomor_buku", None)
+    tanggal_mulai_buku = update_dict.pop("tanggal_mulai_buku", None)
+
     for key, value in update_dict.items():
         setattr(db_siswa, key, value)
+
+    # Sync buku_siswa record if provided
+    if buku_saat_ini is not None:
+        active_buku = db.query(BukuSiswa).filter(
+            BukuSiswa.id_siswa == id,
+            BukuSiswa.status_buku == "SEDANG_DIPELAJARI"
+        ).order_by(BukuSiswa.id.desc()).first()
+
+        if active_buku:
+            active_buku.level_anak = buku_saat_ini
+            if nomor_buku is not None:
+                active_buku.nomor_buku = nomor_buku
+            if tanggal_mulai_buku is not None:
+                active_buku.tanggal_mulai = tanggal_mulai_buku
+        else:
+            buku_program = (db_siswa.kategori_program or "Sempoa SIP").split(",")[0].strip()
+            new_buku = BukuSiswa(
+                id_siswa=id,
+                kategori_program=buku_program,
+                level_anak=buku_saat_ini,
+                nomor_buku=nomor_buku or "",
+                status_buku="SEDANG_DIPELAJARI",
+                tanggal_mulai=tanggal_mulai_buku or date.today()
+            )
+            db.add(new_buku)
 
     # Also sync parent user name/phone if updated
     if current_user.role == UserRole.ortu:

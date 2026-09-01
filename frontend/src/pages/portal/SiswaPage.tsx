@@ -9,7 +9,8 @@ import PageHeader from '../../components/PageHeader';
 import EmptyState from '../../components/EmptyState';
 import { DayPicker } from '../../components/DayPicker';
 import { PhotoModal } from '../../components/PhotoModal';
-import { DataSiswaIcon, TrashIcon, CheckIcon, InfoIcon, CalendarIcon, PengajarIcon } from '../../components/SvgIcons';
+import { DataSiswaIcon, TrashIcon, CheckIcon, InfoIcon, CalendarIcon, PengajarIcon, BookIcon } from '../../components/SvgIcons';
+import { PROGRAM_LEVEL_PRESETS } from './BukuPage';
 
 interface Siswa {
   id: number;
@@ -312,7 +313,10 @@ export const SiswaPage: React.FC = () => {
     tanggal_lahir: '',
     asal_sekolah: '',
     target_pertemuan: 8,
-    sisa_pertemuan: 8
+    sisa_pertemuan: 8,
+    buku_saat_ini: 'Junior',
+    nomor_buku: '',
+    tanggal_mulai_buku: new Date().toISOString().split('T')[0]
   });
 
   const showToast = (text: string, type: 'success' | 'error' = 'success') => {
@@ -415,6 +419,15 @@ export const SiswaPage: React.FC = () => {
     },
   });
 
+  // Fetch Buku List (for sync)
+  const { data: bukuList = [] } = useQuery<any[]>({
+    queryKey: ['buku', 'list'],
+    queryFn: async () => {
+      const res = await apiClient.get('/buku/');
+      return res.data;
+    },
+  });
+
   // Create Mutation
   const createMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
@@ -430,6 +443,7 @@ export const SiswaPage: React.FC = () => {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['siswa'] });
+      queryClient.invalidateQueries({ queryKey: ['buku'] });
       setIsAddModalOpen(false);
       if (formData.kategori_program !== 'TK' && data.ortu_email && data.ortu_password_plaintext) {
         setCreatedCredential({
@@ -465,6 +479,7 @@ export const SiswaPage: React.FC = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['siswa'] });
+      queryClient.invalidateQueries({ queryKey: ['buku'] });
       setIsAddModalOpen(false);
       setEditingSiswa(null);
       showToast('Data siswa berhasil diperbarui');
@@ -505,16 +520,14 @@ export const SiswaPage: React.FC = () => {
         showToast(`Pesan WhatsApp terkirim ke +${data.whatsapp_number}`);
       } else if (data.status === 'pending' || data.fallback_message) {
         setWAFallbackData({
-          message: data.fallback_message,
+          message: data.fallback_message || `Halo ${data.nama_siswa}...`,
           number: data.whatsapp_number
         });
         setIsWAFallbackModalOpen(true);
-      } else {
-        showToast(`${data.message}`, 'error');
       }
     },
     onError: (err: any) => {
-      showToast(`Kirim WA gagal: ${err.response?.data?.detail || err.message}`, 'error');
+      showToast(`Gagal push WA: ${err.response?.data?.detail || err.message}`, 'error');
     }
   });
 
@@ -546,6 +559,8 @@ export const SiswaPage: React.FC = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['siswa'] });
+      queryClient.invalidateQueries({ queryKey: ['buku'] });
+      setDeleteConfirm(null);
       showToast('Data siswa berhasil dihapus');
     },
     onError: (err: any) => {
@@ -576,7 +591,10 @@ export const SiswaPage: React.FC = () => {
       tanggal_lahir: '',
       asal_sekolah: '',
       target_pertemuan: initialTarget,
-      sisa_pertemuan: initialTarget
+      sisa_pertemuan: initialTarget,
+      buku_saat_ini: 'Junior',
+      nomor_buku: '',
+      tanggal_mulai_buku: new Date().toISOString().split('T')[0]
     });
     setProgramDays({
       'Sempoa SIP': 'Senin, Rabu'
@@ -595,6 +613,9 @@ export const SiswaPage: React.FC = () => {
     const calculatedAge = calculateAge(siswa.tanggal_lahir);
     const isSempoaPaket2 = (siswa.paket_jadwal || '').includes('12 Pertemuan') && (siswa.kategori_program || '').includes('Sempoa');
     setSempoaPackageIndex(isSempoaPaket2 ? 1 : 0);
+
+    const activeBuku = (bukuList as any[]).find((b: any) => b.id_siswa === siswa.id && b.status_buku === 'SEDANG_DIPELAJARI') || (bukuList as any[]).find((b: any) => b.id_siswa === siswa.id);
+
     setFormData({
       uid: siswa.uid,
       nama: siswa.nama,
@@ -612,7 +633,10 @@ export const SiswaPage: React.FC = () => {
       tanggal_lahir: siswa.tanggal_lahir || '',
       asal_sekolah: siswa.asal_sekolah || '',
       target_pertemuan: siswa.target_pertemuan || 8,
-      sisa_pertemuan: siswa.sisa_pertemuan ?? (siswa.target_pertemuan || 8)
+      sisa_pertemuan: siswa.sisa_pertemuan ?? (siswa.target_pertemuan || 8),
+      buku_saat_ini: activeBuku?.level_anak || 'Junior',
+      nomor_buku: activeBuku?.nomor_buku || '',
+      tanggal_mulai_buku: activeBuku?.tanggal_mulai || new Date().toISOString().split('T')[0]
     });
 
     const progs = (siswa.kategori_program || 'Sempoa SIP').split(',').map((p) => p.trim()).filter(Boolean);
@@ -1631,6 +1655,59 @@ export const SiswaPage: React.FC = () => {
               </div>
             );
           })()}
+
+          {/* Buku & Level Pembelajaran Siswa (Koneksi Otomatis ke Data Buku) */}
+          <div className="bg-gradient-to-r from-[#FFF8E1]/80 to-[#FFF3E0]/80 border border-[#FFE082] rounded-2xl p-3.5 sm:p-4 space-y-3 shadow-2xs">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <span className="p-1.5 rounded-xl bg-[#FF7043] text-white shadow-xs">
+                  <BookIcon size={16} />
+                </span>
+                <div>
+                  <h4 className="font-extrabold text-xs sm:text-sm text-[#E65100]">
+                    Buku & Level Pembelajaran Siswa
+                  </h4>
+                  <p className="text-[11px] text-[#8D6E63] font-medium mt-0.5">
+                    Otomatis tersambung dan tersinkronisasi ke menu Data Buku
+                  </p>
+                </div>
+              </div>
+              <span className="text-[10px] text-[#BF360C] font-extrabold bg-white/90 px-2.5 py-1 rounded-lg border border-[#FFD54F] shadow-2xs">
+                Sinkron Data Buku
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <div>
+                <label className="block text-[#1E293B] font-bold mb-1 text-xs">
+                  Buku Saat Ini*
+                </label>
+                <select
+                  required
+                  value={formData.buku_saat_ini}
+                  onChange={(e) => setFormData({ ...formData, buku_saat_ini: e.target.value })}
+                  className="w-full bg-white border border-[#FFE082] focus:border-[#FF7043] focus:ring-2 focus:ring-[#FF7043]/20 rounded-xl p-2.5 text-[#1E293B] font-bold text-xs focus:outline-none transition-all cursor-pointer shadow-2xs"
+                >
+                  {(PROGRAM_LEVEL_PRESETS[formData.kategori_program.split(',')[0]?.trim() || 'Sempoa SIP']?.levels || PROGRAM_LEVEL_PRESETS['Sempoa SIP'].levels).map(lvl => (
+                    <option key={lvl} value={lvl}>{lvl}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[#1E293B] font-bold mb-1 text-xs">
+                  Nomor / Kode Buku
+                </label>
+                <input
+                  type="text"
+                  value={formData.nomor_buku}
+                  onChange={(e) => setFormData({ ...formData, nomor_buku: e.target.value })}
+                  placeholder="Input kode buku manual..."
+                  className="w-full bg-white border border-[#FFE082] focus:border-[#FF7043] focus:ring-2 focus:ring-[#FF7043]/20 rounded-xl p-2.5 text-[#1E293B] font-bold text-xs focus:outline-none shadow-2xs"
+                />
+              </div>
+            </div>
+          </div>
 
           {/* 6 & 7. Nama Orang Tua & No. WhatsApp */}
           <div className="border-t border-[#E2E8F0] pt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
