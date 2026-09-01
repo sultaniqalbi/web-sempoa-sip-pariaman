@@ -53,6 +53,18 @@ export const PROGRAM_LEVEL_PRESETS: Record<string, { levels: string[]; defaultBo
   }
 };
 
+export interface BukuFormData {
+  id_siswa: string;
+  kategori_program: string;
+  level_anak: string;
+  nomor_buku: string;
+  jenis_buku: string;
+  status_buku: 'SEDANG_DIPELAJARI' | 'SELESAI' | 'LANJUT_LEVEL';
+  tanggal_mulai: string;
+  tanggal_selesai: string;
+  catatan_progres: string;
+}
+
 export const SharedBukuPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [selectedProgram, setSelectedProgram] = useState<string>('all');
@@ -64,13 +76,13 @@ export const SharedBukuPage: React.FC = () => {
   const [editingBuku, setEditingBuku] = useState<BukuItem | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: number; nama: string; buku: string } | null>(null);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<BukuFormData>({
     id_siswa: '',
     kategori_program: 'Sempoa SIP',
     level_anak: 'Junior 1',
     nomor_buku: 'Buku J1-A',
     jenis_buku: 'Modul Sempoa SIP Junior 1',
-    status_buku: 'SEDANG_DIPELAJARI' as const,
+    status_buku: 'SEDANG_DIPELAJARI',
     tanggal_mulai: new Date().toISOString().split('T')[0],
     tanggal_selesai: '',
     catatan_progres: ''
