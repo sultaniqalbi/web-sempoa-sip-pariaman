@@ -242,10 +242,10 @@ export const OrtuProfilePage: React.FC = () => {
                 </p>
                 <div className="pt-1 flex flex-wrap gap-1.5 justify-center sm:justify-start">
                   {childPrograms.map((p, idx) => {
-                    const badge = getProgramBadgeStyle(p.nama);
+                    const badge = getProgramBadgeStyle(p.program);
                     return (
-                      <span key={idx} className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${badge.badge}`}>
-                        {p.nama}
+                      <span key={idx} className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${badge}`}>
+                        {p.program}
                       </span>
                     );
                   })}

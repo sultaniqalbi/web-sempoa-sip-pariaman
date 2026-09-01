@@ -86,7 +86,9 @@ export interface AbsensiLog {
   uid: string;
   waktu: string;
   mode: 'ONLINE' | 'OFFLINE';
-  status: 'HADIR' | 'IZIN' | 'ALFA' | 'TERLAMBAT';
+  status: 'HADIR' | 'IZIN' | 'ALFA' | 'TERLAMBAT' | 'TIDAK_HADIR';
+  catatan?: string;
+  keterangan?: string;
   created_at: string;
 }
 

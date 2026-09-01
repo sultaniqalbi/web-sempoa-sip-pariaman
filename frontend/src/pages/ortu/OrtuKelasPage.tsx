@@ -67,10 +67,10 @@ export const OrtuKelasPage: React.FC = () => {
         <div className="mt-3 pt-3 border-t border-[#FFE082]/60 flex flex-wrap items-center gap-2">
           <span className="text-xs font-bold text-[#64748B]">Program Terdaftar:</span>
           {childPrograms.map((p, idx) => {
-            const badge = getProgramBadgeStyle(p.nama);
+            const badge = getProgramBadgeStyle(p.program);
             return (
-              <span key={idx} className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${badge.badge}`}>
-                {p.nama}
+              <span key={idx} className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${badge}`}>
+                {p.program}
               </span>
             );
           })}

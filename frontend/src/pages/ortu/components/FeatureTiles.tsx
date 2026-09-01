@@ -72,34 +72,6 @@ const tiles: TileItem[] = [
       </svg>
     ),
   },
-  {
-    label: 'Pembayaran SPP',
-    sublabel: 'Rekening & bukti transfer',
-    route: '/ortu/pembayaran',
-    color: '#E65100',
-    bgColor: '#FFF3E0',
-    borderColor: '#FFCC80',
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E65100" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
-        <line x1="1" y1="10" x2="23" y2="10" />
-      </svg>
-    ),
-  },
-  {
-    label: 'Profil & Data Anak',
-    sublabel: 'Identitas & edit info',
-    route: '/ortu/profil',
-    color: '#475569',
-    bgColor: '#F1F5F9',
-    borderColor: '#CBD5E1',
-    icon: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-        <circle cx="12" cy="7" r="4" />
-      </svg>
-    ),
-  },
 ];
 
 export const FeatureTiles: React.FC = () => {
@@ -108,11 +80,11 @@ export const FeatureTiles: React.FC = () => {
   return (
     <div id="tour-ortu-features" className="space-y-2">
       <div className="flex items-center justify-between px-1">
-        <h3 className="text-xs font-black text-[#1E293B] uppercase tracking-wider">Menu Utama Pembelajaran</h3>
+        <h3 className="text-xs font-black text-[#1E293B] uppercase tracking-wider">Menu Pembelajaran Ananda</h3>
         <span className="text-[10px] text-[#64748B] font-bold">Portal Orang Tua</span>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+      <div className="grid grid-cols-2 gap-2.5">
         {tiles.map((tile) => (
           <button
             key={tile.route}
