@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import useAuth from '../features/auth/useAuth';
-import { DashboardIcon, DataSiswaIcon, PembayaranIcon, LogoutIcon, CloseIcon } from './SvgIcons';
+import { DashboardIcon, BookIcon, EvaluasiIcon, PresensiIcon, JamIcon, PembayaranIcon, UserIcon, LogoutIcon, CloseIcon } from './SvgIcons';
 
 interface SidebarProps {
   onClose?: () => void;
@@ -19,8 +19,12 @@ export const OrtuSidebar: React.FC<SidebarProps> = ({ onClose, isCollapsed = fal
 
   const links = [
     { to: '/ortu', label: 'Dashboard Ortu', icon: <DashboardIcon size={20} />, end: true },
-    { to: '/ortu/anak', label: 'Detail Anak Saya', icon: <DataSiswaIcon size={20} /> },
+    { to: '/ortu/kelas', label: 'Kelas & Buku', icon: <BookIcon size={20} /> },
+    { to: '/ortu/evaluasi', label: 'Evaluasi & Rapor', icon: <EvaluasiIcon size={20} /> },
+    { to: '/ortu/absensi', label: 'Absensi Siswa', icon: <PresensiIcon size={20} /> },
+    { to: '/ortu/riwayat', label: 'Riwayat Pertemuan', icon: <JamIcon size={20} /> },
     { to: '/ortu/pembayaran', label: 'Bayar SPP', icon: <PembayaranIcon size={20} /> },
+    { to: '/ortu/profil', label: 'Profil & Data Anak', icon: <UserIcon size={20} /> },
   ];
 
   return (

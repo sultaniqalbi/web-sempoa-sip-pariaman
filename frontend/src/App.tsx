@@ -45,7 +45,11 @@ const GuruProfilePage = React.lazy(() => import('./pages/guru/GuruProfilePage'))
 // Parent Pages
 const OrtuLayout = React.lazy(() => import('./pages/ortu/OrtuLayout'));
 const OrtuDashboardPage = React.lazy(() => import('./pages/ortu/OrtuDashboardPage'));
-const AnakSayaPage = React.lazy(() => import('./pages/ortu/AnakSayaPage'));
+const OrtuKelasPage = React.lazy(() => import('./pages/ortu/OrtuKelasPage'));
+const OrtuEvaluasiPage = React.lazy(() => import('./pages/ortu/OrtuEvaluasiPage'));
+const OrtuAbsensiPage = React.lazy(() => import('./pages/ortu/OrtuAbsensiPage'));
+const OrtuRiwayatPertemuanPage = React.lazy(() => import('./pages/ortu/OrtuRiwayatPertemuanPage'));
+const OrtuProfilePage = React.lazy(() => import('./pages/ortu/OrtuProfilePage'));
 const PembayaranOrtuPage = React.lazy(() => import('./pages/ortu/PembayaranOrtuPage'));
 
 // Fallback loader for suspense
@@ -189,8 +193,14 @@ export function App() {
                   >
                     <Route index element={<OrtuDashboardPage />} />
                     <Route path="dashboard" element={<OrtuDashboardPage />} />
-                    <Route path="anak" element={<AnakSayaPage />} />
+                    <Route path="kelas" element={<OrtuKelasPage />} />
+                    <Route path="evaluasi" element={<OrtuEvaluasiPage />} />
+                    <Route path="absensi" element={<OrtuAbsensiPage />} />
+                    <Route path="riwayat" element={<OrtuRiwayatPertemuanPage />} />
+                    <Route path="pertemuan" element={<OrtuRiwayatPertemuanPage />} />
                     <Route path="pembayaran" element={<PembayaranOrtuPage />} />
+                    <Route path="profil" element={<OrtuProfilePage />} />
+                    <Route path="anak" element={<Navigate to="/ortu/profil" replace />} />
                   </Route>
 
                   {/* Fallback Redirect */}

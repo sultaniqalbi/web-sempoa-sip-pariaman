@@ -1,38 +1,70 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import useAuth from '../../../features/auth/useAuth';
 
-const OrtuBottomNav: React.FC = () => {
+export const OrtuBottomNav: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
-
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
 
   const tabs = [
     {
       id: 'dashboard',
-      label: 'Dashboard',
+      label: 'Beranda',
       path: '/ortu',
       exact: true,
       icon: (active: boolean) => (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill={active ? '#FF7043' : 'none'} stroke={active ? '#FF7043' : '#9E9E9E'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill={active ? '#FF7043' : 'none'} stroke={active ? '#FF7043' : '#94A3B8'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
           <polyline points="9 22 9 12 15 12 15 22" />
         </svg>
       ),
     },
     {
+      id: 'kelas',
+      label: 'Kelas',
+      path: '/ortu/kelas',
+      exact: false,
+      icon: (active: boolean) => (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? '#FF7043' : '#94A3B8'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+        </svg>
+      ),
+    },
+    {
+      id: 'evaluasi',
+      label: 'Evaluasi',
+      path: '/ortu/evaluasi',
+      exact: false,
+      icon: (active: boolean) => (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? '#FF7043' : '#94A3B8'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+      ),
+    },
+    {
+      id: 'absensi',
+      label: 'Absensi',
+      path: '/ortu/absensi',
+      exact: false,
+      icon: (active: boolean) => (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? '#FF7043' : '#94A3B8'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+      ),
+    },
+    {
       id: 'pembayaran',
-      label: 'Pembayaran',
+      label: 'SPP',
       path: '/ortu/pembayaran',
       exact: false,
       icon: (active: boolean) => (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#FF7043' : '#9E9E9E'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? '#FF7043' : '#94A3B8'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
           <line x1="1" y1="10" x2="23" y2="10" />
         </svg>
@@ -41,10 +73,10 @@ const OrtuBottomNav: React.FC = () => {
     {
       id: 'profil',
       label: 'Profil',
-      path: '#profil',
+      path: '/ortu/profil',
       exact: false,
       icon: (active: boolean) => (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#FF7043' : '#9E9E9E'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? '#FF7043' : '#94A3B8'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
           <circle cx="12" cy="7" r="4" />
         </svg>
@@ -54,83 +86,41 @@ const OrtuBottomNav: React.FC = () => {
 
   const isActive = (tab: typeof tabs[0]) => {
     if (tab.exact) return location.pathname === tab.path;
-    if (tab.path === '#profil') return false;
     return location.pathname.startsWith(tab.path);
   };
 
   return (
-    <>
-      {/* Profile dropdown menu */}
-      {showProfileMenu && (
-        <>
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setShowProfileMenu(false)}
-          />
-          <div
-            className="fixed bottom-[72px] right-3 z-50 bg-white rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.15)] border border-[#E0E0E0] overflow-hidden min-w-[200px] animate-[slideUp_0.2s_ease-out]"
-            style={{ fontFamily: "'Inter', sans-serif" }}
-          >
-            <div className="px-4 py-3 border-b border-[#F5F5F5] bg-[#FAFAFA]">
-              <p className="text-[13px] font-bold text-[#424242] truncate">{user?.nama || 'Orang Tua'}</p>
-              <p className="text-[11px] text-[#9E9E9E] font-medium uppercase">{user?.role || 'ortu'}</p>
-            </div>
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-[#E2E8F0] shadow-[0_-2px_10px_rgba(0,0,0,0.06)]"
+      style={{
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+      }}
+    >
+      <div className="flex items-center justify-around h-16 max-w-xl mx-auto px-1">
+        {tabs.map((tab) => {
+          const active = isActive(tab);
+          return (
             <button
-              onClick={handleLogout}
-              className="w-full px-4 py-3 text-left text-[13px] font-semibold text-[#D32F2F] hover:bg-[#FFF5F5] transition-colors flex items-center gap-2"
+              key={tab.id}
+              id={`tour-tab-${tab.id}`}
+              onClick={() => navigate(tab.path)}
+              className={`flex flex-col items-center justify-center gap-1 min-w-[50px] min-h-[44px] py-1 rounded-xl transition-all cursor-pointer ${
+                active ? 'text-[#FF7043]' : 'text-[#64748B] hover:text-[#1E293B]'
+              }`}
+              style={{ WebkitTapHighlightColor: 'transparent' }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D32F2F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
-              </svg>
-              Keluar
+              {tab.icon(active)}
+              <span className={`text-[10px] font-extrabold leading-none ${active ? 'text-[#FF7043]' : 'text-[#64748B]'}`}>
+                {tab.label}
+              </span>
+              {active && (
+                <div className="w-4 h-[2.5px] rounded-full bg-[#FF7043] mt-0.5" />
+              )}
             </button>
-          </div>
-        </>
-      )}
-
-      {/* Bottom Navigation Bar */}
-      <nav
-        className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-[#E0E0E0] shadow-[0_-2px_10px_rgba(0,0,0,0.06)]"
-        style={{
-          fontFamily: "'Inter', sans-serif",
-          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-        }}
-      >
-        <div className="flex items-center justify-around h-16 max-w-lg mx-auto">
-          {tabs.map((tab) => {
-            const active = isActive(tab);
-            return (
-              <button
-                key={tab.id}
-                id={`tour-tab-${tab.id}`}
-                onClick={() => {
-                  if (tab.path === '#profil') {
-                    setShowProfileMenu(!showProfileMenu);
-                  } else {
-                    setShowProfileMenu(false);
-                    navigate(tab.path);
-                  }
-                }}
-                className={`flex flex-col items-center justify-center gap-1 min-w-[60px] min-h-[44px] px-2 py-1 rounded-lg transition-colors ${
-                  active ? 'text-[#FF7043]' : 'text-[#9E9E9E]'
-                }`}
-                style={{ WebkitTapHighlightColor: 'transparent' }}
-              >
-                {tab.icon(active)}
-                <span className={`text-[10px] font-bold leading-none ${active ? 'text-[#FF7043]' : 'text-[#9E9E9E]'}`}>
-                  {tab.label}
-                </span>
-                {active && (
-                  <div className="w-4 h-[2px] rounded-full bg-[#FF7043] mt-0.5" />
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </nav>
-    </>
+          );
+        })}
+      </div>
+    </nav>
   );
 };
 

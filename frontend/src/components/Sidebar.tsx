@@ -34,8 +34,12 @@ export const Sidebar: React.FC = () => {
       case 'ortu':
         return [
           { to: '/ortu', label: <><i className="fas fa-chart-bar w-5"></i> Dashboard Ortu</>, end: true },
-          { to: '/ortu/anak', label: <><i className="fas fa-child w-5"></i> Detail Anak Saya</> },
+          { to: '/ortu/kelas', label: <><i className="fas fa-book w-5"></i> Kelas & Buku</> },
+          { to: '/ortu/evaluasi', label: <><i className="fas fa-star w-5"></i> Evaluasi & Rapor</> },
+          { to: '/ortu/absensi', label: <><i className="fas fa-calendar-check w-5"></i> Absensi Siswa</> },
+          { to: '/ortu/riwayat', label: <><i className="fas fa-history w-5"></i> Riwayat Pertemuan</> },
           { to: '/ortu/pembayaran', label: <><i className="fas fa-credit-card w-5"></i> Bayar SPP</> },
+          { to: '/ortu/profil', label: <><i className="fas fa-user w-5"></i> Profil & Data Anak</> },
         ];
       default:
         return [];
