@@ -185,92 +185,98 @@ export const OrtuDashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-4" style={{ fontFamily: "'Inter', sans-serif" }}>
-      {/* Kotak 1: Notifikasi Pengingat SPP Real-time */}
-      <div id="tour-ortu-push" className="bg-gradient-to-r from-[#FFF3E0] to-[#FFF8E1] border border-[#FFE082] rounded-xl p-4 shadow-[0_2px_6px_rgba(0,0,0,0.04)]">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#FF9800] text-white flex items-center justify-center flex-shrink-0 shadow-sm">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-[13px] font-bold text-[#E65100] flex items-center gap-2">
-                Notifikasi Pengingat SPP Real-time
-                {permissionState === 'granted' && (
-                  <span className="text-[10px] bg-[#E8F5E9] text-[#2E7D32] border border-[#A5D6A7] font-semibold px-2 py-0.5 rounded-full">
-                    Aktif
-                  </span>
-                )}
-              </h3>
-              <p className="text-[11px] text-[#795548] mt-0.5 leading-relaxed">
-                {permissionState === 'granted'
-                  ? 'HP Anda sudah terhubung. Anda akan otomatis menerima notifikasi saat tagihan SPP ananda mendekati jatuh tempo.'
-                  : 'Aktifkan izin notifikasi di HP Anda agar sistem dapat mengirimkan pengingat SPP secara otomatis saat mendekati jatuh tempo.'}
-              </p>
-              {pushMsg && (
-                <p className={`text-[11px] font-semibold mt-1 ${pushMsg.type === 'success' ? 'text-[#2E7D32]' : 'text-[#C62828]'}`}>
-                  {pushMsg.text}
-                </p>
-              )}
-            </div>
+      {/* 1 Card Terpadu: Pusat Layanan & Pengingat Cepat (Quick Action 2x2 Grid) */}
+      <div id="tour-ortu-contact" className="bg-white border border-[#E0E0E0] rounded-2xl shadow-xs overflow-hidden">
+        <div className="px-4 py-3 bg-[#FAFAFA] border-b border-[#F1F5F9] flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#FF7043]" />
+            <h3 className="text-xs font-black text-[#1E293B] uppercase tracking-wider">
+              Pusat Layanan & Pengingat Cepat
+            </h3>
+          </div>
+          {permissionState === 'granted' ? (
+            <span className="text-[10px] bg-[#E8F5E9] text-[#2E7D32] border border-[#A5D6A7] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#2E7D32] animate-pulse" />
+              Notifikasi HP Aktif
+            </span>
+          ) : (
+            <span className="text-[10px] bg-[#FFF3E0] text-[#E65100] border border-[#FFCC80] font-bold px-2 py-0.5 rounded-full">
+              Siap Digunakan
+            </span>
+          )}
+        </div>
+
+        <div className="p-3.5 space-y-2.5">
+          {/* Baris 1: 2 Tombol WhatsApp Berdampingan */}
+          <div className="grid grid-cols-2 gap-2.5">
+            <a
+              href={`https://wa.me/${adminWa}`}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-2.5 p-2.5 rounded-xl border border-[#C8E6C9] bg-[#F1F8E9] hover:bg-[#E8F5E9] active:scale-[0.98] transition-all group cursor-pointer shadow-2xs"
+            >
+              <div className="w-8 h-8 rounded-lg bg-[#25D366] text-white flex items-center justify-center flex-shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-extrabold text-[#1E293B] truncate leading-tight">Chat Admin</p>
+                <p className="text-[10px] text-[#2E7D32] font-semibold truncate mt-0.5">Bantuan & Info</p>
+              </div>
+            </a>
+
+            <a
+              href={`https://wa.me/${direkturWa}`}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-2.5 p-2.5 rounded-xl border border-[#FFE082] bg-[#FFFDE7] hover:bg-[#FFF9C4] active:scale-[0.98] transition-all group cursor-pointer shadow-2xs"
+            >
+              <div className="w-8 h-8 rounded-lg bg-[#FF9800] text-white flex items-center justify-center flex-shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-extrabold text-[#1E293B] truncate leading-tight">Chat Direktur</p>
+                <p className="text-[10px] text-[#E65100] font-semibold truncate mt-0.5">Layanan & SPP</p>
+              </div>
+            </a>
           </div>
 
-          <div className="flex-shrink-0 sm:self-center">
-            {permissionState === 'granted' ? (
-              <button
-                type="button"
-                onClick={handleEnablePush}
-                disabled={pushLoading}
-                className="w-full sm:w-auto text-[11px] font-bold text-[#2E7D32] bg-white px-3.5 py-2 rounded-lg border border-[#A5D6A7] hover:bg-[#E8F5E9] transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-              >
-                {pushLoading ? 'Memproses...' : 'Perbarui Izin HP'}
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleEnablePush}
-                disabled={pushLoading}
-                className="w-full sm:w-auto text-[11px] font-bold text-white bg-[#E65100] hover:bg-[#D84315] px-3.5 py-2 rounded-lg shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          {/* Baris 2: 2 Tombol Pengingat (Notif HP & Google Calendar) Berdampingan */}
+          <div className="grid grid-cols-2 gap-2.5">
+            <button
+              type="button"
+              id="tour-ortu-push"
+              onClick={handleEnablePush}
+              disabled={pushLoading}
+              className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-left active:scale-[0.98] transition-all cursor-pointer shadow-2xs ${
+                permissionState === 'granted'
+                  ? 'bg-[#E8F5E9]/60 border-[#A5D6A7] hover:bg-[#E8F5E9]'
+                  : 'bg-[#FFF3E0] border-[#FFCC80] hover:bg-[#FFE0B2]'
+              }`}
+            >
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 shadow-2xs ${
+                permissionState === 'granted' ? 'bg-[#2E7D32] text-white' : 'bg-[#FF7043] text-white'
+              }`}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
                   <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                 </svg>
-                {pushLoading ? 'Menghubungkan...' : 'Aktifkan Notifikasi'}
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-extrabold text-[#1E293B] truncate leading-tight">
+                  {permissionState === 'granted' ? 'Notifikasi HP' : 'Aktifkan Notif'}
+                </p>
+                <p className={`text-[10px] font-semibold truncate mt-0.5 ${
+                  permissionState === 'granted' ? 'text-[#2E7D32]' : 'text-[#E65100]'
+                }`}>
+                  {pushLoading ? 'Memproses...' : permissionState === 'granted' ? 'Status: Aktif' : 'Pengingat SPP'}
+                </p>
+              </div>
+            </button>
 
-      {/* Kotak 2: Pengingat Kalender Google (Opsional) */}
-      <div className="bg-gradient-to-r from-[#E3F2FD] to-[#F0F7FF] border border-[#90CAF9] rounded-xl p-4 shadow-[0_2px_6px_rgba(0,0,0,0.04)]">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#1976D2] text-white flex items-center justify-center flex-shrink-0 shadow-sm">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                <line x1="16" y1="2" x2="16" y2="6" />
-                <line x1="8" y1="2" x2="8" y2="6" />
-                <line x1="3" y1="10" x2="21" y2="10" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-[13px] font-bold text-[#0D47A1] flex items-center gap-2">
-                Pengingat Kalender Google
-                <span className="text-[10px] bg-[#E2E8F0] text-[#475569] border border-[#CBD5E1] font-semibold px-2 py-0.5 rounded-full">
-                  Opsional
-                </span>
-              </h3>
-              <p className="text-[11px] text-[#334155] mt-0.5 leading-relaxed">
-                Tambahkan jadwal jatuh tempo SPP ananda ke aplikasi Google Calendar di HP Anda sebagai pengingat kalender mandiri.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex-shrink-0 sm:self-center">
             <button
               type="button"
               onClick={async () => {
@@ -287,74 +293,25 @@ export const OrtuDashboardPage: React.FC = () => {
                 }
               }}
               disabled={pushLoading || !child?.id}
-              className="w-full sm:w-auto text-[11px] font-bold text-[#1565C0] bg-white px-3.5 py-2 rounded-lg border border-[#90CAF9] hover:bg-[#BBDEFB] transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="flex items-center gap-2.5 p-2.5 rounded-xl border border-[#90CAF9] bg-[#E3F2FD] hover:bg-[#BBDEFB] text-left active:scale-[0.98] transition-all cursor-pointer shadow-2xs"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M19.5 4H18V2h-2v2H8V2H6v2H4.5C3.67 4 3 4.67 3 5.5v15c0 .83.67 1.5 1.5 1.5h15c.83 0 1.5-.67 1.5-1.5v-15c0-.83-.67-1.5-1.5-1.5zm0 16.5H4.5V9h15v11.5zM7 11h5v5H7z" />
-              </svg>
-              Simpan ke Google Calendar
+              <div className="w-8 h-8 rounded-lg bg-[#1976D2] text-white flex items-center justify-center flex-shrink-0 shadow-2xs">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19.5 4H18V2h-2v2H8V2H6v2H4.5C3.67 4 3 4.67 3 5.5v15c0 .83.67 1.5 1.5 1.5h15c.83 0 1.5-.67 1.5-1.5v-15c0-.83-.67-1.5-1.5-1.5zm0 16.5H4.5V9h15v11.5zM7 11h5v5H7z" />
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-extrabold text-[#1E293B] truncate leading-tight">Google Calendar</p>
+                <p className="text-[10px] text-[#1565C0] font-semibold truncate mt-0.5">Jadwal SPP HP</p>
+              </div>
             </button>
           </div>
-        </div>
-      </div>
 
-      {/* Card Info Kontak (Admin & Owner) */}
-      <div id="tour-ortu-contact" className="bg-white border border-[#E0E0E0] rounded-xl shadow-[0_2px_6px_rgba(0,0,0,0.04)] overflow-hidden">
-        <div className="px-4 py-3 border-b border-[#F5F5F5] flex items-center gap-2.5">
-          <div className="w-6 h-6 rounded-lg bg-[#E8F5E9] text-[#2E7D32] flex items-center justify-center">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
-            </svg>
-          </div>
-          <div>
-            <h3 className="text-[13px] font-bold text-[#1E293B]">Hubungi Pengelola & Bantuan</h3>
-            <p className="text-[11px] text-[#64748B]">Klik tombol untuk langsung terhubung ke WhatsApp:</p>
-          </div>
-        </div>
-        <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <a
-            href={`https://wa.me/${adminWa}`}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center justify-between p-3 rounded-xl border border-[#C8E6C9] bg-[#F1F8E9] hover:bg-[#E8F5E9] transition-all group"
-          >
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-[#25D366] text-white flex items-center justify-center flex-shrink-0">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
-                </svg>
-              </div>
-              <div>
-                <p className="text-[12px] font-extrabold text-[#1E293B]">Kontak Admin</p>
-                <p className="text-[10px] text-[#64748B]">Bantuan Jadwal & Info</p>
-              </div>
-            </div>
-            <span className="text-[11px] font-bold text-[#2E7D32] bg-white px-2.5 py-1 rounded-lg border border-[#C8E6C9] group-hover:bg-[#2E7D32] group-hover:text-white transition-colors">
-              Chat WA
-            </span>
-          </a>
-
-          <a
-            href={`https://wa.me/${direkturWa}`}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center justify-between p-3 rounded-xl border border-[#FFE082] bg-[#FFFDE7] hover:bg-[#FFF9C4] transition-all group"
-          >
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-[#FF9800] text-white flex items-center justify-center flex-shrink-0">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
-                </svg>
-              </div>
-              <div>
-                <p className="text-[12px] font-extrabold text-[#1E293B]">Kontak Direktur</p>
-                <p className="text-[10px] text-[#64748B]">Konfirmasi SPP & Layanan</p>
-              </div>
-            </div>
-            <span className="text-[11px] font-bold text-[#E65100] bg-white px-2.5 py-1 rounded-lg border border-[#FFE082] group-hover:bg-[#E65100] group-hover:text-white transition-colors">
-              Chat WA
-            </span>
-          </a>
+          {pushMsg && (
+            <p className={`text-[11px] font-bold text-center pt-1 ${pushMsg.type === 'success' ? 'text-[#2E7D32]' : 'text-[#C62828]'}`}>
+              {pushMsg.text}
+            </p>
+          )}
         </div>
       </div>
 
