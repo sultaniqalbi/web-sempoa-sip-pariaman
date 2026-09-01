@@ -739,116 +739,105 @@ export const SiswaPage: React.FC = () => {
 
   const columns = [
     {
-      header: 'Foto Siswa',
+      header: 'Identitas Siswa',
       accessor: (row: Siswa) => {
         const fullPhotoUrl = row.foto_profil 
           ? '/api/v1'.replace('/api/v1', '') + row.foto_profil
           : null;
-        return (
-          <div 
-            onClick={() => {
-              if (fullPhotoUrl) {
-                setPhotoModalData({
-                  url: fullPhotoUrl,
-                  name: `${row.nama} (${row.uid})`,
-                  subtitle: `${row.kategori_program} • Kelas ${row.kelas_sekolah || '-'}`
-                });
-              }
-            }}
-            className={`w-10 h-10 rounded-xl overflow-hidden border border-[#E2E8F0] shadow-xs flex items-center justify-center ${fullPhotoUrl ? 'cursor-pointer hover:ring-2 hover:ring-[#FF7043] transition-all hover:scale-105' : 'bg-[#F1F5F9]'}`}
-            title={fullPhotoUrl ? "Klik untuk melihat & download foto 1:1" : "Tidak ada foto"}
-          >
-            {fullPhotoUrl ? (
-              <img src={fullPhotoUrl} alt={row.nama} className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-[#94A3B8] text-[10px] font-bold">Foto</span>
-            )}
-          </div>
-        );
-      },
-      className: 'md:w-[70px] text-center'
-    },
-    {
-      header: 'Kode Siswa',
-      accessor: (row: Siswa) => {
         const displayAge = row.umur ?? calculateAge(row.tanggal_lahir);
+        const initials = row.nama
+          .split(' ')
+          .filter(Boolean)
+          .slice(0, 2)
+          .map(n => n[0])
+          .join('')
+          .toUpperCase() || 'S';
+
         return (
-          <div>
-            <span className="font-mono text-[#FF7043] font-black text-xs block">{row.uid}</span>
-            <p className="font-bold text-[#1E293B] text-xs mt-0.5">
-              {row.nama} {displayAge ? <span className="text-[10px] font-normal text-[#64748B]">({displayAge} thn)</span> : ''}
-            </p>
-            <p className="text-[10px] text-[#94A3B8]">
-              {row.asal_sekolah ? `${row.asal_sekolah}${row.kelas_sekolah ? ` • ${row.kelas_sekolah}` : ''}` : `Ortu: ${row.nama_orang_tua || '-'}`}
-            </p>
-          </div>
-        );
-      }
-    },
-    {
-      header: 'Program Belajar',
-      accessor: (row: Siswa) => {
-        const details = parseProgramDetails(row.kategori_program, row.paket_jadwal);
-        return (
-          <div className="py-1">
-            <div className="flex flex-col gap-2">
-              {details.map((item, idx) => (
-                <div key={idx} className="flex items-center h-[26px]">
-                  <span
-                    className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold border shadow-2xs inline-block ${getProgramBadgeStyle(item.program)}`}
-                  >
-                    {item.program}
+          <div className="flex items-center gap-3 py-1">
+            {/* Avatar / Foto Siswa */}
+            <div 
+              onClick={() => {
+                if (fullPhotoUrl) {
+                  setPhotoModalData({
+                    url: fullPhotoUrl,
+                    name: `${row.nama} (${row.uid})`,
+                    subtitle: `${row.kategori_program} • Kelas ${row.kelas_sekolah || '-'}`
+                  });
+                }
+              }}
+              className={`w-11 h-11 rounded-2xl overflow-hidden border border-[#E2E8F0] shadow-2xs shrink-0 flex items-center justify-center ${
+                fullPhotoUrl 
+                  ? 'cursor-pointer hover:ring-2 hover:ring-[#FF7043] transition-all hover:scale-105' 
+                  : 'bg-gradient-to-br from-[#FFF3E0] to-[#FFE0B2] text-[#E65100]'
+              }`}
+              title={fullPhotoUrl ? "Klik untuk melihat foto" : row.nama}
+            >
+              {fullPhotoUrl ? (
+                <img src={fullPhotoUrl} alt={row.nama} className="w-full h-full object-cover" />
+              ) : (
+                <span className="font-black text-xs">{initials}</span>
+              )}
+            </div>
+
+            {/* Detail Nama, UID, & Ortu */}
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <p className="font-black text-sm text-[#0F172A] tracking-tight">{row.nama}</p>
+                {displayAge && (
+                  <span className="text-[11px] font-bold text-[#64748B] bg-[#F1F5F9] px-1.5 py-0.2 rounded-md">
+                    {displayAge} thn
                   </span>
-                </div>
-              ))}
+                )}
+              </div>
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                <span className="font-mono text-[#FF7043] font-bold text-[11px] bg-[#FFF3E0] px-2 py-0.5 rounded-lg border border-[#FFE082]">
+                  {row.uid}
+                </span>
+                {row.nama_orang_tua && (
+                  <span className="text-[11px] text-[#64748B] truncate max-w-[160px]">
+                    Ortu: <strong className="text-[#334155]">{row.nama_orang_tua}</strong>
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         );
       },
-      className: 'md:w-[150px]'
+      className: 'md:w-[260px]'
     },
     {
-      header: 'Jadwal & Sesi Pertemuan',
+      header: 'Program & Pengajar',
       accessor: (row: Siswa) => {
         const details = parseProgramDetails(row.kategori_program, row.paket_jadwal);
         const assignedTeacher = row.id_guru ? (guruList as any[]).find((g: any) => g.id === row.id_guru) : null;
         return (
-          <div className="py-1">
-            <div className="flex flex-col gap-2">
-              {details.map((item, idx) => {
-                const schedule = getProgramSchedule(item.program, row.hari_masuk);
-                return (
-                  <div key={idx} className="flex items-center gap-1.5 h-[26px] flex-wrap">
-                    <span className="text-[11px] font-bold text-[#1E293B] bg-[#F8FAFC] border border-[#CBD5E1] px-2 py-0.5 rounded-md flex items-center gap-1 shadow-2xs">
-                      <CalendarIcon size={11} className="text-[#64748B]" />
-                      <span>{schedule}</span>
-                    </span>
-                    <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-white text-[#334155] border border-[#CBD5E1] shadow-2xs">
-                      {item.meetingInfo}
-                    </span>
-                  </div>
-                );
-              })}
+          <div className="space-y-1.5 py-1">
+            <div className="flex flex-wrap gap-1">
+              {details.map((item, idx) => (
+                <span
+                  key={idx}
+                  className={`px-2.5 py-1 rounded-xl text-xs font-black border shadow-2xs inline-block ${getProgramBadgeStyle(item.program)}`}
+                >
+                  {item.program}
+                </span>
+              ))}
             </div>
             {assignedTeacher && (
-              <div className="mt-1.5 flex items-center gap-1">
-                <span className="text-[10px] font-bold text-[#15803D] bg-[#DCFCE7] border border-[#86EFAC] px-2 py-0.5 rounded-md flex items-center gap-1 shadow-2xs">
-                  <PengajarIcon size={10} className="text-[#16A34A]" />
-                  Guru: {assignedTeacher.nama.split(',')[0]}
-                </span>
+              <div className="flex items-center gap-1 text-[11px] font-bold text-[#15803D] bg-[#DCFCE7] border border-[#86EFAC] px-2 py-0.5 rounded-lg shadow-2xs w-fit">
+                <PengajarIcon size={11} className="text-[#16A34A]" />
+                <span>Guru: {assignedTeacher.nama.split(',')[0]}</span>
               </div>
             )}
-            <p className="text-[10px] text-[#64748B] pt-1.5 font-semibold border-t border-[#F1F5F9] mt-1.5">
-              Total Target: {row.target_pertemuan || 8} Sesi
-            </p>
           </div>
         );
       },
-      className: 'md:w-[220px]'
+      className: 'md:w-[200px]'
     },
     {
-      header: 'Sisa Pertemuan',
+      header: 'Jadwal & Kuota Sesi',
       accessor: (row: Siswa) => {
+        const details = parseProgramDetails(row.kategori_program, row.paket_jadwal);
         const quotas = parseProgramQuotas(
           row.kategori_program,
           row.paket_jadwal,
@@ -858,28 +847,23 @@ export const SiswaPage: React.FC = () => {
         );
 
         return (
-          <div className="py-1">
-            <div className="flex flex-col gap-2">
-              {quotas.map((q, idx) => {
-                const isTk = q.program.trim().toLowerCase() === 'tk' || q.target === 0;
-                if (isTk) {
-                  return (
-                    <div key={idx} className="flex items-center h-[26px]">
-                      <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A] shadow-2xs">
-                        Program TK
-                      </span>
-                    </div>
-                  );
-                }
+          <div className="space-y-1.5 py-1">
+            {details.map((item, idx) => {
+              const schedule = getProgramSchedule(item.program, row.hari_masuk);
+              const q = quotas[idx] || quotas[0];
+              const ratio = q && q.target > 0 ? q.sisa / q.target : 1;
+              const isUrgent = ratio <= 0.20;
+              const isPeringatan = ratio <= 0.40 && !isUrgent;
 
-                const ratio = q.target > 0 ? q.sisa / q.target : 1;
-                const isUrgent = ratio <= 0.20;
-                const isPeringatan = ratio <= 0.40 && !isUrgent;
-
-                return (
-                  <div key={idx} className="flex items-center h-[26px]">
+              return (
+                <div key={idx} className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-bold text-[#1E293B] bg-[#F8FAFC] border border-[#CBD5E1] px-2.5 py-0.5 rounded-lg flex items-center gap-1 shadow-2xs">
+                    <CalendarIcon size={11} className="text-[#64748B]" />
+                    <span>{schedule}</span>
+                  </span>
+                  {q && q.target > 0 && (
                     <span
-                      className={`px-2.5 py-0.5 rounded-md text-[11px] font-extrabold border shadow-2xs ${
+                      className={`px-2 py-0.5 rounded-lg text-[11px] font-black border shadow-2xs ${
                         isUrgent
                           ? 'bg-[#FFF1F2] text-[#E11D48] border-[#FECDD3]'
                           : isPeringatan
@@ -889,37 +873,35 @@ export const SiswaPage: React.FC = () => {
                     >
                       {q.sisa} / {q.target} kali
                     </span>
-                  </div>
-                );
-              })}
-            </div>
-            <p className="text-[10px] text-[#64748B] pt-1.5 font-semibold border-t border-[#F1F5F9] mt-1.5">
-              Total: {row.sisa_pertemuan} / {row.target_pertemuan || 8} Sesi
-            </p>
+                  )}
+                </div>
+              );
+            })}
           </div>
         );
       },
-      className: 'md:w-[150px]'
+      className: 'md:w-[220px]'
     },
     {
       header: 'Status SPP',
       accessor: (row: Siswa) => (
-        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+        <span className={`px-3 py-1 rounded-xl text-xs font-black uppercase tracking-wide border shadow-2xs ${
           row.status_spp === 'AKTIF' 
-            ? 'bg-[#E8F5E9] text-[#388E3C] border border-[#A5D6A7]' 
-            : 'bg-[#FFF1F2] text-[#e11d48] border border-[#FECDD3]'
+            ? 'bg-[#E8F5E9] text-[#2E7D32] border-[#A5D6A7]' 
+            : 'bg-[#FFF1F2] text-[#E11D48] border-[#FECDD3]'
         }`}>
           {row.status_spp}
         </span>
-      )
+      ),
+      className: 'md:w-[120px]'
     },
     {
       header: 'Aksi',
       accessor: (row: Siswa) => (
-        <div className="flex gap-1.5 flex-wrap items-center">
+        <div className="flex items-center gap-1.5 justify-end flex-wrap">
           <button
             onClick={() => openEditModal(row)}
-            className="px-2 py-1 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#475569] text-xs font-bold rounded-lg border border-[#CBD5E1] transition-colors"
+            className="px-2.5 py-1.5 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#334155] text-xs font-bold rounded-xl border border-[#CBD5E1] transition-all cursor-pointer active:scale-95 shadow-2xs"
             title="Edit Data Siswa"
           >
             Edit
@@ -927,7 +909,7 @@ export const SiswaPage: React.FC = () => {
           <button
             onClick={() => pushWAMutation.mutate(row.id)}
             disabled={pushWAMutation.isPending}
-            className="px-2 py-1 bg-[#E3F2FD] hover:bg-[#BBDEFB] text-[#1976D2] text-xs font-bold rounded-lg border border-[#90CAF9] transition-colors"
+            className="px-2.5 py-1.5 bg-[#E0F2FE] hover:bg-[#BAE6FD] text-[#0284C7] text-xs font-bold rounded-xl border border-[#7DD3FC] transition-all cursor-pointer active:scale-95 shadow-2xs disabled:opacity-50"
             title="Kirim Pesan WhatsApp Login Ortu"
           >
             WA Push
@@ -935,20 +917,21 @@ export const SiswaPage: React.FC = () => {
           <button
             onClick={() => resetPasswordMutation.mutate(row.id)}
             disabled={resetPasswordMutation.isPending}
-            className="px-2 py-1 bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#E65100] text-xs font-bold rounded-lg border border-[#FFCC80] transition-colors"
+            className="px-2.5 py-1.5 bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#E65100] text-xs font-bold rounded-xl border border-[#FFCC80] transition-all cursor-pointer active:scale-95 shadow-2xs disabled:opacity-50"
             title="Reset Password Akun Ortu"
           >
             Reset
           </button>
           <button
             onClick={() => deleteMutation.mutate(row.id)}
-            className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center cursor-pointer active:scale-95"
+            className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#E11D48] rounded-xl border border-[#FECDD3] transition-all flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
             title="Hapus Data Siswa"
           >
             <TrashIcon size={14} />
           </button>
         </div>
-      )
+      ),
+      className: 'text-right md:w-[200px]'
     }
   ];
 

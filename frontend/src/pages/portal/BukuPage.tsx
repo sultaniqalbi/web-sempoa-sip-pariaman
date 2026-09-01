@@ -6,6 +6,7 @@ import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
 import ConfirmModal from '../../components/ConfirmModal';
 import EmptyState from '../../components/EmptyState';
+import SearchableSelect from '../../components/SearchableSelect';
 import { BookIcon, EditIcon, TrashIcon, CheckIcon, StarIcon, TrophyIcon, CalendarIcon } from '../../components/SvgIcons';
 import { getProgramBadgeStyle, AVAILABLE_PROGRAMS } from './SiswaPage';
 
@@ -243,7 +244,7 @@ export const SharedBukuPage: React.FC = () => {
           </span>
         </div>
       ),
-      className: 'md:w-[200px]'
+      className: 'md:w-[180px]'
     },
     {
       header: 'Nomor / Kode Buku',
@@ -254,17 +255,28 @@ export const SharedBukuPage: React.FC = () => {
           </span>
         </div>
       ),
-      className: 'md:w-[180px]'
+      className: 'md:w-[160px]'
     },
     {
-      header: 'Tanggal Mulai',
+      header: 'Periode & Tanggal Buku',
       accessor: (row: BukuItem) => (
-        <div className="text-xs text-[#64748B] font-semibold flex items-center gap-1.5">
-          <CalendarIcon size={12} className="text-[#94A3B8]" />
-          <span>{new Date(row.tanggal_mulai).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+        <div className="space-y-1">
+          <div className="text-xs text-[#1E293B] font-bold flex items-center gap-1.5">
+            <CalendarIcon size={12} className="text-[#64748B]" />
+            <span>Mulai: {new Date(row.tanggal_mulai).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+          </div>
+          {row.tanggal_selesai ? (
+            <span className="text-[10px] font-bold text-[#16A34A] bg-[#DCFCE7] border border-[#86EFAC] px-2 py-0.5 rounded-md inline-block">
+              Selesai: {new Date(row.tanggal_selesai).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+            </span>
+          ) : (
+            <span className="text-[10px] font-bold text-[#D97706] bg-[#FEF3C7] border border-[#FDE68A] px-2 py-0.5 rounded-md inline-block">
+              Sedang Dipelajari
+            </span>
+          )}
         </div>
       ),
-      className: 'md:w-[150px]'
+      className: 'md:w-[180px]'
     },
     {
       header: 'Catatan Progres',
@@ -298,6 +310,13 @@ export const SharedBukuPage: React.FC = () => {
     }
   ];
 
+  const studentOptions = siswaList.map((s: any) => ({
+    value: String(s.id),
+    label: s.nama,
+    subLabel: s.uid,
+    badge: s.kategori_program
+  }));
+
   return (
     <div className="space-y-6">
       {toastMessage && (
@@ -316,7 +335,7 @@ export const SharedBukuPage: React.FC = () => {
       <PageHeader
         icon={<BookIcon size={24} className="text-[#FF7043]" />}
         title="Data Buku & Level Siswa"
-        subtitle="Manajemen buku saat ini dan progres pembelajaran setiap murid"
+        subtitle="Manajemen buku saat ini, tanggal mulai & selesai, serta progres pembelajaran setiap murid"
         iconColorBg="bg-[#FFF3E0] text-[#FF7043]"
         actionLabel="Tambah Data Buku"
         onAction={openAddModal}
@@ -397,30 +416,22 @@ export const SharedBukuPage: React.FC = () => {
             }}
             className="space-y-4 text-xs"
           >
-            {/* Pilih Siswa */}
+            {/* Pilih Siswa dengan Searchable Combobox */}
             <div>
-              <label className="block text-[#1E293B] font-bold mb-1">
-                Pilih Murid / Siswa*
-              </label>
-              <select
+              <SearchableSelect
+                label="Pilih Murid / Siswa"
                 required
+                options={studentOptions}
                 value={formData.id_siswa}
-                onChange={(e) => {
-                  const sId = e.target.value;
+                onChange={(sId) => {
                   const s = siswaList.find((x: any) => String(x.id) === sId);
                   const prog = s?.kategori_program?.split(',')[0]?.trim() || 'Sempoa SIP';
                   handleProgramChange(prog);
                   setFormData(prev => ({ ...prev, id_siswa: sId }));
                 }}
-                className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold text-xs focus:border-[#FF7043] focus:outline-none"
-              >
-                <option value="">-- Pilih Siswa --</option>
-                {siswaList.map((s: any) => (
-                  <option key={s.id} value={s.id}>
-                    {s.nama} ({s.uid}) - {s.kategori_program}
-                  </option>
-                ))}
-              </select>
+                placeholder="-- Ketik nama atau UID murid --"
+                searchPlaceholder="Cari nama siswa atau UID..."
+              />
             </div>
 
             {/* Kategori Program */}
@@ -471,7 +482,7 @@ export const SharedBukuPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Tanggal Mulai & Selesai */}
+            {/* Tanggal Mulai & Tanggal Selesai Buku */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-[#1E293B] font-bold mb-1">
@@ -488,16 +499,29 @@ export const SharedBukuPage: React.FC = () => {
 
               <div>
                 <label className="block text-[#1E293B] font-bold mb-1">
-                  Catatan Progres Belajar
+                  Tanggal Selesai Buku (Opsional)
                 </label>
                 <input
-                  type="text"
-                  value={formData.catatan_progres}
-                  onChange={(e) => setFormData({ ...formData, catatan_progres: e.target.value })}
-                  placeholder="Contoh: Sudah halaman 20..."
-                  className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] text-xs focus:border-[#FF7043] focus:outline-none"
+                  type="date"
+                  value={formData.tanggal_selesai}
+                  onChange={(e) => setFormData({ ...formData, tanggal_selesai: e.target.value })}
+                  className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold text-xs focus:border-[#FF7043] focus:outline-none"
                 />
               </div>
+            </div>
+
+            {/* Catatan Progres */}
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">
+                Catatan Progres Belajar
+              </label>
+              <input
+                type="text"
+                value={formData.catatan_progres}
+                onChange={(e) => setFormData({ ...formData, catatan_progres: e.target.value })}
+                placeholder="Contoh: Sudah halaman 20..."
+                className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] text-xs focus:border-[#FF7043] focus:outline-none"
+              />
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E2E8F0]">
@@ -520,15 +544,15 @@ export const SharedBukuPage: React.FC = () => {
         </Modal>
       )}
 
-      {/* Confirm Modal Hapus Buku */}
+      {/* Modal Konfirmasi Hapus */}
       {deleteConfirm && (
         <ConfirmModal
           isOpen={!!deleteConfirm}
           onClose={() => setDeleteConfirm(null)}
           onConfirm={() => deleteMutation.mutate(deleteConfirm.id)}
           title="Hapus Data Buku"
-          description={`Apakah Anda yakin ingin menghapus catatan "${deleteConfirm.buku}" untuk siswa "${deleteConfirm.nama}"?`}
-          confirmText="Ya, Hapus"
+          description={`Apakah Anda yakin ingin menghapus data buku ${deleteConfirm.buku} milik siswa ${deleteConfirm.nama}?`}
+          confirmText="Hapus Buku"
           cancelText="Batal"
           variant="danger"
           isLoading={deleteMutation.isPending}
