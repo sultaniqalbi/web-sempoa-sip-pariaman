@@ -266,7 +266,7 @@ export const PembayaranOrtuPage: React.FC = () => {
                   </span>
                 ))}
               </div>
-              <p className="text-[10px] text-[#64748B] mt-0.5">UID: {child.uid} {child.paket_jadwal ? `• ${child.paket_jadwal}` : ''}</p>
+              <p className="text-[10px] text-[#64748B] mt-0.5">ID: {child.uid} {child.paket_jadwal ? `• ${child.paket_jadwal}` : ''}</p>
             </div>
           </div>
           <span

@@ -259,7 +259,7 @@ export const OrtuProfilePage: React.FC = () => {
                   Nama Panggilan: <strong className="text-[#1E293B]">{child?.nama_panggilan || '-'}</strong>
                 </p>
                 <p className="text-xs text-[#64748B]">
-                  UID Kartu RFID: <span className="font-mono font-bold text-[#FF7043]">{child?.uid || '-'}</span>
+                  ID: <span className="font-mono font-bold text-[#FF7043]">{child?.uid || '-'}</span>
                 </p>
               </div>
             </div>
