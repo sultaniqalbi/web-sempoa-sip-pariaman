@@ -25,31 +25,34 @@ export interface BukuItem {
   created_at: string;
 }
 
-export const PROGRAM_LEVEL_PRESETS: Record<string, { levels: string[]; defaultBooks: string[] }> = {
+export const PROGRAM_LEVEL_PRESETS: Record<string, { levels: string[] }> = {
   'Sempoa SIP': {
     levels: [
-      'Foundation 1', 'Foundation 2',
-      'Junior 1', 'Junior 2', 'Junior 3',
-      'Intermediate 1', 'Intermediate 2', 'Intermediate 3',
-      'Advanced 1', 'Advanced 2', 'Grand Module'
-    ],
-    defaultBooks: ['Buku F1', 'Buku F2', 'Buku J1-A', 'Buku J1-B', 'Buku J2-A', 'Buku J2-B', 'Buku J3-A', 'Buku J3-B', 'Buku Int 1', 'Buku Int 2', 'Buku Adv']
+      'Junior',
+      'Foundation 1',
+      'Foundation 2',
+      'Intermediate 1',
+      'Intermediate 2',
+      'Intermediate 3',
+      'Advance 1',
+      'Advance 2',
+      'Advance 3',
+      'Graduate 1',
+      'Graduate 2',
+      'Graduate 3'
+    ]
   },
   'Fonem': {
-    levels: ['Level 1 (Pengenalan Huruf)', 'Level 2 (Membaca Suku Kata)', 'Level 3 (Membaca Kalimat)', 'Level 4 (Lancar & Pemahaman)'],
-    defaultBooks: ['Modul Fonem 1', 'Modul Fonem 2', 'Modul Fonem 3', 'Modul Fonem 4']
+    levels: ['Fonem Level 1', 'Fonem Level 2', 'Fonem Level 3', 'Fonem Level 4']
   },
   'Tahfidz': {
-    levels: ['Iqro / Yanbua 1-3', 'Iqro / Yanbua 4-6', 'Tahfidz Juz 30', 'Tahfidz Juz 29', 'Tahfidz Pilihan'],
-    defaultBooks: ['Buku Iqro / Tilawati', 'Buku Target Juz 30', 'Buku Mutabaah Tahfidz']
+    levels: ['Iqro / Yanbua', 'Juz 30', 'Juz 29', 'Juz 1-28', 'Surah Pilihan']
   },
   'Bahasa Inggris': {
-    levels: ['Starter Level', 'Beginner 1', 'Beginner 2', 'Elementary Level', 'Intermediate Level'],
-    defaultBooks: ['English Book 1: Phonics & Basic', 'English Book 2: Vocabulary', 'English Book 3: Grammar & Speaking']
+    levels: ['Starter', 'Beginner 1', 'Beginner 2', 'Elementary', 'Intermediate']
   },
   'TK': {
-    levels: ['Kelompok Bermain (KB)', 'TK A (Usia 4-5 thn)', 'TK B (Usia 5-6 thn)'],
-    defaultBooks: ['Buku Tema 1', 'Buku Tema 2', 'Buku Kreativitas & Motorik']
+    levels: ['Kelompok Bermain (KB)', 'TK A', 'TK B']
   }
 };
 
@@ -68,7 +71,6 @@ export interface BukuFormData {
 export const SharedBukuPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [selectedProgram, setSelectedProgram] = useState<string>('all');
-  const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   // Modal State
@@ -79,9 +81,9 @@ export const SharedBukuPage: React.FC = () => {
   const [formData, setFormData] = useState<BukuFormData>({
     id_siswa: '',
     kategori_program: 'Sempoa SIP',
-    level_anak: 'Junior 1',
-    nomor_buku: 'Buku J1-A',
-    jenis_buku: 'Modul Sempoa SIP Junior 1',
+    level_anak: 'Junior',
+    nomor_buku: '',
+    jenis_buku: '',
     status_buku: 'SEDANG_DIPELAJARI',
     tanggal_mulai: new Date().toISOString().split('T')[0],
     tanggal_selesai: '',
@@ -95,11 +97,10 @@ export const SharedBukuPage: React.FC = () => {
 
   // 1. Fetch Data Buku Siswa
   const { data: bukuList = [], isLoading } = useQuery<BukuItem[]>({
-    queryKey: ['buku', 'list', selectedProgram, selectedStatus],
+    queryKey: ['buku', 'list', selectedProgram],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (selectedProgram !== 'all') params.append('program', selectedProgram);
-      if (selectedStatus !== 'all') params.append('status_buku', selectedStatus);
       const res = await apiClient.get(`/buku/?${params.toString()}`);
       return res.data;
     }
@@ -128,10 +129,10 @@ export const SharedBukuPage: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['buku'] });
       setIsAddModalOpen(false);
-      showToast('Data buku dan level siswa berhasil disimpan');
+      showToast('Data buku siswa berhasil ditambahkan');
     },
     onError: (err: any) => {
-      showToast(`Gagal menambah buku: ${err.response?.data?.detail || err.message}`, 'error');
+      showToast(`Gagal menambah data buku: ${err.response?.data?.detail || err.message}`, 'error');
     }
   });
 
@@ -152,7 +153,7 @@ export const SharedBukuPage: React.FC = () => {
       showToast('Data buku siswa berhasil diperbarui');
     },
     onError: (err: any) => {
-      showToast(`Gagal update buku: ${err.response?.data?.detail || err.message}`, 'error');
+      showToast(`Gagal update: ${err.response?.data?.detail || err.message}`, 'error');
     }
   });
 
@@ -164,36 +165,24 @@ export const SharedBukuPage: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['buku'] });
       setDeleteConfirm(null);
-      showToast('Data buku berhasil dihapus');
+      showToast('Data buku siswa berhasil dihapus');
     },
     onError: (err: any) => {
-      showToast(`Gagal hapus buku: ${err.response?.data?.detail || err.message}`, 'error');
-    }
-  });
-
-  // Quick Selesai / Lanjut Level
-  const markSelesaiMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const res = await apiClient.put(`/buku/${id}`, {
-        status_buku: 'SELESAI',
-        tanggal_selesai: new Date().toISOString().split('T')[0]
-      });
-      return res.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['buku'] });
-      showToast('Status buku berhasil ditandai LULUS / SELESAI', 'success');
+      showToast(`Gagal menghapus: ${err.response?.data?.detail || err.message}`, 'error');
     }
   });
 
   const openAddModal = () => {
     setEditingBuku(null);
+    const firstSiswa = siswaList[0];
+    const defaultProg = firstSiswa?.kategori_program?.split(',')[0]?.trim() || 'Sempoa SIP';
+    const preset = PROGRAM_LEVEL_PRESETS[defaultProg] || PROGRAM_LEVEL_PRESETS['Sempoa SIP'];
     setFormData({
-      id_siswa: siswaList[0]?.id ? String(siswaList[0].id) : '',
-      kategori_program: 'Sempoa SIP',
-      level_anak: 'Junior 1',
-      nomor_buku: 'Buku J1-A',
-      jenis_buku: 'Modul Sempoa SIP Junior 1',
+      id_siswa: firstSiswa?.id ? String(firstSiswa.id) : '',
+      kategori_program: defaultProg,
+      level_anak: preset.levels[0] || 'Junior',
+      nomor_buku: '',
+      jenis_buku: '',
       status_buku: 'SEDANG_DIPELAJARI',
       tanggal_mulai: new Date().toISOString().split('T')[0],
       tanggal_selesai: '',
@@ -207,7 +196,7 @@ export const SharedBukuPage: React.FC = () => {
     setFormData({
       id_siswa: String(item.id_siswa),
       kategori_program: item.kategori_program || 'Sempoa SIP',
-      level_anak: item.level_anak || 'Junior 1',
+      level_anak: item.level_anak || 'Junior',
       nomor_buku: item.nomor_buku || '',
       jenis_buku: item.jenis_buku || '',
       status_buku: item.status_buku || 'SEDANG_DIPELAJARI',
@@ -223,16 +212,12 @@ export const SharedBukuPage: React.FC = () => {
     setFormData(prev => ({
       ...prev,
       kategori_program: prog,
-      level_anak: preset.levels[0] || 'Tingkat 1',
-      nomor_buku: preset.defaultBooks[0] || 'Buku 1',
-      jenis_buku: `Modul ${prog} ${preset.levels[0] || ''}`
+      level_anak: preset.levels[0] || 'Junior'
     }));
   };
 
-  // Stats calculation
+  // Metrics
   const totalBuku = bukuList.length;
-  const bukuAktif = bukuList.filter(b => b.status_buku === 'SEDANG_DIPELAJARI').length;
-  const bukuSelesai = bukuList.filter(b => b.status_buku === 'SELESAI' || b.status_buku === 'LANJUT_LEVEL').length;
 
   const columns = [
     {
@@ -246,63 +231,43 @@ export const SharedBukuPage: React.FC = () => {
           </span>
         </div>
       ),
+      className: 'md:w-[220px]'
+    },
+    {
+      header: 'Buku Saat Ini',
+      accessor: (row: BukuItem) => (
+        <div>
+          <span className="px-3 py-1 rounded-xl text-xs font-black bg-[#FFF3E0] text-[#E65100] border border-[#FFCC80] inline-flex items-center gap-1.5 shadow-2xs">
+            <BookIcon size={13} className="text-[#FF7043]" />
+            {row.level_anak}
+          </span>
+        </div>
+      ),
       className: 'md:w-[200px]'
     },
     {
-      header: 'Level Pembelajaran',
+      header: 'Nomor / Kode Buku',
       accessor: (row: BukuItem) => (
         <div>
-          <span className="px-2.5 py-1 rounded-lg text-xs font-black bg-[#EFF6FF] text-[#1D4ED8] border border-[#BFDBFE] inline-flex items-center gap-1 shadow-2xs">
-            <StarIcon size={12} className="text-[#3B82F6]" />
-            {row.level_anak}
+          <span className="font-bold text-xs text-[#0F172A] block">
+            {row.nomor_buku ? row.nomor_buku : <span className="text-[#94A3B8] italic font-normal">Tidak ada kode</span>}
           </span>
         </div>
       ),
       className: 'md:w-[180px]'
     },
     {
-      header: 'Buku & Modul',
+      header: 'Tanggal Mulai',
       accessor: (row: BukuItem) => (
-        <div>
-          <span className="font-bold text-xs text-[#0F172A] block">{row.nomor_buku}</span>
-          <p className="text-[11px] text-[#64748B] mt-0.5">{row.jenis_buku || 'Buku Paket Pembelajaran'}</p>
+        <div className="text-xs text-[#64748B] font-semibold flex items-center gap-1.5">
+          <CalendarIcon size={12} className="text-[#94A3B8]" />
+          <span>{new Date(row.tanggal_mulai).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
         </div>
       ),
-      className: 'md:w-[220px]'
+      className: 'md:w-[150px]'
     },
     {
-      header: 'Status & Periode',
-      accessor: (row: BukuItem) => {
-        let badgeStyle = 'bg-[#DCFCE7] text-[#16A34A] border-[#86EFAC]';
-        let label = 'Sedang Dipelajari';
-        if (row.status_buku === 'SELESAI') {
-          badgeStyle = 'bg-[#E0F2FE] text-[#0369A1] border-[#BAE6FD]';
-          label = 'Lulus / Selesai';
-        } else if (row.status_buku === 'LANJUT_LEVEL') {
-          badgeStyle = 'bg-[#FEF3C7] text-[#D97706] border-[#FCD34D]';
-          label = 'Lanjut Level Berikutnya';
-        }
-
-        return (
-          <div>
-            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase border ${badgeStyle}`}>
-              {label}
-            </span>
-            <div className="flex items-center gap-1 text-[10px] text-[#64748B] font-semibold mt-1">
-              <CalendarIcon size={10} className="text-[#94A3B8]" />
-              <span>Mulai: {new Date(row.tanggal_mulai).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-            </div>
-            {row.tanggal_selesai && (
-              <p className="text-[10px] text-[#16A34A] font-semibold">
-                Selesai: {new Date(row.tanggal_selesai).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-              </p>
-            )}
-          </div>
-        );
-      }
-    },
-    {
-      header: 'Catatan Guru/Progres',
+      header: 'Catatan Progres',
       accessor: (row: BukuItem) => (
         <p className="text-xs text-[#475569] italic line-clamp-2">
           {row.catatan_progres || '-'}
@@ -313,15 +278,6 @@ export const SharedBukuPage: React.FC = () => {
       header: 'Aksi',
       accessor: (row: BukuItem) => (
         <div className="flex items-center gap-1.5 justify-end">
-          {row.status_buku === 'SEDANG_DIPELAJARI' && (
-            <button
-              onClick={() => markSelesaiMutation.mutate(row.id)}
-              className="p-1.5 bg-[#DCFCE7] hover:bg-[#BBF7D0] text-[#15803D] rounded-lg border border-[#86EFAC] transition-colors flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
-              title="Tandai Selesai / Lulus Buku"
-            >
-              <CheckIcon size={14} />
-            </button>
-          )}
           <button
             onClick={() => openEditModal(row)}
             className="p-1.5 bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#FF7043] rounded-lg border border-[#FFCC80] transition-colors flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
@@ -330,7 +286,7 @@ export const SharedBukuPage: React.FC = () => {
             <EditIcon size={14} />
           </button>
           <button
-            onClick={() => setDeleteConfirm({ id: row.id, nama: row.nama_siswa || '', buku: row.nomor_buku })}
+            onClick={() => setDeleteConfirm({ id: row.id, nama: row.nama_siswa || '', buku: row.level_anak })}
             className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
             title="Hapus Data Buku"
           >
@@ -360,49 +316,16 @@ export const SharedBukuPage: React.FC = () => {
       <PageHeader
         icon={<BookIcon size={24} className="text-[#FF7043]" />}
         title="Data Buku & Level Siswa"
-        subtitle="Manajemen level pembelajaran murid, nomor buku modul, dan progres kelulusan buku"
+        subtitle="Manajemen buku saat ini dan progres pembelajaran setiap murid"
         iconColorBg="bg-[#FFF3E0] text-[#FF7043]"
-        actionLabel="Tambah Buku Siswa"
+        actionLabel="Tambah Data Buku"
         onAction={openAddModal}
       />
-
-      {/* Quick Summary Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-        <div className="p-4 bg-white border border-[#E2E8F0] rounded-2xl shadow-xs flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-[#FFF3E0] text-[#FF7043] flex items-center justify-center font-bold">
-            <BookIcon size={24} />
-          </div>
-          <div>
-            <p className="text-[11px] font-bold text-[#64748B] uppercase tracking-wide">Total Catatan Buku</p>
-            <h3 className="text-xl font-black text-[#1E293B]">{totalBuku} Modul</h3>
-          </div>
-        </div>
-
-        <div className="p-4 bg-white border border-[#E2E8F0] rounded-2xl shadow-xs flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-[#DCFCE7] text-[#16A34A] flex items-center justify-center font-bold">
-            <StarIcon size={24} />
-          </div>
-          <div>
-            <p className="text-[11px] font-bold text-[#64748B] uppercase tracking-wide">Sedang Dipelajari</p>
-            <h3 className="text-xl font-black text-[#166534]">{bukuAktif} Siswa Aktif</h3>
-          </div>
-        </div>
-
-        <div className="p-4 bg-white border border-[#E2E8F0] rounded-2xl shadow-xs flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-[#E0F2FE] text-[#0284C7] flex items-center justify-center font-bold">
-            <TrophyIcon size={24} />
-          </div>
-          <div>
-            <p className="text-[11px] font-bold text-[#64748B] uppercase tracking-wide">Lulus / Selesai Modul</p>
-            <h3 className="text-xl font-black text-[#0369A1]">{bukuSelesai} Modul Tuntas</h3>
-          </div>
-        </div>
-      </div>
 
       {/* Filter Tabs */}
       <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-[#E2E8F0] shadow-xs">
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-xs font-bold text-[#64748B] mr-2">Program:</span>
+          <span className="text-xs font-bold text-[#64748B] mr-2">Filter Program:</span>
           {['all', 'Sempoa SIP', 'Fonem', 'Tahfidz', 'Bahasa Inggris', 'TK'].map(prog => (
             <button
               key={prog}
@@ -417,19 +340,8 @@ export const SharedBukuPage: React.FC = () => {
             </button>
           ))}
         </div>
-
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-[#64748B]">Status:</span>
-          <select
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
-            className="bg-[#F8FAFC] border border-[#CBD5E1] rounded-lg px-2.5 py-1.5 text-xs font-bold text-[#1E293B] focus:outline-none focus:border-[#FF7043]"
-          >
-            <option value="all">Semua Status</option>
-            <option value="SEDANG_DIPELAJARI">Sedang Dipelajari</option>
-            <option value="SELESAI">Lulus / Selesai</option>
-            <option value="LANJUT_LEVEL">Lanjut Level</option>
-          </select>
+        <div className="text-xs font-bold text-[#64748B]">
+          Total: <span className="text-[#FF7043] font-black">{totalBuku}</span> Murid Terdaftar
         </div>
       </div>
 
@@ -440,15 +352,15 @@ export const SharedBukuPage: React.FC = () => {
         <EmptyState
           icon={<BookIcon size={40} className="text-[#757575]" />}
           title="Belum ada data buku siswa"
-          description="Tambahkan data level dan nomor buku yang sedang dipelajari oleh siswa."
-          actionLabel="Tambah Buku Siswa"
+          description="Tambahkan data buku saat ini yang sedang dipelajari oleh siswa."
+          actionLabel="Tambah Data Buku"
           onAction={openAddModal}
         />
       ) : (
         <DataTable
           columns={columns}
           data={bukuList}
-          searchPlaceholder="Cari siswa, UID, nomor buku, level..."
+          searchPlaceholder="Cari nama siswa, UID, buku saat ini, nomor buku..."
           searchFilter={(row, q) => {
             const query = q.toLowerCase();
             return (
@@ -467,7 +379,7 @@ export const SharedBukuPage: React.FC = () => {
         <Modal
           isOpen={isAddModalOpen}
           onClose={() => setIsAddModalOpen(false)}
-          title={editingBuku ? "Edit Data Buku Siswa" : "Tambah Data Buku & Level Siswa"}
+          title={editingBuku ? "Edit Data Buku Siswa" : "Tambah Data Buku Siswa"}
           size="md"
         >
           <form
@@ -527,77 +439,35 @@ export const SharedBukuPage: React.FC = () => {
               </select>
             </div>
 
-            {/* Level & Nomor Buku */}
+            {/* Buku Saat Ini & Nomor / Kode Buku */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-[#1E293B] font-bold mb-1">
-                  Level Anak Saat Ini*
+                  Buku Saat Ini*
                 </label>
-                <input
-                  type="text"
-                  list="level-presets"
+                <select
                   required
                   value={formData.level_anak}
                   onChange={(e) => setFormData({ ...formData, level_anak: e.target.value })}
-                  placeholder="Contoh: Junior 1 / Level 2"
-                  className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold text-xs focus:border-[#FF7043] focus:outline-none"
-                />
-                <datalist id="level-presets">
-                  {(PROGRAM_LEVEL_PRESETS[formData.kategori_program]?.levels || []).map(lvl => (
-                    <option key={lvl} value={lvl} />
-                  ))}
-                </datalist>
-              </div>
-
-              <div>
-                <label className="block text-[#1E293B] font-bold mb-1">
-                  Nomor / Kode Buku*
-                </label>
-                <input
-                  type="text"
-                  list="book-presets"
-                  required
-                  value={formData.nomor_buku}
-                  onChange={(e) => setFormData({ ...formData, nomor_buku: e.target.value })}
-                  placeholder="Contoh: Buku J1-A"
-                  className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold text-xs focus:border-[#FF7043] focus:outline-none"
-                />
-                <datalist id="book-presets">
-                  {(PROGRAM_LEVEL_PRESETS[formData.kategori_program]?.defaultBooks || []).map(bk => (
-                    <option key={bk} value={bk} />
-                  ))}
-                </datalist>
-              </div>
-            </div>
-
-            {/* Jenis / Judul Buku & Status */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[#1E293B] font-bold mb-1">
-                  Jenis / Judul Buku
-                </label>
-                <input
-                  type="text"
-                  value={formData.jenis_buku}
-                  onChange={(e) => setFormData({ ...formData, jenis_buku: e.target.value })}
-                  placeholder="Contoh: Modul Sempoa Junior 1"
-                  className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] text-xs focus:border-[#FF7043] focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[#1E293B] font-bold mb-1">
-                  Status Buku*
-                </label>
-                <select
-                  value={formData.status_buku}
-                  onChange={(e) => setFormData({ ...formData, status_buku: e.target.value as any })}
                   className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold text-xs focus:border-[#FF7043] focus:outline-none"
                 >
-                  <option value="SEDANG_DIPELAJARI">Sedang Dipelajari</option>
-                  <option value="SELESAI">Lulus / Selesai</option>
-                  <option value="LANJUT_LEVEL">Lanjut Level</option>
+                  {(PROGRAM_LEVEL_PRESETS[formData.kategori_program]?.levels || PROGRAM_LEVEL_PRESETS['Sempoa SIP'].levels).map(lvl => (
+                    <option key={lvl} value={lvl}>{lvl}</option>
+                  ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-[#1E293B] font-bold mb-1">
+                  Nomor / Kode Buku
+                </label>
+                <input
+                  type="text"
+                  value={formData.nomor_buku}
+                  onChange={(e) => setFormData({ ...formData, nomor_buku: e.target.value })}
+                  placeholder="Input kode buku manual..."
+                  className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold text-xs focus:border-[#FF7043] focus:outline-none"
+                />
               </div>
             </div>
 
@@ -618,29 +488,16 @@ export const SharedBukuPage: React.FC = () => {
 
               <div>
                 <label className="block text-[#1E293B] font-bold mb-1">
-                  Tanggal Selesai (Opsional)
+                  Catatan Progres Belajar
                 </label>
                 <input
-                  type="date"
-                  value={formData.tanggal_selesai}
-                  onChange={(e) => setFormData({ ...formData, tanggal_selesai: e.target.value })}
-                  className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold text-xs focus:border-[#FF7043] focus:outline-none"
+                  type="text"
+                  value={formData.catatan_progres}
+                  onChange={(e) => setFormData({ ...formData, catatan_progres: e.target.value })}
+                  placeholder="Contoh: Sudah halaman 20..."
+                  className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] text-xs focus:border-[#FF7043] focus:outline-none"
                 />
               </div>
-            </div>
-
-            {/* Catatan Progres */}
-            <div>
-              <label className="block text-[#1E293B] font-bold mb-1">
-                Catatan Progres Belajar / Halaman
-              </label>
-              <textarea
-                rows={2}
-                value={formData.catatan_progres}
-                onChange={(e) => setFormData({ ...formData, catatan_progres: e.target.value })}
-                placeholder="Contoh: Sudah mencapai halaman 45, rumus manik kawan besar lancar..."
-                className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] text-xs focus:border-[#FF7043] focus:outline-none"
-              />
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E2E8F0]">
@@ -654,7 +511,7 @@ export const SharedBukuPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={createMutation.isPending || updateMutation.isPending}
-                className="px-5 py-2 bg-[#FF7043] hover:bg-[#F4511E] text-white font-bold rounded-lg transition-colors shadow-sm cursor-pointer disabled:opacity-50"
+                className="px-5 py-2 bg-[#FF7043] hover:bg-[#F4511E] text-white font-bold rounded-lg transition-colors cursor-pointer shadow-md disabled:opacity-50"
               >
                 {createMutation.isPending || updateMutation.isPending ? 'Menyimpan...' : 'Simpan Data Buku'}
               </button>

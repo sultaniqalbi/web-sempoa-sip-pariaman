@@ -135,9 +135,9 @@ export const GuruBukuPage: React.FC = () => {
     setFormData({
       id_siswa: first?.id ? String(first.id) : '',
       kategori_program: prog,
-      level_anak: preset.levels[0] || 'Junior 1',
-      nomor_buku: preset.defaultBooks[0] || 'Buku J1-A',
-      jenis_buku: `Modul ${prog} ${preset.levels[0] || ''}`,
+      level_anak: preset.levels[0] || 'Junior',
+      nomor_buku: '',
+      jenis_buku: '',
       status_buku: 'SEDANG_DIPELAJARI',
       tanggal_mulai: new Date().toISOString().split('T')[0],
       tanggal_selesai: '',
@@ -151,7 +151,7 @@ export const GuruBukuPage: React.FC = () => {
     setFormData({
       id_siswa: String(item.id_siswa),
       kategori_program: item.kategori_program || 'Sempoa SIP',
-      level_anak: item.level_anak || 'Junior 1',
+      level_anak: item.level_anak || 'Junior',
       nomor_buku: item.nomor_buku || '',
       jenis_buku: item.jenis_buku || '',
       status_buku: item.status_buku || 'SEDANG_DIPELAJARI',
@@ -174,60 +174,40 @@ export const GuruBukuPage: React.FC = () => {
           </span>
         </div>
       ),
+      className: 'md:w-[220px]'
+    },
+    {
+      header: 'Buku Saat Ini',
+      accessor: (row: BukuItem) => (
+        <div>
+          <span className="px-3 py-1 rounded-xl text-xs font-black bg-[#FFF3E0] text-[#E65100] border border-[#FFCC80] inline-flex items-center gap-1.5 shadow-2xs">
+            <BookIcon size={13} className="text-[#FF7043]" />
+            {row.level_anak}
+          </span>
+        </div>
+      ),
       className: 'md:w-[200px]'
     },
     {
-      header: 'Level Pembelajaran',
+      header: 'Nomor / Kode Buku',
       accessor: (row: BukuItem) => (
         <div>
-          <span className="px-2.5 py-1 rounded-lg text-xs font-black bg-[#EFF6FF] text-[#1D4ED8] border border-[#BFDBFE] inline-flex items-center gap-1 shadow-2xs">
-            <StarIcon size={12} className="text-[#3B82F6]" />
-            {row.level_anak}
+          <span className="font-bold text-xs text-[#0F172A] block">
+            {row.nomor_buku ? row.nomor_buku : <span className="text-[#94A3B8] italic font-normal">Tidak ada kode</span>}
           </span>
         </div>
       ),
       className: 'md:w-[180px]'
     },
     {
-      header: 'Buku & Modul',
+      header: 'Tanggal Mulai',
       accessor: (row: BukuItem) => (
-        <div>
-          <span className="font-bold text-xs text-[#0F172A] block">{row.nomor_buku}</span>
-          <p className="text-[11px] text-[#64748B] mt-0.5">{row.jenis_buku || 'Buku Pembelajaran'}</p>
+        <div className="text-xs text-[#64748B] font-semibold flex items-center gap-1.5">
+          <CalendarIcon size={12} className="text-[#94A3B8]" />
+          <span>{new Date(row.tanggal_mulai).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
         </div>
       ),
-      className: 'md:w-[200px]'
-    },
-    {
-      header: 'Status & Periode',
-      accessor: (row: BukuItem) => {
-        let badgeStyle = 'bg-[#DCFCE7] text-[#16A34A] border-[#86EFAC]';
-        let label = 'Sedang Dipelajari';
-        if (row.status_buku === 'SELESAI') {
-          badgeStyle = 'bg-[#E0F2FE] text-[#0369A1] border-[#BAE6FD]';
-          label = 'Lulus / Selesai';
-        } else if (row.status_buku === 'LANJUT_LEVEL') {
-          badgeStyle = 'bg-[#FEF3C7] text-[#D97706] border-[#FCD34D]';
-          label = 'Lanjut Level';
-        }
-
-        return (
-          <div>
-            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase border ${badgeStyle}`}>
-              {label}
-            </span>
-            <div className="flex items-center gap-1 text-[10px] text-[#64748B] font-semibold mt-1">
-              <CalendarIcon size={10} className="text-[#94A3B8]" />
-              <span>Mulai: {new Date(row.tanggal_mulai).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-            </div>
-            {row.tanggal_selesai && (
-              <p className="text-[10px] text-[#16A34A] font-semibold">
-                Selesai: {new Date(row.tanggal_selesai).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-              </p>
-            )}
-          </div>
-        );
-      }
+      className: 'md:w-[150px]'
     },
     {
       header: 'Catatan Guru',
@@ -241,15 +221,6 @@ export const GuruBukuPage: React.FC = () => {
       header: 'Aksi',
       accessor: (row: BukuItem) => (
         <div className="flex items-center gap-1.5 justify-end">
-          {row.status_buku === 'SEDANG_DIPELAJARI' && (
-            <button
-              onClick={() => markSelesaiMutation.mutate(row.id)}
-              className="p-1.5 bg-[#DCFCE7] hover:bg-[#BBF7D0] text-[#15803D] rounded-lg border border-[#86EFAC] transition-colors flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
-              title="Tandai Selesai / Lulus Buku"
-            >
-              <CheckIcon size={14} />
-            </button>
-          )}
           <button
             onClick={() => openEditModal(row)}
             className="p-1.5 bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#FF7043] rounded-lg border border-[#FFCC80] transition-colors flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
@@ -280,8 +251,8 @@ export const GuruBukuPage: React.FC = () => {
       {/* Page Header */}
       <PageHeader
         icon={<BookIcon size={24} className="text-[#FF7043]" />}
-        title="Data Buku & Level Siswa"
-        subtitle="Kelola level pembelajaran murid bimbingan dan update status kelulusan buku modul"
+        title="Data Buku Siswa"
+        subtitle="Kelola buku saat ini untuk setiap murid bimbingan Anda"
         iconColorBg="bg-[#FFF3E0] text-[#FF7043]"
         actionLabel="Update Buku Murid"
         onAction={openAddModal}
@@ -294,7 +265,7 @@ export const GuruBukuPage: React.FC = () => {
         <EmptyState
           icon={<BookIcon size={40} className="text-[#757575]" />}
           title="Belum ada data buku murid"
-          description="Tambahkan data nomor buku dan level murid bimbingan Anda untuk memantau kelulusan modul."
+          description="Tambahkan data buku saat ini untuk murid bimbingan Anda."
           actionLabel="Update Buku Murid"
           onAction={openAddModal}
         />
@@ -320,7 +291,7 @@ export const GuruBukuPage: React.FC = () => {
         <Modal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          title={editingBuku ? "Edit Buku & Level Siswa" : "Tambah Buku & Level Murid"}
+          title={editingBuku ? "Edit Buku Siswa" : "Tambah Data Buku Murid"}
           size="md"
         >
           <form
@@ -355,9 +326,7 @@ export const GuruBukuPage: React.FC = () => {
                     ...prev,
                     id_siswa: sId,
                     kategori_program: prog,
-                    level_anak: preset.levels[0] || 'Junior 1',
-                    nomor_buku: preset.defaultBooks[0] || 'Buku J1-A',
-                    jenis_buku: `Modul ${prog} ${preset.levels[0] || ''}`
+                    level_anak: preset.levels[0] || 'Junior'
                   }));
                 }}
                 className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold text-xs focus:border-[#FF7043] focus:outline-none"
@@ -371,77 +340,35 @@ export const GuruBukuPage: React.FC = () => {
               </select>
             </div>
 
-            {/* Level & Nomor Buku */}
+            {/* Buku Saat Ini & Nomor / Kode Buku */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-[#1E293B] font-bold mb-1">
-                  Level Siswa Saat Ini*
+                  Buku Saat Ini*
                 </label>
-                <input
-                  type="text"
-                  list="guru-level-presets"
+                <select
                   required
                   value={formData.level_anak}
                   onChange={(e) => setFormData({ ...formData, level_anak: e.target.value })}
-                  placeholder="Contoh: Junior 1"
-                  className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold text-xs focus:border-[#FF7043] focus:outline-none"
-                />
-                <datalist id="guru-level-presets">
-                  {(PROGRAM_LEVEL_PRESETS[formData.kategori_program]?.levels || []).map(lvl => (
-                    <option key={lvl} value={lvl} />
-                  ))}
-                </datalist>
-              </div>
-
-              <div>
-                <label className="block text-[#1E293B] font-bold mb-1">
-                  Nomor / Kode Buku*
-                </label>
-                <input
-                  type="text"
-                  list="guru-book-presets"
-                  required
-                  value={formData.nomor_buku}
-                  onChange={(e) => setFormData({ ...formData, nomor_buku: e.target.value })}
-                  placeholder="Contoh: Buku J1-A"
-                  className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold text-xs focus:border-[#FF7043] focus:outline-none"
-                />
-                <datalist id="guru-book-presets">
-                  {(PROGRAM_LEVEL_PRESETS[formData.kategori_program]?.defaultBooks || []).map(bk => (
-                    <option key={bk} value={bk} />
-                  ))}
-                </datalist>
-              </div>
-            </div>
-
-            {/* Judul & Status */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[#1E293B] font-bold mb-1">
-                  Jenis / Judul Buku
-                </label>
-                <input
-                  type="text"
-                  value={formData.jenis_buku}
-                  onChange={(e) => setFormData({ ...formData, jenis_buku: e.target.value })}
-                  placeholder="Contoh: Modul Sempoa Junior 1"
-                  className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] text-xs focus:border-[#FF7043] focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[#1E293B] font-bold mb-1">
-                  Status Buku*
-                </label>
-                <select
-                  value={formData.status_buku}
-                  onChange={(e) => setFormData({ ...formData, status_buku: e.target.value as any })}
                   className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold text-xs focus:border-[#FF7043] focus:outline-none"
                 >
-                  <option value="SEDANG_DIPELAJARI">Sedang Dipelajari</option>
-                  <option value="SELESAI">Lulus / Selesai</option>
-                  <option value="LANJUT_LEVEL">Lanjut Level</option>
+                  {(PROGRAM_LEVEL_PRESETS[formData.kategori_program]?.levels || PROGRAM_LEVEL_PRESETS['Sempoa SIP'].levels).map(lvl => (
+                    <option key={lvl} value={lvl}>{lvl}</option>
+                  ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-[#1E293B] font-bold mb-1">
+                  Nomor / Kode Buku
+                </label>
+                <input
+                  type="text"
+                  value={formData.nomor_buku}
+                  onChange={(e) => setFormData({ ...formData, nomor_buku: e.target.value })}
+                  placeholder="Input kode buku manual..."
+                  className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold text-xs focus:border-[#FF7043] focus:outline-none"
+                />
               </div>
             </div>
 
@@ -462,29 +389,16 @@ export const GuruBukuPage: React.FC = () => {
 
               <div>
                 <label className="block text-[#1E293B] font-bold mb-1">
-                  Tanggal Selesai (Opsional)
+                  Catatan Progres Belajar
                 </label>
                 <input
-                  type="date"
-                  value={formData.tanggal_selesai}
-                  onChange={(e) => setFormData({ ...formData, tanggal_selesai: e.target.value })}
-                  className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold text-xs focus:border-[#FF7043] focus:outline-none"
+                  type="text"
+                  value={formData.catatan_progres}
+                  onChange={(e) => setFormData({ ...formData, catatan_progres: e.target.value })}
+                  placeholder="Contoh: Sudah halaman 20..."
+                  className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] text-xs focus:border-[#FF7043] focus:outline-none"
                 />
               </div>
-            </div>
-
-            {/* Catatan Progres */}
-            <div>
-              <label className="block text-[#1E293B] font-bold mb-1">
-                Catatan Progres Belajar / Halaman
-              </label>
-              <textarea
-                rows={2}
-                value={formData.catatan_progres}
-                onChange={(e) => setFormData({ ...formData, catatan_progres: e.target.value })}
-                placeholder="Contoh: Sudah mencapai halaman 45, rumus manik kawan besar lancar..."
-                className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] text-xs focus:border-[#FF7043] focus:outline-none"
-              />
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E2E8F0]">
@@ -498,7 +412,7 @@ export const GuruBukuPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={createMutation.isPending || updateMutation.isPending}
-                className="px-5 py-2 bg-[#FF7043] hover:bg-[#F4511E] text-white font-bold rounded-lg transition-colors shadow-sm cursor-pointer disabled:opacity-50"
+                className="px-5 py-2 bg-[#FF7043] hover:bg-[#F4511E] text-white font-bold rounded-lg transition-colors cursor-pointer shadow-md disabled:opacity-50"
               >
                 {createMutation.isPending || updateMutation.isPending ? 'Menyimpan...' : 'Simpan Data Buku'}
               </button>

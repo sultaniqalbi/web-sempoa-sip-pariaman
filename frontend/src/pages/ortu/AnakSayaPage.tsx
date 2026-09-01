@@ -590,19 +590,23 @@ export const AnakSayaPage: React.FC = () => {
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="px-2.5 py-0.5 rounded-lg text-xs font-black bg-white text-[#1D4ED8] border border-[#BFDBFE] shadow-2xs">
-                              ⭐ {buku.level_anak}
+                            <span className="px-2.5 py-1 rounded-xl text-xs font-black bg-[#FFF3E0] text-[#E65100] border border-[#FFCC80] shadow-2xs inline-flex items-center gap-1">
+                              📖 Buku: {buku.level_anak}
                             </span>
-                            <span className="font-extrabold text-sm text-[#0F172A]">
-                              {buku.nomor_buku}
-                            </span>
+                            {buku.nomor_buku && (
+                              <span className="font-bold text-xs text-[#0F172A] bg-white px-2 py-0.5 rounded-md border border-[#E2E8F0]">
+                                Kode: {buku.nomor_buku}
+                              </span>
+                            )}
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getProgramBadgeStyle(buku.kategori_program)}`}>
                               {buku.kategori_program}
                             </span>
                           </div>
-                          <p className="text-xs text-[#475569] font-medium mt-1">
-                            {buku.jenis_buku || 'Buku Modul Pembelajaran'}
-                          </p>
+                          {buku.catatan_progres && (
+                            <p className="text-xs text-[#475569] font-medium mt-1.5 italic">
+                              Catatan: {buku.catatan_progres}
+                            </p>
+                          )}
                         </div>
 
                         <span
