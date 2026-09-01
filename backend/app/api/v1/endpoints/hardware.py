@@ -68,10 +68,11 @@ async def post_absensi(request: Request, db: Session = Depends(get_db)):
     uid_nospace = uid_clean.replace(" ", "")
 
     try:
-        # 1. Cek Eksklusif di Database Guru (Pegawai & Owner)
+        # 1. Cek Eksklusif di Database Guru (Pegawai & Owner yang aktif)
         guru = db.query(Guru).filter(
-            (func.upper(Guru.uid) == uid_clean) |
-            (func.replace(func.upper(Guru.uid), " ", "") == uid_nospace)
+            ((func.upper(Guru.uid) == uid_clean) |
+            (func.replace(func.upper(Guru.uid), " ", "") == uid_nospace)),
+            Guru.is_deleted == False
         ).first()
 
         # 2. Jika Kartu Belum Terdaftar sebagai Guru -> KARTU BARU (untuk Pendaftaran Guru)
@@ -80,7 +81,7 @@ async def post_absensi(request: Request, db: Session = Depends(get_db)):
             write_last_tap(uid_clean, waktu_str, "UNREGISTERED")
 
             manager.broadcast_sync("CARD_TAP", {
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(WIB).isoformat(),
                 "uid": uid_clean,
                 "waktu": waktu_str,
                 "status": "UNREGISTERED"
@@ -155,6 +156,8 @@ async def get_ping(request: Request):
         hardware_limiter.record_auth_failure(client_ip)
         return PlainTextResponse("UNAUTHORIZED", status_code=401)
 
+    hardware_limiter.reset_auth_failures(client_ip)
+
     ack = request.query_params.get("ack")
     if ack == "1":
         acknowledge_reset_command()
@@ -183,10 +186,11 @@ async def get_last_tap(
     uid_clean = uid.strip().upper()
     uid_nospace = uid_clean.replace(" ", "")
 
-    # Cek apakah sudah ada guru dengan UID ini di database
+    # Cek apakah sudah ada guru aktif dengan UID ini di database
     existing = db.query(Guru).filter(
-        (func.upper(Guru.uid) == uid_clean) |
-        (func.replace(func.upper(Guru.uid), " ", "") == uid_nospace)
+        ((func.upper(Guru.uid) == uid_clean) |
+        (func.replace(func.upper(Guru.uid), " ", "") == uid_nospace)),
+        Guru.is_deleted == False
     ).first()
 
     return {
@@ -202,9 +206,8 @@ async def get_last_tap(
 @router.get("/guru-cache", response_class=PlainTextResponse)
 async def get_guru_cache(request: Request, db: Session = Depends(get_db)):
     """
-    Mengembalikan seluruh daftar UID & Nama Guru untuk cache offline hardware ESP32.
+    Mengembalikan seluruh daftar UID & Nama Guru aktif untuk cache offline hardware ESP32.
     Format: UID:Nama|UID:Nama|...
-    Dilindungi dengan X-API-Key dan Rate Limiter sesuai SECURITY_STANDARDS.md.
     """
     client_ip = request.client.host if request.client else "unknown"
 
@@ -219,7 +222,7 @@ async def get_guru_cache(request: Request, db: Session = Depends(get_db)):
     hardware_limiter.reset_auth_failures(client_ip)
 
     try:
-        gurus = db.query(Guru).all()
+        gurus = db.query(Guru).filter(Guru.is_deleted == False).all()
         records = []
         for g in gurus:
             if g.uid and g.uid.strip():

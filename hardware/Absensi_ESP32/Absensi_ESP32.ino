@@ -286,6 +286,17 @@ void simpanGuruCache(const String& uid, const String& nama) {
   Serial.println("[Cache] Guru disimpan offline: " + cleanUid + " -> " + nama);
 }
 
+void hapusGuruCache(const String& uid) {
+  String cleanUid = uid;
+  cleanUid.replace(" ", "");
+  cleanUid.toUpperCase();
+
+  preferences.begin("g_cache", false);
+  preferences.remove(cleanUid.c_str());
+  preferences.end();
+  Serial.println("[Cache] Guru dihapus dari NVS: " + cleanUid);
+}
+
 String ambilGuruCache(const String& uid) {
   String cleanUid = uid;
   cleanUid.replace(" ", "");
@@ -629,6 +640,12 @@ void syncGuruCacheFromServer() {
     if (code == HTTP_CODE_OK) {
       String payload = http.getString();
       payload.trim();
+
+      // BERSIHKAN TOTAL SELURUH CACHE LAMA AGAR TIDAK ADA DATA DUMMY / KARTU UJI COBA YANG TERTINGGAL!
+      preferences.begin("g_cache", false);
+      preferences.clear();
+      preferences.end();
+
       if (payload.length() > 0) {
         int start = 0;
         int countLoaded = 0;
@@ -645,7 +662,9 @@ void syncGuruCacheFromServer() {
           }
           start = end + 1;
         }
-        Serial.println("[Guru Cache] Berhasil sinkron " + String(countLoaded) + " guru ke NVS lokal!");
+        Serial.println("[Guru Cache] SINKRON 100% REALTIME: " + String(countLoaded) + " guru aktif berhasil disimpan ke NVS!");
+      } else {
+        Serial.println("[Guru Cache] Database kosong. Seluruh cache lokal NVS telah dikosongkan.");
       }
     }
     http.end();
@@ -787,6 +806,9 @@ void wifiSyncTask(void *pvParameters) {
           }
           nama.trim();
           simpanGuruCache(uidStr, nama);
+        } else if (res.startsWith("KARTU_BARU") || res == "GURU_NOT_FOUND" || res == "TIDAK_TERDAFTAR") {
+          // Kartu belum terdaftar / kartu uji coba lama -> Bersihkan seketika dari cache NVS lokal!
+          hapusGuruCache(uidStr);
         } else if (res == "WIFI_OFF" || res == "KONEKSI_ERROR" || res.startsWith("HTTP_")) {
           // Gagal koneksi -> simpan offline agar data tap tidak hilang
           simpanOffline(uidStr, waktuStr);
