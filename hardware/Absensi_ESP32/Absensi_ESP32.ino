@@ -176,8 +176,15 @@ void cetakDuaBarisCenter(const char* baris0, const char* baris1) {
 }
 
 // =========================================================
-// BUZZER FUNCTIONS
+// NON-BLOCKING BUZZER STATE MACHINE
 // =========================================================
+unsigned long buzzerMulai = 0;
+unsigned long buzzerDurasi = 0;
+int buzzerBeepCount = 0;
+int buzzerBeepTarget = 0;
+unsigned long buzzerNextToggle = 0;
+bool buzzerState = false;
+
 // 1. Boot / Nyala: Bip panjang 1 detik (1000ms)
 void beepBoot() {
   digitalWrite(BUZZER_PIN, HIGH);
@@ -185,20 +192,50 @@ void beepBoot() {
   digitalWrite(BUZZER_PIN, LOW);
 }
 
-// 2. Kartu Terdaftar: Bip panjang 1 detik (1000ms)
-void beepKartuTerdaftar() {
+// 2. Kartu Terdaftar: Bip panjang 1 detik (Non-blocking)
+void triggerBuzzerTerdaftar() {
   digitalWrite(BUZZER_PIN, HIGH);
-  delay(1000);
-  digitalWrite(BUZZER_PIN, LOW);
+  buzzerMulai = millis();
+  buzzerDurasi = 1000;
+  buzzerBeepTarget = 0;
+  buzzerState = true;
 }
 
-// 3. Kartu Belum Terdaftar / Baru: Bip 3x cepat dalam 1 detik
-void beepKartuBaru() {
-  for (int i = 0; i < 3; i++) {
-    digitalWrite(BUZZER_PIN, HIGH);
-    delay(120);
-    digitalWrite(BUZZER_PIN, LOW);
-    if (i < 2) delay(100);
+// 3. Kartu Baru: Bip 3x cepat dalam 1 detik (Non-blocking)
+void triggerBuzzerBaru() {
+  buzzerBeepCount = 0;
+  buzzerBeepTarget = 3;
+  buzzerNextToggle = millis();
+  buzzerState = false;
+  buzzerDurasi = 0;
+}
+
+// Fungsi update buzzer yang dipanggil di setiap putaran loop()
+void updateBuzzer() {
+  unsigned long now = millis();
+  if (buzzerDurasi > 0) {
+    if (now - buzzerMulai >= buzzerDurasi) {
+      digitalWrite(BUZZER_PIN, LOW);
+      buzzerDurasi = 0;
+      buzzerState = false;
+    }
+  } else if (buzzerBeepTarget > 0) {
+    if (now >= buzzerNextToggle) {
+      if (!buzzerState) {
+        digitalWrite(BUZZER_PIN, HIGH);
+        buzzerState = true;
+        buzzerNextToggle = now + 120; // 120ms ON
+      } else {
+        digitalWrite(BUZZER_PIN, LOW);
+        buzzerState = false;
+        buzzerBeepCount++;
+        if (buzzerBeepCount >= buzzerBeepTarget) {
+          buzzerBeepTarget = 0;
+        } else {
+          buzzerNextToggle = now + 100; // 100ms OFF
+        }
+      }
+    }
   }
 }
 
@@ -209,7 +246,7 @@ void optimasiAntenaRFID() {
   // 1. Set Gain Receiver Maksimal (48 dB)
   rfid.PCD_SetAntennaGain(MFRC522::RxGain_max);
   
-  // 2. Force 100% ASK Modulation untuk memperkuat penetrasi gelombang medan magnet
+  // 2. Force 100% ASK Modulation untuk memperkuat penetrasi medan magnet
   rfid.PCD_WriteRegister(MFRC522::TxASKReg, 0x40);
 
   // 3. Aktifkan driver pemancar antena
@@ -218,19 +255,21 @@ void optimasiAntenaRFID() {
   Serial.println("[BOOT] Penguatan Antena RFID RC522: MAX 48dB + 100% ASK Modulation OK");
 }
 
-// Deteksi kartu agresif (Wake-Up All / WUPA 0x52) - membaca kartu di posisi / kemiringan apapun
+// Deteksi kartu agresif (Wake-Up All / WUPA 0x52)
 bool deteksiKartuAgresif() {
   byte bufferATQA[2];
   byte bufferSize = sizeof(bufferATQA);
 
-  // Reset baud rate registers
-  rfid.PCD_WriteRegister(MFRC522::TxModeReg, 0x00);
-  rfid.PCD_WriteRegister(MFRC522::RxModeReg, 0x00);
-  rfid.PCD_WriteRegister(MFRC522::ModWidthReg, 0x26);
-
-  // Kirim command WUPA (0x52) untuk menangkap kartu pada seluruh area antena
   MFRC522::StatusCode status = rfid.PICC_WakeupA(bufferATQA, &bufferSize);
   return (status == MFRC522::STATUS_OK || status == MFRC522::STATUS_COLLISION);
+}
+
+// Helper membaca kartu RFID tanpa delay
+bool cekKartuRFID() {
+  if (!rfid.PICC_IsNewCardPresent() && !deteksiKartuAgresif()) {
+    return false;
+  }
+  return rfid.PICC_ReadCardSerial();
 }
 
 // =========================================================
@@ -389,6 +428,8 @@ void setup() {
 // MAIN LOOP (CORE 1) — RESPON CEPAT & ULTRA REALTIME
 // =========================================================
 void loop() {
+  updateBuzzer(); // Handle non-blocking buzzer timing
+
   // Input provisioning serial dari admin (Opsional)
   if (Serial.available()) {
     String input = Serial.readStringUntil('\n');
@@ -415,15 +456,15 @@ void loop() {
   RtcDateTime now = ambilWaktuValidWIB();
 
   // DETEKSI TAP KARTU RFID (Agresif + Non-blocking)
-  if ((deteksiKartuAgresif() || rfid.PICC_IsNewCardPresent()) && rfid.PICC_ReadCardSerial()) {
+  if (cekKartuRFID()) {
     prosesTap(now);
     rfid.PICC_HaltA();
     rfid.PCD_StopCrypto1();
-    delay(20);
   }
 
+  updateBuzzer();
   jalankanStandby();
-  delay(10);
+  delay(5);
 }
 
 // =========================================================
@@ -448,7 +489,7 @@ void prosesTap(const RtcDateTime& now) {
   waktuTapTerakhir = msNow;
   String waktu = formatWaktu(now);
 
-  // 1. INSTANT LOCAL CACHE LOOKUP & POLA SUARA BUZZER
+  // 1. INSTANT LOCAL CACHE LOOKUP & POLA SUARA BUZZER (NON-BLOCKING)
   String cachedNama = ambilGuruCache(uid);
 
   if (cachedNama.length() > 0) {
@@ -456,11 +497,11 @@ void prosesTap(const RtcDateTime& now) {
     String dispNama = cachedNama;
     if (dispNama.length() > 16) dispNama = dispNama.substring(0, 16);
     cetakDuaBarisCenter("Selamat Datang", dispNama.c_str());
-    beepKartuTerdaftar(); // Bip 1x panjang 1 detik
+    triggerBuzzerTerdaftar(); // Bip 1x panjang (non-blocking)
   } else {
     // B. KARTU BARU: Tampilkan Status Baru & Bip 3x Cepat dalam 1 detik
     cetakDuaBarisCenter("KARTU BARU", uid.c_str());
-    beepKartuBaru(); // Bip 3x cepat
+    triggerBuzzerBaru(); // Bip 3x cepat (non-blocking)
   }
 
   lcdDisplayUntil = millis() + 2000; // Tampilkan status di LCD selama 2 detik
