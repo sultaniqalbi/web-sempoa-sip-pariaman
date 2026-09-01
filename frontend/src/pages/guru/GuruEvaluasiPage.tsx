@@ -6,8 +6,9 @@ import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
 import ConfirmModal from '../../components/ConfirmModal';
 import EmptyState from '../../components/EmptyState';
-import { EvaluasiIcon, EditIcon, TrashIcon, CheckIcon, StarIcon, AwardIcon, CalendarIcon } from '../../components/SvgIcons';
+import { EvaluasiIcon, TrashIcon, BookIcon, CalendarIcon, CheckIcon } from '../../components/SvgIcons';
 import { getProgramBadgeStyle } from '../portal/SiswaPage';
+import { BukuItem } from '../portal/BukuPage';
 
 export interface EvaluasiGuruItem {
   id: number;
@@ -29,28 +30,22 @@ export interface EvaluasiGuruItem {
   created_at: string;
 }
 
-const ASPEK_OPTIONS = ['Sangat Baik', 'Baik', 'Cukup', 'Perlu Bimbingan'];
-const PREDIKAT_OPTIONS = ['A (Sangat Baik / Istimewa)', 'B (Baik & Lancar)', 'C (Cukup / Terus Berlatih)', 'D (Perlu Pendampingan Khusus)'];
-
 export const GuruEvaluasiPage: React.FC = () => {
   const queryClient = useQueryClient();
+  const [selectedProgram, setSelectedProgram] = useState<string>('all');
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [targetSiswa, setTargetSiswa] = useState<any | null>(null);
   const [editingEval, setEditingEval] = useState<EvaluasiGuruItem | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<{ id: number; nama: string; periode: string } | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: number; nama: string } | null>(null);
 
   const [formData, setFormData] = useState({
     id_siswa: '',
     kategori_program: 'Sempoa SIP',
     tanggal_evaluasi: new Date().toISOString().split('T')[0],
-    periode_evaluasi: 'Bulan September 2026',
-    nilai_fokus: 'Baik',
-    nilai_kecepatan: 'Baik',
-    nilai_ketelitian: 'Baik',
-    nilai_pemahaman: 'Baik',
-    predikat_keseluruhan: 'B (Baik & Lancar)',
+    predikat_keseluruhan: 'Baik',
     catatan_guru: '',
     saran_untuk_ortu: ''
   });
@@ -61,7 +56,7 @@ export const GuruEvaluasiPage: React.FC = () => {
   };
 
   // 1. Fetch Teacher's Students
-  const { data: siswaList = [] } = useQuery<any[]>({
+  const { data: siswaList = [], isLoading: isSiswaLoading } = useQuery<any[]>({
     queryKey: ['guru-siswa-list'],
     queryFn: async () => {
       try {
@@ -74,8 +69,17 @@ export const GuruEvaluasiPage: React.FC = () => {
     }
   });
 
-  // 2. Fetch Teacher's Evaluations
-  const { data: evalList = [], isLoading } = useQuery<EvaluasiGuruItem[]>({
+  // 2. Fetch Books
+  const { data: bukuList = [] } = useQuery<BukuItem[]>({
+    queryKey: ['buku', 'guru-list'],
+    queryFn: async () => {
+      const res = await apiClient.get('/buku/');
+      return res.data;
+    }
+  });
+
+  // 3. Fetch Evaluations
+  const { data: evalList = [] } = useQuery<EvaluasiGuruItem[]>({
     queryKey: ['evaluasi', 'guru-list'],
     queryFn: async () => {
       const res = await apiClient.get('/evaluasi/');
@@ -87,8 +91,16 @@ export const GuruEvaluasiPage: React.FC = () => {
   const createMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
       const payload = {
-        ...data,
-        id_siswa: parseInt(data.id_siswa, 10)
+        id_siswa: parseInt(data.id_siswa, 10),
+        kategori_program: data.kategori_program,
+        tanggal_evaluasi: data.tanggal_evaluasi,
+        predikat_keseluruhan: data.predikat_keseluruhan,
+        catatan_guru: data.catatan_guru,
+        saran_untuk_ortu: data.saran_untuk_ortu || null,
+        nilai_fokus: data.predikat_keseluruhan,
+        nilai_kecepatan: data.predikat_keseluruhan,
+        nilai_ketelitian: data.predikat_keseluruhan,
+        nilai_pemahaman: data.predikat_keseluruhan,
       };
       const res = await apiClient.post('/evaluasi/', payload);
       return res.data;
@@ -96,18 +108,24 @@ export const GuruEvaluasiPage: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['evaluasi'] });
       setIsModalOpen(false);
-      showToast('Lembar evaluasi siswa berhasil dikirimkan ke orang tua');
+      showToast('Evaluasi berhasil disimpan dan otomatis masuk ke portal Orang Tua');
     },
     onError: (err: any) => {
-      showToast(`Gagal input evaluasi: ${err.response?.data?.detail || err.message}`, 'error');
+      showToast(`Gagal menyimpan evaluasi: ${err.response?.data?.detail || err.message}`, 'error');
     }
   });
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: typeof formData }) => {
       const payload = {
-        ...data,
-        id_siswa: parseInt(data.id_siswa, 10)
+        tanggal_evaluasi: data.tanggal_evaluasi,
+        predikat_keseluruhan: data.predikat_keseluruhan,
+        catatan_guru: data.catatan_guru,
+        saran_untuk_ortu: data.saran_untuk_ortu || null,
+        nilai_fokus: data.predikat_keseluruhan,
+        nilai_kecepatan: data.predikat_keseluruhan,
+        nilai_ketelitian: data.predikat_keseluruhan,
+        nilai_pemahaman: data.predikat_keseluruhan,
       };
       const res = await apiClient.put(`/evaluasi/${id}`, payload);
       return res.data;
@@ -116,10 +134,10 @@ export const GuruEvaluasiPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['evaluasi'] });
       setIsModalOpen(false);
       setEditingEval(null);
-      showToast('Lembar evaluasi berhasil diperbarui');
+      showToast('Evaluasi murid berhasil diperbarui');
     },
     onError: (err: any) => {
-      showToast(`Gagal update evaluasi: ${err.response?.data?.detail || err.message}`, 'error');
+      showToast(`Gagal update: ${err.response?.data?.detail || err.message}`, 'error');
     }
   });
 
@@ -138,148 +156,147 @@ export const GuruEvaluasiPage: React.FC = () => {
     }
   });
 
-  const openAddModal = () => {
-    setEditingEval(null);
-    const firstSiswa = siswaList[0];
-    setFormData({
-      id_siswa: firstSiswa?.id ? String(firstSiswa.id) : '',
-      kategori_program: firstSiswa?.kategori_program?.split(',')[0]?.trim() || 'Sempoa SIP',
-      tanggal_evaluasi: new Date().toISOString().split('T')[0],
-      periode_evaluasi: `Bulan ${new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}`,
-      nilai_fokus: 'Baik',
-      nilai_kecepatan: 'Baik',
-      nilai_ketelitian: 'Baik',
-      nilai_pemahaman: 'Baik',
-      predikat_keseluruhan: 'B (Baik & Lancar)',
-      catatan_guru: '',
-      saran_untuk_ortu: ''
-    });
-    setIsModalOpen(true);
-  };
-
-  const openEditModal = (item: EvaluasiGuruItem) => {
-    setEditingEval(item);
-    setFormData({
-      id_siswa: String(item.id_siswa),
-      kategori_program: item.kategori_program || 'Sempoa SIP',
-      tanggal_evaluasi: item.tanggal_evaluasi || new Date().toISOString().split('T')[0],
-      periode_evaluasi: item.periode_evaluasi || '',
-      nilai_fokus: item.nilai_fokus || 'Baik',
-      nilai_kecepatan: item.nilai_kecepatan || 'Baik',
-      nilai_ketelitian: item.nilai_ketelitian || 'Baik',
-      nilai_pemahaman: item.nilai_pemahaman || 'Baik',
-      predikat_keseluruhan: item.predikat_keseluruhan || 'B (Baik & Lancar)',
-      catatan_guru: item.catatan_guru || '',
-      saran_untuk_ortu: item.saran_untuk_ortu || ''
-    });
-    setIsModalOpen(true);
-  };
-
-  const getScoreBadge = (score: string) => {
-    const s = (score || '').toLowerCase();
-    if (s.includes('sangat baik') || s.includes('istimewa') || s.includes('a')) {
-      return 'bg-[#DCFCE7] text-[#16A34A] border-[#86EFAC]';
-    } else if (s.includes('baik') || s.includes('b')) {
-      return 'bg-[#E0F2FE] text-[#0369A1] border-[#BAE6FD]';
-    } else if (s.includes('cukup') || s.includes('c')) {
-      return 'bg-[#FEF3C7] text-[#D97706] border-[#FCD34D]';
+  // Modal Open Handler
+  const handleOpenEvaluasiModal = (siswa: any, existingEval?: EvaluasiGuruItem) => {
+    setTargetSiswa(siswa);
+    const prog = siswa.kategori_program?.split(',')[0]?.trim() || 'Sempoa SIP';
+    if (existingEval) {
+      setEditingEval(existingEval);
+      setFormData({
+        id_siswa: String(siswa.id),
+        kategori_program: existingEval.kategori_program || prog,
+        tanggal_evaluasi: existingEval.tanggal_evaluasi || new Date().toISOString().split('T')[0],
+        predikat_keseluruhan: existingEval.predikat_keseluruhan || 'Baik',
+        catatan_guru: existingEval.catatan_guru || '',
+        saran_untuk_ortu: existingEval.saran_untuk_ortu || ''
+      });
+    } else {
+      setEditingEval(null);
+      setFormData({
+        id_siswa: String(siswa.id),
+        kategori_program: prog,
+        tanggal_evaluasi: new Date().toISOString().split('T')[0],
+        predikat_keseluruhan: 'Baik',
+        catatan_guru: '',
+        saran_untuk_ortu: ''
+      });
     }
-    return 'bg-[#FEE2E2] text-[#DC2626] border-[#FCA5A5]';
+    setIsModalOpen(true);
   };
+
+  // Filter Siswa Sesuai Tab Program
+  const filteredStudents = siswaList.filter((s: any) => {
+    if (selectedProgram === 'all') return true;
+    return (s.kategori_program || '').toLowerCase().includes(selectedProgram.toLowerCase());
+  });
+
+  // Gabungkan Siswa + Buku + Evaluasi
+  const tableData = filteredStudents.map((siswa: any) => {
+    const studentBuku = bukuList.find((b: BukuItem) => b.id_siswa === siswa.id);
+    const studentEval = evalList.find((e: EvaluasiGuruItem) => e.id_siswa === siswa.id);
+
+    return {
+      siswa,
+      buku: studentBuku,
+      evaluasi: studentEval
+    };
+  });
 
   const columns = [
     {
-      header: 'Nama Siswa',
-      accessor: (row: EvaluasiGuruItem) => (
+      header: 'ID & Nama Siswa',
+      accessor: (row: any) => (
         <div>
-          <span className="font-mono text-[#FF7043] font-black text-xs block">{row.uid_siswa || '-'}</span>
-          <p className="font-bold text-[#1E293B] text-xs sm:text-sm mt-0.5">{row.nama_siswa}</p>
-          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border mt-1 inline-block ${getProgramBadgeStyle(row.kategori_program)}`}>
-            {row.kategori_program}
+          <span className="font-mono text-[#FF7043] font-black text-xs block">{row.siswa.uid}</span>
+          <p className="font-bold text-[#1E293B] text-xs sm:text-sm mt-0.5">{row.siswa.nama}</p>
+          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border mt-1 inline-block ${getProgramBadgeStyle(row.siswa.kategori_program)}`}>
+            {row.siswa.kategori_program}
           </span>
         </div>
       ),
-      className: 'md:w-[180px]'
+      className: 'md:w-[200px]'
     },
     {
-      header: 'Periode Evaluasi',
-      accessor: (row: EvaluasiGuruItem) => (
+      header: 'Buku Saat Ini',
+      accessor: (row: any) => (
         <div>
-          <span className="font-bold text-xs text-[#0F172A] block">
-            {row.periode_evaluasi || 'Evaluasi Berkala'}
+          <span className="px-2.5 py-1 rounded-xl text-xs font-black bg-[#FFF3E0] text-[#E65100] border border-[#FFCC80] inline-flex items-center gap-1.5 shadow-2xs">
+            <BookIcon size={13} className="text-[#FF7043]" />
+            {row.buku?.level_anak || 'Junior'}
           </span>
-          <div className="flex items-center gap-1 text-[10px] text-[#64748B] mt-1 font-semibold">
-            <CalendarIcon size={10} />
-            <span>Tanggal: {new Date(row.tanggal_evaluasi).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-          </div>
         </div>
       ),
       className: 'md:w-[160px]'
     },
     {
-      header: '4 Aspek Penilaian',
-      accessor: (row: EvaluasiGuruItem) => (
-        <div className="grid grid-cols-2 gap-1 py-1 text-[10px]">
-          <div className="p-1 rounded bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-between">
-            <span className="text-[#64748B] font-semibold">Fokus:</span>
-            <span className={`font-bold px-1.5 py-0.2 rounded ${getScoreBadge(row.nilai_fokus)}`}>{row.nilai_fokus}</span>
-          </div>
-          <div className="p-1 rounded bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-between">
-            <span className="text-[#64748B] font-semibold">Kecepatan:</span>
-            <span className={`font-bold px-1.5 py-0.2 rounded ${getScoreBadge(row.nilai_kecepatan)}`}>{row.nilai_kecepatan}</span>
-          </div>
-          <div className="p-1 rounded bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-between">
-            <span className="text-[#64748B] font-semibold">Ketelitian:</span>
-            <span className={`font-bold px-1.5 py-0.2 rounded ${getScoreBadge(row.nilai_ketelitian)}`}>{row.nilai_ketelitian}</span>
-          </div>
-          <div className="p-1 rounded bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-between">
-            <span className="text-[#64748B] font-semibold">Pemahaman:</span>
-            <span className={`font-bold px-1.5 py-0.2 rounded ${getScoreBadge(row.nilai_pemahaman)}`}>{row.nilai_pemahaman}</span>
-          </div>
-        </div>
+      header: 'Nomor / Kode Buku',
+      accessor: (row: any) => (
+        <span className="font-bold text-xs text-[#0F172A]">
+          {row.buku?.nomor_buku ? row.buku.nomor_buku : <span className="text-[#94A3B8] italic font-normal">Tidak ada kode</span>}
+        </span>
       ),
-      className: 'md:w-[260px]'
+      className: 'md:w-[150px]'
     },
     {
-      header: 'Predikat & Pesan untuk Ortu',
-      accessor: (row: EvaluasiGuruItem) => (
-        <div>
-          <span className={`px-2.5 py-0.5 rounded-full text-xs font-black border inline-flex items-center gap-1 ${getScoreBadge(row.predikat_keseluruhan)}`}>
-            <AwardIcon size={12} />
-            {row.predikat_keseluruhan}
-          </span>
-          <p className="text-xs text-[#334155] italic mt-1 line-clamp-2">
-            "{row.catatan_guru}"
-          </p>
-          {row.saran_untuk_ortu && (
-            <p className="text-[11px] text-[#B45309] font-medium mt-0.5 line-clamp-1">
-              💡 Tips Ortu: {row.saran_untuk_ortu}
+      header: 'Evaluasi & Masukan Guru',
+      accessor: (row: any) => {
+        if (!row.evaluasi) {
+          return (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-[#94A3B8] italic bg-[#F8FAFC] px-2.5 py-1 rounded-lg border border-[#E2E8F0]">
+                Belum ada evaluasi
+              </span>
+            </div>
+          );
+        }
+
+        return (
+          <div className="space-y-1 py-1">
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-[#DCFCE7] text-[#16A34A] border border-[#86EFAC]">
+                Predikat: {row.evaluasi.predikat_keseluruhan}
+              </span>
+              <span className="text-[10px] text-[#64748B] flex items-center gap-1">
+                <CalendarIcon size={10} />
+                {new Date(row.evaluasi.tanggal_evaluasi).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+              </span>
+            </div>
+            <p className="text-xs text-[#1E293B] font-medium italic line-clamp-2">
+              "{row.evaluasi.catatan_guru}"
             </p>
-          )}
-        </div>
-      )
+          </div>
+        );
+      }
     },
     {
       header: 'Aksi',
-      accessor: (row: EvaluasiGuruItem) => (
+      accessor: (row: any) => (
         <div className="flex items-center gap-1.5 justify-end">
           <button
-            onClick={() => openEditModal(row)}
-            className="p-1.5 bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#FF7043] rounded-lg border border-[#FFCC80] transition-colors flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
-            title="Edit Evaluasi"
+            onClick={() => handleOpenEvaluasiModal(row.siswa, row.evaluasi)}
+            className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1 cursor-pointer active:scale-95 shadow-2xs ${
+              row.evaluasi
+                ? 'bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#FF7043] border border-[#FFCC80]'
+                : 'bg-[#FF7043] hover:bg-[#F4511E] text-white shadow-xs'
+            }`}
+            title="Beri / Edit Evaluasi"
           >
-            <EditIcon size={14} />
+            <EvaluasiIcon size={14} />
+            <span>{row.evaluasi ? 'Edit Evaluasi' : 'Beri Evaluasi'}</span>
           </button>
-          <button
-            onClick={() => setDeleteConfirm({ id: row.id, nama: row.nama_siswa || '', periode: row.periode_evaluasi || 'Evaluasi' })}
-            className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
-            title="Hapus Evaluasi"
-          >
-            <TrashIcon size={14} />
-          </button>
+
+          {row.evaluasi && (
+            <button
+              onClick={() => setDeleteConfirm({ id: row.evaluasi.id, nama: row.siswa.nama })}
+              className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
+              title="Hapus Evaluasi"
+            >
+              <TrashIcon size={14} />
+            </button>
+          )}
         </div>
       ),
-      className: 'text-right'
+      className: 'text-right md:w-[180px]'
     }
   ];
 
@@ -301,53 +318,74 @@ export const GuruEvaluasiPage: React.FC = () => {
       <PageHeader
         icon={<EvaluasiIcon size={24} className="text-[#FF7043]" />}
         title="Evaluasi Pembelajaran Siswa"
-        subtitle="Input rapor kemajuan belajar murid bimbingan untuk diteruskan ke portal orang tua"
+        subtitle="Input masukan dan laporan perkembangan belajar murid yang langsung tersambung ke portal Orang Tua"
         iconColorBg="bg-[#FFF3E0] text-[#FF7043]"
-        actionLabel="Input Evaluasi Baru"
-        onAction={openAddModal}
       />
 
+      {/* Filter Tabs Program */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-[#E2E8F0] shadow-xs">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-xs font-bold text-[#64748B] mr-2">Filter Program:</span>
+          {['all', 'Sempoa SIP', 'Fonem', 'Tahfidz', 'Bahasa Inggris', 'TK'].map(prog => (
+            <button
+              key={prog}
+              onClick={() => setSelectedProgram(prog)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                selectedProgram === prog
+                  ? 'bg-[#FF7043] text-white shadow-2xs'
+                  : 'bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0]'
+              }`}
+            >
+              {prog === 'all' ? 'Semua Program' : prog}
+            </button>
+          ))}
+        </div>
+        <div className="text-xs font-bold text-[#64748B]">
+          Menampilkan <span className="text-[#FF7043] font-black">{tableData.length}</span> Murid
+        </div>
+      </div>
+
       {/* Main Table */}
-      {isLoading ? (
-        <div className="py-16 text-center text-[#757575] text-xs">Memuat daftar evaluasi siswa...</div>
-      ) : evalList.length === 0 ? (
+      {isSiswaLoading ? (
+        <div className="py-16 text-center text-[#757575] text-xs">Memuat data murid & evaluasi...</div>
+      ) : tableData.length === 0 ? (
         <EmptyState
           icon={<EvaluasiIcon size={40} className="text-[#757575]" />}
-          title="Belum ada lembar evaluasi murid"
-          description="Klik tombol 'Input Evaluasi Baru' untuk membuat catatan evaluasi belajar murid bimbingan Anda."
-          actionLabel="Input Evaluasi Baru"
-          onAction={openAddModal}
+          title="Belum ada data murid bimbingan"
+          description="Siswa bimbingan Anda akan otomatis muncul di sini."
         />
       ) : (
         <DataTable
           columns={columns}
-          data={evalList}
-          searchPlaceholder="Cari siswa, periode, catatan..."
+          data={tableData}
+          searchPlaceholder="Cari nama murid, UID, level/buku, catatan evaluasi..."
           searchFilter={(row, q) => {
             const query = q.toLowerCase();
             return (
-              (row.nama_siswa || '').toLowerCase().includes(query) ||
-              (row.periode_evaluasi || '').toLowerCase().includes(query) ||
-              (row.catatan_guru || '').toLowerCase().includes(query) ||
-              (row.predikat_keseluruhan || '').toLowerCase().includes(query)
+              (row.siswa.nama || '').toLowerCase().includes(query) ||
+              (row.siswa.uid || '').toLowerCase().includes(query) ||
+              (row.siswa.kategori_program || '').toLowerCase().includes(query) ||
+              (row.buku?.level_anak || '').toLowerCase().includes(query) ||
+              (row.buku?.nomor_buku || '').toLowerCase().includes(query) ||
+              (row.evaluasi?.catatan_guru || '').toLowerCase().includes(query)
             );
           }}
         />
       )}
 
-      {/* Modal Input / Edit Evaluasi Siswa */}
-      {isModalOpen && (
+      {/* Modal Popup Input / Edit Evaluasi Siswa */}
+      {isModalOpen && targetSiswa && (
         <Modal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          title={editingEval ? "Edit Lembar Evaluasi Siswa" : "Input Evaluasi & Rapor Siswa Baru"}
-          size="lg"
+          title={editingEval ? "Edit Evaluasi Murid" : "Input Evaluasi Pembelajaran Murid"}
+          size="md"
         >
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              if (!formData.id_siswa) {
-                showToast('Pilih murid terlebih dahulu', 'error');
+              if (!formData.catatan_guru.trim()) {
+                showToast('Catatan masukan evaluasi wajib diisi', 'error');
                 return;
               }
               if (editingEval) {
@@ -358,65 +396,20 @@ export const GuruEvaluasiPage: React.FC = () => {
             }}
             className="space-y-4 text-xs"
           >
-            {/* Pilih Siswa & Program */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Banner Identitas Siswa */}
+            <div className="p-3 bg-gradient-to-r from-[#FFF3E0] to-[#FFF8E1] border border-[#FFE082] rounded-xl flex items-center justify-between">
               <div>
-                <label className="block text-[#1E293B] font-bold mb-1">
-                  Pilih Murid Bimbingan*
-                </label>
-                <select
-                  required
-                  value={formData.id_siswa}
-                  onChange={(e) => {
-                    const sId = e.target.value;
-                    const s = siswaList.find((x: any) => String(x.id) === sId);
-                    const prog = s?.kategori_program?.split(',')[0]?.trim() || 'Sempoa SIP';
-                    setFormData(prev => ({
-                      ...prev,
-                      id_siswa: sId,
-                      kategori_program: prog
-                    }));
-                  }}
-                  className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold text-xs focus:border-[#FF7043] focus:outline-none"
-                >
-                  <option value="">-- Pilih Murid --</option>
-                  {siswaList.map((s: any) => (
-                    <option key={s.id} value={s.id}>
-                      {s.nama} ({s.uid}) - {s.kategori_program}
-                    </option>
-                  ))}
-                </select>
+                <p className="text-[11px] text-[#64748B] font-bold">Evaluasi Pembelajaran Untuk:</p>
+                <h4 className="text-sm font-black text-[#E65100]">{targetSiswa.nama}</h4>
+                <span className="text-[10px] font-mono text-[#8D6E63] font-bold">{targetSiswa.uid}</span>
               </div>
-
-              <div>
-                <label className="block text-[#1E293B] font-bold mb-1">
-                  Program Pembelajaran*
-                </label>
-                <input
-                  type="text"
-                  readOnly
-                  value={formData.kategori_program}
-                  className="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg p-2.5 text-[#475569] font-bold text-xs cursor-not-allowed"
-                />
-              </div>
+              <span className={`px-2.5 py-1 rounded-lg text-xs font-black border ${getProgramBadgeStyle(formData.kategori_program)}`}>
+                {formData.kategori_program}
+              </span>
             </div>
 
-            {/* Periode & Tanggal Evaluasi */}
+            {/* Tanggal & Predikat Capaian */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[#1E293B] font-bold mb-1">
-                  Periode Evaluasi*
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.periode_evaluasi}
-                  onChange={(e) => setFormData({ ...formData, periode_evaluasi: e.target.value })}
-                  placeholder="Contoh: Bulan September 2026 / Pertemuan Ke-8"
-                  className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold text-xs focus:border-[#FF7043] focus:outline-none"
-                />
-              </div>
-
               <div>
                 <label className="block text-[#1E293B] font-bold mb-1">
                   Tanggal Evaluasi*
@@ -429,119 +422,50 @@ export const GuruEvaluasiPage: React.FC = () => {
                   className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold text-xs focus:border-[#FF7043] focus:outline-none"
                 />
               </div>
-            </div>
 
-            {/* 4 Rating Aspek Penilaian */}
-            <div className="p-3.5 bg-[#FFF8E1] border border-[#FFE082] rounded-xl space-y-3">
-              <div className="flex items-center justify-between pb-1 border-b border-[#FFD54F]">
-                <span className="font-extrabold text-xs text-[#E65100] flex items-center gap-1.5">
-                  <StarIcon size={14} className="text-[#FF7043]" />
-                  Penilaian 4 Aspek Perkembangan Siswa:
-                </span>
-                <span className="text-[10px] text-[#BF360C] font-semibold">
-                  Pilih predikat per aspek
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* 1. Fokus */}
-                <div>
-                  <label className="block text-[#B45309] font-bold text-xs mb-1">
-                    1. Fokus & Konsentrasi Belajar*
-                  </label>
-                  <select
-                    value={formData.nilai_fokus}
-                    onChange={(e) => setFormData({ ...formData, nilai_fokus: e.target.value })}
-                    className="w-full bg-white border border-[#FCD34D] rounded-lg p-2 text-[#1E293B] font-bold text-xs focus:border-[#FF7043] focus:outline-none"
-                  >
-                    {ASPEK_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </select>
-                </div>
-
-                {/* 2. Kecepatan */}
-                <div>
-                  <label className="block text-[#B45309] font-bold text-xs mb-1">
-                    2. Kecepatan Berhitung / Membaca*
-                  </label>
-                  <select
-                    value={formData.nilai_kecepatan}
-                    onChange={(e) => setFormData({ ...formData, nilai_kecepatan: e.target.value })}
-                    className="w-full bg-white border border-[#FCD34D] rounded-lg p-2 text-[#1E293B] font-bold text-xs focus:border-[#FF7043] focus:outline-none"
-                  >
-                    {ASPEK_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </select>
-                </div>
-
-                {/* 3. Ketelitian */}
-                <div>
-                  <label className="block text-[#B45309] font-bold text-xs mb-1">
-                    3. Ketelitian & Akurasi Jawaban*
-                  </label>
-                  <select
-                    value={formData.nilai_ketelitian}
-                    onChange={(e) => setFormData({ ...formData, nilai_ketelitian: e.target.value })}
-                    className="w-full bg-white border border-[#FCD34D] rounded-lg p-2 text-[#1E293B] font-bold text-xs focus:border-[#FF7043] focus:outline-none"
-                  >
-                    {ASPEK_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </select>
-                </div>
-
-                {/* 4. Pemahaman */}
-                <div>
-                  <label className="block text-[#B45309] font-bold text-xs mb-1">
-                    4. Pemahaman Konsep & Rumus*
-                  </label>
-                  <select
-                    value={formData.nilai_pemahaman}
-                    onChange={(e) => setFormData({ ...formData, nilai_pemahaman: e.target.value })}
-                    className="w-full bg-white border border-[#FCD34D] rounded-lg p-2 text-[#1E293B] font-bold text-xs focus:border-[#FF7043] focus:outline-none"
-                  >
-                    {ASPEK_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              {/* Predikat Keseluruhan */}
-              <div className="pt-2 border-t border-[#FFD54F]">
-                <label className="block text-[#E65100] font-black text-xs mb-1">
-                  Predikat Rapor Keseluruhan*
+              <div>
+                <label className="block text-[#1E293B] font-bold mb-1">
+                  Predikat Hasil Belajar*
                 </label>
                 <select
                   value={formData.predikat_keseluruhan}
                   onChange={(e) => setFormData({ ...formData, predikat_keseluruhan: e.target.value })}
-                  className="w-full bg-white border border-[#FFCC80] rounded-lg p-2.5 text-[#E65100] font-black text-xs focus:border-[#FF7043] focus:outline-none"
+                  className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold text-xs focus:border-[#FF7043] focus:outline-none"
                 >
-                  {PREDIKAT_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  <option value="Sangat Baik">Sangat Baik (A)</option>
+                  <option value="Baik">Baik (B)</option>
+                  <option value="Cukup">Cukup (C)</option>
+                  <option value="Perlu Bimbingan">Perlu Bimbingan (D)</option>
                 </select>
               </div>
             </div>
 
-            {/* Catatan Kemajuan Belajar */}
+            {/* Catatan Masukan / Evaluasi Guru (Ketik Sendiri) */}
             <div>
               <label className="block text-[#1E293B] font-bold mb-1">
-                Catatan / Ulasan Perkembangan Belajar Siswa*
+                Catatan Masukan & Evaluasi Perkembangan Anak* (Akan dilihat Orang Tua)
               </label>
               <textarea
                 required
-                rows={3}
+                rows={4}
                 value={formData.catatan_guru}
                 onChange={(e) => setFormData({ ...formData, catatan_guru: e.target.value })}
-                placeholder="Jelaskan kemajuan materi anak, keberhasilan rumus, motivasi belajar di kelas..."
-                className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] text-xs focus:border-[#FF7043] focus:outline-none"
+                placeholder="Ketik masukan evaluasi perkembangan anak secara lengkap di sini (misal: Ananda sudah sangat lancar berhitung manik tanpa melihat sempoa, fokus meningkat pesat)..."
+                className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-xl p-3 text-[#1E293B] text-xs focus:border-[#FF7043] focus:outline-none leading-relaxed shadow-2xs"
               />
             </div>
 
-            {/* Saran untuk Orang Tua */}
+            {/* Saran untuk Orang Tua (Opsional) */}
             <div>
               <label className="block text-[#1E293B] font-bold mb-1">
-                Pesan & Saran Latihan di Rumah untuk Orang Tua (Opsional)
+                Saran Pendampingan untuk Orang Tua di Rumah (Opsional)
               </label>
               <textarea
                 rows={2}
                 value={formData.saran_untuk_ortu}
                 onChange={(e) => setFormData({ ...formData, saran_untuk_ortu: e.target.value })}
-                placeholder="Contoh: Mohon didampingi latihan sempoa 10 menit setiap malam untuk mengasah kawan gabungan..."
-                className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] text-xs focus:border-[#FF7043] focus:outline-none"
+                placeholder="Contoh: Mohon didampingi latihan 10 menit setiap malam di rumah..."
+                className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-xl p-2.5 text-[#1E293B] text-xs focus:border-[#FF7043] focus:outline-none"
               />
             </div>
 
@@ -556,27 +480,26 @@ export const GuruEvaluasiPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={createMutation.isPending || updateMutation.isPending}
-                className="px-5 py-2 bg-[#FF7043] hover:bg-[#F4511E] text-white font-bold rounded-lg transition-colors shadow-sm cursor-pointer disabled:opacity-50"
+                className="px-5 py-2 bg-[#FF7043] hover:bg-[#F4511E] text-white font-bold rounded-lg transition-colors cursor-pointer shadow-md disabled:opacity-50 flex items-center gap-1.5"
               >
-                {createMutation.isPending || updateMutation.isPending ? 'Menyimpan...' : 'Kirim Lembar Evaluasi'}
+                <CheckIcon size={14} />
+                <span>{createMutation.isPending || updateMutation.isPending ? 'Menyimpan...' : 'Simpan & Kirim ke Ortu'}</span>
               </button>
             </div>
           </form>
         </Modal>
       )}
 
-      {/* Confirm Modal Hapus Evaluasi */}
+      {/* Modal Konfirmasi Hapus */}
       {deleteConfirm && (
         <ConfirmModal
           isOpen={!!deleteConfirm}
           onClose={() => setDeleteConfirm(null)}
           onConfirm={() => deleteMutation.mutate(deleteConfirm.id)}
           title="Hapus Lembar Evaluasi"
-          description={`Apakah Anda yakin ingin menghapus lembar evaluasi "${deleteConfirm.periode}" untuk siswa "${deleteConfirm.nama}"?`}
-          confirmText="Ya, Hapus"
-          cancelText="Batal"
-          variant="danger"
-          isLoading={deleteMutation.isPending}
+          message={`Apakah Anda yakin ingin menghapus lembar evaluasi untuk murid ${deleteConfirm.nama}?`}
+          confirmLabel="Hapus Evaluasi"
+          isDanger={true}
         />
       )}
     </div>
