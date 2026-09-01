@@ -86,13 +86,6 @@ export const CloseIcon: React.FC<IconProps> = ({ size = 24, className = 'text-cu
   </svg>
 );
 
-export const SearchIcon: React.FC<IconProps> = ({ size = 24, className = 'text-current' }) => (
-  <svg width={size} height={size} className={`shrink-0 ${className}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="11" cy="11" r="8"/>
-    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-  </svg>
-);
-
 export const ChevronDownIcon: React.FC<IconProps> = ({ size = 24, className = 'text-current' }) => (
   <svg width={size} height={size} className={`shrink-0 ${className}`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
