@@ -187,25 +187,32 @@ export const GuruBukuPage: React.FC = () => {
       className: 'md:w-[160px]'
     },
     {
-      header: 'Periode & Tanggal Buku',
+      header: 'Tanggal Mulai',
       accessor: (row: BukuItem) => (
-        <div className="space-y-1">
-          <div className="text-xs text-[#1E293B] font-bold flex items-center gap-1.5">
-            <CalendarIcon size={12} className="text-[#64748B]" />
-            <span>Mulai: {new Date(row.tanggal_mulai).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-          </div>
+        <div className="text-xs text-[#1E293B] font-bold flex items-center gap-1.5">
+          <CalendarIcon size={12} className="text-[#64748B]" />
+          <span>{new Date(row.tanggal_mulai).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+        </div>
+      ),
+      className: 'md:w-[140px]'
+    },
+    {
+      header: 'Tanggal Selesai',
+      accessor: (row: BukuItem) => (
+        <div>
           {row.tanggal_selesai ? (
-            <span className="text-[10px] font-bold text-[#16A34A] bg-[#DCFCE7] border border-[#86EFAC] px-2 py-0.5 rounded-md inline-block">
-              Selesai: {new Date(row.tanggal_selesai).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+            <span className="text-[11px] font-bold text-[#16A34A] bg-[#DCFCE7] border border-[#86EFAC] px-2.5 py-0.5 rounded-lg inline-flex items-center gap-1 shadow-2xs">
+              <CheckIcon size={11} className="text-[#16A34A]" />
+              <span>{new Date(row.tanggal_selesai).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
             </span>
           ) : (
-            <span className="text-[10px] font-bold text-[#D97706] bg-[#FEF3C7] border border-[#FDE68A] px-2 py-0.5 rounded-md inline-block">
+            <span className="text-[11px] font-bold text-[#D97706] bg-[#FEF3C7] border border-[#FDE68A] px-2.5 py-0.5 rounded-lg inline-block shadow-2xs">
               Sedang Dipelajari
             </span>
           )}
         </div>
       ),
-      className: 'md:w-[180px]'
+      className: 'md:w-[150px]'
     },
     {
       header: 'Catatan Guru',

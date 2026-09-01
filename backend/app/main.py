@@ -125,7 +125,14 @@ def on_startup():
                 details JSON,
                 status VARCHAR(20) NOT NULL DEFAULT 'SUCCESS',
                 backup_file VARCHAR(255)
-            );"""
+            );""",
+            """INSERT INTO buku_siswa (id_siswa, kategori_program, level_anak, nomor_buku, status_buku, tanggal_mulai)
+            SELECT s.id, SPLIT_PART(s.kategori_program, ',', 1), 'Junior', '', 'SEDANG_DIPELAJARI', CURRENT_DATE
+            FROM siswa s
+            WHERE s.is_deleted = FALSE 
+              AND NOT EXISTS (
+                SELECT 1 FROM buku_siswa b WHERE b.id_siswa = s.id
+              );"""
         ]
 
         for sql_stmt in auto_sqls:

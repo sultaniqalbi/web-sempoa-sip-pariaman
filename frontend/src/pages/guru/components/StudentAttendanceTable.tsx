@@ -149,7 +149,9 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
     return (
       s.nama_lengkap.toLowerCase().includes(term) ||
       (s.panggilan && s.panggilan.toLowerCase().includes(term)) ||
-      (s.asal_sekolah && s.asal_sekolah.toLowerCase().includes(term))
+      (s.uid && s.uid.toLowerCase().includes(term)) ||
+      (s.asal_sekolah && s.asal_sekolah.toLowerCase().includes(term)) ||
+      (s.kategori_program && s.kategori_program.toLowerCase().includes(term))
     );
   });
 
