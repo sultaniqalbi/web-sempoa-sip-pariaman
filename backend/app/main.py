@@ -64,83 +64,79 @@ def on_startup():
                 logger.warning(f"Auto-migration skipped or failed: {mig_e}")
 
         # Auto-migration for multi-program expanded columns and schema updates
-        try:
-            with engine.connect() as conn:
-                # Siswa table updates
-                conn.execute(text("ALTER TABLE siswa ALTER COLUMN kategori_program TYPE VARCHAR(255);"))
-                conn.execute(text("ALTER TABLE siswa ALTER COLUMN paket_jadwal TYPE VARCHAR(255);"))
-                conn.execute(text("ALTER TABLE siswa ALTER COLUMN hari_masuk TYPE VARCHAR(255);"))
-                conn.execute(text("ALTER TABLE siswa ADD COLUMN IF NOT EXISTS id_guru INTEGER;"))
-                conn.execute(text("ALTER TABLE siswa ADD COLUMN IF NOT EXISTS kuota_program TEXT;"))
-                conn.execute(text("ALTER TABLE siswa ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;"))
+        auto_sqls = [
+            "ALTER TABLE siswa ALTER COLUMN kategori_program TYPE VARCHAR(255);",
+            "ALTER TABLE siswa ALTER COLUMN paket_jadwal TYPE VARCHAR(255);",
+            "ALTER TABLE siswa ALTER COLUMN hari_masuk TYPE VARCHAR(255);",
+            "ALTER TABLE siswa ADD COLUMN IF NOT EXISTS id_guru INTEGER;",
+            "ALTER TABLE siswa ADD COLUMN IF NOT EXISTS kuota_program TEXT;",
+            "ALTER TABLE siswa ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS plain_password VARCHAR(100);",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS uid_terhubung VARCHAR(50);",
+            "ALTER TABLE jadwal ADD COLUMN IF NOT EXISTS guru_ids VARCHAR(255);",
+            "ALTER TABLE jadwal ADD COLUMN IF NOT EXISTS siswa_ids VARCHAR(500);",
+            "ALTER TABLE jadwal ADD COLUMN IF NOT EXISTS mode_kelas VARCHAR(20) DEFAULT 'OFFLINE';",
+            "ALTER TABLE guru ALTER COLUMN kategori_program TYPE VARCHAR(255);",
+            "ALTER TABLE guru ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;",
+            "ALTER TABLE absensi_log ADD COLUMN IF NOT EXISTS kategori_program VARCHAR(100);",
+            "ALTER TABLE absensi_log ADD COLUMN IF NOT EXISTS sumber VARCHAR(50);",
+            "ALTER TABLE absensi_log ADD COLUMN IF NOT EXISTS catatan TEXT;",
+            "ALTER TABLE absensi_log ADD COLUMN IF NOT EXISTS jumlah_sesi INTEGER DEFAULT 1;",
+            """DO $$ BEGIN
+                CREATE TYPE status_buku_enum AS ENUM ('SEDANG_DIPELAJARI', 'SELESAI', 'LANJUT_LEVEL');
+            EXCEPTION
+                WHEN duplicate_object THEN null;
+            END $$;""",
+            """CREATE TABLE IF NOT EXISTS buku_siswa (
+                id SERIAL PRIMARY KEY,
+                id_siswa INTEGER NOT NULL,
+                kategori_program VARCHAR(100) NOT NULL,
+                level_anak VARCHAR(100) NOT NULL,
+                nomor_buku VARCHAR(100) NOT NULL,
+                jenis_buku VARCHAR(150),
+                status_buku VARCHAR(50) NOT NULL DEFAULT 'SEDANG_DIPELAJARI',
+                tanggal_mulai DATE NOT NULL DEFAULT CURRENT_DATE,
+                tanggal_selesai DATE,
+                catatan_progres TEXT,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );""",
+            """CREATE TABLE IF NOT EXISTS evaluasi_siswa (
+                id SERIAL PRIMARY KEY,
+                id_siswa INTEGER NOT NULL,
+                id_guru INTEGER,
+                kategori_program VARCHAR(100) NOT NULL,
+                tanggal_evaluasi DATE NOT NULL DEFAULT CURRENT_DATE,
+                periode_evaluasi VARCHAR(100),
+                nilai_fokus VARCHAR(50) NOT NULL DEFAULT 'Baik',
+                nilai_kecepatan VARCHAR(50) NOT NULL DEFAULT 'Baik',
+                nilai_ketelitian VARCHAR(50) NOT NULL DEFAULT 'Baik',
+                nilai_pemahaman VARCHAR(50) NOT NULL DEFAULT 'Baik',
+                predikat_keseluruhan VARCHAR(50) NOT NULL DEFAULT 'Baik',
+                catatan_guru TEXT NOT NULL,
+                saran_untuk_ortu TEXT,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );""",
+            """CREATE TABLE IF NOT EXISTS audit_log (
+                id SERIAL PRIMARY KEY,
+                action VARCHAR(50) NOT NULL,
+                role VARCHAR(20) NOT NULL,
+                email VARCHAR(255) NOT NULL,
+                timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                details JSON,
+                status VARCHAR(20) NOT NULL DEFAULT 'SUCCESS',
+                backup_file VARCHAR(255)
+            );"""
+        ]
 
-                # Users table updates (vital for parent auto-provisioning)
-                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS plain_password VARCHAR(100);"))
-                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS uid_terhubung VARCHAR(50);"))
+        for sql_stmt in auto_sqls:
+            try:
+                with engine.connect() as conn:
+                    conn.execute(text(sql_stmt))
+                    conn.commit()
+            except Exception as e_sql:
+                logger.debug(f"Auto-migration statement notice: {e_sql}")
 
-                # Jadwal table updates
-                conn.execute(text("ALTER TABLE jadwal ADD COLUMN IF NOT EXISTS guru_ids VARCHAR(255);"))
-                conn.execute(text("ALTER TABLE jadwal ADD COLUMN IF NOT EXISTS siswa_ids VARCHAR(500);"))
-                conn.execute(text("ALTER TABLE jadwal ADD COLUMN IF NOT EXISTS mode_kelas VARCHAR(20) DEFAULT 'OFFLINE';"))
-
-                # Guru table updates
-                conn.execute(text("ALTER TABLE guru ALTER COLUMN kategori_program TYPE VARCHAR(255);"))
-                conn.execute(text("ALTER TABLE guru ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;"))
-
-                # Absensi Log table updates
-                conn.execute(text("ALTER TABLE absensi_log ADD COLUMN IF NOT EXISTS kategori_program VARCHAR(100);"))
-                conn.execute(text("ALTER TABLE absensi_log ADD COLUMN IF NOT EXISTS sumber VARCHAR(50);"))
-                conn.execute(text("ALTER TABLE absensi_log ADD COLUMN IF NOT EXISTS catatan TEXT;"))
-                conn.execute(text("ALTER TABLE absensi_log ADD COLUMN IF NOT EXISTS jumlah_sesi INTEGER DEFAULT 1;"))
-
-                # Auto-create enum and tables for Buku & Evaluasi
-                conn.execute(text("""
-                    DO $$ BEGIN
-                        CREATE TYPE status_buku_enum AS ENUM ('SEDANG_DIPELAJARI', 'SELESAI', 'LANJUT_LEVEL');
-                    EXCEPTION
-                        WHEN duplicate_object THEN null;
-                    END $$;
-                """))
-
-                conn.execute(text("""
-                    CREATE TABLE IF NOT EXISTS buku_siswa (
-                        id SERIAL PRIMARY KEY,
-                        id_siswa INTEGER NOT NULL,
-                        kategori_program VARCHAR(100) NOT NULL,
-                        level_anak VARCHAR(100) NOT NULL,
-                        nomor_buku VARCHAR(100) NOT NULL,
-                        jenis_buku VARCHAR(150),
-                        status_buku status_buku_enum NOT NULL DEFAULT 'SEDANG_DIPELAJARI',
-                        tanggal_mulai DATE NOT NULL DEFAULT CURRENT_DATE,
-                        tanggal_selesai DATE,
-                        catatan_progres TEXT,
-                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-                    );
-                """))
-
-                conn.execute(text("""
-                    CREATE TABLE IF NOT EXISTS evaluasi_siswa (
-                        id SERIAL PRIMARY KEY,
-                        id_siswa INTEGER NOT NULL,
-                        id_guru INTEGER,
-                        kategori_program VARCHAR(100) NOT NULL,
-                        tanggal_evaluasi DATE NOT NULL DEFAULT CURRENT_DATE,
-                        periode_evaluasi VARCHAR(100),
-                        nilai_fokus VARCHAR(50) NOT NULL DEFAULT 'Baik',
-                        nilai_kecepatan VARCHAR(50) NOT NULL DEFAULT 'Baik',
-                        nilai_ketelitian VARCHAR(50) NOT NULL DEFAULT 'Baik',
-                        nilai_pemahaman VARCHAR(50) NOT NULL DEFAULT 'Baik',
-                        predikat_keseluruhan VARCHAR(50) NOT NULL DEFAULT 'Baik',
-                        catatan_guru TEXT NOT NULL,
-                        saran_untuk_ortu TEXT,
-                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-                    );
-                """))
-
-                conn.commit()
-                logger.info("Auto-migration: Successfully checked and updated all PostgreSQL columns and tables")
-        except Exception as mig_col_e:
-            logger.warning(f"Auto-migration for columns: {mig_col_e}")
+        logger.info("Auto-migration: Finished executing independent schema sync queries")
 
         # Auto-migration for bukti_transfer (ensure table exists on any DB engine)
         try:

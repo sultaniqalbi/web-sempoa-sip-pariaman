@@ -66,11 +66,20 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     } catch (err: any) {
       console.error('Login failed:', err);
       if (err.response?.status === 429) {
-        setGlobalError('Terlalu banyak percobaan masuk salah. Akun Anda diblokir selama 15 menit.');
+        setGlobalError('Terlalu banyak percobaan masuk salah. Silakan tunggu beberapa menit lagi.');
       } else if (err.response?.status === 401) {
         setGlobalError(err.response?.data?.detail || 'Email atau kata sandi salah');
       } else {
-        setGlobalError(err.response?.data?.detail || 'Gagal terhubung ke server');
+        const detail = err.response?.data?.detail;
+        if (typeof detail === 'string') {
+          setGlobalError(detail);
+        } else if (Array.isArray(detail)) {
+          setGlobalError(detail.map((d: any) => d.msg || d.message).join(', '));
+        } else if (err.response?.status) {
+          setGlobalError(`Server error (${err.response.status}): Silakan coba lagi`);
+        } else {
+          setGlobalError(err.message || 'Gagal terhubung ke server');
+        }
       }
     } finally {
       setIsLoading(false);
