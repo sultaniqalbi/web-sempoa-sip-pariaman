@@ -492,9 +492,11 @@ export const EvaluasiAdminPage: React.FC = () => {
           onClose={() => setDeleteConfirm(null)}
           onConfirm={() => deleteMutation.mutate(deleteConfirm.id)}
           title="Hapus Lembar Evaluasi"
-          message={`Apakah Anda yakin ingin menghapus lembar evaluasi untuk siswa ${deleteConfirm.nama}?`}
-          confirmLabel="Hapus Evaluasi"
-          isDanger={true}
+          description={`Apakah Anda yakin ingin menghapus lembar evaluasi untuk siswa ${deleteConfirm.nama}?`}
+          confirmText="Hapus Evaluasi"
+          cancelText="Batal"
+          variant="danger"
+          isLoading={deleteMutation.isPending}
         />
       )}
     </div>
