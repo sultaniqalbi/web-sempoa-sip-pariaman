@@ -70,6 +70,7 @@ def on_startup():
                 conn.execute(text("ALTER TABLE siswa ALTER COLUMN kategori_program TYPE VARCHAR(255);"))
                 conn.execute(text("ALTER TABLE siswa ALTER COLUMN paket_jadwal TYPE VARCHAR(255);"))
                 conn.execute(text("ALTER TABLE siswa ALTER COLUMN hari_masuk TYPE VARCHAR(255);"))
+                conn.execute(text("ALTER TABLE siswa ADD COLUMN IF NOT EXISTS id_guru INTEGER;"))
                 conn.execute(text("ALTER TABLE siswa ADD COLUMN IF NOT EXISTS kuota_program TEXT;"))
                 conn.execute(text("ALTER TABLE siswa ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;"))
 
@@ -91,6 +92,50 @@ def on_startup():
                 conn.execute(text("ALTER TABLE absensi_log ADD COLUMN IF NOT EXISTS sumber VARCHAR(50);"))
                 conn.execute(text("ALTER TABLE absensi_log ADD COLUMN IF NOT EXISTS catatan TEXT;"))
                 conn.execute(text("ALTER TABLE absensi_log ADD COLUMN IF NOT EXISTS jumlah_sesi INTEGER DEFAULT 1;"))
+
+                # Auto-create enum and tables for Buku & Evaluasi
+                conn.execute(text("""
+                    DO $$ BEGIN
+                        CREATE TYPE status_buku_enum AS ENUM ('SEDANG_DIPELAJARI', 'SELESAI', 'LANJUT_LEVEL');
+                    EXCEPTION
+                        WHEN duplicate_object THEN null;
+                    END $$;
+                """))
+
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS buku_siswa (
+                        id SERIAL PRIMARY KEY,
+                        id_siswa INTEGER NOT NULL,
+                        kategori_program VARCHAR(100) NOT NULL,
+                        level_anak VARCHAR(100) NOT NULL,
+                        nomor_buku VARCHAR(100) NOT NULL,
+                        jenis_buku VARCHAR(150),
+                        status_buku status_buku_enum NOT NULL DEFAULT 'SEDANG_DIPELAJARI',
+                        tanggal_mulai DATE NOT NULL DEFAULT CURRENT_DATE,
+                        tanggal_selesai DATE,
+                        catatan_progres TEXT,
+                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                    );
+                """))
+
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS evaluasi_siswa (
+                        id SERIAL PRIMARY KEY,
+                        id_siswa INTEGER NOT NULL,
+                        id_guru INTEGER,
+                        kategori_program VARCHAR(100) NOT NULL,
+                        tanggal_evaluasi DATE NOT NULL DEFAULT CURRENT_DATE,
+                        periode_evaluasi VARCHAR(100),
+                        nilai_fokus VARCHAR(50) NOT NULL DEFAULT 'Baik',
+                        nilai_kecepatan VARCHAR(50) NOT NULL DEFAULT 'Baik',
+                        nilai_ketelitian VARCHAR(50) NOT NULL DEFAULT 'Baik',
+                        nilai_pemahaman VARCHAR(50) NOT NULL DEFAULT 'Baik',
+                        predikat_keseluruhan VARCHAR(50) NOT NULL DEFAULT 'Baik',
+                        catatan_guru TEXT NOT NULL,
+                        saran_untuk_ortu TEXT,
+                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                    );
+                """))
 
                 conn.commit()
                 logger.info("Auto-migration: Successfully checked and updated all PostgreSQL columns and tables")
