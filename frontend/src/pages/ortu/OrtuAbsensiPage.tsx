@@ -3,7 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import useAuth from '../../features/auth/useAuth';
 import apiClient from '../../features/api/apiClient';
 import { Siswa, AbsensiLog } from '../../types';
-import { PresensiIcon, CalendarIcon, CheckIcon } from '../../components/SvgIcons';
+import { PresensiIcon, CalendarIcon, UserIcon } from '../../components/SvgIcons';
+import { parseProgramDetails, getProgramBadgeStyle } from '../portal/SiswaPage';
 
 export const OrtuAbsensiPage: React.FC = () => {
   const { user } = useAuth();
@@ -36,7 +37,7 @@ export const OrtuAbsensiPage: React.FC = () => {
 
   if (isChildLoading || isLogsLoading) {
     return (
-      <div className="py-16 text-center">
+      <div className="py-16 text-center" style={{ fontFamily: "'Inter', sans-serif" }}>
         <div className="w-8 h-8 border-3 border-[#FF7043] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
         <p className="text-xs text-[#757575]">Memuat data absensi ananda...</p>
       </div>
@@ -45,11 +46,13 @@ export const OrtuAbsensiPage: React.FC = () => {
 
   const totalPertemuan = child?.target_pertemuan || 8;
   const sisaPertemuan = child?.sisa_pertemuan ?? totalPertemuan;
-  const selesaiPertemuan = totalPertemuan - sisaPertemuan;
   const hadirCount = absensiLogs.filter((l) => l.status === 'HADIR').length;
   const izinCount = absensiLogs.filter((l) => l.status === 'IZIN').length;
   const alfaCount = absensiLogs.filter((l) => l.status === 'ALFA' || l.status === 'TIDAK_HADIR').length;
   const attendanceRate = absensiLogs.length > 0 ? Math.round((hadirCount / absensiLogs.length) * 100) : 100;
+
+  const childPrograms = parseProgramDetails(child?.kategori_program, child?.paket_jadwal);
+  const latestLog = absensiLogs.length > 0 ? absensiLogs[0] : null;
 
   const formatWaktu = (waktuStr: string) => {
     if (!waktuStr) return '-';
@@ -75,7 +78,7 @@ export const OrtuAbsensiPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4 max-w-2xl mx-auto pb-6">
+    <div className="space-y-4 max-w-2xl mx-auto pb-6" style={{ fontFamily: "'Inter', sans-serif" }}>
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-[#FFF3E0] via-white to-[#FFF8F3] border border-[#FFCC80] rounded-2xl p-4 sm:p-5 shadow-xs">
         <div className="flex items-center gap-3.5">
@@ -114,6 +117,68 @@ export const OrtuAbsensiPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Kotak Ringkasan Profil & Status Absensi Ananda */}
+      <div className="bg-white border border-[#E0E0E0] rounded-2xl p-4 sm:p-5 shadow-xs space-y-3.5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#F1F5F9]">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-[#FFF3E0] border border-[#FFCC80] text-[#FF7043] flex items-center justify-center font-extrabold text-base shrink-0 shadow-2xs">
+              {child?.nama ? child.nama.substring(0, 2).toUpperCase() : 'AN'}
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-sm sm:text-base font-extrabold text-[#1E293B]">{child?.nama}</h3>
+                <span className="font-mono text-[10px] font-bold text-[#FF7043] bg-[#FFF3E0] px-2 py-0.5 rounded-full border border-[#FFCC80]">
+                  ID: {child?.uid || '-'}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                {childPrograms.map((p, idx) => (
+                  <span key={idx} className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${getProgramBadgeStyle(p.program)}`}>
+                    {p.program}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="text-left sm:text-right bg-[#F8FAFC] sm:bg-transparent p-2.5 sm:p-0 rounded-xl border sm:border-0 border-[#E2E8F0]">
+            <span className="text-[10px] font-bold text-[#64748B] uppercase block">Presensi Terakhir</span>
+            <span className="text-xs font-extrabold text-[#1E293B] block mt-0.5">
+              {latestLog ? formatWaktu(latestLog.waktu) : 'Belum Ada Presensi'}
+            </span>
+            {latestLog && (
+              <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border ${
+                latestLog.status === 'HADIR'
+                  ? 'bg-[#DCFCE7] text-[#16A34A] border-[#86EFAC]'
+                  : latestLog.status === 'IZIN'
+                  ? 'bg-[#FEF3C7] text-[#D97706] border-[#FDE68A]'
+                  : 'bg-[#FEE2E2] text-[#DC2626] border-[#FCA5A5]'
+              }`}>
+                Status: {latestLog.status}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* 3 Kotak Rincian: Hadir, Izin, Absen */}
+        <div className="grid grid-cols-3 gap-2 text-center pt-1">
+          <div className="p-2.5 bg-[#F0FDF4] border border-[#BBF7D0] rounded-xl">
+            <span className="text-[10px] font-extrabold text-[#16A34A] uppercase block">Hadir</span>
+            <span className="text-sm sm:text-base font-black text-[#15803D] mt-0.5 block">{hadirCount} Sesi</span>
+          </div>
+
+          <div className="p-2.5 bg-[#FFFBEB] border border-[#FDE68A] rounded-xl">
+            <span className="text-[10px] font-extrabold text-[#D97706] uppercase block">Izin</span>
+            <span className="text-sm sm:text-base font-black text-[#B45309] mt-0.5 block">{izinCount} Sesi</span>
+          </div>
+
+          <div className="p-2.5 bg-[#FEF2F2] border border-[#FECDD3] rounded-xl">
+            <span className="text-[10px] font-extrabold text-[#DC2626] uppercase block">Absen / Alfa</span>
+            <span className="text-sm sm:text-base font-black text-[#B91C1C] mt-0.5 block">{alfaCount} Sesi</span>
+          </div>
+        </div>
+      </div>
+
       {/* Daftar Log Absensi */}
       <div className="bg-white border border-[#E0E0E0] rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
         <div className="flex items-center justify-between pb-2 border-b border-[#F1F5F9]">
@@ -144,7 +209,7 @@ export const OrtuAbsensiPage: React.FC = () => {
                       {formatWaktu(log.waktu)}
                     </span>
                     <span className="text-[11px] text-[#64748B] mt-0.5 block">
-                      {log.catatan || (isHadir ? 'Hadir mengikuti sesi belajar' : isIzin ? 'Izin tidak hadir' : 'Tidak hadir')}
+                      {log.catatan || log.keterangan || (isHadir ? 'Hadir mengikuti sesi belajar' : isIzin ? 'Izin tidak hadir' : 'Tidak hadir')}
                     </span>
                   </div>
 
