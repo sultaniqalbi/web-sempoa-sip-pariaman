@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from app.core.dependencies import get_current_user, RoleChecker
 from app.models.users import User, UserRole
-from app.api.v1.endpoints import auth, siswa, guru, jadwal, absensi, pembayaran, bukti_transfer, quota, owner, galeri, portal, portal_guru, realtime, push, calendar, hardware
+from app.api.v1.endpoints import auth, siswa, guru, jadwal, absensi, pembayaran, bukti_transfer, quota, owner, galeri, portal, portal_guru, realtime, push, calendar, hardware, buku, evaluasi
 
 api_router = APIRouter()
 
@@ -11,6 +11,8 @@ api_router.include_router(siswa.router, prefix="/siswa", tags=["siswa"])
 api_router.include_router(guru.router, prefix="/guru", tags=["guru"])
 api_router.include_router(jadwal.router, prefix="/jadwal", tags=["jadwal"])
 api_router.include_router(absensi.router, prefix="/absensi", tags=["absensi"])
+api_router.include_router(buku.router, prefix="/buku", tags=["buku"])
+api_router.include_router(evaluasi.router, prefix="/evaluasi", tags=["evaluasi"])
 api_router.include_router(pembayaran.router, prefix="/pembayaran", tags=["pembayaran"])
 api_router.include_router(bukti_transfer.router, prefix="/bukti-transfer", tags=["bukti-transfer"])
 api_router.include_router(quota.router, prefix="/quota", tags=["quota"])

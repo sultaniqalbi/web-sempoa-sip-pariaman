@@ -22,6 +22,8 @@ const PortalLayout = React.lazy(() => import('./layouts/PortalLayout'));
 const SharedDashboardPage = React.lazy(() => import('./pages/portal/DashboardPage'));
 const SharedSiswaPage = React.lazy(() => import('./pages/portal/SiswaPage'));
 const SharedGuruPage = React.lazy(() => import('./pages/portal/GuruPage'));
+const SharedBukuPage = React.lazy(() => import('./pages/portal/BukuPage'));
+const SharedEvaluasiPage = React.lazy(() => import('./pages/portal/EvaluasiAdminPage'));
 const SharedJadwalPage = React.lazy(() => import('./pages/portal/JadwalPage'));
 const SharedAbsensiPage = React.lazy(() => import('./pages/portal/AbsensiPage'));
 const SharedPembayaranPage = React.lazy(() => import('./pages/portal/PembayaranPage'));
@@ -36,6 +38,8 @@ const GuruLayout = React.lazy(() => import('./pages/guru/GuruLayout'));
 const GuruDashboardPage = React.lazy(() => import('./pages/guru/GuruDashboardPage'));
 const KelasPage = React.lazy(() => import('./pages/guru/KelasPage'));
 const AbsensiInputPage = React.lazy(() => import('./pages/guru/AbsensiInputPage'));
+const GuruEvaluasiPage = React.lazy(() => import('./pages/guru/GuruEvaluasiPage'));
+const GuruBukuPage = React.lazy(() => import('./pages/guru/GuruBukuPage'));
 const GuruProfilePage = React.lazy(() => import('./pages/guru/GuruProfilePage'));
 
 // Parent Pages
@@ -100,6 +104,8 @@ export function App() {
                     <Route path="dashboard" element={<SharedDashboardPage />} />
                     <Route path="siswa" element={<SharedSiswaPage />} />
                     <Route path="guru" element={<SharedGuruPage />} />
+                    <Route path="buku" element={<SharedBukuPage />} />
+                    <Route path="evaluasi" element={<SharedEvaluasiPage />} />
                     <Route path="jadwal" element={<SharedJadwalPage />} />
                     <Route path="absensi" element={<SharedAbsensiPage />} />
                     <Route path="pembayaran" element={<SharedPembayaranPage />} />
@@ -119,6 +125,8 @@ export function App() {
                     <Route path="dashboard" element={<SharedDashboardPage />} />
                     <Route path="siswa" element={<SharedSiswaPage />} />
                     <Route path="guru" element={<SharedGuruPage />} />
+                    <Route path="buku" element={<SharedBukuPage />} />
+                    <Route path="evaluasi" element={<SharedEvaluasiPage />} />
                     <Route path="jadwal" element={<SharedJadwalPage />} />
                     <Route path="absensi" element={<SharedAbsensiPage />} />
                     <Route path="pembayaran" element={<SharedPembayaranPage />} />
@@ -142,6 +150,8 @@ export function App() {
                     <Route path="dashboard" element={<SharedDashboardPage />} />
                     <Route path="siswa" element={<SharedSiswaPage />} />
                     <Route path="guru" element={<SharedGuruPage />} />
+                    <Route path="buku" element={<SharedBukuPage />} />
+                    <Route path="evaluasi" element={<SharedEvaluasiPage />} />
                     <Route path="jadwal" element={<SharedJadwalPage />} />
                     <Route path="absensi" element={<SharedAbsensiPage />} />
                     <Route path="pembayaran" element={<SharedPembayaranPage />} />
@@ -163,6 +173,8 @@ export function App() {
                     <Route path="dashboard" element={<GuruDashboardPage />} />
                     <Route path="kelas" element={<KelasPage />} />
                     <Route path="absensi-input" element={<AbsensiInputPage />} />
+                    <Route path="evaluasi" element={<GuruEvaluasiPage />} />
+                    <Route path="buku" element={<GuruBukuPage />} />
                     <Route path="profil" element={<GuruProfilePage />} />
                   </Route>
 

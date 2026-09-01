@@ -1569,100 +1569,85 @@ export const SiswaPage: React.FC = () => {
             );
           })()}
 
-          {/* Alokasi Guru Pengajar & Kelas Pembimbing */}
-          <div className="p-3.5 bg-[#F0FDF4] border border-[#BBF7D0] rounded-xl space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="p-1 rounded-md bg-[#DCFCE7] text-[#16A34A]">
-                  <PengajarIcon size={16} />
-                </span>
-                <span className="font-bold text-xs sm:text-sm text-[#166534]">
-                  Pilih Guru Pembimbing & Kelas
-                </span>
-              </div>
-              <span className="text-[10px] text-[#15803D] font-semibold bg-white px-2 py-0.5 rounded-md border border-[#BBF7D0]">
-                Sinkronisasi Guru & Siswa
-              </span>
-            </div>
+          {/* Alokasi Guru Pengajar Pembimbing per Program */}
+          {(() => {
+            const selectedList = formData.kategori_program
+              ? formData.kategori_program.split(',').map((p) => p.trim()).filter(Boolean)
+              : ['Sempoa SIP'];
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Dropdown Guru */}
-              <div>
-                <label className="block text-[#166534] font-bold text-xs mb-1">
-                  Guru / Pengajar Pembimbing
-                </label>
-                <select
-                  value={formData.id_guru || ''}
-                  onChange={(e) => {
-                    const val = e.target.value ? parseInt(e.target.value, 10) : undefined;
-                    setFormData({ ...formData, id_guru: val });
-                  }}
-                  className="w-full bg-white border border-[#86EFAC] rounded-lg p-2.5 text-[#1E293B] font-bold text-xs focus:border-[#16A34A] focus:outline-none shadow-2xs"
-                >
-                  <option value="">-- Tanpa Guru Spesifik / Semua Guru Program --</option>
-                  {(guruList as any[])
-                    .filter((g: any) => {
+            return (
+              <div className="bg-gradient-to-r from-[#FFF3E0]/70 to-[#FFF8E1]/70 border border-[#FFE082] rounded-2xl p-3.5 sm:p-4 space-y-3 shadow-2xs">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="p-1.5 rounded-xl bg-[#FF7043] text-white shadow-xs">
+                      <PengajarIcon size={16} />
+                    </span>
+                    <div>
+                      <h4 className="font-extrabold text-xs sm:text-sm text-[#E65100]">
+                        Pilih Guru Pembimbing Kelas
+                      </h4>
+                      <p className="text-[11px] text-[#8D6E63] font-medium mt-0.5">
+                        Murid otomatis dialokasikan ke kelas bimbingan guru yang dipilih
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] text-[#BF360C] font-extrabold bg-white/90 px-2.5 py-1 rounded-lg border border-[#FFD54F] shadow-2xs">
+                    {selectedList.length > 1 ? `${selectedList.length} Program Terpilih` : 'Sinkronisasi Otomatis'}
+                  </span>
+                </div>
+
+                <div className="space-y-2.5 pt-1">
+                  {selectedList.map((prog, idx) => {
+                    const filteredTeachers = (guruList as any[]).filter((g: any) => {
                       const teacherProgs = (g.kategori_program || '').toLowerCase();
-                      const studentProgs = formData.kategori_program.toLowerCase().split(',').map((p: string) => p.trim());
-                      return studentProgs.some((p: string) => teacherProgs.includes(p)) || teacherProgs.includes('sempoa');
-                    })
-                    .map((g: any) => (
-                      <option key={g.id} value={g.id}>
-                        {g.nama} ({g.kategori_program || 'Umum'}) {g.hari_wajib ? `• ${g.hari_wajib}` : ''}
-                      </option>
-                    ))}
-                </select>
-                <p className="text-[10px] text-[#15803D] mt-1">
-                  Guru ini akan otomatis melihat siswa ini di portal absensi mereka.
-                </p>
-              </div>
+                      return (
+                        teacherProgs.includes(prog.toLowerCase()) ||
+                        teacherProgs.includes('sempoa') ||
+                        teacherProgs.includes('umum')
+                      );
+                    });
 
-              {/* Pilihan Jadwal / Kelas */}
-              <div>
-                <label className="block text-[#166534] font-bold text-xs mb-1">
-                  Pilih Sesi Kelas & Jadwal (Opsional)
-                </label>
-                <select
-                  onChange={(e) => {
-                    const selectedJadwalId = e.target.value ? parseInt(e.target.value, 10) : undefined;
-                    if (selectedJadwalId) {
-                      const j = (jadwalList as any[]).find((x: any) => x.id === selectedJadwalId);
-                      if (j) {
-                        const updatedProgDays = { ...programDays };
-                        const mainProg = formData.kategori_program.split(',')[0].trim();
-                        updatedProgDays[mainProg] = j.hari;
-                        setProgramDays(updatedProgDays);
-                        setFormData({
-                          ...formData,
-                          hari_masuk: j.hari,
-                          id_guru: j.id_guru || formData.id_guru,
-                        });
-                        showToast(`Jadwal "${j.kategori_program} (${j.hari})" dipilih. Hari masuk otomatis disinkronkan.`, 'success');
-                      }
-                    }
-                  }}
-                  className="w-full bg-white border border-[#86EFAC] rounded-lg p-2.5 text-[#1E293B] font-bold text-xs focus:border-[#16A34A] focus:outline-none shadow-2xs"
-                  defaultValue=""
-                >
-                  <option value="">-- Pilih Sesi Kelas Jadwal --</option>
-                  {(jadwalList as any[])
-                    .filter((j: any) => {
-                      const jProg = (j.kategori_program || '').toLowerCase();
-                      const sProgs = formData.kategori_program.toLowerCase().split(',').map((p: string) => p.trim());
-                      return sProgs.some((p: string) => jProg.includes(p) || p.includes(jProg));
-                    })
-                    .map((j: any) => (
-                      <option key={j.id} value={j.id}>
-                        {j.kategori_program} • {j.hari} ({j.jam_mulai} - {j.jam_selesai}) • {j.guru_names || 'Pengajar'}
-                      </option>
-                    ))}
-                </select>
-                <p className="text-[10px] text-[#15803D] mt-1">
-                  Memilih jadwal akan otomatis mengisi hari masuk dan guru pembimbing.
-                </p>
+                    return (
+                      <div
+                        key={prog}
+                        className="p-3 bg-white rounded-xl border border-[#FFD54F] shadow-2xs space-y-1.5"
+                      >
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-black text-[#1E293B] flex items-center gap-1.5">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getProgramBadgeStyle(prog)}`}>
+                              {prog}
+                            </span>
+                            <span>Pilih Guru Pengajar:</span>
+                          </label>
+                          {selectedList.length > 1 && (
+                            <span className="text-[10px] text-[#9E9E9E] font-semibold">
+                              Program #{idx + 1}
+                            </span>
+                          )}
+                        </div>
+
+                        <select
+                          value={formData.id_guru || ''}
+                          onChange={(e) => {
+                            const val = e.target.value ? parseInt(e.target.value, 10) : undefined;
+                            setFormData({ ...formData, id_guru: val });
+                          }}
+                          className="w-full bg-[#FFFDE7]/40 hover:bg-[#FFFDE7]/70 border border-[#FFE082] focus:border-[#FF7043] focus:ring-2 focus:ring-[#FF7043]/20 rounded-xl p-2.5 text-[#1E293B] font-bold text-xs focus:outline-none transition-all cursor-pointer shadow-2xs"
+                        >
+                          <option value="">-- Tanpa Guru Spesifik / Semua Pengajar {prog} --</option>
+                          {filteredTeachers.map((g: any) => (
+                            <option key={g.id} value={g.id}>
+                              {g.nama} ({g.kategori_program || 'Umum'}) {g.hari_wajib ? `• Jadwal: ${g.hari_wajib}` : ''}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          </div>
+            );
+          })()}
 
           {/* 6 & 7. Nama Orang Tua & No. WhatsApp */}
           <div className="border-t border-[#E2E8F0] pt-3 grid grid-cols-1 md:grid-cols-2 gap-3">

@@ -70,6 +70,28 @@ export const AnakSayaPage: React.FC = () => {
     enabled: !!child?.id,
   });
 
+  // Fetch child's book & level records
+  const { data: bukuList = [], isLoading: isBukuLoading } = useQuery<any[]>({
+    queryKey: ['child-buku', child?.id],
+    queryFn: async () => {
+      if (!child?.id) return [];
+      const res = await apiClient.get(`/buku/siswa/${child.id}`);
+      return res.data;
+    },
+    enabled: !!child?.id
+  });
+
+  // Fetch child's evaluation reports
+  const { data: evaluasiList = [], isLoading: isEvaluasiLoading } = useQuery<any[]>({
+    queryKey: ['child-evaluasi', child?.id],
+    queryFn: async () => {
+      if (!child?.id) return [];
+      const res = await apiClient.get(`/evaluasi/siswa/${child.id}`);
+      return res.data;
+    },
+    enabled: !!child?.id
+  });
+
   // Form state
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [formData, setFormData] = useState<ChildFormData>({
@@ -535,6 +557,171 @@ export const AnakSayaPage: React.FC = () => {
               </div>
             ) : (
               <div className="py-4 text-center text-[12px] text-[#BDBDBD]">Belum ada riwayat absensi</div>
+            )}
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-[#F5F5F5]" />
+
+          {/* Section: Data Buku & Level Pembelajaran Anak */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-[12px] font-bold text-[#757575] uppercase tracking-wider">Level & Buku Modul Anak</h4>
+              <span className="text-[10px] font-bold text-[#1976D2] bg-[#E3F2FD] px-2 py-0.5 rounded-full border border-[#BBDEFB]">
+                {bukuList.length} Modul Terdata
+              </span>
+            </div>
+
+            {isBukuLoading ? (
+              <div className="py-4 text-center text-[12px] text-[#BDBDBD]">Memuat data level & buku...</div>
+            ) : bukuList && bukuList.length > 0 ? (
+              <div className="space-y-3">
+                {bukuList.map((buku: any) => {
+                  const isSelesai = buku.status_buku === 'SELESAI' || buku.status_buku === 'LANJUT_LEVEL';
+                  return (
+                    <div
+                      key={buku.id}
+                      className={`p-4 rounded-xl border transition-all ${
+                        isSelesai
+                          ? 'bg-[#F0FDF4] border-[#BBF7D0]'
+                          : 'bg-[#FFF8E1] border-[#FFE082] ring-1 ring-[#FFD54F]'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="px-2.5 py-0.5 rounded-lg text-xs font-black bg-white text-[#1D4ED8] border border-[#BFDBFE] shadow-2xs">
+                              ⭐ {buku.level_anak}
+                            </span>
+                            <span className="font-extrabold text-sm text-[#0F172A]">
+                              {buku.nomor_buku}
+                            </span>
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getProgramBadgeStyle(buku.kategori_program)}`}>
+                              {buku.kategori_program}
+                            </span>
+                          </div>
+                          <p className="text-xs text-[#475569] font-medium mt-1">
+                            {buku.jenis_buku || 'Buku Modul Pembelajaran'}
+                          </p>
+                        </div>
+
+                        <span
+                          className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase shrink-0 border ${
+                            isSelesai
+                              ? 'bg-[#DCFCE7] text-[#16A34A] border-[#86EFAC]'
+                              : 'bg-[#FF7043] text-white border-[#FF7043] shadow-2xs'
+                          }`}
+                        >
+                          {isSelesai ? '🏆 Lulus / Selesai' : '📖 Sedang Dipelajari'}
+                        </span>
+                      </div>
+
+                      <div className="mt-2.5 pt-2 border-t border-black/5 flex items-center justify-between text-[11px] text-[#64748B] font-medium">
+                        <span>Mulai: {new Date(buku.tanggal_mulai).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                        {buku.tanggal_selesai && (
+                          <span className="text-[#16A34A] font-bold">
+                            Tuntas: {new Date(buku.tanggal_selesai).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </span>
+                        )}
+                      </div>
+
+                      {buku.catatan_progres && (
+                        <p className="mt-1.5 text-xs text-[#78350F] italic bg-white/70 p-2 rounded-lg border border-black/5">
+                          "{buku.catatan_progres}"
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="p-4 bg-[#FAFAFA] border border-[#EEEEEE] rounded-xl text-center">
+                <p className="text-xs text-[#9E9E9E]">Belum ada modul buku yang didaftarkan untuk anak Anda.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-[#F5F5F5]" />
+
+          {/* Section: Rapor Evaluasi Perkembangan Siswa */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-[12px] font-bold text-[#757575] uppercase tracking-wider">Rapor Evaluasi Belajar dari Guru</h4>
+              <span className="text-[10px] font-bold text-[#16A34A] bg-[#DCFCE7] px-2 py-0.5 rounded-full border border-[#86EFAC]">
+                {evaluasiList.length} Lembar Evaluasi
+              </span>
+            </div>
+
+            {isEvaluasiLoading ? (
+              <div className="py-4 text-center text-[12px] text-[#BDBDBD]">Memuat data evaluasi...</div>
+            ) : evaluasiList && evaluasiList.length > 0 ? (
+              <div className="space-y-4">
+                {evaluasiList.map((ev: any) => (
+                  <div key={ev.id} className="p-4 bg-[#EFF6FF] border border-[#BFDBFE] rounded-2xl space-y-3 shadow-2xs">
+                    {/* Evaluasi Header */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <span className="text-[11px] font-bold text-[#2563EB] uppercase tracking-wide">
+                          {ev.periode_evaluasi || 'Evaluasi Pembelajaran'}
+                        </span>
+                        <h5 className="text-sm font-black text-[#1E293B] mt-0.5">
+                          Penilai: {ev.nama_guru || 'Pengajar Sempoa SIP'}
+                        </h5>
+                        <p className="text-[10px] text-[#64748B]">
+                          Tanggal: {new Date(ev.tanggal_evaluasi).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </p>
+                      </div>
+
+                      <span className="px-3 py-1 bg-white text-[#1D4ED8] border border-[#BFDBFE] rounded-full text-xs font-black shadow-2xs">
+                        ⭐ Predikat: {ev.predikat_keseluruhan}
+                      </span>
+                    </div>
+
+                    {/* 4 Aspek Rating Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px]">
+                      <div className="p-2 bg-white rounded-lg border border-[#DBEAFE] text-center shadow-2xs">
+                        <span className="text-[#64748B] block font-semibold">Fokus Belajar</span>
+                        <span className="font-black text-[#1E293B] text-[11px] mt-0.5 block">{ev.nilai_fokus}</span>
+                      </div>
+                      <div className="p-2 bg-white rounded-lg border border-[#DBEAFE] text-center shadow-2xs">
+                        <span className="text-[#64748B] block font-semibold">Kecepatan Hitung</span>
+                        <span className="font-black text-[#1E293B] text-[11px] mt-0.5 block">{ev.nilai_kecepatan}</span>
+                      </div>
+                      <div className="p-2 bg-white rounded-lg border border-[#DBEAFE] text-center shadow-2xs">
+                        <span className="text-[#64748B] block font-semibold">Ketelitian Jawaban</span>
+                        <span className="font-black text-[#1E293B] text-[11px] mt-0.5 block">{ev.nilai_ketelitian}</span>
+                      </div>
+                      <div className="p-2 bg-white rounded-lg border border-[#DBEAFE] text-center shadow-2xs">
+                        <span className="text-[#64748B] block font-semibold">Pemahaman Rumus</span>
+                        <span className="font-black text-[#1E293B] text-[11px] mt-0.5 block">{ev.nilai_pemahaman}</span>
+                      </div>
+                    </div>
+
+                    {/* Ulasan Guru */}
+                    <div className="p-3 bg-white rounded-xl border border-[#DBEAFE] space-y-1">
+                      <p className="text-[11px] font-bold text-[#1E293B]">Ulasan Kemajuan dari Guru:</p>
+                      <p className="text-xs text-[#334155] leading-relaxed italic">
+                        "{ev.catatan_guru}"
+                      </p>
+                    </div>
+
+                    {/* Saran Latihan di Rumah */}
+                    {ev.saran_untuk_ortu && (
+                      <div className="p-3 bg-[#FFFBEB] rounded-xl border border-[#FDE68A] space-y-1">
+                        <p className="text-[11px] font-bold text-[#92400E]">💡 Tips Latihan di Rumah untuk Orang Tua:</p>
+                        <p className="text-xs text-[#78350F] leading-relaxed">
+                          {ev.saran_untuk_ortu}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-4 bg-[#FAFAFA] border border-[#EEEEEE] rounded-xl text-center">
+                <p className="text-xs text-[#9E9E9E]">Belum ada lembar evaluasi pembelajaran dari guru.</p>
+              </div>
             )}
           </div>
 

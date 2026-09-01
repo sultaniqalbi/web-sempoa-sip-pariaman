@@ -10,6 +10,8 @@ import {
   PembayaranIcon,
   GaleriIcon,
   SearchIcon,
+  BookIcon,
+  EvaluasiIcon,
 } from '../components/SvgIcons';
 import { useAuthenticatedFontAwesome } from '../hooks/useAuthenticatedFontAwesome';
 
@@ -37,6 +39,8 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
           { to: `${basePath}/dashboard`, label: 'Dashboard', icon: <DashboardIcon size={20} />, end: true },
           { to: `${basePath}/siswa`, label: 'Data Siswa', icon: <DataSiswaIcon size={20} /> },
           { to: `${basePath}/guru`, label: 'Data Guru', icon: <PengajarIcon size={20} /> },
+          { to: `${basePath}/buku`, label: 'Data Buku', icon: <BookIcon size={20} /> },
+          { to: `${basePath}/evaluasi`, label: 'Evaluasi Siswa', icon: <EvaluasiIcon size={20} /> },
           { to: `${basePath}/jadwal`, label: 'Jadwal & Kelas', icon: <JadwalIcon size={20} /> },
           { to: `${basePath}/absensi`, label: 'Absensi', icon: <AbsensiIcon size={20} /> },
           { to: `${basePath}/pembayaran`, label: 'Reminder SPP', icon: <PembayaranIcon size={20} /> },
@@ -48,6 +52,8 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
           { to: `${basePath}/dashboard`, label: 'Dashboard', icon: <DashboardIcon size={20} />, end: true },
           { to: `${basePath}/siswa`, label: 'Data Siswa', icon: <DataSiswaIcon size={20} /> },
           { to: `${basePath}/guru`, label: 'Data Guru', icon: <PengajarIcon size={20} /> },
+          { to: `${basePath}/buku`, label: 'Data Buku', icon: <BookIcon size={20} /> },
+          { to: `${basePath}/evaluasi`, label: 'Evaluasi Siswa', icon: <EvaluasiIcon size={20} /> },
           { to: `${basePath}/jadwal`, label: 'Jadwal & Kelas', icon: <JadwalIcon size={20} /> },
           { to: `${basePath}/absensi`, label: 'Absensi', icon: <AbsensiIcon size={20} /> },
           { to: `${basePath}/pembayaran`, label: 'Reminder SPP', icon: <PembayaranIcon size={20} /> },
