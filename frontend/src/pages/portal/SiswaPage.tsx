@@ -806,7 +806,8 @@ export const SiswaPage: React.FC = () => {
         );
       },
       className: 'md:w-[150px]'
-        {
+    },
+    {
       header: 'Jadwal & Sesi Pertemuan',
       accessor: (row: Siswa) => {
         const details = parseProgramDetails(row.kategori_program, row.paket_jadwal);
@@ -844,7 +845,7 @@ export const SiswaPage: React.FC = () => {
         );
       },
       className: 'md:w-[220px]'
-    },  },
+    },
     {
       header: 'Sisa Pertemuan',
       accessor: (row: Siswa) => {
