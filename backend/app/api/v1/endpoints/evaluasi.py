@@ -13,15 +13,30 @@ from app.schemas.evaluasi import EvaluasiCreate, EvaluasiUpdate, EvaluasiRespons
 
 router = APIRouter()
 
+from sqlalchemy import or_, and_, func
+
 def _get_current_guru(db: Session, user: User) -> Optional[Guru]:
     if user.uid_terhubung:
-        guru = db.query(Guru).filter(Guru.uid == user.uid_terhubung).first()
+        try:
+            int_id = int(user.uid_terhubung)
+            guru = db.query(Guru).filter((Guru.id == int_id) | (Guru.uid == str(user.uid_terhubung))).first()
+        except (ValueError, TypeError):
+            guru = db.query(Guru).filter(Guru.uid == str(user.uid_terhubung)).first()
         if guru:
             return guru
     
+    if user.nama:
+        guru = db.query(Guru).filter(
+            (func.lower(Guru.nama) == user.nama.lower().strip()) |
+            (func.lower(Guru.nama_panggilan) == user.nama.lower().strip()) |
+            (func.lower(Guru.nama).contains(user.nama.lower().strip()))
+        ).first()
+        if guru:
+            return guru
+
     email_prefix = user.email.split("@")[0].lower()
     guru = db.query(Guru).filter(
-        (Guru.nama.ilike(f"%{user.nama}%")) |
+        (Guru.nama.ilike(f"%{email_prefix}%")) |
         (Guru.nama_panggilan.ilike(f"%{email_prefix}%"))
     ).first()
     return guru
@@ -47,7 +62,15 @@ def get_all_evaluasi(
     if current_user.role == UserRole.guru:
         guru = _get_current_guru(db, current_user)
         if guru:
-            query = query.filter(EvaluasiSiswa.id_guru == guru.id)
+            available_progs = [p.strip().lower() for p in (guru.kategori_program or "").split(",") if p.strip()]
+            prog_conditions = [func.lower(Siswa.kategori_program).like(f"%{p}%") for p in available_progs]
+            query = query.filter(
+                or_(
+                    EvaluasiSiswa.id_guru == guru.id,
+                    Siswa.id_guru == guru.id,
+                    and_(Siswa.id_guru == None, or_(*prog_conditions)) if prog_conditions else Siswa.id_guru == guru.id
+                )
+            )
     elif current_user.role == UserRole.ortu:
         if current_user.uid_terhubung:
             query = query.filter(EvaluasiSiswa.id_siswa == int(current_user.uid_terhubung))

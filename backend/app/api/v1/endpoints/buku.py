@@ -12,6 +12,35 @@ from app.schemas.buku import BukuSiswaCreate, BukuSiswaUpdate, BukuSiswaResponse
 
 router = APIRouter()
 
+from app.models.guru import Guru
+from sqlalchemy import or_, and_, func
+
+def _get_current_guru(db: Session, user: User) -> Optional[Guru]:
+    if user.uid_terhubung:
+        try:
+            int_id = int(user.uid_terhubung)
+            guru = db.query(Guru).filter((Guru.id == int_id) | (Guru.uid == str(user.uid_terhubung))).first()
+        except (ValueError, TypeError):
+            guru = db.query(Guru).filter(Guru.uid == str(user.uid_terhubung)).first()
+        if guru:
+            return guru
+    
+    if user.nama:
+        guru = db.query(Guru).filter(
+            (func.lower(Guru.nama) == user.nama.lower().strip()) |
+            (func.lower(Guru.nama_panggilan) == user.nama.lower().strip()) |
+            (func.lower(Guru.nama).contains(user.nama.lower().strip()))
+        ).first()
+        if guru:
+            return guru
+
+    email_prefix = user.email.split("@")[0].lower()
+    guru = db.query(Guru).filter(
+        (Guru.nama.ilike(f"%{email_prefix}%")) |
+        (Guru.nama_panggilan.ilike(f"%{email_prefix}%"))
+    ).first()
+    return guru
+
 @router.get("/", response_model=List[BukuSiswaResponse])
 def get_all_buku_siswa(
     program: Optional[str] = None,
@@ -22,13 +51,26 @@ def get_all_buku_siswa(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Ambil semua data buku siswa dengan filter
+    Ambil semua data buku siswa dengan filter (Guru hanya melihat murid bimbingannya)
     """
     query = db.query(
         BukuSiswa,
         Siswa.nama.label("nama_siswa"),
         Siswa.uid.label("uid_siswa")
     ).join(Siswa, BukuSiswa.id_siswa == Siswa.id).filter(Siswa.is_deleted == False)
+
+    # Filter khusus Guru: hanya siswa yang diajarkan oleh guru yang login
+    if current_user.role == UserRole.guru:
+        guru = _get_current_guru(db, current_user)
+        if guru:
+            available_progs = [p.strip().lower() for p in (guru.kategori_program or "").split(",") if p.strip()]
+            prog_conditions = [func.lower(Siswa.kategori_program).like(f"%{p}%") for p in available_progs]
+            query = query.filter(
+                or_(
+                    Siswa.id_guru == guru.id,
+                    and_(Siswa.id_guru == None, or_(*prog_conditions)) if prog_conditions else Siswa.id_guru == guru.id
+                )
+            )
 
     if id_siswa:
         query = query.filter(BukuSiswa.id_siswa == id_siswa)

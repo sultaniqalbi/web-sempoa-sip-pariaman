@@ -315,18 +315,21 @@ async def get_siswa_absensi(
     guru = _get_current_guru(db, current_user)
     available_programs = [p.strip() for p in (guru.kategori_program or "Sempoa SIP").split(",") if p.strip()]
 
-    # Determine effective program strictly from teacher's authorized programs
-    if program and program.lower() != 'all':
-        matching_p = [p for p in available_programs if program.lower() in p.lower() or p.lower() in program.lower()]
-        current_active_prog = matching_p[0] if matching_p else available_programs[0]
-    else:
-        current_active_prog = available_programs[0] if available_programs else "Sempoa SIP"
+    # Saring hanya siswa yang dibimbing oleh guru ini
+    prog_conditions = [func.lower(Siswa.kategori_program).like(f"%{p.lower()}%") for p in available_programs]
+    
+    student_query = db.query(Siswa).filter(
+        Siswa.is_deleted == False,
+        or_(
+            Siswa.id_guru == guru.id,
+            and_(Siswa.id_guru == None, or_(*prog_conditions)) if prog_conditions else Siswa.id_guru == guru.id
+        )
+    )
 
-    prog_condition = func.lower(Siswa.kategori_program).like(f"%{current_active_prog.lower()}%")
-    students = db.query(Siswa).filter(
-        prog_condition,
-        Siswa.is_deleted == False
-    ).order_by(Siswa.nama).all()
+    if program and program.lower() != 'all':
+        student_query = student_query.filter(func.lower(Siswa.kategori_program).like(f"%{program.lower()}%"))
+
+    students = student_query.order_by(Siswa.nama).all()
 
     if tanggal:
         try:
