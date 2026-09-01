@@ -369,6 +369,7 @@ void setup() {
 
   // 3. Inisialisasi RFID RC522 & BOOST SENSITIVITAS ANTENA MAKSIMAL
   SPI.begin();
+  SPI.setFrequency(4000000); // Set clock SPI 4MHz stabil & tahan noise kabel panjang
   rfid.PCD_Init();
   delay(10);
   optimasiAntenaRFID();
