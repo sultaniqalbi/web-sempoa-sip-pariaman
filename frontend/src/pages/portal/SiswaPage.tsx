@@ -1108,17 +1108,39 @@ export const SiswaPage: React.FC = () => {
 
           {/* Pas Foto Profil */}
           <div>
-            <label className="block text-[#1E293B] font-bold mb-1">Pas Foto (Tampil 3x4)</label>
+            <label className="block text-[#1E293B] font-bold mb-1">Pas Foto (JPG atau PNG, maks 10MB)</label>
             <input
               type="file"
-              accept="image/*"
-              onChange={(e) => setSelectedPhoto(e.target.files ? e.target.files[0] : null)}
+              accept="image/jpeg,image/png,image/jpg"
+              onChange={(e) => {
+                const file = e.target.files ? e.target.files[0] : null;
+                if (!file) {
+                  setSelectedPhoto(null);
+                  return;
+                }
+                const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+                if (!allowedTypes.includes(file.type) || file.name.toLowerCase().endsWith('.webp')) {
+                  showToast('Format foto tidak didukung. Harap gunakan format JPG atau PNG.', 'error');
+                  e.target.value = '';
+                  setSelectedPhoto(null);
+                  return;
+                }
+                if (file.size > 10 * 1024 * 1024) {
+                  showToast('Ukuran foto melebihi 10MB. Harap gunakan foto di bawah 10MB.', 'error');
+                  e.target.value = '';
+                  setSelectedPhoto(null);
+                  return;
+                }
+                setSelectedPhoto(file);
+              }}
               className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2 text-[#1E293B] focus:border-[#FF7043] focus:outline-none file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#FF7043] file:text-white hover:file:bg-[#F4511E]"
             />
             {editingSiswa?.foto_profil && !selectedPhoto && (
               <p className="text-[10px] text-[#64748B] mt-1">Siswa ini sudah memiliki foto. Upload baru untuk mengganti.</p>
             )}
-          </div>          {/* 3. Kategori Multi-Program & Info Biaya SPP Terakumulasi */}
+          </div>
+          
+          {/* 3. Kategori Multi-Program & Info Biaya SPP Terakumulasi */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="block text-[#1E293B] font-bold text-xs sm:text-sm">Pilih Program (Bisa Pilih Lebih Dari 1)*</label>

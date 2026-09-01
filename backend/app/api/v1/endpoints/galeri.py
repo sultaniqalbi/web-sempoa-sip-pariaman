@@ -44,32 +44,32 @@ class GaleriResponse(BaseModel):
         from_attributes = True
 
 def save_base64_or_image_to_disk(base64_data_or_bytes: bytes, filename_prefix: str = "galeri") -> str:
-    """Helper to save image bytes/base64 to backend/app/uploads/galeri/ as WebP with size & format validation"""
-    # Max 5MB limit
-    if len(base64_data_or_bytes) > 5 * 1024 * 1024:
+    """Helper to save image bytes/base64 to backend/app/uploads/galeri/ with size & format validation"""
+    # Max 10MB limit
+    if len(base64_data_or_bytes) > 10 * 1024 * 1024:
         raise HTTPException(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail="Ukuran file terlalu besar. Maksimal 5MB."
+            detail="Ukuran file terlalu besar. Maksimal 10MB."
         )
     
     upload_dir = os.path.join(os.path.dirname(__file__), "../../../uploads/galeri")
     os.makedirs(upload_dir, exist_ok=True)
     
     unique_id = uuid.uuid4().hex[:10]
-    filename = f"{filename_prefix}_{unique_id}.webp"
+    filename = f"{filename_prefix}_{unique_id}.jpg"
     filepath = os.path.join(upload_dir, filename)
     
     try:
         image = Image.open(io.BytesIO(base64_data_or_bytes))
         # Validate format is acceptable image
-        if image.format not in ("JPEG", "JPG", "PNG", "WEBP", "MPO"):
+        if image.format not in ("JPEG", "JPG", "PNG", "MPO"):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Format file tidak didukung. Harap upload gambar JPEG, PNG, atau WebP."
+                detail="Format file tidak didukung. Harap upload gambar JPG atau PNG."
             )
         if image.mode in ("RGBA", "P"):
             image = image.convert("RGB")
-        image.save(filepath, "WEBP", quality=85)
+        image.save(filepath, "JPEG", quality=85)
     except HTTPException:
         raise
     except Exception as e:

@@ -36,12 +36,6 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar, onToggleCollaps
           Selamat datang kembali, <span className="text-[#FF7043] font-extrabold">{user?.nama}</span>!
         </h2>
       </div>
-      <div className="flex items-center gap-3">
-        <div className="text-[11px] sm:text-xs bg-[#F8FAFC] text-[#475569] font-bold px-3 py-1.5 rounded-full border border-[#E2E8F0] flex items-center gap-1.5 shadow-2xs">
-          <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-          <span className="hidden xs:inline">Koneksi:</span> <span className="text-emerald-600 font-bold">ONLINE</span>
-        </div>
-      </div>
     </header>
   );
 };

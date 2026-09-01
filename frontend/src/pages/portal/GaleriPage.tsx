@@ -209,19 +209,19 @@ export const GaleriPage: React.FC = () => {
 
     setFileError(null);
 
-    const validMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/tiff'];
-    const isImage = file.type.startsWith('image/') || validMimes.includes(file.type.toLowerCase());
+    const validMimes = ['image/jpeg', 'image/jpg', 'image/png'];
+    const isImage = validMimes.includes(file.type.toLowerCase()) && !file.name.toLowerCase().endsWith('.webp');
     if (!isImage) {
-      const err = 'Format tidak didukung. Hanya file gambar yang diizinkan.';
+      const err = 'Format tidak didukung. Harap gunakan foto JPG atau PNG.';
       setFileError(err);
       showToast(err, 'error');
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
-    const MAX_SIZE_BYTES = 12 * 1024 * 1024;
+    const MAX_SIZE_BYTES = 10 * 1024 * 1024;
     if (file.size > MAX_SIZE_BYTES) {
-      const err = 'Ukuran file maksimal 12MB.';
+      const err = 'Ukuran file melebihi 10MB. Harap upload foto di bawah 10MB.';
       setFileError(err);
       showToast(err, 'error');
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -578,7 +578,7 @@ export const GaleriPage: React.FC = () => {
                 <input
                   type="file"
                   ref={fileInputRef}
-                  accept="image/jpeg,image/png,image/gif,image/webp,image/bmp,image/tiff"
+                  accept="image/jpeg,image/png,image/jpg"
                   onChange={handleFileSelect}
                   className="hidden"
                 />

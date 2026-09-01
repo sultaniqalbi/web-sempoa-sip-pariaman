@@ -504,12 +504,12 @@ async def upload_foto_siswa(
         
     try:
         contents = await file.read()
-        if len(contents) > 5 * 1024 * 1024:
-            raise HTTPException(status_code=413, detail="Ukuran foto melebihi batas maksimal (5MB).")
+        if len(contents) > 10 * 1024 * 1024:
+            raise HTTPException(status_code=413, detail="Ukuran foto melebihi batas maksimal (10MB).")
             
         image = Image.open(io.BytesIO(contents))
-        if image.format not in ("JPEG", "JPG", "PNG", "WEBP", "MPO"):
-            raise HTTPException(status_code=400, detail="Format file tidak didukung. Harap gunakan format JPG, PNG, atau WebP.")
+        if image.format not in ("JPEG", "JPG", "PNG", "MPO"):
+            raise HTTPException(status_code=400, detail="Format file tidak didukung. Harap gunakan format JPG atau PNG.")
             
         # Convert to RGB if needed (e.g. from PNG with alpha)
         if image.mode in ("RGBA", "P"):
@@ -519,14 +519,13 @@ async def upload_foto_siswa(
         max_size = (800, 800)
         image.thumbnail(max_size, Image.Resampling.LANCZOS)
         
-        # Save as WebP
-        filename = f"{siswa.uid}_{uuid.uuid4().hex[:8]}.webp"
+        # Save as JPG
+        filename = f"{siswa.uid}_{uuid.uuid4().hex[:8]}.jpg"
         upload_dir = os.path.join(os.path.dirname(__file__), "../../../uploads/profil")
         os.makedirs(upload_dir, exist_ok=True)
         
         filepath = os.path.join(upload_dir, filename)
-        # Quality 80 usually produces small files (100-300kb for 800px images)
-        image.save(filepath, "WEBP", quality=80)
+        image.save(filepath, "JPEG", quality=85)
         
         file_url = f"/uploads/profil/{filename}"
         

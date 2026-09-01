@@ -442,14 +442,31 @@ export const PembayaranOrtuPage: React.FC = () => {
         <form onSubmit={handleUploadSubmit} className="space-y-4">
           <div>
             <label className="block text-[#1E293B] font-bold text-xs mb-1.5">
-              Pilih File Struk Pembayaran* (JPG, PNG, atau WEBP max 10MB)
+              Pilih File Struk Pembayaran* (JPG atau PNG, maks 10MB)
             </label>
             <input
               type="file"
-              accept="image/jpeg,image/png,image/jpg,image/webp"
+              accept="image/jpeg,image/png,image/jpg"
               required
               onChange={(e) => {
                 const file = e.target.files ? e.target.files[0] : null;
+                if (!file) {
+                  setSelectedFile(null);
+                  return;
+                }
+                const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+                if (!allowedTypes.includes(file.type) || file.name.toLowerCase().endsWith('.webp')) {
+                  showToast('Format file tidak didukung. Harap pilih foto struk format JPG atau PNG.', 'error');
+                  e.target.value = '';
+                  setSelectedFile(null);
+                  return;
+                }
+                if (file.size > 10 * 1024 * 1024) {
+                  showToast('Ukuran file melebihi 10MB. Harap upload foto struk di bawah 10MB.', 'error');
+                  e.target.value = '';
+                  setSelectedFile(null);
+                  return;
+                }
                 setSelectedFile(file);
               }}
               className="w-full bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl p-2.5 text-xs text-[#1E293B] focus:border-[#FF7043] focus:outline-none file:mr-4 file:py-1.5 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-[#FF7043] file:text-white hover:file:bg-[#F4511E] cursor-pointer"

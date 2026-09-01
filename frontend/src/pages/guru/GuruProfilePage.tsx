@@ -149,6 +149,17 @@ export const GuruProfilePage: React.FC = () => {
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+      if (!allowedTypes.includes(file.type) || file.name.toLowerCase().endsWith('.webp')) {
+        showToast('Format foto tidak didukung. Harap gunakan format JPG atau PNG.', 'error');
+        e.target.value = '';
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        showToast('Ukuran foto melebihi 10MB. Harap gunakan foto di bawah 10MB.', 'error');
+        e.target.value = '';
+        return;
+      }
       setSelectedPhoto(file);
       const previewUrl = URL.createObjectURL(file);
       setPhotoPreview(previewUrl);
@@ -233,7 +244,7 @@ export const GuruProfilePage: React.FC = () => {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/jpg"
               className="hidden"
               onChange={handlePhotoSelect}
             />

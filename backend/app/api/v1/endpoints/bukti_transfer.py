@@ -289,13 +289,13 @@ async def upload_proof(
 
     # Validate file extension and MIME type
     file_ext = os.path.splitext(file.filename or "")[1].lower()
-    valid_extensions = [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif"]
-    valid_content_types = ["image/jpeg", "image/png", "image/jpg", "image/webp", "image/heic", "image/heif", "application/octet-stream"]
+    valid_extensions = [".jpg", ".jpeg", ".png"]
+    valid_content_types = ["image/jpeg", "image/png", "image/jpg"]
 
     if file.content_type not in valid_content_types and file_ext not in valid_extensions:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Format file tidak didukung. Harap unggah foto struk dalam format JPG, PNG, atau WEBP."
+            detail="Format file tidak didukung. Harap unggah foto struk dalam format JPG atau PNG."
         )
 
     max_size = 10 * 1024 * 1024  # 10MB
@@ -309,7 +309,7 @@ async def upload_proof(
 
     os.makedirs(UPLOAD_DIR, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    ext = file_ext if file_ext in [".png", ".jpg", ".jpeg", ".webp"] else ".jpg"
+    ext = file_ext if file_ext in [".png", ".jpg", ".jpeg"] else ".jpg"
     filename = f"{siswa.id}_{timestamp}{ext}"
     file_path = os.path.join(UPLOAD_DIR, filename)
 

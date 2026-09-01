@@ -425,11 +425,33 @@ export const OrtuProfilePage: React.FC = () => {
 
             {/* Pas Foto Profil */}
             <div>
-              <label className="block text-[#1E293B] font-bold mb-1">Pas Foto (Tampil 3x4)</label>
+              <label className="block text-[#1E293B] font-bold mb-1">Pas Foto (JPG atau PNG, maks 10MB)</label>
               <input
                 type="file"
-                accept="image/*"
-                onChange={(e) => setSelectedPhoto(e.target.files ? e.target.files[0] : null)}
+                accept="image/jpeg,image/png,image/jpg"
+                onChange={(e) => {
+                  const file = e.target.files ? e.target.files[0] : null;
+                  if (!file) {
+                    setSelectedPhoto(null);
+                    return;
+                  }
+                  const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+                  if (!allowedTypes.includes(file.type) || file.name.toLowerCase().endsWith('.webp')) {
+                    setSaveMessage({ type: 'error', text: 'Format foto tidak didukung. Harap gunakan format JPG atau PNG.' });
+                    setTimeout(() => setSaveMessage(null), 4000);
+                    e.target.value = '';
+                    setSelectedPhoto(null);
+                    return;
+                  }
+                  if (file.size > 10 * 1024 * 1024) {
+                    setSaveMessage({ type: 'error', text: 'Ukuran foto melebihi 10MB. Harap gunakan foto di bawah 10MB.' });
+                    setTimeout(() => setSaveMessage(null), 4000);
+                    e.target.value = '';
+                    setSelectedPhoto(null);
+                    return;
+                  }
+                  setSelectedPhoto(file);
+                }}
                 className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2 text-[#1E293B] focus:border-[#FF7043] focus:outline-none file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#FF7043] file:text-white hover:file:bg-[#F4511E]"
               />
               {child?.foto_profil && !selectedPhoto && (

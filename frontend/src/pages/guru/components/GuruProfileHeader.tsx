@@ -84,12 +84,8 @@ const GuruProfileHeader: React.FC<GuruProfileHeaderProps> = ({ teacherName, prog
             </p>
           </div>
 
-          {/* Actions: Online Badge & Logout Button */}
+          {/* Actions: Logout Button */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            <div className="hidden sm:flex items-center gap-1.5 bg-white/15 backdrop-blur-sm px-2.5 py-1 rounded-full border border-white/20">
-              <span className="w-2 h-2 bg-[#4CAF50] rounded-full animate-pulse shadow-[0_0_6px_rgba(76,175,80,0.6)]" />
-              <span className="text-white text-[10px] font-bold uppercase tracking-wider">Online</span>
-            </div>
 
             <button
               onClick={handleLogout}
