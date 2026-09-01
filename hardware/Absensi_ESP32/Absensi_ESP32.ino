@@ -809,6 +809,14 @@ void wifiSyncTask(void *pvParameters) {
           }
           nama.trim();
           simpanGuruCache(uidStr, nama);
+
+          // Update LCD & Buzzer Realtime jika saat tap awal belum ada di cache
+          if (millis() < lcdDisplayUntil) {
+            String dispNama = nama;
+            if (dispNama.length() > 16) dispNama = dispNama.substring(0, 16);
+            cetakDuaBarisCenter("Selamat Datang", dispNama.c_str());
+            triggerBuzzerTerdaftar();
+          }
         } else if (res.startsWith("KARTU_BARU") || res == "GURU_NOT_FOUND" || res == "TIDAK_TERDAFTAR") {
           // Kartu belum terdaftar / kartu uji coba lama -> Bersihkan seketika dari cache NVS lokal!
           hapusGuruCache(uidStr);
@@ -829,8 +837,8 @@ void wifiSyncTask(void *pvParameters) {
         syncInternalFlashKeServer();
       }
 
-      // 3. Sinkronisasi Cache Seluruh Guru Lokal setiap 30 menit
-      if (lastCacheSync == 0 || millis() - lastCacheSync >= 1800000UL) {
+      // 3. Sinkronisasi Cache Seluruh Guru Lokal secara berkala (setiap 60 detik)
+      if (lastCacheSync == 0 || millis() - lastCacheSync >= 60000UL) {
         lastCacheSync = millis();
         syncGuruCacheFromServer();
       }
