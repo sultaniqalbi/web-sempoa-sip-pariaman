@@ -3,20 +3,6 @@ import { useNavigate } from 'react-router-dom';
 
 const tiles = [
   {
-    label: 'Dashboard',
-    route: '/ortu',
-    color: '#1976D2',
-    bgColor: '#E3F2FD',
-    icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1976D2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="3" width="7" height="7" rx="1" />
-        <rect x="14" y="3" width="7" height="7" rx="1" />
-        <rect x="3" y="14" width="7" height="7" rx="1" />
-        <rect x="14" y="14" width="7" height="7" rx="1" />
-      </svg>
-    ),
-  },
-  {
     label: 'Anak Saya',
     route: '/ortu/anak',
     color: '#FF7043',
@@ -29,7 +15,7 @@ const tiles = [
     ),
   },
   {
-    label: 'Pembayaran',
+    label: 'Pembayaran SPP',
     route: '/ortu/pembayaran',
     color: '#388E3C',
     bgColor: '#E8F5E9',
@@ -46,7 +32,7 @@ const FeatureTiles: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div id="tour-ortu-features" className="grid grid-cols-3 gap-3" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div id="tour-ortu-features" className="grid grid-cols-2 gap-3" style={{ fontFamily: "'Inter', sans-serif" }}>
       {tiles.map((tile) => (
         <button
           key={tile.route}

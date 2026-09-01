@@ -18,7 +18,9 @@ const AbsensiGuruCard: React.FC<AbsensiGuruCardProps> = ({ absensi }) => {
       <div className="flex items-center gap-2 mb-4 border-b border-[#F5F5F5] pb-3">
         <span className="text-[#1976D2]">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <polyline points="16 11 18 13 22 9" />
           </svg>
         </span>
         <h3 className="text-xs font-bold text-[#64748B] uppercase tracking-wider">Status Mengajar Hari Ini</h3>

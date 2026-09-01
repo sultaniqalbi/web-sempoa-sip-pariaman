@@ -66,19 +66,6 @@ const GuruDashboardPage: React.FC = () => {
 
   const quickTiles = [
     {
-      label: 'Dashboard',
-      route: '/guru',
-      bgColor: '#E3F2FD',
-      icon: (
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1976D2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="3" width="7" height="7" rx="1" />
-          <rect x="14" y="3" width="7" height="7" rx="1" />
-          <rect x="3" y="14" width="7" height="7" rx="1" />
-          <rect x="14" y="14" width="7" height="7" rx="1" />
-        </svg>
-      ),
-    },
-    {
       label: 'Kelas Bimbingan',
       route: '/guru/kelas',
       bgColor: '#FFF3E0',
@@ -184,7 +171,7 @@ const GuruDashboardPage: React.FC = () => {
         </div>
       </div>
       {/* Quick Action Tiles */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {quickTiles.map((tile) => (
           <button
             key={tile.route}
