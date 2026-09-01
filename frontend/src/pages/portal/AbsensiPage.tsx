@@ -96,7 +96,12 @@ export const SharedAbsensiPage: React.FC = () => {
   const formatWaktuTap = (waktuStr: string) => {
     if (!waktuStr) return '-';
     try {
-      const d = new Date(waktuStr);
+      let d: Date;
+      if (typeof waktuStr === 'string' && !waktuStr.includes('Z') && !waktuStr.includes('+')) {
+        d = new Date(waktuStr.replace(' ', 'T') + '+07:00');
+      } else {
+        d = new Date(waktuStr);
+      }
       if (isNaN(d.getTime())) return waktuStr;
       return (
         d.toLocaleString('id-ID', {

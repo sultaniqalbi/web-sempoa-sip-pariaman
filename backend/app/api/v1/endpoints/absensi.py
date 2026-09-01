@@ -1,9 +1,11 @@
 import os
 from typing import List, Optional
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+
+WIB = timezone(timedelta(hours=7))
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user, RoleChecker
@@ -74,6 +76,12 @@ async def read_absensi_list(
         s = siswa_map.get(clean_uid) or siswa_map.get(nospace_uid)
 
         resp = AbsensiResponse.model_validate(log)
+        if log.waktu:
+            if log.waktu.tzinfo is not None:
+                resp.waktu = log.waktu.astimezone(WIB)
+            else:
+                resp.waktu = log.waktu.replace(tzinfo=WIB)
+
         if g:
             resp.guru_nama = g.nama
             resp.kategori_program = g.kategori_program
@@ -96,11 +104,12 @@ async def get_laporan_absensi_guru(
     current_user: User = Depends(admin_or_owner)
 ):
     """
-    Laporan Tap RFID Guru + Auto-Detect Guru Tidak Hadir
+    Laporan Tap RFID Guru + Auto-Detect Guru Tidak Hadir (Zona WIB)
     """
     gurus = db.query(Guru).all()
-    today_str = datetime.utcnow().strftime("%Y-%m-%d")
-    today_day_name = datetime.utcnow().strftime("%A") # e.g. 'Monday'
+    today_wib = datetime.now(WIB)
+    today_str = today_wib.strftime("%Y-%m-%d")
+    today_day_name = today_wib.strftime("%A") # e.g. 'Monday'
 
     # Day mapping ID
     day_map = {
@@ -120,11 +129,15 @@ async def get_laporan_absensi_guru(
         )
 
         is_wajib_today = hari_ini_id.lower() in (g.hari_wajib or "").lower()
-        tap_today = [l for l in logs_today if l.waktu.strftime("%Y-%m-%d") == today_str]
+        tap_today = []
+        for l in logs_today:
+            l_waktu_wib = l.waktu.astimezone(WIB) if l.waktu.tzinfo else l.waktu.replace(tzinfo=WIB)
+            if l_waktu_wib.strftime("%Y-%m-%d") == today_str:
+                tap_today.append((l, l_waktu_wib))
 
         if tap_today:
-            status_guru = tap_today[0].status.value
-            jam_tap = tap_today[0].waktu.strftime("%H:%M")
+            status_guru = tap_today[0][0].status.value if hasattr(tap_today[0][0].status, 'value') else str(tap_today[0][0].status)
+            jam_tap = tap_today[0][1].strftime("%H:%M")
         elif is_wajib_today:
             status_guru = "TIDAK_HADIR"
             jam_tap = "-"
@@ -199,11 +212,11 @@ async def bulk_absensi_siswa(
     current_user: User = Depends(RoleChecker([UserRole.admin, UserRole.owner, UserRole.guru]))
 ):
     processed = 0
-    now = datetime.now()
+    now = datetime.now(WIB)
     if req.tanggal:
         try:
             target_date = datetime.strptime(req.tanggal, "%Y-%m-%d").date()
-            now = datetime.combine(target_date, datetime.now().time())
+            now = datetime.combine(target_date, datetime.now(WIB).time()).replace(tzinfo=WIB)
         except Exception:
             pass
 
@@ -214,7 +227,7 @@ async def bulk_absensi_siswa(
 
         existing_log = db.query(AbsensiLog).filter(
             AbsensiLog.uid == siswa.uid,
-            func.date(AbsensiLog.waktu) == now.date()
+            func.date(func.timezone('Asia/Jakarta', AbsensiLog.waktu)) == now.astimezone(WIB).date()
         ).order_by(AbsensiLog.waktu.desc()).first()
 
         if existing_log:
@@ -346,11 +359,15 @@ async def update_absensi_log(
             try:
                 if "T" in w_val:
                     w_dt = datetime.fromisoformat(w_val.replace("Z", "+00:00"))
+                    if w_dt.tzinfo is None:
+                        w_dt = w_dt.replace(tzinfo=WIB)
                 else:
-                    w_dt = datetime.strptime(w_val.strip(), "%Y-%m-%d %H:%M:%S")
+                    w_dt = datetime.strptime(w_val.strip(), "%Y-%m-%d %H:%M:%S").replace(tzinfo=WIB)
                 update_dict["waktu"] = w_dt
             except Exception:
                 pass
+        elif isinstance(w_val, datetime) and w_val.tzinfo is None:
+            update_dict["waktu"] = w_val.replace(tzinfo=WIB)
 
     if "uid" in update_dict and update_dict["uid"]:
         update_dict["uid"] = update_dict["uid"].strip().upper()
@@ -362,7 +379,7 @@ async def update_absensi_log(
     db.refresh(log)
 
     manager.broadcast_sync("ABSENSI_UPDATE", {
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(WIB).isoformat(),
         "source": "update_absensi",
         "id": log.id,
         "uid": log.uid,
@@ -379,6 +396,12 @@ async def update_absensi_log(
         Siswa.is_deleted == False
     ).first()
     resp = AbsensiResponse.model_validate(log)
+    if log.waktu:
+        if log.waktu.tzinfo is not None:
+            resp.waktu = log.waktu.astimezone(WIB)
+        else:
+            resp.waktu = log.waktu.replace(tzinfo=WIB)
+
     if g:
         resp.guru_nama = g.nama
         resp.kategori_program = g.kategori_program
@@ -410,7 +433,7 @@ async def delete_absensi_log(
     db.commit()
 
     manager.broadcast_sync("ABSENSI_UPDATE", {
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(WIB).isoformat(),
         "source": "delete_absensi",
         "id": deleted_id,
         "uid": deleted_uid
@@ -433,14 +456,14 @@ async def create_guru_manual_absensi(
     try:
         t_date = datetime.strptime(req.tanggal, "%Y-%m-%d").date()
     except Exception:
-        t_date = datetime.now().date()
+        t_date = datetime.now(WIB).date()
 
     try:
         t_time = datetime.strptime(req.jam or "08:00", "%H:%M").time()
     except Exception:
-        t_time = datetime.now().time()
+        t_time = datetime.now(WIB).time()
 
-    waktu_target = datetime.combine(t_date, t_time)
+    waktu_target = datetime.combine(t_date, t_time).replace(tzinfo=WIB)
 
     try:
         mode_val = ModeAbsensi(req.mode.upper() if req.mode else "OFFLINE")
@@ -449,7 +472,7 @@ async def create_guru_manual_absensi(
 
     existing_log = db.query(AbsensiLog).filter(
         AbsensiLog.uid == guru.uid,
-        func.date(AbsensiLog.waktu) == t_date
+        func.date(func.timezone('Asia/Jakarta', AbsensiLog.waktu)) == t_date
     ).first()
 
     if existing_log:
@@ -497,10 +520,10 @@ async def create_guru_izin(
     curr = start_date
     count = 0
     while curr <= end_date:
-        waktu_target = datetime.combine(curr, datetime.strptime("08:00", "%H:%M").time())
+        waktu_target = datetime.combine(curr, datetime.strptime("08:00", "%H:%M").time()).replace(tzinfo=WIB)
         existing = db.query(AbsensiLog).filter(
             AbsensiLog.uid == guru.uid,
-            func.date(AbsensiLog.waktu) == curr
+            func.date(func.timezone('Asia/Jakarta', AbsensiLog.waktu)) == curr
         ).first()
 
         catatan_str = f"[{req.jenis_izin}] {req.keterangan}" if req.keterangan else f"[{req.jenis_izin}]"

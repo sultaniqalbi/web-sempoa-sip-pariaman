@@ -1,10 +1,12 @@
 import os
 import json
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import PlainTextResponse
 from sqlalchemy import func
 from sqlalchemy.orm import Session
+
+WIB = timezone(timedelta(hours=7))
 
 from app.core.database import get_db
 from app.core.websocket import manager
@@ -55,9 +57,9 @@ async def post_absensi(request: Request, db: Session = Depends(get_db)):
     if not waktu_str or not waktu_str.strip():
         return PlainTextResponse("ERROR_WAKTU_FORMAT", status_code=200)
 
-    # Validate waktu format (YYYY-MM-DD HH:MM:SS)
+    # Validate waktu format (YYYY-MM-DD HH:MM:SS) - Explicit WIB (UTC+7)
     try:
-        waktu_dt = datetime.strptime(waktu_str.strip(), "%Y-%m-%d %H:%M:%S")
+        waktu_dt = datetime.strptime(waktu_str.strip(), "%Y-%m-%d %H:%M:%S").replace(tzinfo=WIB)
     except ValueError:
         return PlainTextResponse("ERROR_WAKTU_FORMAT", status_code=200)
 
@@ -92,18 +94,18 @@ async def post_absensi(request: Request, db: Session = Depends(get_db)):
 
         # Broadcast card tap event for real-time listeners
         manager.broadcast_sync("CARD_TAP", {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(WIB).isoformat(),
             "uid": uid_clean,
             "waktu": waktu_str,
             "status": "REGISTERED",
             "nama": nama_guru
         })
 
-        # Cek duplikasi tap hari ini (Idempotency)
-        today_date = waktu_dt.date()
+        # Cek duplikasi tap hari ini dalam zona WIB (Idempotency)
+        today_date = waktu_dt.astimezone(WIB).date()
         duplicate = db.query(AbsensiLog).filter(
             (AbsensiLog.uid == uid_clean) | (AbsensiLog.uid == matched_uid),
-            func.date(AbsensiLog.waktu) == today_date
+            func.date(func.timezone('Asia/Jakarta', AbsensiLog.waktu)) == today_date
         ).first()
 
         if duplicate:
@@ -121,7 +123,7 @@ async def post_absensi(request: Request, db: Session = Depends(get_db)):
         db.commit()
 
         manager.broadcast_sync("ABSENSI_UPDATE", {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(WIB).isoformat(),
             "source": "rfid_hardware",
             "uid": matched_uid,
             "nama": nama_guru,

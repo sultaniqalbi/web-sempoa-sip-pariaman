@@ -1,9 +1,11 @@
 from typing import List, Dict, Any, Optional
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_
 from pydantic import BaseModel
+
+WIB = timezone(timedelta(hours=7))
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user, RoleChecker
@@ -28,25 +30,17 @@ def _get_current_guru(db: Session, current_user: User) -> Guru:
         except (ValueError, TypeError):
             guru = db.query(Guru).filter(Guru.uid == str(current_user.uid_terhubung)).first()
 
-    if not guru and current_user.nama:
+    if not guru:
         guru = db.query(Guru).filter(
-            (func.lower(Guru.nama) == current_user.nama.lower().strip()) |
-            (func.lower(Guru.nama_panggilan) == current_user.nama.lower().strip()) |
-            (func.lower(Guru.nama).contains(current_user.nama.lower().strip()))
-        ).first()
-
-    if not guru and current_user.email:
-        email_name = current_user.email.split("@")[0].lower()
-        guru = db.query(Guru).filter(
-            (func.lower(Guru.nama).contains(email_name)) |
-            (func.lower(Guru.nama_panggilan).contains(email_name))
+            (func.lower(Guru.nama) == current_user.username.lower()) |
+            (Guru.id_user == current_user.id)
         ).first()
 
     if not guru:
-        guru = db.query(Guru).first()
-
-    if not guru:
-        raise HTTPException(status_code=404, detail="Data guru tidak ditemukan")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Profil data guru Anda tidak ditemukan"
+        )
     return guru
 
 def _get_guru_programs(guru: Guru) -> List[str]:
@@ -54,40 +48,44 @@ def _get_guru_programs(guru: Guru) -> List[str]:
         return ["sempoa sip"]
     return [p.strip().lower() for p in guru.kategori_program.split(",") if p.strip()]
 
-@router.get("/dashboard")
+@router.get("/dashboard", response_model=Dict[str, Any])
 async def get_guru_dashboard(
     db: Session = Depends(get_db),
     current_user: User = Depends(teacher_only)
 ):
     guru = _get_current_guru(db, current_user)
-    programs = _get_guru_programs(guru)
+    programs = [p.strip().lower() for p in (guru.kategori_program or "").split(",") if p.strip()]
 
-    # Get active students strictly matching the teacher's taught programs
-    prog_conditions = [func.lower(Siswa.kategori_program).like(f"%{p}%") for p in programs]
     active_students = db.query(Siswa).filter(
-        or_(*prog_conditions),
-        func.lower(func.trim(Siswa.kategori_program)) != 'tk',
         Siswa.status_spp == StatusSPP.AKTIF,
         Siswa.is_deleted == False
     ).all()
 
     total_siswa = len(active_students)
-    today = datetime.now().date()
+    today = datetime.now(WIB).date()
 
-    # Find teacher's latest attendance tap
+    # Find teacher's latest attendance tap in WIB
     last_tap = db.query(AbsensiLog).filter(
         AbsensiLog.uid == guru.uid,
-        func.date(AbsensiLog.waktu) == today
+        func.date(func.timezone('Asia/Jakarta', AbsensiLog.waktu)) == today
     ).order_by(AbsensiLog.waktu.desc()).first()
 
     status_val = "Belum Absen"
     if last_tap:
         status_val = last_tap.status.value if hasattr(last_tap.status, 'value') else str(last_tap.status)
 
+    if last_tap and last_tap.waktu:
+        lt_wib = last_tap.waktu.astimezone(WIB) if last_tap.waktu.tzinfo else last_tap.waktu.replace(tzinfo=WIB)
+        tanggal_str = lt_wib.strftime("%d-%m")
+        jam_str = lt_wib.strftime("%H:%M")
+    else:
+        tanggal_str = today.strftime("%d-%m")
+        jam_str = "-"
+
     absensi_guru = {
         "status": status_val,
-        "tanggal": last_tap.waktu.strftime("%d-%m") if last_tap else today.strftime("%d-%m"),
-        "jam": last_tap.waktu.strftime("%H:%M") if last_tap else "-"
+        "tanggal": tanggal_str,
+        "jam": jam_str
     }
 
     # Jadwal hari ini
