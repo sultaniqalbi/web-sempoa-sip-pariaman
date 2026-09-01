@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, Date
+from sqlalchemy import Column, Integer, String, Text, DateTime, Date, Boolean
 from sqlalchemy.sql import func
 from app.core.database import Base
 
@@ -24,3 +24,4 @@ class Guru(Base):
     foto_profil = Column(String(255), nullable=True)
     mode_kelas = Column(String(20), nullable=True, default="OFFLINE")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    is_deleted = Column(Boolean, default=False, nullable=False)
