@@ -12,7 +12,7 @@ import DayPicker from '../../components/DayPicker';
 import { PhotoModal } from '../../components/PhotoModal';
 import { PengajarIcon, TrashIcon, CheckIcon } from '../../components/SvgIcons';
 
-const AVAILABLE_PROGRAMS = ['Sempoa SIP', 'Fonem', 'Tahfidz', 'Bahasa Inggris', 'TK'];
+const AVAILABLE_PROGRAMS = ['Sempoa SIP', 'Fonem', 'Tahfidz', 'Bahasa Inggris', 'TK', 'Admin', 'Direktur'];
 
 const getProgramBadgeStyle = (program: string) => {
   const p = program.trim().toLowerCase();
@@ -26,6 +26,10 @@ const getProgramBadgeStyle = (program: string) => {
     return 'bg-[#E0F2FE] text-[#0369A1] border-[#BAE6FD]';
   } else if (p.includes('tk')) {
     return 'bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]';
+  } else if (p.includes('admin')) {
+    return 'bg-[#F1F5F9] text-[#0F172A] border-[#94A3B8]';
+  } else if (p.includes('direktur') || p.includes('owner')) {
+    return 'bg-[#FDF2F8] text-[#BE185D] border-[#FBCFE8]';
   }
   return 'bg-[#F1F5F9] text-[#475569] border-[#CBD5E1]';
 };

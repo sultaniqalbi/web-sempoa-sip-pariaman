@@ -9,7 +9,7 @@ import PageHeader from '../../components/PageHeader';
 import EmptyState from '../../components/EmptyState';
 import { DayPicker } from '../../components/DayPicker';
 import { PhotoModal } from '../../components/PhotoModal';
-import { DataSiswaIcon, TrashIcon, CheckIcon, InfoIcon, CalendarIcon } from '../../components/SvgIcons';
+import { DataSiswaIcon, TrashIcon, CheckIcon, InfoIcon, CalendarIcon, PengajarIcon } from '../../components/SvgIcons';
 
 interface Siswa {
   id: number;
@@ -23,6 +23,7 @@ interface Siswa {
   kategori_program: string;
   paket_jadwal?: string;
   hari_masuk: string;
+  id_guru?: number;
   sisa_pertemuan: number;
   target_pertemuan: number;
   status_spp: string;
@@ -108,6 +109,10 @@ export const getProgramBadgeStyle = (program: string) => {
     return 'bg-[#E0F2FE] text-[#0369A1] border-[#BAE6FD]';
   } else if (p.includes('tk')) {
     return 'bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]';
+  } else if (p.includes('admin')) {
+    return 'bg-[#F1F5F9] text-[#0F172A] border-[#94A3B8]';
+  } else if (p.includes('direktur') || p.includes('owner')) {
+    return 'bg-[#FDF2F8] text-[#BE185D] border-[#FBCFE8]';
   }
   return 'bg-[#F1F5F9] text-[#475569] border-[#CBD5E1]';
 };
@@ -299,6 +304,7 @@ export const SiswaPage: React.FC = () => {
     kategori_program: 'Sempoa SIP',
     paket_jadwal: 'Paket 1: 8 Pertemuan, 90 Menit',
     hari_masuk: 'Senin, Rabu',
+    id_guru: undefined as number | undefined,
     nama_orang_tua: '',
     whatsapp_orang_tua: '',
     alamat: '',
@@ -389,6 +395,24 @@ export const SiswaPage: React.FC = () => {
       return res.data;
     },
     refetchInterval: 10000
+  });
+
+  // Fetch Guru List
+  const { data: guruList = [] } = useQuery<any[]>({
+    queryKey: ['guru', 'list'],
+    queryFn: async () => {
+      const res = await apiClient.get('/guru/');
+      return res.data;
+    },
+  });
+
+  // Fetch Jadwal List
+  const { data: jadwalList = [] } = useQuery<any[]>({
+    queryKey: ['jadwal', 'list'],
+    queryFn: async () => {
+      const res = await apiClient.get('/jadwal/');
+      return res.data;
+    },
   });
 
   // Create Mutation
@@ -544,6 +568,7 @@ export const SiswaPage: React.FC = () => {
       kategori_program: 'Sempoa SIP',
       paket_jadwal: 'Paket 1: 8 Pertemuan, 90 Menit',
       hari_masuk: 'Senin, Rabu',
+      id_guru: undefined,
       nama_orang_tua: '',
       whatsapp_orang_tua: '',
       alamat: '',
@@ -579,6 +604,7 @@ export const SiswaPage: React.FC = () => {
       kategori_program: siswa.kategori_program || 'Sempoa SIP',
       paket_jadwal: siswa.paket_jadwal || 'Paket 1: 8 Pertemuan, 90 Menit',
       hari_masuk: siswa.hari_masuk || 'Senin, Rabu',
+      id_guru: siswa.id_guru,
       nama_orang_tua: siswa.nama_orang_tua || '',
       whatsapp_orang_tua: siswa.whatsapp_orang_tua || '',
       alamat: siswa.alamat || '',
@@ -780,11 +806,11 @@ export const SiswaPage: React.FC = () => {
         );
       },
       className: 'md:w-[150px]'
-    },
-    {
+        {
       header: 'Jadwal & Sesi Pertemuan',
       accessor: (row: Siswa) => {
         const details = parseProgramDetails(row.kategori_program, row.paket_jadwal);
+        const assignedTeacher = row.id_guru ? (guruList as any[]).find((g: any) => g.id === row.id_guru) : null;
         return (
           <div className="py-1">
             <div className="flex flex-col gap-2">
@@ -803,14 +829,22 @@ export const SiswaPage: React.FC = () => {
                 );
               })}
             </div>
+            {assignedTeacher && (
+              <div className="mt-1.5 flex items-center gap-1">
+                <span className="text-[10px] font-bold text-[#15803D] bg-[#DCFCE7] border border-[#86EFAC] px-2 py-0.5 rounded-md flex items-center gap-1 shadow-2xs">
+                  <PengajarIcon size={10} className="text-[#16A34A]" />
+                  Guru: {assignedTeacher.nama.split(',')[0]}
+                </span>
+              </div>
+            )}
             <p className="text-[10px] text-[#64748B] pt-1.5 font-semibold border-t border-[#F1F5F9] mt-1.5">
               Total Target: {row.target_pertemuan || 8} Sesi
             </p>
           </div>
         );
       },
-      className: 'md:w-[260px]'
-    },
+      className: 'md:w-[220px]'
+    },  },
     {
       header: 'Sisa Pertemuan',
       accessor: (row: Siswa) => {
@@ -1533,6 +1567,101 @@ export const SiswaPage: React.FC = () => {
               </div>
             );
           })()}
+
+          {/* Alokasi Guru Pengajar & Kelas Pembimbing */}
+          <div className="p-3.5 bg-[#F0FDF4] border border-[#BBF7D0] rounded-xl space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="p-1 rounded-md bg-[#DCFCE7] text-[#16A34A]">
+                  <PengajarIcon size={16} />
+                </span>
+                <span className="font-bold text-xs sm:text-sm text-[#166534]">
+                  Pilih Guru Pembimbing & Kelas
+                </span>
+              </div>
+              <span className="text-[10px] text-[#15803D] font-semibold bg-white px-2 py-0.5 rounded-md border border-[#BBF7D0]">
+                Sinkronisasi Guru & Siswa
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Dropdown Guru */}
+              <div>
+                <label className="block text-[#166534] font-bold text-xs mb-1">
+                  Guru / Pengajar Pembimbing
+                </label>
+                <select
+                  value={formData.id_guru || ''}
+                  onChange={(e) => {
+                    const val = e.target.value ? parseInt(e.target.value, 10) : undefined;
+                    setFormData({ ...formData, id_guru: val });
+                  }}
+                  className="w-full bg-white border border-[#86EFAC] rounded-lg p-2.5 text-[#1E293B] font-bold text-xs focus:border-[#16A34A] focus:outline-none shadow-2xs"
+                >
+                  <option value="">-- Tanpa Guru Spesifik / Semua Guru Program --</option>
+                  {(guruList as any[])
+                    .filter((g: any) => {
+                      const teacherProgs = (g.kategori_program || '').toLowerCase();
+                      const studentProgs = formData.kategori_program.toLowerCase().split(',').map((p: string) => p.trim());
+                      return studentProgs.some((p: string) => teacherProgs.includes(p)) || teacherProgs.includes('sempoa');
+                    })
+                    .map((g: any) => (
+                      <option key={g.id} value={g.id}>
+                        {g.nama} ({g.kategori_program || 'Umum'}) {g.hari_wajib ? `• ${g.hari_wajib}` : ''}
+                      </option>
+                    ))}
+                </select>
+                <p className="text-[10px] text-[#15803D] mt-1">
+                  Guru ini akan otomatis melihat siswa ini di portal absensi mereka.
+                </p>
+              </div>
+
+              {/* Pilihan Jadwal / Kelas */}
+              <div>
+                <label className="block text-[#166534] font-bold text-xs mb-1">
+                  Pilih Sesi Kelas & Jadwal (Opsional)
+                </label>
+                <select
+                  onChange={(e) => {
+                    const selectedJadwalId = e.target.value ? parseInt(e.target.value, 10) : undefined;
+                    if (selectedJadwalId) {
+                      const j = (jadwalList as any[]).find((x: any) => x.id === selectedJadwalId);
+                      if (j) {
+                        const updatedProgDays = { ...programDays };
+                        const mainProg = formData.kategori_program.split(',')[0].trim();
+                        updatedProgDays[mainProg] = j.hari;
+                        setProgramDays(updatedProgDays);
+                        setFormData({
+                          ...formData,
+                          hari_masuk: j.hari,
+                          id_guru: j.id_guru || formData.id_guru,
+                        });
+                        showToast(`Jadwal "${j.kategori_program} (${j.hari})" dipilih. Hari masuk otomatis disinkronkan.`, 'success');
+                      }
+                    }
+                  }}
+                  className="w-full bg-white border border-[#86EFAC] rounded-lg p-2.5 text-[#1E293B] font-bold text-xs focus:border-[#16A34A] focus:outline-none shadow-2xs"
+                  defaultValue=""
+                >
+                  <option value="">-- Pilih Sesi Kelas Jadwal --</option>
+                  {(jadwalList as any[])
+                    .filter((j: any) => {
+                      const jProg = (j.kategori_program || '').toLowerCase();
+                      const sProgs = formData.kategori_program.toLowerCase().split(',').map((p: string) => p.trim());
+                      return sProgs.some((p: string) => jProg.includes(p) || p.includes(jProg));
+                    })
+                    .map((j: any) => (
+                      <option key={j.id} value={j.id}>
+                        {j.kategori_program} • {j.hari} ({j.jam_mulai} - {j.jam_selesai}) • {j.guru_names || 'Pengajar'}
+                      </option>
+                    ))}
+                </select>
+                <p className="text-[10px] text-[#15803D] mt-1">
+                  Memilih jadwal akan otomatis mengisi hari masuk dan guru pembimbing.
+                </p>
+              </div>
+            </div>
+          </div>
 
           {/* 6 & 7. Nama Orang Tua & No. WhatsApp */}
           <div className="border-t border-[#E2E8F0] pt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
