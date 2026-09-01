@@ -222,3 +222,47 @@ def delete_evaluasi(
     db.delete(eval_obj)
     db.commit()
     return {"message": "Data evaluasi berhasil dihapus"}
+
+@router.post("/export-sheets")
+async def export_evaluasi_sheets(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Export Lembar Evaluasi & Rapor Siswa ke Google Sheets
+    """
+    if current_user.role not in [UserRole.admin, UserRole.owner]:
+        raise HTTPException(status_code=403, detail="Hanya admin/owner yang dapat melakukan ekspor")
+
+    results = db.query(
+        EvaluasiSiswa,
+        Siswa.nama.label("nama_siswa"),
+        Siswa.uid.label("uid_siswa"),
+        Guru.nama.label("nama_guru")
+    ).join(Siswa, EvaluasiSiswa.id_siswa == Siswa.id).outerjoin(Guru, EvaluasiSiswa.id_guru == Guru.id).filter(Siswa.is_deleted == False).order_by(EvaluasiSiswa.tanggal_evaluasi.desc(), EvaluasiSiswa.created_at.desc()).all()
+
+    rows = [[
+        "Nama Siswa", "UID Siswa", "Kategori Program", "Guru Penilai",
+        "Tanggal Evaluasi", "Periode", "Fokus Belajar", "Kecepatan Menghitung",
+        "Ketelitian", "Pemahaman Konsep", "Predikat Keseluruhan", "Catatan Guru", "Saran untuk Orang Tua"
+    ]]
+
+    for evaluasi, nama_siswa, uid_siswa, nama_guru in results:
+        rows.append([
+            nama_siswa,
+            uid_siswa,
+            evaluasi.kategori_program or "-",
+            nama_guru or "Pengajar Sempoa SIP",
+            evaluasi.tanggal_evaluasi.strftime("%Y-%m-%d") if evaluasi.tanggal_evaluasi else "-",
+            evaluasi.periode_evaluasi or "-",
+            evaluasi.nilai_fokus or "-",
+            evaluasi.nilai_kecepatan or "-",
+            evaluasi.nilai_ketelitian or "-",
+            evaluasi.nilai_pemahaman or "-",
+            evaluasi.predikat_keseluruhan or "-",
+            evaluasi.catatan_guru or "-",
+            evaluasi.saran_untuk_ortu or "-"
+        ])
+
+    from app.services.google_sheets import send_to_google_sheet
+    return send_to_google_sheet(tab_name="Evaluasi Siswa", rows=rows, title="Data Evaluasi & Rapor Siswa")

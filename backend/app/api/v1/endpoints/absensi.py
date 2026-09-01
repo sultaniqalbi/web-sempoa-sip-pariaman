@@ -556,16 +556,18 @@ async def export_absensi_sheets(
 ):
     from app.services.google_sheets import send_to_google_sheet
 
-    items = db.query(AbsensiLog).order_by(AbsensiLog.waktu.desc()).limit(500).all()
-    rows = [["ID Log", "UID", "Nama Terkait", "Waktu Tap", "Mode", "Status Absensi"]]
+    items = db.query(AbsensiLog).order_by(AbsensiLog.waktu.desc()).limit(1000).all()
+    rows = [["ID Log", "UID Kartu", "Nama Guru / Pemilik", "Program", "Waktu Tap (WIB)", "Jalur Sinkronisasi", "Status Kehadiran", "Catatan"]]
     for a in items:
-        guru = db.query(Guru).filter(Guru.uid == a.uid).first()
-        siswa = db.query(Siswa).filter(Siswa.uid == a.uid).first()
+        guru = db.query(Guru).filter((Guru.uid == a.uid) | (func.replace(Guru.uid, " ", "") == a.uid.replace(" ", ""))).first()
+        siswa = db.query(Siswa).filter((Siswa.uid == a.uid) | (func.replace(Siswa.uid, " ", "") == a.uid.replace(" ", ""))).first()
         nama = guru.nama if guru else (siswa.nama if siswa else "Kartu Belum Terdaftar")
-        mode_str = a.mode.value if hasattr(a.mode, 'value') else str(a.mode)
-        status_str = a.status.value if hasattr(a.status, 'value') else str(a.status)
-        rows.append([a.id, a.uid, nama, a.waktu.strftime("%Y-%m-%d %H:%M:%S") if a.waktu else "-", mode_str, status_str])
+        prog = guru.kategori_program if guru else (siswa.kategori_program if siswa else "-")
+        mode_str = a.mode.value if hasattr(a.mode, 'value') else str(a.mode or "ONLINE")
+        status_str = a.status.value if hasattr(a.status, 'value') else str(a.status or "HADIR")
+        waktu_wib = a.waktu.astimezone(WIB).strftime("%Y-%m-%d %H:%M:%S WIB") if a.waktu else "-"
+        rows.append([a.id, a.uid, nama, prog, waktu_wib, mode_str, status_str, a.catatan or "-"])
 
-    tab_name = "Data Absensi"
-    return send_to_google_sheet(tab_name=tab_name, rows=rows, title="Log Absensi RFID")
+    tab_name = "Absensi Guru"
+    return send_to_google_sheet(tab_name=tab_name, rows=rows, title="Rekap Log Absensi Guru RFID")
 

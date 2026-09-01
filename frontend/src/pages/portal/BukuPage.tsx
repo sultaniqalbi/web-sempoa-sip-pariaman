@@ -76,6 +76,8 @@ export const SharedBukuPage: React.FC = () => {
 
   // Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [exportResult, setExportResult] = useState<any>(null);
   const [editingBuku, setEditingBuku] = useState<BukuItem | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: number; nama: string; buku: string } | null>(null);
 
@@ -95,6 +97,25 @@ export const SharedBukuPage: React.FC = () => {
     setToastMessage({ text, type });
     setTimeout(() => setToastMessage(null), 4000);
   };
+
+  const exportSheetsMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiClient.post('/buku/export-sheets');
+      return res.data;
+    },
+    onSuccess: (data) => {
+      setExportResult(data);
+      setIsExportModalOpen(true);
+      if (data.status === 'success') {
+        showToast('Data buku siswa berhasil dikirim ke Google Sheets');
+      } else {
+        showToast(`Info: ${data.message}`, 'error');
+      }
+    },
+    onError: (err: any) => {
+      showToast(`Gagal export: ${err.message}`, 'error');
+    }
+  });
 
   // 1. Fetch Data Buku Siswa
   const { data: bukuList = [], isLoading } = useQuery<BukuItem[]>({
@@ -346,6 +367,8 @@ export const SharedBukuPage: React.FC = () => {
         iconColorBg="bg-[#FFF3E0] text-[#FF7043]"
         actionLabel="Tambah Data Buku"
         onAction={openAddModal}
+        onExportSheets={() => exportSheetsMutation.mutate()}
+        isExporting={exportSheetsMutation.isPending}
       />
 
       {/* Filter Tabs */}
@@ -565,6 +588,42 @@ export const SharedBukuPage: React.FC = () => {
           isLoading={deleteMutation.isPending}
         />
       )}
+
+      {/* Export Status Modal */}
+      <Modal isOpen={isExportModalOpen} onClose={() => setIsExportModalOpen(false)} title="Status Google Sheets Export">
+        {exportResult && (
+          <div className="space-y-4 text-xs">
+            <p className="text-[#424242] font-bold">{exportResult.message}</p>
+            {exportResult.status === 'success' ? (
+              <div className="space-y-3">
+                <p className="text-[#757575]">
+                  Tab: <code className="text-[#FF7043] font-bold">{exportResult.worksheet_name}</code> ({exportResult.rows_written} baris ditulis)
+                </p>
+                <a
+                  href={exportResult.sheet_url && !exportResult.sheet_url.includes('script.google.com') ? exportResult.sheet_url : 'https://docs.google.com/spreadsheets/d/1C9m90ipD2mt_pmWK5pNQ_YxfzwRbWZOlLYAXMtzMYKA/edit'}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-block px-4 py-2.5 bg-[#388E3C] text-white font-bold rounded-lg hover:bg-[#2E7D32]"
+                >
+                  Buka Google Sheets
+                </a>
+              </div>
+            ) : exportResult.status === 'pending' ? (
+              <div className="p-3 bg-[#FFF3E0] border border-[#FFCC80] rounded-xl text-[#E65100]">
+                Fitur ini memerlukan <code>GOOGLE_WEBHOOK_URL</code> pada file .env backend.
+              </div>
+            ) : null}
+            <div className="flex justify-end pt-2">
+              <button
+                onClick={() => setIsExportModalOpen(false)}
+                className="px-4 py-2 bg-[#FAFAFA] text-[#757575] font-bold rounded-lg border border-[#E0E0E0] cursor-pointer"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

@@ -208,3 +208,43 @@ def delete_buku_siswa(
     db.delete(buku)
     db.commit()
     return {"message": "Data buku berhasil dihapus"}
+
+@router.post("/export-sheets")
+async def export_buku_sheets(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Export Progres Buku Siswa ke Google Sheets
+    """
+    if current_user.role not in [UserRole.admin, UserRole.owner]:
+        raise HTTPException(status_code=403, detail="Hanya admin/owner yang dapat melakukan ekspor")
+
+    results = db.query(
+        BukuSiswa,
+        Siswa.nama.label("nama_siswa"),
+        Siswa.uid.label("uid_siswa")
+    ).join(Siswa, BukuSiswa.id_siswa == Siswa.id).filter(Siswa.is_deleted == False).order_by(BukuSiswa.created_at.desc()).all()
+
+    rows = [[
+        "Nama Siswa", "UID Siswa", "Kategori Program", "Level Anak",
+        "Nomor Buku", "Jenis Buku", "Status Buku", "Tanggal Mulai",
+        "Tanggal Selesai", "Catatan Progres"
+    ]]
+
+    for buku, nama_siswa, uid_siswa in results:
+        rows.append([
+            nama_siswa,
+            uid_siswa,
+            buku.kategori_program or "-",
+            buku.level_anak or "-",
+            buku.nomor_buku or "-",
+            buku.jenis_buku or "-",
+            buku.status_buku.value if hasattr(buku.status_buku, 'value') else str(buku.status_buku or "-"),
+            buku.tanggal_mulai.strftime("%Y-%m-%d") if buku.tanggal_mulai else "-",
+            buku.tanggal_selesai.strftime("%Y-%m-%d") if buku.tanggal_selesai else "-",
+            buku.catatan_progres or "-"
+        ])
+
+    from app.services.google_sheets import send_to_google_sheet
+    return send_to_google_sheet(tab_name="Data Buku", rows=rows, title="Data Progres Buku Siswa")

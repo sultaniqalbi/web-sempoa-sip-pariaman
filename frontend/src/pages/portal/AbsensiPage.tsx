@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
 import PageHeader from '../../components/PageHeader';
@@ -6,7 +6,20 @@ import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
 import ConfirmModal from '../../components/ConfirmModal';
 import EmptyState from '../../components/EmptyState';
-import { AbsensiIcon, EditIcon, PengajarIcon, DataSiswaIcon, TrashIcon, PresensiIcon, CalendarIcon, CheckIcon } from '../../components/SvgIcons';
+import {
+  AbsensiIcon,
+  EditIcon,
+  PengajarIcon,
+  DataSiswaIcon,
+  TrashIcon,
+  PresensiIcon,
+  CalendarIcon,
+  CheckIcon,
+  SheetsIcon,
+  CalendarNavIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon
+} from '../../components/SvgIcons';
 import { parseProgramDetails, getProgramBadgeStyle, parseProgramQuotas } from './SiswaPage';
 
 interface SiswaItem {
@@ -43,6 +56,23 @@ export const SharedAbsensiPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'siswa' | 'guru'>('siswa');
   const [selectedProgram, setSelectedProgram] = useState<string>('all');
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
+  // Helper mendapatkan tanggal hari ini dalam format YYYY-MM-DD (WIB)
+  const getTodayWIB = () => {
+    const now = new Date();
+    const year = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta', year: 'numeric' });
+    const month = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta', month: '2-digit' });
+    const day = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta', day: '2-digit' });
+    return `${year}-${month}-${day}`;
+  };
+
+  // State Navigasi Kalender Harian (Slide per Hari)
+  const [selectedDate, setSelectedDate] = useState<string>(getTodayWIB());
+  const [viewMode, setViewMode] = useState<'daily' | 'all'>('daily');
+
+  // Export Google Sheets State
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [exportResult, setExportResult] = useState<any>(null);
 
   // Edit Pertemuan Modal State
   const [editingSiswa, setEditingSiswa] = useState<SiswaItem | null>(null);
@@ -119,6 +149,86 @@ export const SharedAbsensiPage: React.FC = () => {
     }
   };
 
+  // Helper mengambil string tanggal YYYY-MM-DD (WIB) dari string log waktu
+  const extractLogDate = (waktuStr: string): string => {
+    if (!waktuStr) return '';
+    try {
+      let d: Date;
+      if (typeof waktuStr === 'string' && !waktuStr.includes('Z') && !waktuStr.includes('+')) {
+        d = new Date(waktuStr.replace(' ', 'T') + '+07:00');
+      } else {
+        d = new Date(waktuStr);
+      }
+      if (isNaN(d.getTime())) return '';
+      const year = d.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta', year: 'numeric' });
+      const month = d.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta', month: '2-digit' });
+      const day = d.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta', day: '2-digit' });
+      return `${year}-${month}-${day}`;
+    } catch (e) {
+      return '';
+    }
+  };
+
+  // Format label tanggal header (e.g. "Selasa, 1 September 2026")
+  const formatHeaderDate = (dateStr: string) => {
+    try {
+      const d = new Date(dateStr + 'T00:00:00');
+      return d.toLocaleDateString('id-ID', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
+  const handlePrevDay = () => {
+    const curr = new Date(selectedDate + 'T00:00:00');
+    curr.setDate(curr.getDate() - 1);
+    const year = curr.getFullYear();
+    const month = String(curr.getMonth() + 1).padStart(2, '0');
+    const day = String(curr.getDate()).padStart(2, '0');
+    setSelectedDate(`${year}-${month}-${day}`);
+    setViewMode('daily');
+  };
+
+  const handleNextDay = () => {
+    const curr = new Date(selectedDate + 'T00:00:00');
+    curr.setDate(curr.getDate() + 1);
+    const year = curr.getFullYear();
+    const month = String(curr.getMonth() + 1).padStart(2, '0');
+    const day = String(curr.getDate()).padStart(2, '0');
+    setSelectedDate(`${year}-${month}-${day}`);
+    setViewMode('daily');
+  };
+
+  const handleJumpToday = () => {
+    setSelectedDate(getTodayWIB());
+    setViewMode('daily');
+  };
+
+  // Export Google Sheets Mutation
+  const exportSheetsMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiClient.post('/absensi/export-sheets');
+      return res.data;
+    },
+    onSuccess: (data) => {
+      setExportResult(data);
+      setIsExportModalOpen(true);
+      if (data.status === 'success') {
+        showToast('Data riwayat absensi berhasil dikirim ke Google Sheets');
+      } else {
+        showToast(`Info: ${data.message}`, 'error');
+      }
+    },
+    onError: (err: any) => {
+      showToast(`Gagal export: ${err.message}`, 'error');
+    }
+  });
+
   // 1. Fetch Data Siswa
   const { data: siswaList = [], isLoading: isSiswaLoading } = useQuery<SiswaItem[]>({
     queryKey: ['siswa', 'list'],
@@ -137,6 +247,15 @@ export const SharedAbsensiPage: React.FC = () => {
     },
     refetchInterval: 10000
   });
+
+  // Filter Log Guru berdasarkan mode per hari (slide) atau semua riwayat
+  const filteredGuruLogs = useMemo(() => {
+    if (viewMode === 'all') return guruLogs;
+    return guruLogs.filter((log) => {
+      const logDate = extractLogDate(log.waktu);
+      return logDate === selectedDate;
+    });
+  }, [guruLogs, selectedDate, viewMode]);
 
   // 3. Fetch List Guru
   const { data: guruList = [] } = useQuery<any[]>({
@@ -537,6 +656,8 @@ export const SharedAbsensiPage: React.FC = () => {
         title="Manajemen & Riwayat Absensi"
         subtitle="Monitoring kehadiran siswa, kuota pertemuan berjalan, dan presensi RFID guru"
         iconColorBg="bg-[#FFF3E0] text-[#FF7043]"
+        onExportSheets={() => exportSheetsMutation.mutate()}
+        isExporting={exportSheetsMutation.isPending}
       />
 
       {/* 2-Tab Navigation Switcher */}
@@ -653,17 +774,118 @@ export const SharedAbsensiPage: React.FC = () => {
 
       {/* Tab 2: Absensi Guru (RFID Taps) */}
       {activeTab === 'guru' && (
-        <div>
-          {(!isGuruLoading && guruLogs.length === 0) ? (
+        <div className="space-y-4">
+          {/* Daily Date Navigation Toolbar */}
+          <div className="bg-gradient-to-r from-[#FFF8F3] via-white to-[#FFF8F3] p-4 rounded-2xl border border-[#FFCC80]/60 shadow-xs space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              {/* Left: Navigation Buttons & Date Display */}
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Prev Day Button */}
+                <button
+                  onClick={handlePrevDay}
+                  className="p-2 bg-white hover:bg-[#FFF3E0] text-[#E65100] border border-[#CBD5E1] hover:border-[#FF7043] rounded-xl font-bold transition-all shadow-2xs cursor-pointer active:scale-95"
+                  title="Hari Sebelumnya (Kemarin)"
+                >
+                  <ChevronLeftIcon size={18} />
+                </button>
+
+                {/* Interactive Date Picker with Icon */}
+                <label className="relative flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-[#FFF8F3] border border-[#CBD5E1] hover:border-[#FF7043] rounded-xl shadow-2xs transition-all cursor-pointer">
+                  <CalendarNavIcon size={18} className="text-[#FF7043]" />
+                  <span className="text-xs sm:text-sm font-extrabold text-[#1E293B]">
+                    {formatHeaderDate(selectedDate)}
+                  </span>
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        setSelectedDate(e.target.value);
+                        setViewMode('daily');
+                      }
+                    }}
+                    className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                  />
+                </label>
+
+                {/* Next Day Button */}
+                <button
+                  onClick={handleNextDay}
+                  className="p-2 bg-white hover:bg-[#FFF3E0] text-[#E65100] border border-[#CBD5E1] hover:border-[#FF7043] rounded-xl font-bold transition-all shadow-2xs cursor-pointer active:scale-95"
+                  title="Hari Berikutnya (Besok)"
+                >
+                  <ChevronRightIcon size={18} />
+                </button>
+
+                {/* Quick Jump Today Button */}
+                <button
+                  onClick={handleJumpToday}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs active:scale-95 ${
+                    selectedDate === getTodayWIB() && viewMode === 'daily'
+                      ? 'bg-[#FF7043] text-white shadow-2xs'
+                      : 'bg-white text-[#64748B] hover:text-[#0F172A] border border-[#CBD5E1]'
+                  }`}
+                >
+                  Hari Ini
+                </button>
+              </div>
+
+              {/* Right: View Mode Toggle */}
+              <div className="flex items-center gap-1.5 bg-[#F1F5F9] p-1 rounded-xl border border-[#CBD5E1]/60 text-xs font-bold">
+                <button
+                  onClick={() => setViewMode('daily')}
+                  className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                    viewMode === 'daily'
+                      ? 'bg-white text-[#FF7043] shadow-2xs font-extrabold'
+                      : 'text-[#64748B] hover:text-[#0F172A]'
+                  }`}
+                >
+                  Per Hari (Slide)
+                </button>
+                <button
+                  onClick={() => setViewMode('all')}
+                  className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                    viewMode === 'all'
+                      ? 'bg-white text-[#FF7043] shadow-2xs font-extrabold'
+                      : 'text-[#64748B] hover:text-[#0F172A]'
+                  }`}
+                >
+                  Semua Riwayat ({guruLogs.length})
+                </button>
+              </div>
+            </div>
+
+            {/* Daily Stats Summary Banner */}
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#F1F5F9] text-xs">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-[#E8F5E9] text-[#2E7D32] border border-[#A5D6A7]">
+                  {filteredGuruLogs.length} Presensi Tercatat
+                </span>
+                <span className="text-[#64748B] text-[11px]">
+                  {viewMode === 'daily' ? `Menampilkan catatan absensi tanggal ${formatHeaderDate(selectedDate)}` : 'Menampilkan seluruh riwayat absensi guru'}
+                </span>
+              </div>
+              {viewMode === 'daily' && filteredGuruLogs.length > 0 && (
+                <div className="text-[11px] text-[#475569] font-medium">
+                  Tap Pertama: <span className="font-bold text-[#0F172A]">{formatWaktuTap(filteredGuruLogs[filteredGuruLogs.length - 1]?.waktu)}</span> • Terakhir: <span className="font-bold text-[#0F172A]">{formatWaktuTap(filteredGuruLogs[0]?.waktu)}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Table Data */}
+          {(!isGuruLoading && filteredGuruLogs.length === 0) ? (
             <EmptyState
               icon={<PengajarIcon size={40} className="text-[#757575]" />}
-              title="Belum ada aktivitas presensi guru"
-              description="Ketukan kartu RFID guru akan otomatis tercatat di sini secara real-time."
+              title={viewMode === 'daily' ? `Tidak ada presensi pada ${formatHeaderDate(selectedDate)}` : "Belum ada aktivitas presensi guru"}
+              description={viewMode === 'daily' ? "Gunakan navigasi tanggal di atas untuk melihat catatan kehadiran di hari lainnya atau ketuk kartu RFID guru pada alat." : "Ketukan kartu RFID guru akan otomatis tercatat di sini secara real-time."}
+              actionLabel={viewMode === 'daily' && selectedDate !== getTodayWIB() ? "Kembali ke Hari Ini" : undefined}
+              onAction={viewMode === 'daily' && selectedDate !== getTodayWIB() ? handleJumpToday : undefined}
             />
           ) : (
             <DataTable
               columns={guruColumns}
-              data={guruLogs}
+              data={filteredGuruLogs}
               isLoading={isGuruLoading}
               searchPlaceholder="Cari nama guru, UID kartu, program, atau status..."
               searchFilter={(row: AbsensiGuruLog, q: string) => {
@@ -1175,6 +1397,42 @@ export const SharedAbsensiPage: React.FC = () => {
           isLoading={deleteLogMutation.isPending}
         />
       )}
+
+      {/* Export Status Modal */}
+      <Modal isOpen={isExportModalOpen} onClose={() => setIsExportModalOpen(false)} title="Status Google Sheets Export">
+        {exportResult && (
+          <div className="space-y-4 text-xs">
+            <p className="text-[#424242] font-bold">{exportResult.message}</p>
+            {exportResult.status === 'success' ? (
+              <div className="space-y-3">
+                <p className="text-[#757575]">
+                  Tab: <code className="text-[#FF7043] font-bold">{exportResult.worksheet_name}</code> ({exportResult.rows_written} baris ditulis)
+                </p>
+                <a
+                  href={exportResult.sheet_url && !exportResult.sheet_url.includes('script.google.com') ? exportResult.sheet_url : 'https://docs.google.com/spreadsheets/d/1C9m90ipD2mt_pmWK5pNQ_YxfzwRbWZOlLYAXMtzMYKA/edit'}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-block px-4 py-2.5 bg-[#388E3C] text-white font-bold rounded-lg hover:bg-[#2E7D32]"
+                >
+                  Buka Google Sheets
+                </a>
+              </div>
+            ) : exportResult.status === 'pending' ? (
+              <div className="p-3 bg-[#FFF3E0] border border-[#FFCC80] rounded-xl text-[#E65100]">
+                Fitur ini memerlukan <code>GOOGLE_WEBHOOK_URL</code> pada file .env backend.
+              </div>
+            ) : null}
+            <div className="flex justify-end pt-2">
+              <button
+                onClick={() => setIsExportModalOpen(false)}
+                className="px-4 py-2 bg-[#FAFAFA] text-[#757575] font-bold rounded-lg border border-[#E0E0E0] cursor-pointer"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };
