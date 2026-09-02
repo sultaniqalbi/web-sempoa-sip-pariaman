@@ -194,7 +194,7 @@ async def create_new_siswa(
             kelas_sekolah=siswa_in.kelas_sekolah,
             kategori_program=siswa_in.kategori_program,
             paket_jadwal=siswa_in.paket_jadwal,
-            hari_masuk=siswa_in.hari_masuk or "Senin, Rabu",
+            hari_masuk=siswa_in.hari_masuk or "Senin, Selasa, Rabu, Kamis, Jumat",
             id_guru=siswa_in.id_guru,
             target_pertemuan=siswa_in.target_pertemuan or 8,
             sisa_pertemuan=siswa_in.sisa_pertemuan if siswa_in.sisa_pertemuan is not None else (siswa_in.target_pertemuan or 8),

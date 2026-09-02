@@ -29,7 +29,7 @@ export const SiswaPage: React.FC = () => {
   const [nama, setNama] = useState('');
   const [kategori, setKategori] = useState('Sempoa SIP');
   const [paket, setPaket] = useState(PROGRAM_CONFIG["Sempoa SIP"][0].label);
-  const [hari, setHari] = useState('Senin, Kamis');
+  const [hari, setHari] = useState('Senin, Selasa, Rabu, Kamis, Jumat');
 
   // Handle auto-update of paket when kategori changes
   const handleKategoriChange = (newKategori: string) => {

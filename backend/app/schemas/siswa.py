@@ -14,7 +14,7 @@ class SiswaBase(BaseModel):
     asal_sekolah: Optional[str] = None
     kategori_program: str = "Sempoa SIP"
     paket_jadwal: Optional[str] = None
-    hari_masuk: str = "Senin, Rabu"
+    hari_masuk: str = "Senin, Selasa, Rabu, Kamis, Jumat"
     id_guru: Optional[int] = None
     target_pertemuan: int = 8
     sisa_pertemuan: int = 8

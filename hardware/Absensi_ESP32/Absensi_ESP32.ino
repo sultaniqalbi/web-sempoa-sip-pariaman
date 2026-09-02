@@ -39,8 +39,8 @@
 
 // ============ PENGATURAN KONEKSI WIFI / HOTSPOT ============
 // Kredensial Hotspot HP Anda (OPPO Find X8):
-const char* DEFAULT_WIFI_SSID     = "OPPO Find X8";
-const char* DEFAULT_WIFI_PASS     = "szgm7477";
+const char* DEFAULT_WIFI_SSID     = "SEMPOA";
+const char* DEFAULT_WIFI_PASS     = "anakdua1";
 const char* DEFAULT_ESP32_API_KEY = "SempoaPariaman_ESP32_SecureKey_2026!";
 
 Preferences preferences;
@@ -407,16 +407,16 @@ void setup() {
     Serial.println("[BOOT] SD Card OK (Lapis 2 Aktif).");
   }
 
-  // 6. Baca Kredensial NVS dengan Fallback
-  preferences.begin("sempoa_cfg", false);
-  WIFI_SSID     = preferences.getString("ssid", DEFAULT_WIFI_SSID);
-  WIFI_PASSWORD = preferences.getString("pass", DEFAULT_WIFI_PASS);
-  ESP32_API_KEY = preferences.getString("apikey", DEFAULT_ESP32_API_KEY);
-  preferences.end();
+  // 6. Inisialisasi Kredensial WiFi & NVS
+  WIFI_SSID     = DEFAULT_WIFI_SSID;
+  WIFI_PASSWORD = DEFAULT_WIFI_PASS;
+  ESP32_API_KEY = DEFAULT_ESP32_API_KEY;
 
-  if (WIFI_SSID.isEmpty()) WIFI_SSID = DEFAULT_WIFI_SSID;
-  if (WIFI_PASSWORD.isEmpty()) WIFI_PASSWORD = DEFAULT_WIFI_PASS;
-  if (ESP32_API_KEY.isEmpty()) ESP32_API_KEY = DEFAULT_ESP32_API_KEY;
+  preferences.begin("sempoa_cfg", false);
+  preferences.putString("ssid", WIFI_SSID);
+  preferences.putString("pass", WIFI_PASSWORD);
+  preferences.putString("apikey", ESP32_API_KEY);
+  preferences.end();
 
   Serial.println("[BOOT] Target WiFi: " + WIFI_SSID);
 

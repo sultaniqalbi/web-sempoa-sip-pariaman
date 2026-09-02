@@ -7,7 +7,6 @@ import Modal from '../../components/Modal';
 import ConfirmModal from '../../components/ConfirmModal';
 import PageHeader from '../../components/PageHeader';
 import EmptyState from '../../components/EmptyState';
-import { DayPicker } from '../../components/DayPicker';
 import { PhotoModal } from '../../components/PhotoModal';
 import { DataSiswaIcon, TrashIcon, CheckIcon, InfoIcon, CalendarIcon, PengajarIcon, BookIcon } from '../../components/SvgIcons';
 import { PROGRAM_LEVEL_PRESETS } from './BukuPage';
@@ -304,7 +303,7 @@ export const SiswaPage: React.FC = () => {
     kelas_sekolah: '',
     kategori_program: 'Sempoa SIP',
     paket_jadwal: 'Paket 1: 8 Pertemuan, 90 Menit',
-    hari_masuk: 'Senin, Rabu',
+    hari_masuk: 'Senin, Selasa, Rabu, Kamis, Jumat',
     id_guru: undefined as number | undefined,
     nama_orang_tua: '',
     whatsapp_orang_tua: '',
@@ -582,7 +581,7 @@ export const SiswaPage: React.FC = () => {
       kelas_sekolah: '',
       kategori_program: 'Sempoa SIP',
       paket_jadwal: 'Paket 1: 8 Pertemuan, 90 Menit',
-      hari_masuk: 'Senin, Rabu',
+      hari_masuk: 'Senin, Selasa, Rabu, Kamis, Jumat',
       id_guru: undefined,
       nama_orang_tua: '',
       whatsapp_orang_tua: '',
@@ -597,7 +596,7 @@ export const SiswaPage: React.FC = () => {
       tanggal_mulai_buku: new Date().toISOString().split('T')[0]
     });
     setProgramDays({
-      'Sempoa SIP': 'Senin, Rabu'
+      'Sempoa SIP': 'Senin, Selasa, Rabu, Kamis, Jumat'
     });
     setProgramQuotas({
       'Sempoa SIP': { sisa: '', target: 8 }
@@ -624,7 +623,7 @@ export const SiswaPage: React.FC = () => {
       kelas_sekolah: siswa.kelas_sekolah || '',
       kategori_program: siswa.kategori_program || 'Sempoa SIP',
       paket_jadwal: siswa.paket_jadwal || 'Paket 1: 8 Pertemuan, 90 Menit',
-      hari_masuk: siswa.hari_masuk || 'Senin, Rabu',
+      hari_masuk: siswa.hari_masuk || 'Senin, Selasa, Rabu, Kamis, Jumat',
       id_guru: siswa.id_guru,
       nama_orang_tua: siswa.nama_orang_tua || '',
       whatsapp_orang_tua: siswa.whatsapp_orang_tua || '',
@@ -651,7 +650,7 @@ export const SiswaPage: React.FC = () => {
     }
     progs.forEach((p) => {
       if (!initialProgDays[p]) {
-        initialProgDays[p] = siswa.hari_masuk && !siswa.hari_masuk.includes(':') ? siswa.hari_masuk : (p === 'Bahasa Inggris' ? 'Jumat, Sabtu' : 'Senin, Rabu');
+        initialProgDays[p] = siswa.hari_masuk && !siswa.hari_masuk.includes(':') ? siswa.hari_masuk : 'Senin, Selasa, Rabu, Kamis, Jumat';
       }
     });
     setProgramDays(initialProgDays);
@@ -696,10 +695,10 @@ export const SiswaPage: React.FC = () => {
 
     // Determine combined hari_masuk & kuota_program JSON
     const selectedProgs = formData.kategori_program.split(',').map((p) => p.trim()).filter(Boolean);
-    let combinedHari = formData.hari_masuk;
+    let combinedHari = formData.hari_masuk || 'Senin, Selasa, Rabu, Kamis, Jumat';
     if (selectedProgs.length > 1 && Object.keys(programDays).length > 0) {
       combinedHari = selectedProgs
-        .map((p) => `${p}: ${programDays[p] || 'Senin, Rabu'}`)
+        .map((p) => `${p}: ${programDays[p] || 'Senin, Selasa, Rabu, Kamis, Jumat'}`)
         .join(' | ');
     } else if (selectedProgs.length === 1 && programDays[selectedProgs[0]]) {
       combinedHari = programDays[selectedProgs[0]];
@@ -741,7 +740,7 @@ export const SiswaPage: React.FC = () => {
 
     const payload = {
       ...formData,
-      hari_masuk: combinedHari || 'Senin, Rabu',
+      hari_masuk: combinedHari || 'Senin, Selasa, Rabu, Kamis, Jumat',
       kuota_program: JSON.stringify(kuotaObj),
       tanggal_lahir: formData.tanggal_lahir || null,
       umur: ageVal || (formData.umur ? parseInt(formData.umur, 10) : null),
@@ -1533,66 +1532,6 @@ export const SiswaPage: React.FC = () => {
                       </div>
                     </div>
                   )}
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* 5. Hari Masuk Kelas per Program */}
-          {(() => {
-            const selectedList = formData.kategori_program.split(',').map((p) => p.trim()).filter(Boolean);
-            if (selectedList.length <= 1) {
-              return (
-                <DayPicker
-                  label={`Hari Masuk Kelas (${selectedList[0] || 'Sempoa SIP'})*`}
-                  selectedDays={programDays[selectedList[0] || 'Sempoa SIP'] || formData.hari_masuk}
-                  onChange={(val) => {
-                    const prog = selectedList[0] || 'Sempoa SIP';
-                    const updated = { ...programDays, [prog]: val };
-                    setProgramDays(updated);
-                    setFormData({ ...formData, hari_masuk: val });
-                  }}
-                  multiSelect={true}
-                  required={true}
-                />
-              );
-            }
-
-            return (
-              <div className="space-y-3 p-3.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl">
-                <div className="flex items-center justify-between">
-                  <label className="block text-[#1E293B] font-bold text-xs sm:text-sm">
-                    Jadwal Hari Masuk per Program*
-                  </label>
-                  <span className="text-[10px] text-[#64748B] font-semibold">
-                    Atur hari masuk masing-masing program
-                  </span>
-                </div>
-                <div className="space-y-3">
-                  {selectedList.map((prog) => (
-                    <div key={prog} className="p-2.5 bg-white rounded-lg border border-[#E2E8F0]">
-                      <div className="flex items-center gap-1.5 mb-2">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getProgramBadgeStyle(prog)}`}>
-                          {prog}
-                        </span>
-                        <span className="text-xs font-bold text-[#334155]">
-                          {prog === 'Bahasa Inggris' ? 'Hari Masuk (Rekomendasi: Jumat, Sabtu)' : 'Hari Masuk'}
-                        </span>
-                      </div>
-                      <DayPicker
-                        label=""
-                        selectedDays={programDays[prog] || (prog === 'Bahasa Inggris' ? 'Jumat, Sabtu' : 'Senin, Rabu')}
-                        onChange={(val) => {
-                          const updated = { ...programDays, [prog]: val };
-                          setProgramDays(updated);
-                          const combined = selectedList.map((p) => `${p}: ${updated[p] || 'Senin, Rabu'}`).join(' | ');
-                          setFormData({ ...formData, hari_masuk: combined });
-                        }}
-                        multiSelect={true}
-                        required={true}
-                      />
-                    </div>
-                  ))}
                 </div>
               </div>
             );
