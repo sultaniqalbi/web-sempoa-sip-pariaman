@@ -23,7 +23,22 @@ teacher_only = RoleChecker([UserRole.guru])
 
 def _get_current_guru(db: Session, current_user: User) -> Guru:
     guru = None
-    if current_user.uid_terhubung:
+
+    # 1. Prioritaskan pencocokan nama user dengan nama guru (paling akurat untuk relasi id_guru)
+    if current_user.nama and current_user.nama.strip():
+        c_nama = current_user.nama.lower().strip()
+        guru = db.query(Guru).filter(
+            Guru.is_deleted == False,
+            or_(
+                func.lower(Guru.nama) == c_nama,
+                func.lower(Guru.nama_panggilan) == c_nama,
+                func.lower(Guru.nama).like(f"%{c_nama}%"),
+                func.lower(c_nama).like(func.concat("%", func.lower(Guru.nama), "%"))
+            )
+        ).first()
+
+    # 2. Cari berdasarkan uid_terhubung jika belum cocok nama
+    if not guru and current_user.uid_terhubung:
         try:
             int_id = int(current_user.uid_terhubung)
             guru = db.query(Guru).filter(
@@ -33,16 +48,7 @@ def _get_current_guru(db: Session, current_user: User) -> Guru:
         except (ValueError, TypeError):
             guru = db.query(Guru).filter(Guru.uid == str(current_user.uid_terhubung), Guru.is_deleted == False).first()
 
-    if not guru and current_user.nama:
-        guru = db.query(Guru).filter(
-            Guru.is_deleted == False,
-            (
-                (func.lower(Guru.nama) == current_user.nama.lower().strip()) |
-                (func.lower(Guru.nama_panggilan) == current_user.nama.lower().strip()) |
-                (func.lower(Guru.nama).contains(current_user.nama.lower().strip()))
-            )
-        ).first()
-
+    # 3. Cari berdasarkan prefix email
     if not guru and current_user.email:
         email_prefix = current_user.email.split("@")[0].lower()
         guru = db.query(Guru).filter(
@@ -53,11 +59,11 @@ def _get_current_guru(db: Session, current_user: User) -> Guru:
             )
         ).first()
 
-    # Fallback to any active Guru if available
+    # 4. Fallback ke guru aktif manapun yang ada
     if not guru:
         guru = db.query(Guru).filter(Guru.is_deleted == False).first()
 
-    # If still no Guru in DB, automatically create a default Guru profile for this user
+    # 5. Jika belum ada sama sekali di tabel guru, buat profil baru
     if not guru:
         guru_name = current_user.nama or "Guru Pengajar"
         guru = Guru(
@@ -72,6 +78,9 @@ def _get_current_guru(db: Session, current_user: User) -> Guru:
         db.add(guru)
         db.commit()
         db.refresh(guru)
+
+    # Selalu sinkronkan uid_terhubung pada akun user
+    if current_user.uid_terhubung != str(guru.id):
         current_user.uid_terhubung = str(guru.id)
         db.commit()
 
@@ -365,17 +374,37 @@ async def get_siswa_absensi(
 
     is_supervisor = any(k in (guru.kategori_program or "").lower() for k in ["kepala sekolah", "kepsek", "direktur", "admin", "owner"])
 
+    matching_guru_ids = [g[0] for g in db.query(Guru.id).filter(
+        Guru.is_deleted == False,
+        or_(
+            Guru.id == guru.id,
+            func.lower(Guru.nama) == guru.nama.lower().strip(),
+            func.lower(Guru.nama_panggilan) == guru.nama.lower().strip(),
+            func.lower(Guru.nama).like(f"%{guru.nama.lower().strip()}%")
+        )
+    ).all()]
+    if not matching_guru_ids:
+        matching_guru_ids = [guru.id]
+
+    prog_conditions = [func.lower(Siswa.kategori_program).like(f"%{p.lower()}%") for p in available_programs]
+
     if is_supervisor:
         student_query = db.query(Siswa).filter(Siswa.is_deleted == False)
     else:
-        prog_conditions = [func.lower(Siswa.kategori_program).like(f"%{p.lower()}%") for p in available_programs]
-        student_query = db.query(Siswa).filter(
-            Siswa.is_deleted == False,
-            or_(
-                Siswa.id_guru == guru.id,
-                and_(Siswa.id_guru == None, or_(*prog_conditions)) if prog_conditions else Siswa.id_guru == guru.id
+        assigned_count = db.query(Siswa).filter(Siswa.id_guru.in_(matching_guru_ids), Siswa.is_deleted == False).count()
+        if assigned_count > 0:
+            student_query = db.query(Siswa).filter(
+                Siswa.is_deleted == False,
+                or_(
+                    Siswa.id_guru.in_(matching_guru_ids),
+                    and_(Siswa.id_guru == None, or_(*prog_conditions)) if prog_conditions else False
+                )
             )
-        )
+        else:
+            student_query = db.query(Siswa).filter(
+                Siswa.is_deleted == False,
+                or_(*prog_conditions) if prog_conditions else Siswa.id_guru.in_(matching_guru_ids)
+            )
 
     if program and program.lower() != 'all':
         student_query = student_query.filter(func.lower(Siswa.kategori_program).like(f"%{program.lower()}%"))
@@ -762,11 +791,41 @@ async def get_rekap_absensi(
     else:
         current_rekap_prog = available_programs[0] if available_programs else "Sempoa SIP"
 
+    is_supervisor = any(k in (guru.kategori_program or "").lower() for k in ["kepala sekolah", "kepsek", "direktur", "admin", "owner"])
+    matching_guru_ids = [g[0] for g in db.query(Guru.id).filter(
+        Guru.is_deleted == False,
+        or_(
+            Guru.id == guru.id,
+            func.lower(Guru.nama) == guru.nama.lower().strip(),
+            func.lower(Guru.nama_panggilan) == guru.nama.lower().strip(),
+            func.lower(Guru.nama).like(f"%{guru.nama.lower().strip()}%")
+        )
+    ).all()]
+    if not matching_guru_ids:
+        matching_guru_ids = [guru.id]
+
     prog_condition = func.lower(Siswa.kategori_program).like(f"%{current_rekap_prog.lower()}%")
-    students = db.query(Siswa).filter(
-        prog_condition,
-        Siswa.is_deleted == False
-    ).order_by(Siswa.nama).all()
+
+    if is_supervisor:
+        student_query = db.query(Siswa).filter(Siswa.is_deleted == False, prog_condition)
+    else:
+        assigned_count = db.query(Siswa).filter(Siswa.id_guru.in_(matching_guru_ids), Siswa.is_deleted == False).count()
+        if assigned_count > 0:
+            student_query = db.query(Siswa).filter(
+                Siswa.is_deleted == False,
+                prog_condition,
+                or_(
+                    Siswa.id_guru.in_(matching_guru_ids),
+                    Siswa.id_guru == None
+                )
+            )
+        else:
+            student_query = db.query(Siswa).filter(
+                Siswa.is_deleted == False,
+                prog_condition
+            )
+
+    students = student_query.order_by(Siswa.nama).all()
 
     uids = [s.uid for s in students]
     logs_map = {}

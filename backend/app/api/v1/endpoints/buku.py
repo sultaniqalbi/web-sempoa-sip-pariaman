@@ -65,12 +65,24 @@ def get_all_buku_siswa(
         if guru:
             is_supervisor = any(k in (guru.kategori_program or "").lower() for k in ["kepala sekolah", "kepsek", "direktur", "admin", "owner"])
             if not is_supervisor:
+                matching_guru_ids = [g[0] for g in db.query(Guru.id).filter(
+                    Guru.is_deleted == False,
+                    or_(
+                        Guru.id == guru.id,
+                        func.lower(Guru.nama) == guru.nama.lower().strip(),
+                        func.lower(Guru.nama_panggilan) == guru.nama.lower().strip(),
+                        func.lower(Guru.nama).like(f"%{guru.nama.lower().strip()}%")
+                    )
+                ).all()]
+                if not matching_guru_ids:
+                    matching_guru_ids = [guru.id]
+
                 available_progs = [p.strip().lower() for p in (guru.kategori_program or "").split(",") if p.strip()]
                 prog_conditions = [func.lower(Siswa.kategori_program).like(f"%{p}%") for p in available_progs]
                 query = query.filter(
                     or_(
-                        Siswa.id_guru == guru.id,
-                        and_(Siswa.id_guru == None, or_(*prog_conditions)) if prog_conditions else Siswa.id_guru == guru.id
+                        Siswa.id_guru.in_(matching_guru_ids),
+                        and_(Siswa.id_guru == None, or_(*prog_conditions)) if prog_conditions else False
                     )
                 )
 
