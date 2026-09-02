@@ -64,20 +64,21 @@ def get_all_evaluasi(
         if guru:
             is_supervisor = any(k in (guru.kategori_program or "").lower() for k in ["kepala sekolah", "kepsek", "direktur", "admin", "owner"])
             if not is_supervisor:
+                guru_nama = guru.nama.strip() if guru.nama else ""
                 matching_guru_ids = [g[0] for g in db.query(Guru.id).filter(
                     Guru.is_deleted == False,
                     or_(
                         Guru.id == guru.id,
-                        func.lower(Guru.nama) == guru.nama.lower().strip(),
-                        func.lower(Guru.nama_panggilan) == guru.nama.lower().strip(),
-                        func.lower(Guru.nama).like(f"%{guru.nama.lower().strip()}%")
+                        Guru.nama.ilike(guru_nama),
+                        Guru.nama_panggilan.ilike(guru_nama),
+                        Guru.nama.ilike(f"%{guru_nama}%")
                     )
                 ).all()]
                 if not matching_guru_ids:
                     matching_guru_ids = [guru.id]
 
                 available_progs = [p.strip().lower() for p in (guru.kategori_program or "").split(",") if p.strip()]
-                prog_conditions = [func.lower(Siswa.kategori_program).like(f"%{p}%") for p in available_progs]
+                prog_conditions = [Siswa.kategori_program.ilike(f"%{p}%") for p in available_progs]
                 query = query.filter(
                     or_(
                         EvaluasiSiswa.id_guru.in_(matching_guru_ids),
