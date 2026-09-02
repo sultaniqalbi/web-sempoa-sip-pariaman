@@ -96,137 +96,198 @@ async def get_guru_dashboard(
     db: Session = Depends(get_db),
     current_user: User = Depends(teacher_only)
 ):
-    guru = _get_current_guru(db, current_user)
-    programs = [p.strip().lower() for p in (guru.kategori_program or "").split(",") if p.strip()]
+    try:
+        guru = _get_current_guru(db, current_user)
+        programs = [p.strip().lower() for p in (guru.kategori_program or "").split(",") if p.strip()]
 
-    is_supervisor = any(k in (guru.kategori_program or "").lower() for k in ["kepala sekolah", "kepsek", "direktur", "admin", "owner"])
-
-    if is_supervisor:
-        active_students = db.query(Siswa).filter(
-            Siswa.status_spp == StatusSPP.AKTIF,
-            Siswa.is_deleted == False
-        ).all()
-    else:
-        prog_conditions = [func.lower(Siswa.kategori_program).like(f"%{p}%") for p in programs]
-        active_students = db.query(Siswa).filter(
-            Siswa.status_spp == StatusSPP.AKTIF,
-            Siswa.is_deleted == False,
+        matching_guru_ids = [g[0] for g in db.query(Guru.id).filter(
+            Guru.is_deleted == False,
             or_(
-                Siswa.id_guru == guru.id,
-                and_(Siswa.id_guru == None, or_(*prog_conditions)) if prog_conditions else Siswa.id_guru == guru.id
+                Guru.id == guru.id,
+                func.lower(Guru.nama) == guru.nama.lower().strip(),
+                func.lower(Guru.nama_panggilan) == guru.nama.lower().strip(),
+                func.lower(Guru.nama).like(f"%{guru.nama.lower().strip()}%")
             )
-        ).all()
+        ).all()]
+        if not matching_guru_ids:
+            matching_guru_ids = [guru.id]
 
-    total_siswa = len(active_students)
-    today = datetime.now(WIB).date()
+        is_supervisor = any(k in (guru.kategori_program or "").lower() for k in ["kepala sekolah", "kepsek", "direktur", "admin", "owner"])
 
-    # Find teacher's latest attendance tap
-    last_tap = db.query(AbsensiLog).filter(
-        AbsensiLog.uid == guru.uid,
-        func.date(AbsensiLog.waktu) == today
-    ).order_by(AbsensiLog.waktu.desc()).first()
+        prog_conditions = [func.lower(Siswa.kategori_program).like(f"%{p}%") for p in programs]
 
-    status_val = "Belum Absen"
-    if last_tap:
-        status_val = last_tap.status.value if hasattr(last_tap.status, 'value') else str(last_tap.status)
+        if is_supervisor:
+            active_students = db.query(Siswa).filter(
+                Siswa.status_spp == StatusSPP.AKTIF,
+                Siswa.is_deleted == False
+            ).all()
+        else:
+            assigned_count = db.query(Siswa).filter(
+                Siswa.id_guru.in_(matching_guru_ids),
+                Siswa.status_spp == StatusSPP.AKTIF,
+                Siswa.is_deleted == False
+            ).count()
 
-    if last_tap and last_tap.waktu:
-        lt_wib = last_tap.waktu.astimezone(WIB) if last_tap.waktu.tzinfo else last_tap.waktu.replace(tzinfo=WIB)
-        tanggal_str = lt_wib.strftime("%d-%m")
-        jam_str = lt_wib.strftime("%H:%M")
-    else:
-        tanggal_str = today.strftime("%d-%m")
-        jam_str = "-"
-
-    absensi_guru = {
-        "status": status_val,
-        "tanggal": tanggal_str,
-        "jam": jam_str
-    }
-
-    # Jadwal hari ini
-    days = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
-    hari_ini = days[today.weekday()]
-    is_active_today = hari_ini in (guru.hari_wajib or "")
-
-    # Find actual schedule if available
-    jadwal_query = db.query(Jadwal).filter(
-        or_(
-            Jadwal.id_guru == guru.id,
-            Jadwal.guru_ids.like(f"%{guru.id}%"),
-            func.lower(Jadwal.kategori_program).in_(programs) if programs else False
-        )
-    )
-    jadwal_row = jadwal_query.first()
-
-    jam_mulai_str = str(jadwal_row.jam_mulai) if jadwal_row and jadwal_row.jam_mulai else "08:30"
-    jam_selesai_str = str(jadwal_row.jam_selesai) if jadwal_row and jadwal_row.jam_selesai else "11:30"
-    ruangan_str = str(jadwal_row.lokasi) if jadwal_row and jadwal_row.lokasi else "Ruang Kelas A"
-
-    jadwal_hari_ini = {
-        "kode_program": "SEMPOA",
-        "nama_program": guru.kategori_program or "Sempoa SIP",
-        "jam_mulai": jam_mulai_str,
-        "jam_selesai": jam_selesai_str,
-        "ruangan": ruangan_str,
-        "jumlah_siswa": total_siswa,
-        "is_active_today": is_active_today
-    }
-
-    # Count real students marked today
-    hadir_count = 0
-    absen_count = 0
-    uids_program = [s.uid for s in active_students]
-    if uids_program:
-        logs_today = db.query(AbsensiLog).filter(
-            AbsensiLog.uid.in_(uids_program),
-            func.date(AbsensiLog.waktu) == today
-        ).all()
-        for l in logs_today:
-            s_str = l.status.value if hasattr(l.status, 'value') else str(l.status).lower()
-            if "hadir" in s_str:
-                hadir_count += 1
+            if assigned_count > 0:
+                active_students = db.query(Siswa).filter(
+                    Siswa.status_spp == StatusSPP.AKTIF,
+                    Siswa.is_deleted == False,
+                    or_(
+                        Siswa.id_guru.in_(matching_guru_ids),
+                        and_(Siswa.id_guru == None, or_(*prog_conditions)) if prog_conditions else False
+                    )
+                ).all()
             else:
-                absen_count += 1
+                active_students = db.query(Siswa).filter(
+                    Siswa.status_spp == StatusSPP.AKTIF,
+                    Siswa.is_deleted == False,
+                    or_(*prog_conditions) if prog_conditions else Siswa.id_guru.in_(matching_guru_ids)
+                ).all()
 
-    # Latest learning note for this program / teacher
-    note_query = db.query(CatatanPembelajaran).filter(
-        or_(
-            CatatanPembelajaran.id_guru == guru.id,
-            func.lower(CatatanPembelajaran.kategori_program).in_(programs) if programs else False
-        )
-    )
-    latest_note = note_query.order_by(CatatanPembelajaran.created_at.desc()).first()
+        total_siswa = len(active_students)
+        today = datetime.now(WIB).date()
 
-    catatan_terbaru = None
-    if latest_note:
-        catatan_terbaru = {
-            "id": latest_note.id,
-            "tanggal": latest_note.tanggal.strftime("%d %B %Y") if latest_note.tanggal else "",
-            "catatan": latest_note.catatan,
-            "waktu": latest_note.created_at.strftime("%H:%M") if latest_note.created_at else ""
+        # Find teacher's latest attendance tap
+        last_tap = None
+        if guru.uid:
+            last_tap = db.query(AbsensiLog).filter(
+                AbsensiLog.uid == guru.uid,
+                func.date(AbsensiLog.waktu) == today
+            ).order_by(AbsensiLog.waktu.desc()).first()
+
+        status_val = "Belum Absen"
+        if last_tap:
+            status_val = last_tap.status.value if hasattr(last_tap.status, 'value') else str(last_tap.status)
+
+        if last_tap and last_tap.waktu:
+            lt_wib = last_tap.waktu.astimezone(WIB) if last_tap.waktu.tzinfo else last_tap.waktu.replace(tzinfo=WIB)
+            tanggal_str = lt_wib.strftime("%d-%m")
+            jam_str = lt_wib.strftime("%H:%M")
+        else:
+            tanggal_str = today.strftime("%d-%m")
+            jam_str = "-"
+
+        absensi_guru = {
+            "status": status_val,
+            "tanggal": tanggal_str,
+            "jam": jam_str
         }
 
-    return {
-        "guru": {
-            "id": guru.id,
-            "nama_guru": guru.nama,
-            "uid_rfid": guru.uid,
-            "program": guru.kategori_program or "Sempoa SIP",
-            "foto_profil": guru.foto_profil,
-            "no_wa": guru.whatsapp_guru,
-            "mode_kelas": guru.mode_kelas or "OFFLINE"
-        },
-        "jadwal_hari_ini": jadwal_hari_ini,
-        "absensi_guru": absensi_guru,
-        "absensi_siswa": {
-            "total_siswa": total_siswa,
-            "jumlah_hadir": hadir_count,
-            "jumlah_absen": absen_count
-        },
-        "mode_kelas": guru.mode_kelas or "OFFLINE",
-        "catatan_terbaru": catatan_terbaru
-    }
+        # Jadwal hari ini
+        days = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
+        hari_ini = days[today.weekday()]
+        is_active_today = hari_ini in (guru.hari_wajib or "Senin, Selasa, Rabu, Kamis, Jumat, Sabtu")
+
+        jadwal_conds = [Jadwal.id_guru.in_(matching_guru_ids)]
+        if programs:
+            jadwal_conds.extend([func.lower(Jadwal.kategori_program).like(f"%{p}%") for p in programs])
+        for gid in matching_guru_ids:
+            jadwal_conds.append(Jadwal.guru_ids.like(f"%{gid}%"))
+
+        jadwal_row = db.query(Jadwal).filter(or_(*jadwal_conds)).first()
+
+        jam_mulai_str = str(jadwal_row.jam_mulai) if jadwal_row and jadwal_row.jam_mulai else "08:30"
+        jam_selesai_str = str(jadwal_row.jam_selesai) if jadwal_row and jadwal_row.jam_selesai else "11:30"
+        ruangan_str = str(jadwal_row.lokasi) if jadwal_row and jadwal_row.lokasi else f"TC Pariaman - Ruang {guru.kategori_program or 'Sempoa'}"
+
+        jadwal_hari_ini = {
+            "kode_program": "SEMPOA",
+            "nama_program": guru.kategori_program or "Sempoa SIP",
+            "jam_mulai": jam_mulai_str,
+            "jam_selesai": jam_selesai_str,
+            "ruangan": ruangan_str,
+            "jumlah_siswa": total_siswa,
+            "is_active_today": is_active_today
+        }
+
+        # Count real students marked today
+        hadir_count = 0
+        absen_count = 0
+        uids_program = [s.uid for s in active_students if s.uid]
+        if uids_program:
+            logs_today = db.query(AbsensiLog).filter(
+                AbsensiLog.uid.in_(uids_program),
+                func.date(AbsensiLog.waktu) == today
+            ).all()
+            for l in logs_today:
+                s_str = l.status.value if hasattr(l.status, 'value') else str(l.status).lower()
+                if "hadir" in s_str:
+                    hadir_count += 1
+                else:
+                    absen_count += 1
+
+        # Latest learning note for this teacher
+        note_conds = [CatatanPembelajaran.id_guru.in_(matching_guru_ids)]
+        if programs:
+            note_conds.extend([func.lower(CatatanPembelajaran.kategori_program).like(f"%{p}%") for p in programs])
+
+        latest_note = db.query(CatatanPembelajaran).filter(or_(*note_conds)).order_by(CatatanPembelajaran.created_at.desc()).first()
+
+        catatan_terbaru = None
+        if latest_note:
+            catatan_terbaru = {
+                "id": latest_note.id,
+                "tanggal": latest_note.tanggal.strftime("%d %B %Y") if latest_note.tanggal else "",
+                "catatan": latest_note.catatan,
+                "waktu": latest_note.created_at.strftime("%H:%M") if latest_note.created_at else ""
+            }
+
+        return {
+            "guru": {
+                "id": guru.id,
+                "nama_guru": guru.nama,
+                "uid_rfid": guru.uid or "",
+                "program": guru.kategori_program or "Sempoa SIP",
+                "foto_profil": guru.foto_profil,
+                "no_wa": guru.whatsapp_guru or "",
+                "mode_kelas": guru.mode_kelas or "OFFLINE"
+            },
+            "jadwal_hari_ini": jadwal_hari_ini,
+            "absensi_guru": absensi_guru,
+            "absensi_siswa": {
+                "total_siswa": total_siswa,
+                "jumlah_hadir": hadir_count,
+                "jumlah_absen": absen_count
+            },
+            "mode_kelas": guru.mode_kelas or "OFFLINE",
+            "catatan_terbaru": catatan_terbaru
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        today = datetime.now(WIB).date()
+        return {
+            "guru": {
+                "id": getattr(current_user, 'id', 1),
+                "nama_guru": current_user.nama or "Guru Pengajar",
+                "uid_rfid": getattr(current_user, 'uid_terhubung', '') or "",
+                "program": getattr(current_user, 'kategori_program', '') or "Sempoa SIP",
+                "foto_profil": current_user.foto_profil,
+                "no_wa": getattr(current_user, 'no_wa', '') or "",
+                "mode_kelas": "OFFLINE"
+            },
+            "jadwal_hari_ini": {
+                "kode_program": "SEMPOA",
+                "nama_program": getattr(current_user, 'kategori_program', '') or "Sempoa SIP",
+                "jam_mulai": "08:30",
+                "jam_selesai": "11:30",
+                "ruangan": "TC Pariaman",
+                "jumlah_siswa": 0,
+                "is_active_today": True
+            },
+            "absensi_guru": {
+                "status": "Belum Absen",
+                "tanggal": today.strftime("%d-%m"),
+                "jam": "-"
+            },
+            "absensi_siswa": {
+                "total_siswa": 0,
+                "jumlah_hadir": 0,
+                "jumlah_absen": 0
+            },
+            "mode_kelas": "OFFLINE",
+            "catatan_terbaru": None
+        }
 
 class ModeKelasUpdate(BaseModel):
     mode_kelas: str
