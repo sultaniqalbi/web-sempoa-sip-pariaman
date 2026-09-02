@@ -111,13 +111,36 @@ async def post_absensi(request: Request, db: Session = Depends(get_db)):
         ).first()
 
         if duplicate:
+            waktu_wib = waktu_dt.astimezone(WIB)
+            # Jika tap di jam 4 sore (16:00) ke atas, hitung sebagai waktu keluar
+            if waktu_wib.hour >= 16:
+                # Maksimal waktu keluar jam 18:00
+                if waktu_wib.hour >= 18 and (waktu_wib.hour > 18 or waktu_wib.minute > 0):
+                    waktu_keluar_capped = waktu_wib.replace(hour=18, minute=0, second=0, microsecond=0)
+                else:
+                    waktu_keluar_capped = waktu_wib
+                
+                duplicate.waktu_keluar = waktu_keluar_capped
+                db.commit()
+                
+                manager.broadcast_sync("ABSENSI_UPDATE", {
+                    "timestamp": datetime.now(WIB).isoformat(),
+                    "source": "rfid_hardware",
+                    "uid": matched_uid,
+                    "nama": nama_guru,
+                    "role": "guru",
+                    "waktu_keluar": waktu_keluar_capped.isoformat(),
+                    "status": "PULANG"
+                })
+                
             return PlainTextResponse(f"OK|{nama_guru}", status_code=200)
 
-        # Catat Log Absensi Kehadiran Guru
+        # Catat Log Absensi Kehadiran Guru (Tap Masuk)
         mode = ModeAbsensi.OFFLINE if mode_str == "OFFLINE" else ModeAbsensi.ONLINE
         new_log = AbsensiLog(
             uid=matched_uid,
             waktu=waktu_dt,
+            waktu_keluar=None,
             mode=mode,
             status=StatusAbsensi.HADIR
         )
@@ -131,6 +154,7 @@ async def post_absensi(request: Request, db: Session = Depends(get_db)):
             "nama": nama_guru,
             "role": "guru",
             "waktu": waktu_str,
+            "waktu_keluar": None,
             "status": "HADIR"
         })
 

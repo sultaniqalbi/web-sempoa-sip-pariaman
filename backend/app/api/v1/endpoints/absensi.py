@@ -81,6 +81,12 @@ async def read_absensi_list(
                 resp.waktu = log.waktu.astimezone(WIB)
             else:
                 resp.waktu = log.waktu.replace(tzinfo=WIB)
+                
+        if log.waktu_keluar:
+            if log.waktu_keluar.tzinfo is not None:
+                resp.waktu_keluar = log.waktu_keluar.astimezone(WIB)
+            else:
+                resp.waktu_keluar = log.waktu_keluar.replace(tzinfo=WIB)
 
         if g:
             resp.guru_nama = g.nama
@@ -94,6 +100,45 @@ async def read_absensi_list(
             resp.guru_nama = "Kartu Belum Terdaftar"
             resp.kategori_program = "-"
             resp.role = "unregistered"
+        result.append(resp)
+    return result
+
+@router.get("/izin-guru", response_model=List[AbsensiResponse])
+async def read_izin_guru_list(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(RoleChecker([UserRole.admin, UserRole.owner]))
+):
+    logs = db.query(AbsensiLog).filter(AbsensiLog.status == StatusAbsensi.IZIN).order_by(AbsensiLog.waktu.desc()).offset(skip).limit(limit).all()
+    gurus = db.query(Guru).all()
+    guru_map = {}
+    for g in gurus:
+        if g.uid:
+            guru_map[g.uid.strip().upper()] = g
+            guru_map[g.uid.strip().upper().replace(" ", "")] = g
+
+    result = []
+    for log in logs:
+        clean_uid = log.uid.strip().upper() if log.uid else ""
+        nospace_uid = clean_uid.replace(" ", "")
+        g = guru_map.get(clean_uid) or guru_map.get(nospace_uid)
+
+        resp = AbsensiResponse.model_validate(log)
+        if log.waktu:
+            if log.waktu.tzinfo is not None:
+                resp.waktu = log.waktu.astimezone(WIB)
+            else:
+                resp.waktu = log.waktu.replace(tzinfo=WIB)
+
+        if g:
+            resp.guru_nama = g.nama
+            resp.kategori_program = g.kategori_program
+            resp.role = "guru"
+        else:
+            resp.guru_nama = "Guru Tidak Diketahui"
+            resp.kategori_program = "-"
+            resp.role = "guru"
         result.append(resp)
 
     return result

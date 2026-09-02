@@ -19,6 +19,7 @@ class AbsensiLog(Base):
     id = Column(Integer, primary_key=True, index=True)
     uid = Column(String(50), nullable=False)
     waktu = Column(DateTime(timezone=True), nullable=False)
+    waktu_keluar = Column(DateTime(timezone=True), nullable=True)
     mode = Column(SQLEnum(ModeAbsensi, name="absensi_mode_enum"), nullable=False, default=ModeAbsensi.ONLINE)
     status = Column(SQLEnum(StatusAbsensi, name="absensi_status_enum"), nullable=False, default=StatusAbsensi.HADIR)
     catatan = Column(Text, nullable=True)

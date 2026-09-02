@@ -20,7 +20,10 @@ export const AbsensiInputPage: React.FC = () => {
 
   // Input date filter state (defaults to today)
   const todayStr = new Date().toISOString().split('T')[0];
+  const nowHour = new Date().getHours().toString().padStart(2, '0');
+  const nowMinute = new Date().getMinutes().toString().padStart(2, '0');
   const [inputDate, setInputDate] = useState<string>(todayStr);
+  const [inputTime, setInputTime] = useState<string>(`${nowHour}:${nowMinute}`);
   const [selectedProgram, setSelectedProgram] = useState<string>('');
 
   // Rekap date filter state (defaults to today)
@@ -109,11 +112,13 @@ export const AbsensiInputPage: React.FC = () => {
       attendance: { siswa_id: number; status: string; jumlah_sesi?: number }[];
       catatan?: string;
       tanggal: string;
+      jam: string;
     }) => {
       const payload = {
         siswa_absensi: attendance,
         catatan_pembelajaran: catatan || null,
         tanggal: tanggal,
+        jam: jam,
         program: selectedProgram !== 'all' ? selectedProgram : null,
       };
       const res = await apiClient.post('/portal-guru/absensi/simpan', payload);
@@ -133,7 +138,7 @@ export const AbsensiInputPage: React.FC = () => {
   });
 
   const handleSaveAttendance = (data: { siswa_id: number; status: string; jumlah_sesi?: number }[], catatan?: string) => {
-    saveMutation.mutate({ attendance: data, catatan, tanggal: inputDate });
+    saveMutation.mutate({ attendance: data, catatan, tanggal: inputDate, jam: inputTime });
   };
 
   const handleActionSuccess = (msg: string) => {
@@ -289,6 +294,8 @@ export const AbsensiInputPage: React.FC = () => {
                 students={siswaData?.siswa || []}
                 tanggalTerpilih={inputDate}
                 onTanggalChange={setInputDate}
+                jamTerpilih={inputTime}
+                onJamChange={setInputTime}
                 onSave={handleSaveAttendance}
                 isSaving={saveMutation.isPending}
                 activeProgram={selectedProgram}

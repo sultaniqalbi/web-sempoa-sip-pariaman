@@ -49,11 +49,12 @@ interface AbsensiGuruLog {
   kategori_program?: string;
   role?: string;
   catatan?: string;
+  waktu_keluar?: string;
 }
 
 export const SharedAbsensiPage: React.FC = () => {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'siswa' | 'guru'>('siswa');
+  const [activeTab, setActiveTab] = useState<'siswa' | 'guru' | 'izin'>('siswa');
   const [selectedProgram, setSelectedProgram] = useState<string>('all');
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
@@ -246,6 +247,14 @@ export const SharedAbsensiPage: React.FC = () => {
       return res.data;
     },
     refetchInterval: 10000
+  });
+
+  const { data: izinLogs = [], isLoading: isIzinLoading } = useQuery<AbsensiGuruLog[]>({
+    queryKey: ['absensi', 'izin-guru'],
+    queryFn: async () => {
+      const res = await apiClient.get('/absensi/izin-guru');
+      return res.data;
+    }
   });
 
   // Filter Log Guru berdasarkan mode per hari (slide) atau semua riwayat
@@ -583,10 +592,18 @@ export const SharedAbsensiPage: React.FC = () => {
       }
     },
     {
-      header: 'Waktu Ketuk (Tap)',
+      header: 'Waktu Masuk',
       accessor: (row: AbsensiGuruLog) => (
         <span className="text-xs text-[#334155] font-semibold">
           {formatWaktuTap(row.waktu)}
+        </span>
+      )
+    },
+    {
+      header: 'Waktu Keluar',
+      accessor: (row: AbsensiGuruLog) => (
+        <span className="text-xs text-[#334155] font-semibold">
+          {row.waktu_keluar ? formatWaktuTap(row.waktu_keluar) : '-'}
         </span>
       )
     },
@@ -684,6 +701,17 @@ export const SharedAbsensiPage: React.FC = () => {
           >
             <PengajarIcon size={16} />
             <span>Log Presensi Guru RFID ({guruLogs.length})</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('izin')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+              activeTab === 'izin'
+                ? 'bg-[#FF7043] text-white shadow-sm'
+                : 'text-[#64748B] hover:text-[#0F172A] hover:bg-white/60'
+            }`}
+          >
+            <CalendarIcon size={16} />
+            <span>Riwayat Perizinan ({izinLogs.length})</span>
           </button>
         </div>
 
@@ -900,6 +928,84 @@ export const SharedAbsensiPage: React.FC = () => {
               }}
             />
           )}
+        </div>
+      )}
+
+      {/* Tab 3: Perizinan Guru */}
+      {activeTab === 'izin' && (
+        <div className="space-y-4">
+          <DataTable
+            columns={[
+              {
+                header: 'Nama Lengkap Guru',
+                accessor: (row: AbsensiGuruLog) => {
+                  const info = getGuruInfo(row.uid, row.guru_nama, row.kategori_program);
+                  return (
+                    <div className="flex items-center gap-3 py-1">
+                      <div className="w-8 h-8 rounded-full bg-[#FFF3E0] text-[#FF7043] border border-[#FFCC80] flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+                        {info.nama.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="font-bold text-[#1E293B] text-xs sm:text-sm">{info.nama}</p>
+                      </div>
+                    </div>
+                  );
+                }
+              },
+              {
+                header: 'Tanggal Izin',
+                accessor: (row: AbsensiGuruLog) => (
+                  <span className="text-xs text-[#334155] font-semibold">
+                    {formatWaktuTap(row.waktu)}
+                  </span>
+                )
+              },
+              {
+                header: 'Status',
+                accessor: (row: AbsensiGuruLog) => (
+                  <span className="px-2.5 py-1 rounded-full text-xs font-bold uppercase border bg-[#FEF3C7] text-[#D97706] border-[#FCD34D]">
+                    {row.status}
+                  </span>
+                )
+              },
+              {
+                header: 'Keterangan',
+                accessor: (row: AbsensiGuruLog) => (
+                  <span className="text-xs text-[#64748B] italic">
+                    {row.catatan || '-'}
+                  </span>
+                )
+              },
+              {
+                header: 'Aksi',
+                accessor: (row: AbsensiGuruLog) => {
+                  const info = getGuruInfo(row.uid, row.guru_nama, row.kategori_program);
+                  return (
+                    <div className="flex items-center gap-1.5 justify-end">
+                      <button
+                        onClick={() => setDeleteLogConfirm({ id: row.id, nama: info.nama, waktu: formatWaktuTap(row.waktu) })}
+                        className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
+                        title="Hapus Izin"
+                      >
+                        <TrashIcon size={14} />
+                      </button>
+                    </div>
+                  );
+                },
+                className: 'text-right'
+              }
+            ]}
+            data={izinLogs}
+            isLoading={isIzinLoading}
+            searchPlaceholder="Cari nama guru atau keterangan..."
+            searchFilter={(row, q) => {
+              const info = getGuruInfo(row.uid, row.guru_nama, row.kategori_program);
+              return (
+                info.nama.toLowerCase().includes(q.toLowerCase()) ||
+                (row.catatan || '').toLowerCase().includes(q.toLowerCase())
+              );
+            }}
+          />
         </div>
       )}
 

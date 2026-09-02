@@ -33,6 +33,8 @@ interface StudentAttendanceTableProps {
   students: SiswaAbsensi[];
   tanggalTerpilih: string;
   onTanggalChange: (date: string) => void;
+  jamTerpilih: string;
+  onJamChange: (time: string) => void;
   onSave: (attendanceData: { siswa_id: number; status: string; jumlah_sesi: number }[], catatan?: string) => void;
   isSaving: boolean;
   activeProgram?: string;
@@ -43,6 +45,8 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
   students,
   tanggalTerpilih,
   onTanggalChange,
+  jamTerpilih,
+  onJamChange,
   onSave,
   isSaving,
   activeProgram = 'all',
@@ -169,7 +173,13 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
               type="date"
               value={tanggalTerpilih}
               onChange={(e) => onTanggalChange(e.target.value)}
-              className="px-2.5 py-1 bg-[#FFF3E0] text-[#E65100] border border-[#FFE082] rounded-full text-xs font-black uppercase focus:outline-none focus:border-[#FF7043]"
+              className="px-2.5 py-1 bg-[#FFF3E0] text-[#E65100] border border-[#FFE082] rounded-lg text-xs font-black uppercase focus:outline-none focus:border-[#FF7043]"
+            />
+            <input
+              type="time"
+              value={jamTerpilih}
+              onChange={(e) => onJamChange(e.target.value)}
+              className="px-2.5 py-1 bg-[#FFF3E0] text-[#E65100] border border-[#FFE082] rounded-lg text-xs font-black uppercase focus:outline-none focus:border-[#FF7043]"
             />
           </div>
           <p className="text-[11px] text-[#64748B] mt-1">

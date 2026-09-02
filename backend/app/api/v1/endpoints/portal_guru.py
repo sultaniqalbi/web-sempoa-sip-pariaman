@@ -539,6 +539,7 @@ class SiswaAbsensiSubmit(BaseModel):
     siswa_absensi: List[SiswaAbsensiItem]
     catatan_pembelajaran: Optional[str] = None
     tanggal: Optional[str] = None
+    jam: Optional[str] = None
     program: Optional[str] = None
 
 def _update_student_program_quota(siswa: Siswa, program_name: Optional[str], delta: int):
@@ -607,7 +608,12 @@ async def save_siswa_absensi(
     if data.tanggal:
         try:
             target_date = datetime.strptime(data.tanggal, "%Y-%m-%d").date()
-            now = datetime.combine(target_date, datetime.now().time())
+            if data.jam:
+                from datetime import time
+                hour, minute = map(int, data.jam.split(':'))
+                now = datetime.combine(target_date, time(hour=hour, minute=minute))
+            else:
+                now = datetime.combine(target_date, datetime.now().time())
         except Exception:
             pass
 

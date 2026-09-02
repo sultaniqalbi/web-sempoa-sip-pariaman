@@ -6,6 +6,7 @@ from app.models.absensi_log import ModeAbsensi, StatusAbsensi
 class AbsensiBase(BaseModel):
     uid: str
     waktu: datetime
+    waktu_keluar: Optional[datetime] = None
     mode: ModeAbsensi = ModeAbsensi.ONLINE
     status: StatusAbsensi = StatusAbsensi.HADIR
 
