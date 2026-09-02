@@ -113,6 +113,8 @@ export const getProgramBadgeStyle = (program: string) => {
     return 'bg-[#F1F5F9] text-[#0F172A] border-[#94A3B8]';
   } else if (p.includes('direktur') || p.includes('owner')) {
     return 'bg-[#FDF2F8] text-[#BE185D] border-[#FBCFE8]';
+  } else if (p.includes('kepala') || p.includes('kepsek')) {
+    return 'bg-[#F0FDF4] text-[#15803D] border-[#BBF7D0]';
   }
   return 'bg-[#F1F5F9] text-[#475569] border-[#CBD5E1]';
 };

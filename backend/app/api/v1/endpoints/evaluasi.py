@@ -62,15 +62,17 @@ def get_all_evaluasi(
     if current_user.role == UserRole.guru:
         guru = _get_current_guru(db, current_user)
         if guru:
-            available_progs = [p.strip().lower() for p in (guru.kategori_program or "").split(",") if p.strip()]
-            prog_conditions = [func.lower(Siswa.kategori_program).like(f"%{p}%") for p in available_progs]
-            query = query.filter(
-                or_(
-                    EvaluasiSiswa.id_guru == guru.id,
-                    Siswa.id_guru == guru.id,
-                    and_(Siswa.id_guru == None, or_(*prog_conditions)) if prog_conditions else Siswa.id_guru == guru.id
+            is_supervisor = any(k in (guru.kategori_program or "").lower() for k in ["kepala sekolah", "kepsek", "direktur", "admin", "owner"])
+            if not is_supervisor:
+                available_progs = [p.strip().lower() for p in (guru.kategori_program or "").split(",") if p.strip()]
+                prog_conditions = [func.lower(Siswa.kategori_program).like(f"%{p}%") for p in available_progs]
+                query = query.filter(
+                    or_(
+                        EvaluasiSiswa.id_guru == guru.id,
+                        Siswa.id_guru == guru.id,
+                        and_(Siswa.id_guru == None, or_(*prog_conditions)) if prog_conditions else Siswa.id_guru == guru.id
+                    )
                 )
-            )
     elif current_user.role == UserRole.ortu:
         if current_user.uid_terhubung:
             query = query.filter(EvaluasiSiswa.id_siswa == int(current_user.uid_terhubung))

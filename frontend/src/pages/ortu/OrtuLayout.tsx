@@ -9,58 +9,58 @@ import ScheduleCard, { ScheduleData, TeacherContact } from './components/Schedul
 import FeatureTiles from './components/FeatureTiles';
 import OrtuBottomNav from './components/OrtuBottomNav';
 import ProductTourModal, { TourStep } from '../../components/ProductTourModal';
-import { UserIcon, CalendarIcon, CubesIcon, DocumentTextIcon } from '../../components/SvgIcons';
+import { UserIcon, CalendarIcon, CubesIcon, DocumentTextIcon, HomeIcon, BookOpenIcon } from '../../components/SvgIcons';
 import { useAuthenticatedFontAwesome } from '../../hooks/useAuthenticatedFontAwesome';
 
 const TOUR_STEPS: TourStep[] = [
   {
     targetId: 'tour-ortu-header',
-    categoryBadge: 'PROFIL & PANDUAN',
+    categoryBadge: 'PROFIL ANANDA',
     icon: <UserIcon size={20} className="text-[#FF7043]" />,
-    title: 'Profil Ananda & Panduan Cepat',
-    description: 'Memuat nama lengkap ananda, foto, program kursus, dan nomor WhatsApp terdaftar. Tombol "Panduan" di kanan atas siap membuka kembali tutorial ini kapan saja.',
+    title: 'Profil Ananda & Tombol Panduan',
+    description: 'Menampilkan nama lengkap ananda, foto profil, program kursus yang diambil, dan nomor WhatsApp terdaftar. Tombol "Panduan" di kanan atas siap membuka kembali tutorial ini kapan saja.',
+  },
+  {
+    targetId: 'tour-ortu-schedule',
+    categoryBadge: 'JADWAL & PENGAJAR',
+    icon: <CalendarIcon size={20} className="text-[#FF7043]" />,
+    title: 'Jadwal Bimbingan & Kontak Guru',
+    description: 'Pantau jam bimbingan kelas hari ini, ruangan/lokasi tatap muka, serta kontak WhatsApp guru pembimbing ananda untuk komunikasi langsung dengan 1 klik.',
+  },
+  {
+    targetId: 'tour-ortu-features',
+    categoryBadge: 'FITUR BELAJAR',
+    icon: <BookOpenIcon size={20} className="text-[#FF7043]" />,
+    title: 'Akses Cepat 4 Menu Pembelajaran',
+    description: 'Grid pintasan menuju menu Kelas & Buku (modul aktif ananda), Evaluasi Perkembangan (4 pilar rapor), Absensi Kehadiran (RFID realtime), dan Riwayat Pertemuan.',
+  },
+  {
+    targetId: 'tour-ortu-contact',
+    categoryBadge: 'PUSAT LAYANAN & SPP',
+    icon: <DocumentTextIcon size={20} className="text-[#FF7043]" />,
+    title: 'Pusat Bantuan & Notifikasi SPP',
+    description: 'Hubungi Admin atau Direktur via WhatsApp untuk bantuan administrasi, aktifkan Notifikasi HP (Push Notification), serta pasang pengingat jatuh tempo SPP ke Google Calendar HP Anda.',
   },
   {
     targetId: 'tour-tab-dashboard',
-    categoryBadge: '1. MENU BERANDA',
-    icon: <CalendarIcon size={20} className="text-[#FF7043]" />,
-    title: 'Menu Beranda: Jadwal & Akses Menu Cepat',
-    description: 'Pantau sisa sesi bimbingan ananda, status jatuh tempo SPP, jadwal kelas hari ini, kontak WhatsApp guru pembimbing, dan grid menu pembelajaran.',
-  },
-  {
-    targetId: 'tour-tab-kelas',
-    categoryBadge: '2. MENU KELAS & BUKU',
-    icon: <DocumentTextIcon size={20} className="text-[#FF7043]" />,
-    title: 'Menu Kelas: Data Buku & Level',
-    description: 'Lihat buku aktif yang sedang dipelajari ananda, tingkatan level saat ini, nomor buku, dan riwayat modul yang telah selesai.',
-  },
-  {
-    targetId: 'tour-tab-evaluasi',
-    categoryBadge: '3. MENU EVALUASI & RAPOR',
-    icon: <CubesIcon size={20} className="text-[#FF7043]" />,
-    title: 'Menu Evaluasi: 4 Pilar Perkembangan',
-    description: 'Pantau rapor berkala kemampuan belajar ananda (Fokus, Kecepatan, Ketelitian, Pemahaman Konsep) serta saran bimbingan dari guru.',
-  },
-  {
-    targetId: 'tour-tab-absensi',
-    categoryBadge: '4. MENU ABSENSI',
-    icon: <CalendarIcon size={20} className="text-[#FF7043]" />,
-    title: 'Menu Absensi: Kehadiran Siswa',
-    description: 'Cek persentase kehadiran, kuota sesi bimbingan, dan riwayat ketukan kartu RFID ananda.',
+    categoryBadge: 'NAVIGASI: BERANDA',
+    icon: <HomeIcon size={20} className="text-[#FF7043]" />,
+    title: 'Menu Beranda Utama',
+    description: 'Gunakan tombol ini untuk kembali ke halaman Beranda kapan saja guna melihat ringkasan jadwal bimbingan, status kuota sesi belajar, dan info harian ananda.',
   },
   {
     targetId: 'tour-tab-pembayaran',
-    categoryBadge: '5. MENU PEMBAYARAN SPP',
+    categoryBadge: 'NAVIGASI: PEMBAYARAN',
     icon: <CubesIcon size={20} className="text-[#FF7043]" />,
-    title: 'Menu SPP: Rekening & Unggah Bukti Transfer',
-    description: 'Dapatkan nomor rekening resmi Bank BRI & Bank Nagari, salin nomor rekening sekali klik, dan unggah foto bukti transfer SPP.',
+    title: 'Menu Pembayaran SPP & Rekening',
+    description: 'Periksa tagihan bulanan SPP, salin nomor rekening resmi Bank BRI / Bank Nagari (a.n. Zulhemawati), dan unggah foto bukti transfer pembayaran langsung dari HP Anda.',
   },
   {
     targetId: 'tour-tab-profil',
-    categoryBadge: '6. MENU PROFIL & DATA ANAK',
+    categoryBadge: 'NAVIGASI: PROFIL',
     icon: <UserIcon size={20} className="text-[#FF7043]" />,
-    title: 'Menu Profil: Edit Info Anak & Akun',
-    description: 'Kelola data identitas ananda (nama, tanggal lahir, sekolah, kontak), ganti foto profil, serta tombol keluar akun dengan aman.',
+    title: 'Menu Profil & Pengaturan Akun',
+    description: 'Kelola data identitas ananda (nama, tanggal lahir, sekolah asal), perbarui foto profil ananda, serta opsi untuk keluar akun (logout) dengan aman.',
   },
 ];
 

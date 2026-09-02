@@ -249,35 +249,39 @@ export const AbsensiInputPage: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Sedang Mengabsen:</span>
                         <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-[#FFF3E0] text-[#E65100] border border-[#FFE082]">
-                          {selectedProgram === 'all' ? 'Semua Program' : selectedProgram}
+                          {selectedProgram === 'all' ? 'Semua Program' : (selectedProgram || siswaData.available_programs[0])}
                         </span>
                       </div>
-                      <p className="text-xs text-[#1E293B] font-bold mt-1">
-                        Pilih program di slide bar untuk memfilter daftar absensi siswa:
-                      </p>
+                      {siswaData.available_programs.length > 1 && (
+                        <p className="text-xs text-[#1E293B] font-bold mt-1">
+                          Pilih program di slide bar untuk memfilter daftar absensi siswa:
+                        </p>
+                      )}
                     </div>
                     <span className="text-xs font-bold text-[#64748B] bg-[#F8FAFC] px-3 py-1 rounded-xl border border-[#E2E8F0] self-start sm:self-auto">
                       {siswaData?.siswa?.length || 0} Siswa Terdaftar
                     </span>
                   </div>
 
-                  {/* Horizontal Slide Bar / Tabs */}
-                  <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
-                    {siswaData.available_programs.map((prog: string) => (
-                      <button
-                        key={prog}
-                        type="button"
-                        onClick={() => setSelectedProgram(prog)}
-                        className={`px-4 py-2 rounded-xl text-xs font-black transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0 ${
-                          selectedProgram === prog
-                            ? 'bg-[#FF7043] text-white shadow-sm ring-2 ring-[#FF7043]/30'
-                            : 'bg-[#F8FAFC] text-[#64748B] border border-[#E2E8F0] hover:bg-[#F1F5F9]'
-                        }`}
-                      >
-                        {prog}
-                      </button>
-                    ))}
-                  </div>
+                  {/* Horizontal Slide Bar / Tabs (Hanya jika mengajar > 1 program) */}
+                  {siswaData.available_programs.length > 1 && (
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+                      {siswaData.available_programs.map((prog: string) => (
+                        <button
+                          key={prog}
+                          type="button"
+                          onClick={() => setSelectedProgram(prog)}
+                          className={`px-4 py-2 rounded-xl text-xs font-black transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                            selectedProgram === prog
+                              ? 'bg-[#FF7043] text-white shadow-sm ring-2 ring-[#FF7043]/30'
+                              : 'bg-[#F8FAFC] text-[#64748B] border border-[#E2E8F0] hover:bg-[#F1F5F9]'
+                          }`}
+                        >
+                          {prog}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 

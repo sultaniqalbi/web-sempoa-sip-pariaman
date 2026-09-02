@@ -55,19 +55,28 @@ export const GuruEvaluasiPage: React.FC = () => {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  // 1. Fetch Teacher's Students
-  const { data: siswaList = [], isLoading: isSiswaLoading } = useQuery<any[]>({
-    queryKey: ['guru-siswa-list'],
+  // 1. Fetch Teacher's Students & Programs from portal-guru
+  const { data: siswaResp, isLoading: isSiswaLoading } = useQuery<any>({
+    queryKey: ['guru-siswa-evaluasi'],
     queryFn: async () => {
       try {
         const res = await apiClient.get('/portal-guru/siswa-absensi');
-        if (Array.isArray(res.data)) return res.data;
-        if (res.data?.siswa && Array.isArray(res.data.siswa)) return res.data.siswa;
-      } catch (e) {}
-      const fallback = await apiClient.get('/siswa/');
-      return fallback.data;
+        return res.data;
+      } catch (e) {
+        return { siswa: [], available_programs: [] };
+      }
     }
   });
+
+  const siswaList: any[] = Array.isArray(siswaResp) ? siswaResp : (siswaResp?.siswa || []);
+  const teacherPrograms: string[] = siswaResp?.available_programs || [];
+
+  // Auto-sync selectedProgram when teacher's programs are loaded
+  React.useEffect(() => {
+    if (teacherPrograms.length > 0 && selectedProgram !== 'all' && !teacherPrograms.includes(selectedProgram)) {
+      setSelectedProgram(teacherPrograms.length > 1 ? 'all' : teacherPrograms[0]);
+    }
+  }, [teacherPrograms, selectedProgram]);
 
   // 2. Fetch Books
   const { data: bukuList = [] } = useQuery<BukuItem[]>({
@@ -323,22 +332,36 @@ export const GuruEvaluasiPage: React.FC = () => {
       />
 
       {/* Filter Tabs Program */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-[#E2E8F0] shadow-xs">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-[#E2E8F0] shadow-xs">
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-xs font-bold text-[#64748B] mr-2">Filter Program:</span>
-          {['all', 'Sempoa SIP', 'Fonem', 'Tahfidz', 'Bahasa Inggris', 'TK'].map(prog => (
-            <button
-              key={prog}
-              onClick={() => setSelectedProgram(prog)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                selectedProgram === prog
-                  ? 'bg-[#FF7043] text-white shadow-2xs'
-                  : 'bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0]'
-              }`}
-            >
-              {prog === 'all' ? 'Semua Program' : prog}
-            </button>
-          ))}
+          {teacherPrograms.length > 1 ? (
+            <>
+              <span className="text-xs font-bold text-[#64748B] mr-1.5">Filter Program:</span>
+              {['all', ...teacherPrograms].map(prog => (
+                <button
+                  key={prog}
+                  type="button"
+                  onClick={() => setSelectedProgram(prog)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    selectedProgram === prog
+                      ? 'bg-[#FF7043] text-white shadow-2xs ring-2 ring-[#FF7043]/30'
+                      : 'bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0]'
+                  }`}
+                >
+                  {prog === 'all' ? 'Semua Program Bimbingan' : prog}
+                </button>
+              ))}
+            </>
+          ) : teacherPrograms.length === 1 ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-[#64748B]">Program Pengajaran:</span>
+              <span className="px-3 py-1 rounded-xl text-xs font-black bg-[#FFF3E0] text-[#E65100] border border-[#FFCC80] shadow-2xs">
+                {teacherPrograms[0]}
+              </span>
+            </div>
+          ) : (
+            <span className="text-xs font-bold text-[#64748B]">Daftar Siswa Bimbingan</span>
+          )}
         </div>
         <div className="text-xs font-bold text-[#64748B]">
           Menampilkan <span className="text-[#FF7043] font-black">{tableData.length}</span> Murid

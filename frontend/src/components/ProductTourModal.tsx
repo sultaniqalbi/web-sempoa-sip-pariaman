@@ -72,9 +72,16 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
   const updateSpotlight = useCallback(() => {
     if (!isOpen || !currentStep) return;
 
-    const measureElement = () => {
+    const measureElement = (shouldScroll = false) => {
       const el = document.getElementById(currentStep.targetId);
       if (el) {
+        if (shouldScroll) {
+          const boundingCheck = el.getBoundingClientRect();
+          const winHeight = window.innerHeight || 800;
+          if (boundingCheck.top < 70 || boundingCheck.bottom > winHeight - 80) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }
         const bounding = el.getBoundingClientRect();
         const padding = 6;
         setRect({
@@ -88,9 +95,15 @@ export const ProductTourModal: React.FC<ProductTourModalProps> = ({
       }
     };
 
-    measureElement();
-    const t = setTimeout(measureElement, 60);
-    return () => clearTimeout(t);
+    measureElement(true);
+    const t1 = setTimeout(() => measureElement(false), 80);
+    const t2 = setTimeout(() => measureElement(false), 220);
+    const t3 = setTimeout(() => measureElement(false), 380);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
   }, [isOpen, currentStep]);
 
   useEffect(() => {

@@ -56,10 +56,23 @@ async def get_guru_dashboard(
     guru = _get_current_guru(db, current_user)
     programs = [p.strip().lower() for p in (guru.kategori_program or "").split(",") if p.strip()]
 
-    active_students = db.query(Siswa).filter(
-        Siswa.status_spp == StatusSPP.AKTIF,
-        Siswa.is_deleted == False
-    ).all()
+    is_supervisor = any(k in (guru.kategori_program or "").lower() for k in ["kepala sekolah", "kepsek", "direktur", "admin", "owner"])
+
+    if is_supervisor:
+        active_students = db.query(Siswa).filter(
+            Siswa.status_spp == StatusSPP.AKTIF,
+            Siswa.is_deleted == False
+        ).all()
+    else:
+        prog_conditions = [func.lower(Siswa.kategori_program).like(f"%{p}%") for p in programs]
+        active_students = db.query(Siswa).filter(
+            Siswa.status_spp == StatusSPP.AKTIF,
+            Siswa.is_deleted == False,
+            or_(
+                Siswa.id_guru == guru.id,
+                and_(Siswa.id_guru == None, or_(*prog_conditions)) if prog_conditions else Siswa.id_guru == guru.id
+            )
+        ).all()
 
     total_siswa = len(active_students)
     today = datetime.now(WIB).date()
@@ -312,17 +325,21 @@ async def get_siswa_absensi(
 ):
     guru = _get_current_guru(db, current_user)
     available_programs = [p.strip() for p in (guru.kategori_program or "Sempoa SIP").split(",") if p.strip()]
+    current_active_prog = program if (program and program.lower() != 'all') else (available_programs[0] if available_programs else None)
 
-    # Saring hanya siswa yang dibimbing oleh guru ini
-    prog_conditions = [func.lower(Siswa.kategori_program).like(f"%{p.lower()}%") for p in available_programs]
-    
-    student_query = db.query(Siswa).filter(
-        Siswa.is_deleted == False,
-        or_(
-            Siswa.id_guru == guru.id,
-            and_(Siswa.id_guru == None, or_(*prog_conditions)) if prog_conditions else Siswa.id_guru == guru.id
+    is_supervisor = any(k in (guru.kategori_program or "").lower() for k in ["kepala sekolah", "kepsek", "direktur", "admin", "owner"])
+
+    if is_supervisor:
+        student_query = db.query(Siswa).filter(Siswa.is_deleted == False)
+    else:
+        prog_conditions = [func.lower(Siswa.kategori_program).like(f"%{p.lower()}%") for p in available_programs]
+        student_query = db.query(Siswa).filter(
+            Siswa.is_deleted == False,
+            or_(
+                Siswa.id_guru == guru.id,
+                and_(Siswa.id_guru == None, or_(*prog_conditions)) if prog_conditions else Siswa.id_guru == guru.id
+            )
         )
-    )
 
     if program and program.lower() != 'all':
         student_query = student_query.filter(func.lower(Siswa.kategori_program).like(f"%{program.lower()}%"))
@@ -745,7 +762,7 @@ async def get_rekap_absensi(
     note_row = db.query(CatatanPembelajaran).filter(
         or_(
             CatatanPembelajaran.id_guru == guru.id,
-            *filter_conditions
+            func.lower(CatatanPembelajaran.kategori_program).like(f"%{current_rekap_prog.lower()}%")
         ),
         CatatanPembelajaran.tanggal == filter_date
     ).order_by(CatatanPembelajaran.created_at.desc()).first()
