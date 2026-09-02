@@ -8,6 +8,8 @@ export interface User {
   bio?: string;
   foto_profil?: string;
   uid_terhubung?: string;
+  kategori_program?: string;
+  no_wa?: string;
   created_at: string;
 }
 
