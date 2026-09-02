@@ -36,7 +36,7 @@ const GuruDashboardPage: React.FC = () => {
     }
   };
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['guru-dashboard'],
     queryFn: async () => {
       const res = await apiClient.get('/portal-guru/dashboard');
@@ -49,14 +49,6 @@ const GuruDashboardPage: React.FC = () => {
       <div className="flex flex-col items-center justify-center min-h-[400px]">
         <div className="w-10 h-10 border-4 border-[#FF7043] border-t-transparent rounded-full animate-spin mb-4"></div>
         <p className="text-sm text-[#757575] font-bold animate-pulse">Memuat dashboard...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-6 m-4 bg-[#FFF1F2] border border-[#FECDD3] text-[#D32F2F] rounded-xl text-sm font-bold shadow-sm">
-        Gagal memuat data dashboard.
       </div>
     );
   }
@@ -111,6 +103,22 @@ const GuruDashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-4" style={{ fontFamily: "'Inter', sans-serif" }}>
+      {error && !data && (
+        <div className="p-3.5 bg-[#FFF1F2] border border-[#FECDD3] rounded-xl flex items-center justify-between gap-3 text-xs text-[#D32F2F] shadow-xs">
+          <div>
+            <p className="font-bold">Gagal memperbarui status live jadwal & absensi.</p>
+            <p className="text-[11px] text-[#991B1B]">Silakan coba muat ulang atau gunakan menu di bawah.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="px-3 py-1.5 bg-[#D32F2F] text-white rounded-lg font-bold hover:bg-[#B71C1C] transition-all cursor-pointer text-xs shrink-0"
+          >
+            Muat Ulang
+          </button>
+        </div>
+      )}
+
       {/* Banner / Card Notifikasi Pengingat Kelas Guru */}
       <div className="bg-gradient-to-r from-[#FFF3E0] to-[#FFF8E1] border border-[#FFE082] rounded-xl p-4 shadow-[0_2px_6px_rgba(0,0,0,0.04)]">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">

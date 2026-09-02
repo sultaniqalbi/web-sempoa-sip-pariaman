@@ -6,8 +6,11 @@ import GuruProfileHeader from './components/GuruProfileHeader';
 import GuruBottomNav from './components/GuruBottomNav';
 import { useAuthenticatedFontAwesome } from '../../hooks/useAuthenticatedFontAwesome';
 
+import useAuth from '../../features/auth/useAuth';
+
 export const GuruLayout: React.FC = () => {
   useAuthenticatedFontAwesome();
+  const { user } = useAuth();
   const { data: dashboardData } = useQuery({
     queryKey: ['guru-dashboard'],
     queryFn: async () => {
@@ -23,10 +26,10 @@ export const GuruLayout: React.FC = () => {
     >
       {/* Profile Header — always visible on top */}
       <GuruProfileHeader
-        teacherName={dashboardData?.guru?.nama_guru || 'Guru Sempoa'}
-        program={dashboardData?.guru?.program || 'Program Sempoa'}
+        teacherName={dashboardData?.guru?.nama_guru || user?.nama || 'Guru Pengajar'}
+        program={dashboardData?.guru?.program || user?.kategori_program || 'Sempoa SIP'}
         noWa={dashboardData?.guru?.no_wa}
-        fotoProfil={dashboardData?.guru?.foto_profil}
+        fotoProfil={dashboardData?.guru?.foto_profil || user?.foto_profil}
       />
 
       {/* Scrollable content area */}
