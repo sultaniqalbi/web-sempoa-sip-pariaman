@@ -63,14 +63,16 @@ def get_all_buku_siswa(
     if current_user.role == UserRole.guru:
         guru = _get_current_guru(db, current_user)
         if guru:
-            available_progs = [p.strip().lower() for p in (guru.kategori_program or "").split(",") if p.strip()]
-            prog_conditions = [func.lower(Siswa.kategori_program).like(f"%{p}%") for p in available_progs]
-            query = query.filter(
-                or_(
-                    Siswa.id_guru == guru.id,
-                    and_(Siswa.id_guru == None, or_(*prog_conditions)) if prog_conditions else Siswa.id_guru == guru.id
+            is_supervisor = any(k in (guru.kategori_program or "").lower() for k in ["kepala sekolah", "kepsek", "direktur", "admin", "owner"])
+            if not is_supervisor:
+                available_progs = [p.strip().lower() for p in (guru.kategori_program or "").split(",") if p.strip()]
+                prog_conditions = [func.lower(Siswa.kategori_program).like(f"%{p}%") for p in available_progs]
+                query = query.filter(
+                    or_(
+                        Siswa.id_guru == guru.id,
+                        and_(Siswa.id_guru == None, or_(*prog_conditions)) if prog_conditions else Siswa.id_guru == guru.id
+                    )
                 )
-            )
 
     if id_siswa:
         query = query.filter(BukuSiswa.id_siswa == id_siswa)
