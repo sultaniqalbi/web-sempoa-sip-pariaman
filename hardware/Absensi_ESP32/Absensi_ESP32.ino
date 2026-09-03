@@ -38,9 +38,9 @@
 #define DEBUG_MODE 0
 
 // ============ PENGATURAN KONEKSI WIFI / HOTSPOT ============
-// Kredensial Hotspot HP Anda (OPPO Find X8):
-const char* DEFAULT_WIFI_SSID     = "OPPO Find X8";
-const char* DEFAULT_WIFI_PASS     = "szgm7477";
+// Kredensial WiFi Tempat Les (SEMPOA):
+const char* DEFAULT_WIFI_SSID     = "SEMPOA";
+const char* DEFAULT_WIFI_PASS     = "anakdua1";
 const char* DEFAULT_ESP32_API_KEY = "SempoaPariaman_ESP32_SecureKey_2026!";
 
 Preferences preferences;
