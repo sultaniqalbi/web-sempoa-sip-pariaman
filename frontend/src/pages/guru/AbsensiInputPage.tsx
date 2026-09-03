@@ -108,6 +108,7 @@ export const AbsensiInputPage: React.FC = () => {
       attendance,
       catatan,
       tanggal,
+      jam,
     }: {
       attendance: { siswa_id: number; status: string; jumlah_sesi?: number }[];
       catatan?: string;
