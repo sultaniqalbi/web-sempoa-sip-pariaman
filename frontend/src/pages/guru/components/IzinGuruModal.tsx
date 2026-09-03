@@ -27,6 +27,7 @@ export const IzinGuruModal: React.FC<IzinGuruModalProps> = ({
   const todayStr = new Date().toISOString().split('T')[0];
 
   const [tipeIzin, setTipeIzin] = useState<'HARIAN' | 'JADWAL'>('HARIAN');
+  const [jenisIzin, setJenisIzin] = useState('Sakit');
   const [alasan, setAlasan] = useState('');
   const [tanggalMulai, setTanggalMulai] = useState(todayStr);
   const [tanggalSelesai, setTanggalSelesai] = useState(todayStr);
@@ -43,16 +44,19 @@ export const IzinGuruModal: React.FC<IzinGuruModalProps> = ({
         setTipeIzin(isJadwal ? 'JADWAL' : 'HARIAN');
 
         let rawCatatan = initialData.catatan || '';
-        const jadwalMatch = rawCatatan.match(/\[Izin Jadwal (\d{2}:\d{2})-(\d{2}:\d{2}) WIB\]\s*(.*)/i);
+        const jadwalMatch = rawCatatan.match(/\[(.*?)\s*(\d{2}:\d{2})-(\d{2}:\d{2}) WIB\]\s*(.*)/i);
         if (jadwalMatch) {
-          setJamMulai(jadwalMatch[1]);
-          setJamSelesai(jadwalMatch[2]);
-          setAlasan(jadwalMatch[3]);
+          setJenisIzin(jadwalMatch[1].replace(/^Izin\s*/i, '') || 'Izin Jadwal');
+          setJamMulai(jadwalMatch[2]);
+          setJamSelesai(jadwalMatch[3]);
+          setAlasan(jadwalMatch[4]);
         } else {
           const generalMatch = rawCatatan.match(/^\[(.*?)\]\s*(.*)$/);
           if (generalMatch) {
+            setJenisIzin(generalMatch[1] || 'Sakit');
             setAlasan(generalMatch[2]);
           } else {
+            setJenisIzin('Izin');
             setAlasan(rawCatatan);
           }
         }
@@ -66,6 +70,7 @@ export const IzinGuruModal: React.FC<IzinGuruModalProps> = ({
         // Create mode
         const today = new Date().toISOString().split('T')[0];
         setTipeIzin('HARIAN');
+        setJenisIzin('Sakit');
         setAlasan('');
         setTanggalMulai(today);
         setTanggalSelesai(today);
@@ -83,6 +88,7 @@ export const IzinGuruModal: React.FC<IzinGuruModalProps> = ({
       tanggal_selesai?: string;
       jam_mulai?: string;
       jam_selesai?: string;
+      jenis_izin?: string;
     }) => {
       if (initialData?.id) {
         const res = await apiClient.put(`/portal-guru/izin-guru/${initialData.id}`, payload);
@@ -129,6 +135,7 @@ export const IzinGuruModal: React.FC<IzinGuruModalProps> = ({
     mutation.mutate({
       alasan: alasan.trim(),
       tipe_izin: tipeIzin,
+      jenis_izin: jenisIzin.trim() || 'Izin',
       tanggal_mulai: tanggalMulai,
       tanggal_selesai: tipeIzin === 'HARIAN' ? tanggalSelesai : undefined,
       jam_mulai: tipeIzin === 'JADWAL' ? jamMulai : undefined,
@@ -250,6 +257,31 @@ export const IzinGuruModal: React.FC<IzinGuruModalProps> = ({
                 ? '• Izin seharian penuh untuk 1 hari atau beberapa hari.'
                 : '• Izin pada rentang jam tertentu (misal: izin jam 07:00 - 09:00, jam 10:00 tetap mengajar).'}
             </p>
+          </div>
+
+          {/* Jenis Izin (Bisa Ditulis Bebas / Datalist) */}
+          <div>
+            <label className="block text-xs font-bold text-[#1E293B] mb-1.5">
+              Jenis Izin <span className="text-red-500">*</span> <span className="text-[10px] text-[#64748B] font-normal">(Bisa diketik langsung)</span>
+            </label>
+            <input
+              type="text"
+              required
+              list="guru-jenis-izin-options"
+              value={jenisIzin}
+              onChange={(e) => setJenisIzin(e.target.value)}
+              placeholder="Ketik jenis izin (contoh: Sakit, Cuti Tahunan, Acara Keluarga, dll)..."
+              className="w-full bg-[#F8FAFC] border border-[#CBD5E1] focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 rounded-xl px-3 py-2 text-xs font-bold text-[#1E293B] outline-none transition-all"
+            />
+            <datalist id="guru-jenis-izin-options">
+              <option value="Sakit" />
+              <option value="Izin Pribadi / Acara Keluarga" />
+              <option value="Cuti" />
+              <option value="Tugas Luar / Pelatihan" />
+              <option value="Cuti Melahirkan" />
+              <option value="Izin Kuliah / Sidang" />
+              <option value="Dispensasi" />
+            </datalist>
           </div>
 
           {/* Date / Time Picker based on Type */}

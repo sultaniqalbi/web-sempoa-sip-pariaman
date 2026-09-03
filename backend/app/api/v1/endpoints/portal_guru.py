@@ -973,6 +973,7 @@ class IzinGuruRequest(BaseModel):
     tanggal_selesai: Optional[str] = None  # Format: YYYY-MM-DD (untuk tipe HARIAN)
     jam_mulai: Optional[str] = None  # Format: HH:MM (untuk tipe JADWAL)
     jam_selesai: Optional[str] = None  # Format: HH:MM (untuk tipe JADWAL)
+    jenis_izin: Optional[str] = "Izin"
 
 @router.post("/izin-guru")
 async def input_izin_guru(
@@ -999,6 +1000,8 @@ async def input_izin_guru(
     except ValueError:
         mode_enum = ModeAbsensi.OFFLINE
 
+    jenis_kategori = payload.jenis_izin.strip() if payload.jenis_izin and payload.jenis_izin.strip() else ("Izin Harian" if tipe == "HARIAN" else "Izin Jadwal")
+
     if tipe == "HARIAN":
         try:
             start_date = datetime.strptime(payload.tanggal_mulai, "%Y-%m-%d").date()
@@ -1016,7 +1019,6 @@ async def input_izin_guru(
         if end_date < start_date:
             raise HTTPException(status_code=400, detail="Tanggal selesai tidak boleh sebelum tanggal mulai.")
 
-        # Maksimal 30 hari dalam satu kali input
         delta_days = (end_date - start_date).days
         if delta_days > 30:
             raise HTTPException(status_code=400, detail="Rentang izin maksimal 30 hari.")
@@ -1030,7 +1032,7 @@ async def input_izin_guru(
                 func.date(AbsensiLog.waktu) == curr_date
             ).first()
 
-            note_text = f"[Izin Harian] {payload.alasan.strip()}"
+            note_text = f"[{jenis_kategori}] {payload.alasan.strip()}"
             if existing_log:
                 existing_log.status = StatusAbsensi.IZIN
                 existing_log.sumber = "IZIN_HARIAN"
@@ -1064,7 +1066,7 @@ async def input_izin_guru(
             h, m = 8, 0
 
         target_datetime = datetime(target_date.year, target_date.month, target_date.day, h, m)
-        note_text = f"[Izin Jadwal {jam_mulai_str}-{jam_selesai_str} WIB] {payload.alasan.strip()}"
+        note_text = f"[{jenis_kategori} {jam_mulai_str}-{jam_selesai_str} WIB] {payload.alasan.strip()}"
 
         existing_log = db.query(AbsensiLog).filter(
             AbsensiLog.uid == guru.uid,
@@ -1130,6 +1132,8 @@ async def update_guru_izin_portal(
     except Exception:
         raise HTTPException(status_code=400, detail="Format tanggal tidak valid.")
 
+    jenis_kategori = payload.jenis_izin.strip() if payload.jenis_izin and payload.jenis_izin.strip() else ("Izin Harian" if tipe == "HARIAN" else "Izin Jadwal")
+
     if tipe == "JADWAL":
         jam_mulai_str = payload.jam_mulai or "08:00"
         jam_selesai_str = payload.jam_selesai or "10:00"
@@ -1138,11 +1142,11 @@ async def update_guru_izin_portal(
         except Exception:
             h, m = 8, 0
         waktu_target = datetime(target_date.year, target_date.month, target_date.day, h, m).replace(tzinfo=WIB)
-        note_text = f"[Izin Jadwal {jam_mulai_str}-{jam_selesai_str} WIB] {payload.alasan.strip()}"
+        note_text = f"[{jenis_kategori} {jam_mulai_str}-{jam_selesai_str} WIB] {payload.alasan.strip()}"
         log.sumber = "IZIN_JADWAL"
     else:
         waktu_target = datetime(target_date.year, target_date.month, target_date.day, 8, 0).replace(tzinfo=WIB)
-        note_text = f"[Izin Harian] {payload.alasan.strip()}"
+        note_text = f"[{jenis_kategori}] {payload.alasan.strip()}"
         log.sumber = "IZIN_HARIAN"
 
     log.waktu = waktu_target

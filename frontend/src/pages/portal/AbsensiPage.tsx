@@ -1363,18 +1363,26 @@ export const SharedAbsensiPage: React.FC = () => {
 
           <div>
             <label className="block text-[#1E293B] font-bold mb-1">
-              Jenis Izin*
+              Jenis Izin* (Bisa Diketik Langsung)
             </label>
-            <select
+            <input
+              type="text"
+              required
+              list="jenis-izin-options"
               value={izinForm.jenis_izin}
               onChange={(e) => setIzinForm({ ...izinForm, jenis_izin: e.target.value })}
-              className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none"
-            >
-              <option value="Sakit">Sakit</option>
-              <option value="Izin Pribadi">Izin Pribadi / Acara Keluarga</option>
-              <option value="Cuti">Cuti</option>
-              <option value="Tugas Luar">Tugas Luar / Pelatihan</option>
-            </select>
+              placeholder="Ketik jenis izin (contoh: Sakit, Cuti Tahunan, Izin Kuliah, dll)..."
+              className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none text-xs sm:text-sm"
+            />
+            <datalist id="jenis-izin-options">
+              <option value="Sakit" />
+              <option value="Izin Pribadi / Acara Keluarga" />
+              <option value="Cuti" />
+              <option value="Tugas Luar / Pelatihan" />
+              <option value="Cuti Melahirkan" />
+              <option value="Izin Kuliah / Sidang" />
+              <option value="Dispensasi" />
+            </datalist>
           </div>
 
           <div>
