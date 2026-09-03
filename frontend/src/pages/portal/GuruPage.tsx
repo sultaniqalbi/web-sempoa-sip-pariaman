@@ -82,16 +82,13 @@ export const GuruPage: React.FC = () => {
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const lastProcessedTapRef = useRef<string>('');
 
-  const [jamMengajarMulai, setJamMengajarMulai] = useState('08:00');
-  const [jamMengajarSelesai, setJamMengajarSelesai] = useState('10:00');
-
   const [formData, setFormData] = useState({
     uid: '',
     nama: '',
     nama_panggilan: '',
     umur: '',
     kategori_program: 'Sempoa SIP',
-    paket_pengajaran: '08:00 - 10:00',
+    paket_pengajaran: '08:00',
     hari_wajib: 'Senin, Selasa, Kamis',
     whatsapp_guru: '',
     alamat: '',
@@ -324,15 +321,13 @@ export const GuruPage: React.FC = () => {
   const openAddModal = () => {
     lastProcessedTapRef.current = '';
     setEditingGuru(null);
-    setJamMengajarMulai('08:00');
-    setJamMengajarSelesai('10:00');
     setFormData({
       uid: '', // Default Kosong
       nama: '',
       nama_panggilan: '',
       umur: '',
       kategori_program: 'Sempoa SIP',
-      paket_pengajaran: '08:00 - 10:00',
+      paket_pengajaran: '08:00',
       hari_wajib: 'Senin, Selasa, Kamis',
       whatsapp_guru: '',
       alamat: '',
@@ -354,28 +349,11 @@ export const GuruPage: React.FC = () => {
     setEditingGuru(guru);
     const calculatedAge = calculateAge(guru.tanggal_lahir);
 
-    let start = '08:00';
-    let end = '10:00';
+    let jamAjar = '08:00';
     if (guru.paket_pengajaran) {
-      const match = guru.paket_pengajaran.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
-      if (match) {
-        start = match[1];
-        end = match[2];
-      } else {
-        const single = guru.paket_pengajaran.match(/\d{2}:\d{2}/);
-        if (single) {
-          start = single[0];
-          try {
-            const h = parseInt(start.split(':')[0], 10) + 2;
-            end = `${String(h).padStart(2, '0')}:${start.split(':')[1]}`;
-          } catch (e) {
-            end = '10:00';
-          }
-        }
-      }
+      const match = guru.paket_pengajaran.match(/\d{2}:\d{2}/);
+      if (match) jamAjar = match[0];
     }
-    setJamMengajarMulai(start);
-    setJamMengajarSelesai(end);
 
     setFormData({
       uid: guru.uid,
@@ -383,7 +361,7 @@ export const GuruPage: React.FC = () => {
       nama_panggilan: guru.nama_panggilan || '',
       umur: guru.umur !== undefined && guru.umur !== null ? String(guru.umur) : (calculatedAge !== null ? String(calculatedAge) : ''),
       kategori_program: guru.kategori_program || 'Sempoa SIP',
-      paket_pengajaran: `${start} - ${end}`,
+      paket_pengajaran: jamAjar,
       hari_wajib: guru.hari_wajib || 'Senin, Selasa, Kamis',
       whatsapp_guru: guru.whatsapp_guru || '',
       alamat: guru.alamat || '',
@@ -893,82 +871,15 @@ export const GuruPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Jam Mengajar (Pilih Jam) */}
-          <div className="bg-[#FFF8F3] border border-[#FFCC80] rounded-xl p-3 space-y-2.5">
-            <div className="flex items-center justify-between">
-              <label className="block text-xs font-bold text-[#1E293B]">
-                Jam Mengajar <span className="text-red-500">*</span>
-              </label>
-              <span className="text-[11px] text-[#E65100] font-bold">
-                Pilih Jam Mulai & Selesai Mengajar
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[11px] font-bold text-[#64748B] mb-1">
-                  Mulai Mengajar
-                </label>
-                <input
-                  type="time"
-                  required
-                  value={jamMengajarMulai}
-                  onChange={(e) => {
-                    const newMulai = e.target.value;
-                    setJamMengajarMulai(newMulai);
-                    setFormData(prev => ({ ...prev, paket_pengajaran: `${newMulai} - ${jamMengajarSelesai}` }));
-                  }}
-                  className="w-full bg-white border border-[#CBD5E1] rounded-lg p-2.5 text-xs font-bold text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-bold text-[#64748B] mb-1">
-                  Selesai Mengajar
-                </label>
-                <input
-                  type="time"
-                  required
-                  value={jamMengajarSelesai}
-                  onChange={(e) => {
-                    const newSelesai = e.target.value;
-                    setJamMengajarSelesai(newSelesai);
-                    setFormData(prev => ({ ...prev, paket_pengajaran: `${jamMengajarMulai} - ${newSelesai}` }));
-                  }}
-                  className="w-full bg-white border border-[#CBD5E1] rounded-lg p-2.5 text-xs font-bold text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
-                />
-              </div>
-            </div>
-
-            {/* Quick Presets */}
-            <div>
-              <p className="text-[10px] text-[#64748B] font-semibold mb-1.5">Pilihan Jam Cepat:</p>
-              <div className="flex flex-wrap gap-1.5">
-                {[
-                  { label: '08:00 - 10:00', start: '08:00', end: '10:00' },
-                  { label: '10:00 - 12:00', start: '10:00', end: '12:00' },
-                  { label: '13:00 - 15:00', start: '13:00', end: '15:00' },
-                  { label: '14:00 - 16:00', start: '14:00', end: '16:00' },
-                  { label: '15:30 - 17:00', start: '15:30', end: '17:00' },
-                ].map((slot) => (
-                  <button
-                    key={slot.label}
-                    type="button"
-                    onClick={() => {
-                      setJamMengajarMulai(slot.start);
-                      setJamMengajarSelesai(slot.end);
-                      setFormData(prev => ({ ...prev, paket_pengajaran: `${slot.start} - ${slot.end}` }));
-                    }}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
-                      jamMengajarMulai === slot.start && jamMengajarSelesai === slot.end
-                        ? 'bg-[#FF7043] text-white border-[#FF7043] shadow-2xs'
-                        : 'bg-white text-[#475569] border-[#E2E8F0] hover:bg-[#FFF3E0] hover:text-[#E65100]'
-                    }`}
-                  >
-                    {slot.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+          {/* Jam Mengajar */}
+          <div>
+            <label className="block text-[#1E293B] font-bold mb-1">Jam Mengajar</label>
+            <input
+              type="time"
+              value={formData.paket_pengajaran || '08:00'}
+              onChange={(e) => setFormData({ ...formData, paket_pengajaran: e.target.value })}
+              className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
+            />
           </div>
 
           {/* No. WhatsApp Guru* */}

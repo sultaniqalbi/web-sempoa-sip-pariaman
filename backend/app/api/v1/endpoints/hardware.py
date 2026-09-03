@@ -112,8 +112,15 @@ async def post_absensi(request: Request, db: Session = Depends(get_db)):
 
         if duplicate:
             waktu_wib = waktu_dt.astimezone(WIB)
-            # Jika tap di jam 4 sore (16:00) ke atas, hitung sebagai waktu keluar
-            if waktu_wib.hour >= 16:
+            jam_keluar_threshold = 16
+            if getattr(guru, "jam_keluar", None):
+                try:
+                    jam_keluar_threshold = int(guru.jam_keluar.split(":")[0])
+                except Exception:
+                    jam_keluar_threshold = 16
+
+            # Jika tap di jam keluar ke atas (atau jam 16:00 ke atas), hitung sebagai waktu keluar / tap out
+            if waktu_wib.hour >= jam_keluar_threshold or waktu_wib.hour >= 16:
                 # Maksimal waktu keluar jam 18:00
                 if waktu_wib.hour >= 18 and (waktu_wib.hour > 18 or waktu_wib.minute > 0):
                     waktu_keluar_capped = waktu_wib.replace(hour=18, minute=0, second=0, microsecond=0)
@@ -132,6 +139,8 @@ async def post_absensi(request: Request, db: Session = Depends(get_db)):
                     "waktu_keluar": waktu_keluar_capped.isoformat(),
                     "status": "PULANG"
                 })
+                
+                return PlainTextResponse(f"PULANG|{nama_guru}", status_code=200)
                 
             return PlainTextResponse(f"OK|{nama_guru}", status_code=200)
 

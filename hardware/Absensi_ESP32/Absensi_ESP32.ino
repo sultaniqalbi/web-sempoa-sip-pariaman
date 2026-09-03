@@ -539,10 +539,13 @@ void prosesTap(const RtcDateTime& now) {
     String dispNama = cachedNama;
     if (dispNama.length() > 16) dispNama = dispNama.substring(0, 16);
 
-    if (isLate) {
+    if (now.Hour() >= 16) {
+      // Tap Out (Pulang): Tampilkan "sampai jumpa" di baris 1 dan nama di baris 2 (Rata Tengah)
+      cetakDuaBarisCenter("sampai jumpa", dispNama.c_str());
+      triggerBuzzerTerdaftar(); // Bip 1x panjang (non-blocking)
+    } else if (isLate) {
       // TERLAMBAT: Tampilkan TERLAMBAT & Bip 5x
       cetakDuaBarisCenter("TERLAMBAT", dispNama.c_str());
-      // Re-use triggerBuzzerBaru untuk bunyi cepat 5x (perlu penyesuaian jika 5x)
       buzzerBeepCount = 0;
       buzzerBeepTarget = 5;
       buzzerNextToggle = millis();
@@ -837,7 +840,26 @@ void wifiSyncTask(void *pvParameters) {
         String res = kirimKeServer(uidStr, waktuStr, "ONLINE");
         Serial.println("[Queue Push] Respon Server: " + res);
 
-        if (res.startsWith("OK")) {
+        if (res.startsWith("PULANG")) {
+          String nama = "Guru Sempoa";
+          int idxFirst = res.indexOf('|');
+          if (idxFirst != -1) {
+            nama = res.substring(idxFirst + 1);
+            int idxSecond = nama.indexOf('|');
+            if (idxSecond != -1) {
+              nama = nama.substring(0, idxSecond);
+            }
+          }
+          nama.trim();
+          simpanGuruCache(uidStr, nama);
+
+          if (millis() < lcdDisplayUntil) {
+            String dispNama = nama;
+            if (dispNama.length() > 16) dispNama = dispNama.substring(0, 16);
+            cetakDuaBarisCenter("sampai jumpa", dispNama.c_str());
+            triggerBuzzerTerdaftar();
+          }
+        } else if (res.startsWith("OK")) {
           String nama = "Guru Sempoa";
           int idxFirst = res.indexOf('|');
           if (idxFirst != -1) {
@@ -855,17 +877,23 @@ void wifiSyncTask(void *pvParameters) {
             String dispNama = nama;
             if (dispNama.length() > 16) dispNama = dispNama.substring(0, 16);
             
-            bool isLate = cekGuruTerlambat(nama, ambilWaktuValidWIB());
-            if (isLate) {
-              cetakDuaBarisCenter("TERLAMBAT", dispNama.c_str());
-              buzzerBeepCount = 0;
-              buzzerBeepTarget = 5;
-              buzzerNextToggle = millis();
-              buzzerState = false;
-              buzzerDurasi = 0;
-            } else {
-              cetakDuaBarisCenter("Selamat Datang", dispNama.c_str());
+            RtcDateTime nowWib = ambilWaktuValidWIB();
+            if (nowWib.Hour() >= 16) {
+              cetakDuaBarisCenter("sampai jumpa", dispNama.c_str());
               triggerBuzzerTerdaftar();
+            } else {
+              bool isLate = cekGuruTerlambat(nama, nowWib);
+              if (isLate) {
+                cetakDuaBarisCenter("TERLAMBAT", dispNama.c_str());
+                buzzerBeepCount = 0;
+                buzzerBeepTarget = 5;
+                buzzerNextToggle = millis();
+                buzzerState = false;
+                buzzerDurasi = 0;
+              } else {
+                cetakDuaBarisCenter("Selamat Datang", dispNama.c_str());
+                triggerBuzzerTerdaftar();
+              }
             }
           }
         } else if (res.startsWith("KARTU_BARU") || res == "GURU_NOT_FOUND" || res == "TIDAK_TERDAFTAR") {
