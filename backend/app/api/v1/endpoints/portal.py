@@ -22,8 +22,27 @@ async def get_portal_dashboard_stats(
     current_user: User = Depends(admin_or_owner)
 ):
     """
-    Summary Stats untuk Dashboard Shared Admin & Owner
+    Summary Stats untuk Dashboard Shared Admin & Owner (Redis micro-cached 5s)
     """
+    import json
+    from app.core.redis import redis_client
+
+    WIB = timezone(timedelta(hours=7))
+    today_wib = datetime.now(WIB).date()
+    cache_key = f"cache:portal:stats:{today_wib}"
+    role_str = current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role)
+
+    if redis_client:
+        try:
+            raw_cached = redis_client.get(cache_key)
+            if raw_cached:
+                cached_data = json.loads(raw_cached)
+                cached_data["user_name"] = current_user.nama
+                cached_data["role"] = role_str
+                return cached_data
+        except Exception:
+            pass
+
     try:
         total_siswa = db.query(Siswa).filter(Siswa.is_deleted == False).count()
         siswa_aktif = db.query(Siswa).filter(Siswa.is_deleted == False, Siswa.status_spp == StatusSPP.AKTIF).count()
@@ -31,9 +50,6 @@ async def get_portal_dashboard_stats(
         total_guru = db.query(Guru).filter(Guru.is_deleted == False).count()
         total_jadwal = db.query(Jadwal).count()
 
-        WIB = timezone(timedelta(hours=7))
-        today_wib = datetime.now(WIB).date()
-        # Menggunakan datetime range agar kompatibel dengan SQLite dan timezone (daripada func.date)
         from datetime import time
         today_start = datetime.combine(today_wib, time.min).replace(tzinfo=WIB)
         today_end = datetime.combine(today_wib, time.max).replace(tzinfo=WIB)
@@ -49,9 +65,24 @@ async def get_portal_dashboard_stats(
             .filter(PembayaranPeriode.status == StatusPembayaran.PENDING_VERIFIKASI)
             .count()
         )
+
+        stats_payload = {
+            "total_siswa": total_siswa,
+            "siswa_aktif": siswa_aktif,
+            "siswa_expired": siswa_expired,
+            "total_guru": total_guru,
+            "total_jadwal": total_jadwal,
+            "absensi_hari_ini": absensi_hari_ini,
+            "pending_verifikasi": pending_verifikasi,
+        }
+
+        if redis_client:
+            try:
+                redis_client.setex(cache_key, 5, json.dumps(stats_payload))
+            except Exception:
+                pass
+
     except Exception as e:
-        import traceback
-        traceback.print_exc()
         total_siswa = 0
         siswa_aktif = 0
         siswa_expired = 0
