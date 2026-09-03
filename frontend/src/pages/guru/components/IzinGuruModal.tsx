@@ -28,6 +28,8 @@ export const IzinGuruModal: React.FC<IzinGuruModalProps> = ({
 
   const [tipeIzin, setTipeIzin] = useState<'HARIAN' | 'JADWAL'>('HARIAN');
   const [jenisIzin, setJenisIzin] = useState('Sakit');
+  const [isCustomJenisIzin, setIsCustomJenisIzin] = useState(false);
+  const [customJenisIzin, setCustomJenisIzin] = useState('');
   const [alasan, setAlasan] = useState('');
   const [tanggalMulai, setTanggalMulai] = useState(todayStr);
   const [tanggalSelesai, setTanggalSelesai] = useState(todayStr);
@@ -43,22 +45,34 @@ export const IzinGuruModal: React.FC<IzinGuruModalProps> = ({
         const isJadwal = (initialData.sumber || '').includes('JADWAL');
         setTipeIzin(isJadwal ? 'JADWAL' : 'HARIAN');
 
+        let parsedJenis = 'Sakit';
         let rawCatatan = initialData.catatan || '';
         const jadwalMatch = rawCatatan.match(/\[(.*?)\s*(\d{2}:\d{2})-(\d{2}:\d{2}) WIB\]\s*(.*)/i);
         if (jadwalMatch) {
-          setJenisIzin(jadwalMatch[1].replace(/^Izin\s*/i, '') || 'Izin Jadwal');
+          parsedJenis = jadwalMatch[1].replace(/^Izin\s*/i, '') || 'Izin Jadwal';
           setJamMulai(jadwalMatch[2]);
           setJamSelesai(jadwalMatch[3]);
           setAlasan(jadwalMatch[4]);
         } else {
           const generalMatch = rawCatatan.match(/^\[(.*?)\]\s*(.*)$/);
           if (generalMatch) {
-            setJenisIzin(generalMatch[1] || 'Sakit');
+            parsedJenis = generalMatch[1] || 'Sakit';
             setAlasan(generalMatch[2]);
           } else {
-            setJenisIzin('Izin');
+            parsedJenis = 'Izin';
             setAlasan(rawCatatan);
           }
+        }
+
+        const STANDARD_OPTS = ['Sakit', 'Izin Pribadi / Acara Keluarga', 'Cuti', 'Tugas Luar / Pelatihan'];
+        if (STANDARD_OPTS.includes(parsedJenis)) {
+          setIsCustomJenisIzin(false);
+          setCustomJenisIzin('');
+          setJenisIzin(parsedJenis);
+        } else {
+          setIsCustomJenisIzin(true);
+          setCustomJenisIzin(parsedJenis);
+          setJenisIzin(parsedJenis);
         }
 
         if (initialData.waktu) {
@@ -70,6 +84,8 @@ export const IzinGuruModal: React.FC<IzinGuruModalProps> = ({
         // Create mode
         const today = new Date().toISOString().split('T')[0];
         setTipeIzin('HARIAN');
+        setIsCustomJenisIzin(false);
+        setCustomJenisIzin('');
         setJenisIzin('Sakit');
         setAlasan('');
         setTanggalMulai(today);
@@ -114,6 +130,10 @@ export const IzinGuruModal: React.FC<IzinGuruModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isCustomJenisIzin && !customJenisIzin.trim()) {
+      setErrorMsg('Harap isi jenis izin manual Anda.');
+      return;
+    }
     if (!alasan.trim()) {
       setErrorMsg('Harap isi alasan permohonan izin.');
       return;
@@ -135,7 +155,7 @@ export const IzinGuruModal: React.FC<IzinGuruModalProps> = ({
     mutation.mutate({
       alasan: alasan.trim(),
       tipe_izin: tipeIzin,
-      jenis_izin: jenisIzin.trim() || 'Izin',
+      jenis_izin: (isCustomJenisIzin ? customJenisIzin : jenisIzin).trim() || 'Izin',
       tanggal_mulai: tanggalMulai,
       tanggal_selesai: tipeIzin === 'HARIAN' ? tanggalSelesai : undefined,
       jam_mulai: tipeIzin === 'JADWAL' ? jamMulai : undefined,
@@ -259,29 +279,51 @@ export const IzinGuruModal: React.FC<IzinGuruModalProps> = ({
             </p>
           </div>
 
-          {/* Jenis Izin (Bisa Ditulis Bebas / Datalist) */}
+          {/* Jenis Izin (Dropdown + Lainnya) */}
           <div>
             <label className="block text-xs font-bold text-[#1E293B] mb-1.5">
-              Jenis Izin <span className="text-red-500">*</span> <span className="text-[10px] text-[#64748B] font-normal">(Bisa diketik langsung)</span>
+              Jenis Izin <span className="text-red-500">*</span>
             </label>
-            <input
-              type="text"
-              required
-              list="guru-jenis-izin-options"
-              value={jenisIzin}
-              onChange={(e) => setJenisIzin(e.target.value)}
-              placeholder="Ketik jenis izin (contoh: Sakit, Cuti Tahunan, Acara Keluarga, dll)..."
-              className="w-full bg-[#F8FAFC] border border-[#CBD5E1] focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 rounded-xl px-3 py-2 text-xs font-bold text-[#1E293B] outline-none transition-all"
-            />
-            <datalist id="guru-jenis-izin-options">
-              <option value="Sakit" />
-              <option value="Izin Pribadi / Acara Keluarga" />
-              <option value="Cuti" />
-              <option value="Tugas Luar / Pelatihan" />
-              <option value="Cuti Melahirkan" />
-              <option value="Izin Kuliah / Sidang" />
-              <option value="Dispensasi" />
-            </datalist>
+            <select
+              value={isCustomJenisIzin ? 'Lainnya' : jenisIzin}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === 'Lainnya') {
+                  setIsCustomJenisIzin(true);
+                  setJenisIzin(customJenisIzin || '');
+                } else {
+                  setIsCustomJenisIzin(false);
+                  setJenisIzin(val);
+                }
+              }}
+              className="w-full bg-[#F8FAFC] border border-[#CBD5E1] focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 rounded-xl px-3 py-2.5 text-xs font-bold text-[#1E293B] outline-none transition-all"
+            >
+              <option value="Sakit">Sakit</option>
+              <option value="Izin Pribadi / Acara Keluarga">Izin Pribadi / Acara Keluarga</option>
+              <option value="Cuti">Cuti</option>
+              <option value="Tugas Luar / Pelatihan">Tugas Luar / Pelatihan</option>
+              <option value="Lainnya">Lainnya (Tulis Sendiri...)</option>
+            </select>
+
+            {isCustomJenisIzin && (
+              <div className="mt-2 animate-[fadeIn_0.2s_ease-out]">
+                <input
+                  type="text"
+                  required
+                  autoFocus
+                  value={customJenisIzin}
+                  onChange={(e) => {
+                    setCustomJenisIzin(e.target.value);
+                    setJenisIzin(e.target.value);
+                  }}
+                  placeholder="Ketik jenis izin manual (contoh: Cuti Melahirkan, Izin Kuliah, dll)..."
+                  className="w-full bg-white border-2 border-amber-500 rounded-xl px-3 py-2 text-xs font-bold text-[#1E293B] outline-none"
+                />
+                <p className="text-[10px] text-[#64748B] mt-1 italic">
+                  *Ketik jenis izin yang Anda inginkan di atas
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Date / Time Picker based on Type */}

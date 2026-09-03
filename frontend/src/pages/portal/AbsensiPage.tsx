@@ -115,11 +115,13 @@ export const SharedAbsensiPage: React.FC = () => {
   // Guru Izin Modal State
   const [isIzinModalOpen, setIsIzinModalOpen] = useState(false);
   const [editingIzinId, setEditingIzinId] = useState<number | null>(null);
+  const [isCustomJenisIzin, setIsCustomJenisIzin] = useState(false);
+  const [customJenisIzin, setCustomJenisIzin] = useState('');
   const [izinForm, setIzinForm] = useState({
     id_guru: '',
     tanggal_mulai: new Date().toISOString().split('T')[0],
     tanggal_selesai: new Date().toISOString().split('T')[0],
-    jenis_izin: 'Izin',
+    jenis_izin: 'Sakit',
     keterangan: ''
   });
 
@@ -785,6 +787,8 @@ export const SharedAbsensiPage: React.FC = () => {
             <button
               onClick={() => {
                 setEditingIzinId(null);
+                setIsCustomJenisIzin(false);
+                setCustomJenisIzin('');
                 setIzinForm({
                   id_guru: guruList[0]?.id ? String(guruList[0].id) : '',
                   tanggal_mulai: new Date().toISOString().split('T')[0],
@@ -1022,6 +1026,15 @@ export const SharedAbsensiPage: React.FC = () => {
                             ket = match[2];
                           }
                           const tgl = extractLogDate(row.waktu) || new Date().toISOString().split('T')[0];
+
+                          const STANDARD_OPTS = ['Sakit', 'Izin Pribadi / Acara Keluarga', 'Cuti', 'Tugas Luar / Pelatihan'];
+                          if (STANDARD_OPTS.includes(jenis)) {
+                            setIsCustomJenisIzin(false);
+                            setCustomJenisIzin('');
+                          } else {
+                            setIsCustomJenisIzin(true);
+                            setCustomJenisIzin(jenis);
+                          }
 
                           setEditingIzinId(row.id);
                           setIzinForm({
@@ -1363,26 +1376,48 @@ export const SharedAbsensiPage: React.FC = () => {
 
           <div>
             <label className="block text-[#1E293B] font-bold mb-1">
-              Jenis Izin* (Bisa Diketik Langsung)
+              Jenis Izin*
             </label>
-            <input
-              type="text"
-              required
-              list="jenis-izin-options"
-              value={izinForm.jenis_izin}
-              onChange={(e) => setIzinForm({ ...izinForm, jenis_izin: e.target.value })}
-              placeholder="Ketik jenis izin (contoh: Sakit, Cuti Tahunan, Izin Kuliah, dll)..."
-              className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none text-xs sm:text-sm"
-            />
-            <datalist id="jenis-izin-options">
-              <option value="Sakit" />
-              <option value="Izin Pribadi / Acara Keluarga" />
-              <option value="Cuti" />
-              <option value="Tugas Luar / Pelatihan" />
-              <option value="Cuti Melahirkan" />
-              <option value="Izin Kuliah / Sidang" />
-              <option value="Dispensasi" />
-            </datalist>
+            <select
+              value={isCustomJenisIzin ? 'Lainnya' : izinForm.jenis_izin}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === 'Lainnya') {
+                  setIsCustomJenisIzin(true);
+                  setIzinForm({ ...izinForm, jenis_izin: customJenisIzin || '' });
+                } else {
+                  setIsCustomJenisIzin(false);
+                  setIzinForm({ ...izinForm, jenis_izin: val });
+                }
+              }}
+              className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none"
+            >
+              <option value="Sakit">Sakit</option>
+              <option value="Izin Pribadi / Acara Keluarga">Izin Pribadi / Acara Keluarga</option>
+              <option value="Cuti">Cuti</option>
+              <option value="Tugas Luar / Pelatihan">Tugas Luar / Pelatihan</option>
+              <option value="Lainnya">Lainnya (Tulis Sendiri...)</option>
+            </select>
+
+            {isCustomJenisIzin && (
+              <div className="mt-2 animate-[fadeIn_0.2s_ease-out]">
+                <input
+                  type="text"
+                  required
+                  autoFocus
+                  value={customJenisIzin}
+                  onChange={(e) => {
+                    setCustomJenisIzin(e.target.value);
+                    setIzinForm({ ...izinForm, jenis_izin: e.target.value });
+                  }}
+                  placeholder="Ketik jenis izin manual (contoh: Cuti Melahirkan, Izin Kuliah, dll)..."
+                  className="w-full bg-white border-2 border-[#FF7043] rounded-lg p-2.5 text-[#1E293B] font-bold focus:outline-none"
+                />
+                <p className="text-[10px] text-[#64748B] mt-1 italic">
+                  *Ketik jenis izin yang Anda inginkan di atas
+                </p>
+              </div>
+            )}
           </div>
 
           <div>
