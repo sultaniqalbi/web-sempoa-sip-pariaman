@@ -54,19 +54,27 @@ async def read_absensi_list(
     current_user: User = Depends(RoleChecker([UserRole.admin, UserRole.owner, UserRole.guru]))
 ):
     logs = crud_absensi.get_absensi_list(db, skip=skip, limit=limit)
-    gurus = db.query(Guru).filter(Guru.is_deleted == False).all()
-    guru_map = {}
-    for g in gurus:
-        if g.uid:
-            guru_map[g.uid.strip().upper()] = g
-            guru_map[g.uid.strip().upper().replace(" ", "")] = g
+    page_uids = set()
+    for l in logs:
+        if l.uid:
+            u_clean = l.uid.strip().upper()
+            page_uids.add(u_clean)
+            page_uids.add(u_clean.replace(" ", ""))
 
-    siswas = db.query(Siswa).filter(Siswa.is_deleted == False).all()
+    guru_map = {}
     siswa_map = {}
-    for s in siswas:
-        if s.uid:
-            siswa_map[s.uid.strip().upper()] = s
-            siswa_map[s.uid.strip().upper().replace(" ", "")] = s
+    if page_uids:
+        gurus = db.query(Guru).filter(Guru.is_deleted == False, Guru.uid.in_(page_uids)).all()
+        for g in gurus:
+            if g.uid:
+                guru_map[g.uid.strip().upper()] = g
+                guru_map[g.uid.strip().upper().replace(" ", "")] = g
+
+        siswas = db.query(Siswa).filter(Siswa.is_deleted == False, Siswa.uid.in_(page_uids)).all()
+        for s in siswas:
+            if s.uid:
+                siswa_map[s.uid.strip().upper()] = s
+                siswa_map[s.uid.strip().upper().replace(" ", "")] = s
 
     result = []
     
@@ -773,10 +781,28 @@ async def export_absensi_sheets(
     from app.services.google_sheets import send_to_google_sheet
 
     items = db.query(AbsensiLog).order_by(AbsensiLog.waktu.desc()).limit(1000).all()
+
+    # Pre-fetch gurus and siswas into hash maps (eliminates 2000 N+1 queries)
+    gurus = db.query(Guru).filter(Guru.is_deleted == False).all()
+    g_map = {}
+    for g in gurus:
+        if g.uid:
+            g_map[g.uid.strip().upper()] = g
+            g_map[g.uid.strip().upper().replace(" ", "")] = g
+
+    siswas = db.query(Siswa).filter(Siswa.is_deleted == False).all()
+    s_map = {}
+    for s in siswas:
+        if s.uid:
+            s_map[s.uid.strip().upper()] = s
+            s_map[s.uid.strip().upper().replace(" ", "")] = s
+
     rows = [["ID Log", "UID Kartu", "Nama Guru / Pemilik", "Program", "Waktu Tap (WIB)", "Jalur Sinkronisasi", "Status Kehadiran", "Catatan"]]
     for a in items:
-        guru = db.query(Guru).filter((Guru.uid == a.uid) | (func.replace(Guru.uid, " ", "") == a.uid.replace(" ", ""))).first()
-        siswa = db.query(Siswa).filter((Siswa.uid == a.uid) | (func.replace(Siswa.uid, " ", "") == a.uid.replace(" ", ""))).first()
+        clean_u = a.uid.strip().upper() if a.uid else ""
+        nospace_u = clean_u.replace(" ", "")
+        guru = g_map.get(clean_u) or g_map.get(nospace_u)
+        siswa = s_map.get(clean_u) or s_map.get(nospace_u)
         nama = guru.nama if guru else (siswa.nama if siswa else "Kartu Belum Terdaftar")
         prog = guru.kategori_program if guru else (siswa.kategori_program if siswa else "-")
         mode_str = a.mode.value if hasattr(a.mode, 'value') else str(a.mode or "ONLINE")
