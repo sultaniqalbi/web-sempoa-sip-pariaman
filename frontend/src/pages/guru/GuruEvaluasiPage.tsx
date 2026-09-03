@@ -215,17 +215,18 @@ export const GuruEvaluasiPage: React.FC = () => {
 
   const columns = [
     {
-      header: 'ID & Nama Siswa',
-      accessor: (row: any) => (
-        <div>
-          <span className="font-mono text-[#FF7043] font-black text-xs block">{row.siswa.uid}</span>
-          <p className="font-bold text-[#1E293B] text-xs sm:text-sm mt-0.5">{row.siswa.nama}</p>
-          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border mt-1 inline-block ${getProgramBadgeStyle(row.siswa.kategori_program)}`}>
-            {row.siswa.kategori_program}
-          </span>
-        </div>
-      ),
-      className: 'md:w-[200px]'
+      header: 'Nama',
+      accessor: (row: any) => {
+        const namaPanggilan = row.siswa.nama_panggilan?.trim() || (row.siswa.nama ? row.siswa.nama.split(' ')[0] : '-');
+        return (
+          <div className="py-1">
+            <span className="font-extrabold text-[#1E293B] text-xs sm:text-sm capitalize block">
+              {namaPanggilan}
+            </span>
+          </div>
+        );
+      },
+      className: 'md:w-[160px]'
     },
     {
       header: 'Buku Saat Ini',
@@ -388,6 +389,7 @@ export const GuruEvaluasiPage: React.FC = () => {
             const query = q.toLowerCase();
             return (
               (row.siswa.nama || '').toLowerCase().includes(query) ||
+              (row.siswa.nama_panggilan || '').toLowerCase().includes(query) ||
               (row.siswa.uid || '').toLowerCase().includes(query) ||
               (row.siswa.kategori_program || '').toLowerCase().includes(query) ||
               (row.buku?.level_anak || '').toLowerCase().includes(query) ||
