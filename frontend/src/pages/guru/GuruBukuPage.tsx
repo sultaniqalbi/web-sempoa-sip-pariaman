@@ -191,7 +191,7 @@ export const GuruBukuPage: React.FC = () => {
       accessor: (row: BukuItem) => (
         <div className="text-xs text-[#1E293B] font-bold flex items-center gap-1.5">
           <CalendarIcon size={12} className="text-[#64748B]" />
-          <span>{new Date(row.tanggal_mulai).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+          <span>{new Date(row.tanggal_mulai).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
         </div>
       ),
       className: 'md:w-[140px]'
@@ -203,7 +203,7 @@ export const GuruBukuPage: React.FC = () => {
           {row.tanggal_selesai ? (
             <span className="text-[11px] font-bold text-[#16A34A] bg-[#DCFCE7] border border-[#86EFAC] px-2.5 py-0.5 rounded-lg inline-flex items-center gap-1 shadow-2xs">
               <CheckIcon size={11} className="text-[#16A34A]" />
-              <span>{new Date(row.tanggal_selesai).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+              <span>{new Date(row.tanggal_selesai).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
             </span>
           ) : (
             <span className="text-[11px] font-bold text-[#D97706] bg-[#FEF3C7] border border-[#FDE68A] px-2.5 py-0.5 rounded-lg inline-block shadow-2xs">

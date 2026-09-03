@@ -98,7 +98,7 @@ export const OrtuRiwayatPertemuanPage: React.FC = () => {
                       {catatanList.length - idx}
                     </span>
                     <span className="font-black text-[#1E293B]">
-                      Pertemuan {c.tanggal ? new Date(c.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
+                      Pertemuan {c.tanggal ? new Date(c.tanggal).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}
                     </span>
                   </div>
                   <span className="text-[11px] text-[#E65100] font-bold bg-white px-2.5 py-0.5 rounded-full border border-[#FFCC80]">

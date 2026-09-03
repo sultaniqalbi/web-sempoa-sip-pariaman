@@ -291,7 +291,7 @@ export const OrtuProfilePage: React.FC = () => {
                   )}
                 </div>
                 <span className="font-bold text-[#1E293B] text-xs">
-                  {child?.tanggal_lahir ? new Date(child.tanggal_lahir).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
+                  {child?.tanggal_lahir ? new Date(child.tanggal_lahir).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}
                 </span>
               </div>
 

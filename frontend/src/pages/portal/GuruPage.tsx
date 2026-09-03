@@ -859,6 +859,18 @@ export const GuruPage: React.FC = () => {
             </div>
           </div>
 
+          {/* Jam Mengajar */}
+          <div>
+            <label className="block text-[#1E293B] font-bold mb-1">Jam Mengajar</label>
+            <input
+              type="text"
+              value={formData.paket_pengajaran || ''}
+              onChange={(e) => setFormData({ ...formData, paket_pengajaran: e.target.value })}
+              className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
+              placeholder="Contoh: 09:00, 12:00, 15:00"
+            />
+          </div>
+
           {/* No. WhatsApp Guru* */}
           <div>
             <label className="block text-[#1E293B] font-bold mb-1">No. WhatsApp Guru*</label>

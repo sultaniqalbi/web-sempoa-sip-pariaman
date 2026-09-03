@@ -483,7 +483,7 @@ export const SharedPembayaranPage: React.FC = () => {
         const dtStr = row.created_at || '';
         const isUtc = dtStr.endsWith('Z') || dtStr.includes('+');
         const finalDtStr = dtStr ? (isUtc ? dtStr : dtStr + 'Z') : '';
-        const displayDate = finalDtStr ? new Date(finalDtStr).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '-';
+        const displayDate = finalDtStr ? new Date(finalDtStr).toLocaleString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '-';
         return (
           <span className="text-[11px] font-semibold text-[#475569]">
             {displayDate}

@@ -119,7 +119,7 @@ export const OrtuKelasPage: React.FC = () => {
                 <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-[#FFE0B2]/60">
                   <div className="flex items-center gap-1.5 text-[#64748B]">
                     <CalendarIcon size={12} className="text-[#FF7043]" />
-                    <span>Mulai: <strong className="text-[#1E293B]">{b.tanggal_mulai ? new Date(b.tanggal_mulai).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}</strong></span>
+                    <span>Mulai: <strong className="text-[#1E293B]">{b.tanggal_mulai ? new Date(b.tanggal_mulai).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}</strong></span>
                   </div>
                   <div className="text-right text-[#64748B]">
                     <span>Jenis: <strong className="text-[#1E293B]">{b.jenis_buku || 'Buku Paket'}</strong></span>
@@ -166,7 +166,7 @@ export const OrtuKelasPage: React.FC = () => {
                     <span className="text-[10px] text-[#64748B]">({b.kategori_program})</span>
                   </div>
                   <p className="text-[11px] text-[#64748B] mt-0.5">
-                    Kode: <strong>{b.nomor_buku || '-'}</strong> • Selesai: {b.tanggal_selesai ? new Date(b.tanggal_selesai).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
+                    Kode: <strong>{b.nomor_buku || '-'}</strong> • Selesai: {b.tanggal_selesai ? new Date(b.tanggal_selesai).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}
                   </p>
                 </div>
                 <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-[#DCFCE7] text-[#16A34A] border border-[#86EFAC] inline-flex items-center gap-1 shrink-0">

@@ -267,7 +267,7 @@ export const GuruEvaluasiPage: React.FC = () => {
               </span>
               <span className="text-[10px] text-[#64748B] flex items-center gap-1">
                 <CalendarIcon size={10} />
-                {new Date(row.evaluasi.tanggal_evaluasi).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                {new Date(row.evaluasi.tanggal_evaluasi).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })}
               </span>
             </div>
             <p className="text-xs text-[#1E293B] font-medium italic line-clamp-2">

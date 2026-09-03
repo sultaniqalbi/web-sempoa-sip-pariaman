@@ -555,7 +555,7 @@ export const PembayaranOrtuPage: React.FC = () => {
                             const dtStr = pr.created_at || '';
                             const isUtc = dtStr.endsWith('Z') || dtStr.includes('+');
                             const finalDtStr = dtStr ? (isUtc ? dtStr : dtStr + 'Z') : '';
-                            return finalDtStr ? new Date(finalDtStr).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '-';
+                            return finalDtStr ? new Date(finalDtStr).toLocaleString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '-';
                           })()}
                         </p>
                       </td>

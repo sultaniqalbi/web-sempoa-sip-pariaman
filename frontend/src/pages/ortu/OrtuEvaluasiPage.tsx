@@ -100,7 +100,7 @@ export const OrtuEvaluasiPage: React.FC = () => {
                     <p className="text-[11px] text-[#64748B] flex items-center gap-1.5 mt-0.5">
                       <CalendarIcon size={12} className="text-[#94A3B8]" />
                       <span>
-                        {item.tanggal_evaluasi ? new Date(item.tanggal_evaluasi).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
+                        {item.tanggal_evaluasi ? new Date(item.tanggal_evaluasi).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}
                       </span>
                       <span>• Oleh: <strong className="text-[#1E293B]">{item.nama_guru || 'Pengajar Sempoa'}</strong></span>
                     </p>
