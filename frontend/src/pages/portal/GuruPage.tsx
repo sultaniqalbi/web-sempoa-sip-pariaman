@@ -1087,7 +1087,6 @@ export const GuruPage: React.FC = () => {
               </div>
             </div>
           )}
-          </div>
 
           {/* No. WhatsApp Guru* */}
           <div>
