@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
 import { useAuth } from '../../features/auth/useAuth';
@@ -92,6 +92,7 @@ export interface Guru {
   foto_profil?: string;
   jam_masuk?: string;
   jam_keluar?: string;
+  is_deleted?: boolean;
   created_at: string;
 }
 
