@@ -103,11 +103,14 @@ async def post_absensi(request: Request, db: Session = Depends(get_db)):
             "nama": nama_guru
         })
 
-        # Cek duplikasi tap hari ini dalam zona WIB (Idempotency)
+        # Cek duplikasi tap hari ini dalam zona WIB (Idempotency - DB Agnostic)
         today_date = waktu_dt.astimezone(WIB).date()
+        today_start = datetime.combine(today_date, datetime.min.time())
+        today_end = datetime.combine(today_date, datetime.max.time())
         duplicate = db.query(AbsensiLog).filter(
             (AbsensiLog.uid == uid_clean) | (AbsensiLog.uid == matched_uid),
-            func.date(func.timezone('Asia/Jakarta', AbsensiLog.waktu)) == today_date
+            AbsensiLog.waktu >= today_start,
+            AbsensiLog.waktu <= today_end
         ).first()
 
         if duplicate:

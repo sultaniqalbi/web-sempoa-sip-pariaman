@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.models.bukti_transfer import BuktiTransfer, StatusBuktiTransfer
 from app.models.pembayaran_periode import PembayaranPeriode, StatusPembayaran
 from app.models.siswa import Siswa, StatusSPP
+from app.models.keuangan import Keuangan, JenisKeuangan
 
 def get_bukti_transfer(db: Session, proof_id: int) -> Optional[BuktiTransfer]:
     return db.query(BuktiTransfer).filter(BuktiTransfer.id == proof_id).first()
@@ -40,6 +41,19 @@ def approve_bukti_transfer(db: Session, db_proof: BuktiTransfer) -> BuktiTransfe
         pembayaran.status = StatusPembayaran.LUNAS
         pembayaran.due_date = (datetime.utcnow() + timedelta(days=30)).date()
         db.add(pembayaran)
+
+        # Record financial transaction in Keuangan ledger
+        try:
+            keuangan_entry = Keuangan(
+                id_siswa=pembayaran.id_siswa,
+                jenis=JenisKeuangan.PEMBAYARAN_SPP,
+                jumlah=pembayaran.jumlah,
+                tanggal=datetime.now().date(),
+                keterangan=f"Pembayaran SPP periode {pembayaran.periode_bulan} (Bukti #{db_proof.id})"
+            )
+            db.add(keuangan_entry)
+        except Exception:
+            pass
 
         # Reset student quota to full target and set status back to AKTIF for the new 30-day cycle
         siswa = db.query(Siswa).filter(Siswa.id == pembayaran.id_siswa).first()

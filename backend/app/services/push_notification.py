@@ -39,7 +39,7 @@ def send_push_to_user(
     payload = json.dumps({
         "title": title,
         "body": body,
-        "url": url or "/ortu/keuangan",
+        "url": url or "/ortu/pembayaran",
         "icon": icon or "/assets/logo/logo-sempoa-sip.png",
         "badge": "/assets/logo/logo-sempoa-sip.png",
         "timestamp": datetime.utcnow().isoformat()

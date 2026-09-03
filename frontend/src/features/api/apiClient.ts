@@ -32,9 +32,13 @@ apiClient.interceptors.request.use(
         }
       }
     } else if (config.data && typeof config.data === 'object') {
+      const NULLABLE_EMPTY_KEYS = new Set([
+        'id_guru', 'id_siswa', 'id_jadwal', 'id_pembayaran', 'guru_ids', 'siswa_ids',
+        'tanggal_lahir', 'tanggal_masuk', 'jam_masuk', 'jam_keluar', 'foto', 'bio'
+      ]);
       const cleanData = (obj: any) => {
         for (const key in obj) {
-          if (obj[key] === '') {
+          if (obj[key] === '' && (NULLABLE_EMPTY_KEYS.has(key) || key.endsWith('_id') || key.startsWith('id_'))) {
             obj[key] = null;
           } else if (typeof obj[key] === 'object' && obj[key] !== null) {
             cleanData(obj[key]);

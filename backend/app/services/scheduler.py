@@ -66,7 +66,7 @@ def check_and_send_spp_reminders():
                 user_id=ortu_user.id,
                 title="Pengingat SPP - Sempoa SIP Pariaman",
                 body=body_text,
-                url="/ortu/keuangan"
+                url="/ortu/pembayaran"
             )
 
             if result.get("success", 0) > 0:
