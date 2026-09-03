@@ -166,7 +166,36 @@ def on_startup():
                 logger.info("Auto-migration: Ensured bukti_transfer table exists")
         except Exception as bt_e:
             logger.warning(f"Auto-migration for bukti_transfer: {bt_e}")
-                
+
+        # Auto-normalize legacy 'Bulan YYYY' to 'YYYY-MM' in pembayaran_periode
+        try:
+            from app.models.pembayaran_periode import PembayaranPeriode
+            db_norm = SessionLocal()
+            legacy_pays = db_norm.query(PembayaranPeriode).all()
+            bulan_map = {
+                "januari": "01", "january": "01", "februari": "02", "february": "02",
+                "maret": "03", "march": "03", "april": "04", "mei": "05", "may": "05",
+                "juni": "06", "june": "06", "juli": "07", "july": "07",
+                "agustus": "08", "august": "08", "september": "09", "oktober": "10",
+                "october": "10", "november": "11", "desember": "12", "december": "12"
+            }
+            updated = False
+            for p in legacy_pays:
+                if p.periode_bulan and "-" not in p.periode_bulan:
+                    parts = p.periode_bulan.strip().split()
+                    if len(parts) == 2:
+                        m_name = parts[0].lower()
+                        y_str = parts[1]
+                        if m_name in bulan_map and y_str.isdigit() and len(y_str) == 4:
+                            p.periode_bulan = f"{y_str}-{bulan_map[m_name]}"
+                            updated = True
+            if updated:
+                db_norm.commit()
+                logger.info("Auto-migration: Normalized legacy periode_bulan records to YYYY-MM")
+            db_norm.close()
+        except Exception as norm_err:
+            logger.warning(f"Legacy periode_bulan normalization: {norm_err}")
+
         run_seed()
 
         # Start SPP background reminder scheduler

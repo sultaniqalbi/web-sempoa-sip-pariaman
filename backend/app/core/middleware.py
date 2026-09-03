@@ -61,6 +61,18 @@ class GlobalRateLimitMiddleware(BaseHTTPMiddleware):
         return False
 
     async def dispatch(self, request: Request, call_next) -> Response:
+        # Protect against oversized payloads early (> 50MB)
+        content_length = request.headers.get("content-length")
+        if content_length:
+            try:
+                if int(content_length) > 50 * 1024 * 1024:
+                    return JSONResponse(
+                        status_code=413,
+                        content={"detail": "Ukuran payload terlalu besar. Maksimal 50MB."}
+                    )
+            except ValueError:
+                pass
+
         path = request.url.path
 
         # Whitelist safe paths & methods that should bypass global rate limiting
