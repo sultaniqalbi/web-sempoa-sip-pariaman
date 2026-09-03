@@ -169,32 +169,35 @@ export const OrtuLayout: React.FC = () => {
           }
         }
 
-        // 2. Match teachers by each program the child takes
-        childProgs.forEach((cp) => {
-          const cpLower = cp.toLowerCase();
-          const matchingGurus = allGurus.filter((g) => {
-            const gProgs = (g.kategori_program || '').toLowerCase();
-            return gProgs.includes(cpLower) || cpLower.includes(gProgs);
-          });
+        // 2. ONLY if child has NO specific assigned guru, match teachers by program
+        //    If child already has id_guru, we already added the correct teacher above
+        if (!child.id_guru) {
+          childProgs.forEach((cp) => {
+            const cpLower = cp.toLowerCase();
+            const matchingGurus = allGurus.filter((g) => {
+              const gProgs = (g.kategori_program || '').toLowerCase();
+              return gProgs.includes(cpLower) || cpLower.includes(gProgs);
+            });
 
-          matchingGurus.forEach((g) => {
-            if (!seenGuruIds.has(g.id)) {
-              seenGuruIds.add(g.id);
-              relevantTeachers.push({
-                id: g.id,
-                nama: g.nama,
-                nama_panggilan: g.nama_panggilan || g.nama.split(' ')[0] || g.nama,
-                program: cp,
-                no_wa_guru: g.whatsapp_guru || undefined,
-              });
-            } else {
-              const existing = relevantTeachers.find((t) => t.id === g.id);
-              if (existing && !existing.program.includes(cp)) {
-                existing.program += `, ${cp}`;
+            matchingGurus.forEach((g) => {
+              if (!seenGuruIds.has(g.id)) {
+                seenGuruIds.add(g.id);
+                relevantTeachers.push({
+                  id: g.id,
+                  nama: g.nama,
+                  nama_panggilan: g.nama_panggilan || g.nama.split(' ')[0] || g.nama,
+                  program: cp,
+                  no_wa_guru: g.whatsapp_guru || undefined,
+                });
+              } else {
+                const existing = relevantTeachers.find((t) => t.id === g.id);
+                if (existing && !existing.program.includes(cp)) {
+                  existing.program += `, ${cp}`;
+                }
               }
-            }
+            });
           });
-        });
+        }
 
         // Try exact match for child's program + today
         const matchingSchedule = schedules.find(
@@ -203,8 +206,8 @@ export const OrtuLayout: React.FC = () => {
             s.hari?.toLowerCase() === todayName.toLowerCase()
         );
 
-        // Also check if schedule has embedded teachers
-        if (matchingSchedule?.teachers && matchingSchedule.teachers.length > 0) {
+        // Also check if schedule has embedded teachers (only add if not already covered)
+        if (matchingSchedule?.teachers && matchingSchedule.teachers.length > 0 && !child.id_guru) {
           matchingSchedule.teachers.forEach((t) => {
             if (!seenGuruIds.has(t.id)) {
               seenGuruIds.add(t.id);
