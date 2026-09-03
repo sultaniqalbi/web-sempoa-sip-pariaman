@@ -727,7 +727,7 @@ export const GuruPage: React.FC = () => {
                     nextLock 
                       ? 'UID dikunci. Aman dari tap kartu baru.' 
                       : 'Kunci UID dibuka. Anda dapat mengubah UID atau tap kartu baru.',
-                    'info'
+                    'success'
                   );
                 }}
                 className={`p-2.5 rounded-lg border transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0 ${
