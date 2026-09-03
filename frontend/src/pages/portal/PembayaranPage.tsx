@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
 import useAuth from '../../features/auth/useAuth';
@@ -57,7 +58,25 @@ export const SharedPembayaranPage: React.FC = () => {
   const { user } = useAuth();
   const userRole = user?.role || 'admin';
 
-  const [activeTab, setActiveTab] = useState<'reminder' | 'verifikasi'>('reminder');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') === 'verifikasi' ? 'verifikasi' : 'reminder';
+  const [activeTab, setActiveTab] = useState<'reminder' | 'verifikasi'>(initialTab);
+
+  useEffect(() => {
+    const currentTabParam = searchParams.get('tab');
+    if (currentTabParam === 'verifikasi' || currentTabParam === 'reminder') {
+      setActiveTab(currentTabParam);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (newTab: 'reminder' | 'verifikasi') => {
+    setActiveTab(newTab);
+    if (newTab === 'verifikasi') {
+      setSearchParams({ tab: 'verifikasi' });
+    } else {
+      setSearchParams({});
+    }
+  };
   const [selectedWADraft, setSelectedWADraft] = useState<{ name: string; draft: string; wa: string; title: string } | null>(null);
   const [isWADraftModalOpen, setIsWADraftModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -642,7 +661,7 @@ export const SharedPembayaranPage: React.FC = () => {
       {/* Navigation Tabs */}
       <div className="flex border-b border-[#E2E8F0] gap-2">
         <button
-          onClick={() => setActiveTab('reminder')}
+          onClick={() => handleTabChange('reminder')}
           className={`flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-colors cursor-pointer ${
             activeTab === 'reminder'
               ? 'border-[#FF7043] text-[#FF7043] bg-[#FFF3E0]/50'
@@ -653,7 +672,7 @@ export const SharedPembayaranPage: React.FC = () => {
           <span>Reminder & Status SPP Semua Siswa ({reminderList.length})</span>
         </button>
         <button
-          onClick={() => setActiveTab('verifikasi')}
+          onClick={() => handleTabChange('verifikasi')}
           className={`flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition-colors cursor-pointer ${
             activeTab === 'verifikasi'
               ? 'border-[#FF7043] text-[#FF7043] bg-[#FFF3E0]/50'

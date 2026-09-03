@@ -196,6 +196,20 @@ def on_startup():
         except Exception as norm_err:
             logger.warning(f"Legacy periode_bulan normalization: {norm_err}")
 
+        # Clean up orphan PENDING_VERIFIKASI records that have no BuktiTransfer attached
+        try:
+            with engine.connect() as conn:
+                conn.execute(text("""
+                    UPDATE pembayaran_periode
+                    SET status = 'MENUNGGAK'
+                    WHERE status = 'PENDING_VERIFIKASI'
+                      AND id NOT IN (SELECT DISTINCT id_pembayaran FROM bukti_transfer);
+                """))
+                conn.commit()
+                logger.info("Auto-migration: Reconciled orphan PENDING_VERIFIKASI records")
+        except Exception as cl_e:
+            logger.debug(f"Orphan payment cleanup notice: {cl_e}")
+
         run_seed()
 
         # Start SPP background reminder scheduler

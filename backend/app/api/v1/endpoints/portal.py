@@ -11,6 +11,7 @@ from app.models.guru import Guru
 from app.models.jadwal import Jadwal
 from app.models.absensi_log import AbsensiLog, StatusAbsensi
 from app.models.pembayaran_periode import PembayaranPeriode, StatusPembayaran
+from app.models.bukti_transfer import BuktiTransfer, StatusBuktiTransfer
 
 router = APIRouter()
 admin_or_owner = RoleChecker([UserRole.admin, UserRole.owner])
@@ -61,8 +62,8 @@ async def get_portal_dashboard_stats(
         )
 
         pending_verifikasi = (
-            db.query(PembayaranPeriode)
-            .filter(PembayaranPeriode.status == StatusPembayaran.PENDING_VERIFIKASI)
+            db.query(BuktiTransfer)
+            .filter(BuktiTransfer.status == StatusBuktiTransfer.pending)
             .count()
         )
 

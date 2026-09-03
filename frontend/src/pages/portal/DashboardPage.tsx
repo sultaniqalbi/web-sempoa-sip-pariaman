@@ -126,7 +126,7 @@ export const DashboardPage: React.FC = () => {
       meta: 'Bukti Transfer Pending',
       metaColor: '#1976D2',
       icon: 'verifikasi',
-      onClick: () => navigate(role === 'owner' ? '/owner/pembayaran' : '/admin/pembayaran'),
+      onClick: () => navigate(role === 'owner' ? '/owner/pembayaran?tab=verifikasi' : '/admin/pembayaran?tab=verifikasi'),
     },
   ];
 
