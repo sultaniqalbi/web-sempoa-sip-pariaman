@@ -80,6 +80,8 @@ def on_startup():
             "ALTER TABLE guru ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;",
             "ALTER TABLE guru ADD COLUMN IF NOT EXISTS jam_masuk VARCHAR(5);",
             "ALTER TABLE guru ADD COLUMN IF NOT EXISTS jam_keluar VARCHAR(5);",
+            "UPDATE guru SET jam_masuk = '07:00' WHERE jam_masuk IS NULL;",
+            "UPDATE guru SET jam_keluar = '17:00' WHERE jam_keluar IS NULL;",
             "ALTER TABLE absensi_log ADD COLUMN IF NOT EXISTS kategori_program VARCHAR(100);",
             "ALTER TABLE absensi_log ADD COLUMN IF NOT EXISTS sumber VARCHAR(50);",
             "ALTER TABLE absensi_log ADD COLUMN IF NOT EXISTS catatan TEXT;",
