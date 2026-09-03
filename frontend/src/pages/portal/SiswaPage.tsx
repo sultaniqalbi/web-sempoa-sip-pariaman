@@ -1561,20 +1561,22 @@ export const SiswaPage: React.FC = () => {
                       </p>
                     </div>
                   </div>
-                  <span className="text-[10px] text-[#BF360C] font-extrabold bg-white/90 px-2.5 py-1 rounded-lg border border-[#FFD54F] shadow-2xs">
-                    {selectedList.length > 1 ? `${selectedList.length} Program Terpilih` : 'Sinkronisasi Otomatis'}
-                  </span>
+                  {selectedList.length > 1 && (
+                    <span className="text-[10px] text-[#BF360C] font-extrabold bg-white/90 px-2.5 py-1 rounded-lg border border-[#FFD54F] shadow-2xs">
+                      {selectedList.length} Program Terpilih
+                    </span>
+                  )}
                 </div>
 
                 <div className="space-y-2.5 pt-1">
                   {selectedList.map((prog, idx) => {
                     const filteredTeachers = (guruList as any[]).filter((g: any) => {
-                      const teacherProgs = (g.kategori_program || '').toLowerCase();
-                      return (
-                        teacherProgs.includes(prog.toLowerCase()) ||
-                        teacherProgs.includes('sempoa') ||
-                        teacherProgs.includes('umum')
-                      );
+                      const teacherProgs = (g.kategori_program || '')
+                        .toLowerCase()
+                        .split(/[,\/]/)
+                        .map((p: string) => p.trim());
+                      const progLower = prog.toLowerCase().trim();
+                      return teacherProgs.some((tp: string) => tp.includes(progLower) || progLower.includes(tp));
                     });
 
                     return (
@@ -1631,12 +1633,12 @@ export const SiswaPage: React.FC = () => {
                     Buku & Level Pembelajaran Siswa
                   </h4>
                   <p className="text-[11px] text-[#8D6E63] font-medium mt-0.5">
-                    Otomatis tersambung dan tersinkronisasi ke menu Data Buku
+                    Terhubung langsung ke menu Data Buku
                   </p>
                 </div>
               </div>
               <span className="text-[10px] text-[#BF360C] font-extrabold bg-white/90 px-2.5 py-1 rounded-lg border border-[#FFD54F] shadow-2xs">
-                Sinkron Data Buku
+                Data Buku
               </span>
             </div>
 

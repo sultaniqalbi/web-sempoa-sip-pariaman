@@ -27,6 +27,7 @@ export interface StatItem {
   icon: 'murid' | 'pengajar' | 'presensi' | 'verifikasi';
   aktif?: number;
   expired?: number;
+  onClick?: () => void;
 }
 
 export interface FeatureItem {
@@ -261,7 +262,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             return (
               <div
                 key={item.id || item.title}
-                className="h-[100px] bg-white border border-[#E0E0E0] rounded-[12px] p-4 pl-3 shadow-[0_1px_3px_rgba(0,0,0,0.12),0_1px_2px_rgba(0,0,0,0.24)] hover:bg-[#F5F5F5] hover:shadow-[0_3px_6px_rgba(0,0,0,0.16),0_3px_6px_rgba(0,0,0,0.23)] cursor-pointer transition-all duration-150 flex items-center gap-[12px]"
+                onClick={item.onClick}
+                className="h-[100px] bg-white border border-[#E0E0E0] rounded-[12px] p-4 pl-3 shadow-[0_1px_3px_rgba(0,0,0,0.12),0_1px_2px_rgba(0,0,0,0.24)] hover:bg-[#F5F5F5] hover:shadow-[0_3px_6px_rgba(0,0,0,0.16),0_3px_6px_rgba(0,0,0,0.23)] cursor-pointer transition-all duration-150 flex items-center gap-[12px] active:scale-[0.98]"
               >
                 <div className="shrink-0 flex items-center justify-center">
                   {renderStatIcon(item.icon)}

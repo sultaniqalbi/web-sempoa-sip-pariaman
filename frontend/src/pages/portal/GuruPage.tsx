@@ -10,7 +10,7 @@ import PageHeader from '../../components/PageHeader';
 import EmptyState from '../../components/EmptyState';
 import DayPicker from '../../components/DayPicker';
 import { PhotoModal } from '../../components/PhotoModal';
-import { PengajarIcon, TrashIcon, CheckIcon } from '../../components/SvgIcons';
+import { PengajarIcon, TrashIcon, CheckIcon, PencilIcon } from '../../components/SvgIcons';
 import DateInput from '../../components/DateInput';
 
 const AVAILABLE_PROGRAMS = ['Sempoa SIP', 'Fonem', 'Tahfidz', 'Bahasa Inggris', 'TK', 'Admin', 'Direktur', 'Kepala Sekolah'];
@@ -81,6 +81,10 @@ export const GuruPage: React.FC = () => {
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: number; nama: string } | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const lastProcessedTapRef = useRef<string>('');
+  const [isUidLocked, setIsUidLocked] = useState<boolean>(false);
+
+  const [jamMengajarMulai, setJamMengajarMulai] = useState('08:00');
+  const [jamMengajarSelesai, setJamMengajarSelesai] = useState('10:00');
 
   const [formData, setFormData] = useState({
     uid: '',
@@ -88,7 +92,7 @@ export const GuruPage: React.FC = () => {
     nama_panggilan: '',
     umur: '',
     kategori_program: 'Sempoa SIP',
-    paket_pengajaran: '08:00',
+    paket_pengajaran: '08:00 - 10:00',
     hari_wajib: 'Senin, Selasa, Kamis',
     whatsapp_guru: '',
     alamat: '',
@@ -116,6 +120,7 @@ export const GuruPage: React.FC = () => {
 
   // Cek tap kartu terakhir dari endpoint backend secara realtime
   const checkLatestTap = async () => {
+    if (isUidLocked) return;
     try {
       const res = await apiClient.get('/last-tap');
       if (res.data?.uid) {
@@ -145,6 +150,7 @@ export const GuruPage: React.FC = () => {
 
   // Realtime card tap listener via WebSocket
   useEffect(() => {
+    if (isUidLocked) return;
     if (lastEvent?.event === 'CARD_TAP' && lastEvent.data?.uid) {
       const tappedUid = String(lastEvent.data.uid).trim().toUpperCase();
       const tapKey = `${tappedUid}_${lastEvent.data.waktu || ''}`;
@@ -155,11 +161,11 @@ export const GuruPage: React.FC = () => {
         showToast(`Kartu RFID terdeteksi Realtime: ${tappedUid}`, 'success');
       }
     }
-  }, [lastEvent, isAddModalOpen]);
+  }, [lastEvent, isAddModalOpen, isUidLocked]);
 
   // Active Realtime Poller (1 detik) saat Modal Tambah / Edit Guru terbuka (failsafe jika WebSocket terputus)
   useEffect(() => {
-    if (!isAddModalOpen) return;
+    if (!isAddModalOpen || isUidLocked) return;
 
     checkLatestTap();
     const intervalId = setInterval(() => {
@@ -167,7 +173,7 @@ export const GuruPage: React.FC = () => {
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [isAddModalOpen]);
+  }, [isAddModalOpen, isUidLocked]);
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -321,13 +327,16 @@ export const GuruPage: React.FC = () => {
   const openAddModal = () => {
     lastProcessedTapRef.current = '';
     setEditingGuru(null);
+    setIsUidLocked(false);
+    setJamMengajarMulai('08:00');
+    setJamMengajarSelesai('10:00');
     setFormData({
       uid: '', // Default Kosong
       nama: '',
       nama_panggilan: '',
       umur: '',
       kategori_program: 'Sempoa SIP',
-      paket_pengajaran: '08:00',
+      paket_pengajaran: '08:00 - 10:00',
       hari_wajib: 'Senin, Selasa, Kamis',
       whatsapp_guru: '',
       alamat: '',
@@ -347,13 +356,31 @@ export const GuruPage: React.FC = () => {
   const openEditModal = (guru: Guru) => {
     lastProcessedTapRef.current = guru.uid ? `${guru.uid}_initial` : '';
     setEditingGuru(guru);
+    setIsUidLocked(Boolean(guru.uid && guru.uid.trim()));
     const calculatedAge = calculateAge(guru.tanggal_lahir);
 
-    let jamAjar = '08:00';
+    let start = '08:00';
+    let end = '10:00';
     if (guru.paket_pengajaran) {
-      const match = guru.paket_pengajaran.match(/\d{2}:\d{2}/);
-      if (match) jamAjar = match[0];
+      const match = guru.paket_pengajaran.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
+      if (match) {
+        start = match[1];
+        end = match[2];
+      } else {
+        const single = guru.paket_pengajaran.match(/\d{2}:\d{2}/);
+        if (single) {
+          start = single[0];
+          try {
+            const h = parseInt(start.split(':')[0], 10) + 2;
+            end = `${String(h).padStart(2, '0')}:${start.split(':')[1]}`;
+          } catch (e) {
+            end = '10:00';
+          }
+        }
+      }
     }
+    setJamMengajarMulai(start);
+    setJamMengajarSelesai(end);
 
     setFormData({
       uid: guru.uid,
@@ -361,7 +388,7 @@ export const GuruPage: React.FC = () => {
       nama_panggilan: guru.nama_panggilan || '',
       umur: guru.umur !== undefined && guru.umur !== null ? String(guru.umur) : (calculatedAge !== null ? String(calculatedAge) : ''),
       kategori_program: guru.kategori_program || 'Sempoa SIP',
-      paket_pengajaran: jamAjar,
+      paket_pengajaran: `${start} - ${end}`,
       hari_wajib: guru.hari_wajib || 'Senin, Selasa, Kamis',
       whatsapp_guru: guru.whatsapp_guru || '',
       alamat: guru.alamat || '',
@@ -635,44 +662,91 @@ export const GuruPage: React.FC = () => {
             <div className="flex items-center justify-between mb-1">
               <label className="block text-[#1E293B] font-bold">UID Kartu RFID Guru*</label>
               <div className="flex items-center gap-1.5">
-                <span className="relative flex h-2 w-2">
-                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${formData.uid ? 'bg-[#4CAF50]' : 'bg-[#FF7043]'}`}></span>
-                  <span className={`relative inline-flex rounded-full h-2 w-2 ${formData.uid ? 'bg-[#4CAF50]' : 'bg-[#FF7043]'}`}></span>
-                </span>
-                <span className={`text-[10px] font-bold ${formData.uid ? 'text-[#2E7D32]' : 'text-[#E65100]'}`}>
-                  {formData.uid ? 'Kartu Terdeteksi' : 'Mode Bersiap Tap Kartu'}
-                </span>
+                {isUidLocked ? (
+                  <span className="text-[10px] font-bold text-[#E65100] bg-[#FFF3E0] px-2 py-0.5 rounded-full border border-[#FFCC80] flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#E65100]"></span>
+                    UID Terkunci (Aman)
+                  </span>
+                ) : (
+                  <>
+                    <span className="relative flex h-2 w-2">
+                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${formData.uid ? 'bg-[#4CAF50]' : 'bg-[#FF7043]'}`}></span>
+                      <span className={`relative inline-flex rounded-full h-2 w-2 ${formData.uid ? 'bg-[#4CAF50]' : 'bg-[#FF7043]'}`}></span>
+                    </span>
+                    <span className={`text-[10px] font-bold ${formData.uid ? 'text-[#2E7D32]' : 'text-[#E65100]'}`}>
+                      {formData.uid ? 'Kartu Terdeteksi' : 'Mode Bersiap Tap Kartu'}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
-            <div className="relative">
-              <input
-                type="text"
-                required
-                value={formData.uid}
-                onChange={(e) => setFormData({ ...formData, uid: e.target.value.toUpperCase() })}
-                className={`w-full bg-[#F1F5F9] border rounded-lg p-2.5 pr-8 text-[#1E293B] font-mono tracking-wider transition-all focus:outline-none ${
-                  formData.uid
-                    ? 'border-[#4CAF50] bg-[#E8F5E9]/40 text-[#1B5E20] font-bold ring-1 ring-[#4CAF50]'
-                    : 'border-[#E2E8F0] focus:border-[#FF7043]'
+
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  required
+                  readOnly={isUidLocked}
+                  value={formData.uid}
+                  onChange={(e) => {
+                    if (!isUidLocked) {
+                      setFormData({ ...formData, uid: e.target.value.toUpperCase() });
+                    }
+                  }}
+                  className={`w-full border rounded-lg p-2.5 pr-8 font-mono tracking-wider transition-all focus:outline-none ${
+                    isUidLocked
+                      ? 'bg-[#F1F5F9] border-[#CBD5E1] text-[#64748B] cursor-not-allowed select-none'
+                      : formData.uid
+                      ? 'border-[#4CAF50] bg-[#E8F5E9]/40 text-[#1B5E20] font-bold ring-1 ring-[#4CAF50]'
+                      : 'bg-[#F1F5F9] border-[#E2E8F0] text-[#1E293B] focus:border-[#FF7043]'
+                  }`}
+                  placeholder={isUidLocked ? "UID Terkunci. Tekan tombol pensil untuk mengedit..." : "Tempelkan kartu RFID pada alat atau ketik manual..."}
+                />
+                {!isUidLocked && formData.uid && (
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, uid: '' })}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#757575] hover:text-[#D32F2F] p-1 rounded cursor-pointer transition-colors"
+                    title="Hapus / Ganti UID"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+
+              {/* Tombol Icon Pensil SVG untuk Lock/Unlock UID */}
+              <button
+                type="button"
+                onClick={() => {
+                  const nextLock = !isUidLocked;
+                  setIsUidLocked(nextLock);
+                  showToast(
+                    nextLock 
+                      ? 'UID dikunci. Aman dari tap kartu baru.' 
+                      : 'Kunci UID dibuka. Anda dapat mengubah UID atau tap kartu baru.',
+                    'info'
+                  );
+                }}
+                className={`p-2.5 rounded-lg border transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0 ${
+                  isUidLocked
+                    ? 'bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#E65100] border-[#FFCC80] shadow-2xs'
+                    : 'bg-[#4CAF50] hover:bg-[#43A047] text-white border-[#4CAF50] shadow-sm'
                 }`}
-                placeholder="Tempelkan kartu RFID pada alat atau ketik manual..."
-              />
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, uid: '' })}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#757575] hover:text-[#D32F2F] p-1 rounded cursor-pointer transition-colors"
-                  title="Hapus / Ganti UID"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
-                </button>
+                title={isUidLocked ? 'Buka Kunci untuk Mengubah UID' : 'Kunci UID'}
+              >
+                <PencilIcon size={16} />
+                <span className="text-[11px] font-bold hidden sm:inline">
+                  {isUidLocked ? 'Ubah UID' : 'Kunci'}
+                </span>
+              </button>
             </div>
             <p className="text-[10px] text-[#64748B] mt-1">
-              {formData.uid
-                ? 'UID otomatis terisi dari hasil tap kartu di alat RFID. Anda juga dapat mengeditnya secara manual.'
-                : 'Silakan tap kartu baru di alat pembaca (ESP32) atau ketik kode UID secara manual.'}
+              {isUidLocked 
+                ? 'UID telah disimpan dan dikunci otomatis agar tidak tertimpa tap kartu lain. Klik icon pensil jika ingin mengganti.'
+                : 'UID otomatis terisi dari hasil tap kartu di alat RFID. Anda juga dapat mengetiknya secara manual.'}
             </p>
           </div>
 
@@ -871,15 +945,34 @@ export const GuruPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Jam Mengajar */}
-          <div>
-            <label className="block text-[#1E293B] font-bold mb-1">Jam Mengajar</label>
-            <input
-              type="time"
-              value={formData.paket_pengajaran || '08:00'}
-              onChange={(e) => setFormData({ ...formData, paket_pengajaran: e.target.value })}
-              className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
-            />
+          {/* Jam Mengajar (Mulai & Selesai) */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">Jam Mulai Mengajar</label>
+              <input
+                type="time"
+                value={jamMengajarMulai}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setJamMengajarMulai(val);
+                  setFormData(prev => ({ ...prev, paket_pengajaran: `${val} - ${jamMengajarSelesai}` }));
+                }}
+                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">Jam Selesai Mengajar</label>
+              <input
+                type="time"
+                value={jamMengajarSelesai}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setJamMengajarSelesai(val);
+                  setFormData(prev => ({ ...prev, paket_pengajaran: `${jamMengajarMulai} - ${val}` }));
+                }}
+                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
+              />
+            </div>
           </div>
 
           {/* No. WhatsApp Guru* */}

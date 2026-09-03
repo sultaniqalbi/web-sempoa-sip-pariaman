@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../../features/api/apiClient';
 import useAuth from '../../features/auth/useAuth';
+import { useRealtime } from '../../features/realtime/RealtimeContext';
 import AdminDashboard, { StatItem, FeatureItem } from '../../components/AdminDashboard';
 import { Modal } from '../../components/Modal';
 
@@ -21,6 +22,7 @@ interface DashboardStats {
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { lastEvent } = useRealtime();
 
   const { data: statsData, isLoading, error, refetch } = useQuery<DashboardStats>({
     queryKey: ['portal', 'dashboard'],
@@ -29,8 +31,16 @@ export const DashboardPage: React.FC = () => {
       return response.data;
     },
     retry: 2,
-    staleTime: 30000,
+    staleTime: 2000,
+    refetchInterval: 3000,
   });
+
+  // Realtime instant refresh saat ada event
+  useEffect(() => {
+    if (lastEvent) {
+      refetch();
+    }
+  }, [lastEvent, refetch]);
 
   const [isRekapModalOpen, setIsRekapModalOpen] = useState(false);
   const [selectedBulan, setSelectedBulan] = useState(new Date().toISOString().substring(0, 7));
@@ -93,12 +103,14 @@ export const DashboardPage: React.FC = () => {
       aktif: statsData?.siswa_aktif || 0,
       expired: statsData?.siswa_expired || 0,
       icon: 'murid',
+      onClick: () => navigate(role === 'owner' ? '/owner/siswa' : '/admin/siswa'),
     },
     {
       title: 'Tenaga Pengajar',
       value: statsData?.total_guru || 0,
       meta: 'Pengajar Terdaftar',
       icon: 'pengajar',
+      onClick: () => navigate(role === 'owner' ? '/owner/guru' : '/admin/guru'),
     },
     {
       title: 'Presensi Hari Ini',
@@ -106,6 +118,7 @@ export const DashboardPage: React.FC = () => {
       meta: 'Presensi Guru & Siswa',
       metaColor: '#FF7043',
       icon: 'presensi',
+      onClick: () => navigate(role === 'owner' ? '/owner/absensi' : '/admin/absensi'),
     },
     {
       title: 'Verifikasi Transfer',
@@ -113,6 +126,7 @@ export const DashboardPage: React.FC = () => {
       meta: 'Bukti Transfer Pending',
       metaColor: '#1976D2',
       icon: 'verifikasi',
+      onClick: () => navigate(role === 'owner' ? '/owner/pembayaran' : '/admin/pembayaran'),
     },
   ];
 

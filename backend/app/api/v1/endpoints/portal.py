@@ -31,10 +31,11 @@ async def get_portal_dashboard_stats(
         total_guru = db.query(Guru).count()
         total_jadwal = db.query(Jadwal).count()
 
-        today = datetime.utcnow().date()
+        WIB = timezone(timedelta(hours=7))
+        today_wib = datetime.now(WIB).date()
         absensi_hari_ini = (
             db.query(AbsensiLog)
-            .filter(func.date(AbsensiLog.waktu) == today)
+            .filter(func.date(func.timezone('Asia/Jakarta', AbsensiLog.waktu)) == today_wib)
             .count()
         )
 
