@@ -16,7 +16,6 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String(100), unique=True, nullable=False, index=True)
     password = Column(String(255), nullable=False)
-    plain_password = Column(String(100), nullable=True)  # Remembered password for WhatsApp credential push
     role = Column(SQLEnum(UserRole, name="user_role_enum"), nullable=False)
     nama = Column(String(100), nullable=False)
     bio = Column(Text, nullable=True)

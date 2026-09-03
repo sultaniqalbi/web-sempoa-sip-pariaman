@@ -71,7 +71,6 @@ def on_startup():
             "ALTER TABLE siswa ADD COLUMN IF NOT EXISTS id_guru INTEGER;",
             "ALTER TABLE siswa ADD COLUMN IF NOT EXISTS kuota_program TEXT;",
             "ALTER TABLE siswa ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;",
-            "ALTER TABLE users ADD COLUMN IF NOT EXISTS plain_password VARCHAR(100);",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS uid_terhubung VARCHAR(50);",
             "ALTER TABLE jadwal ADD COLUMN IF NOT EXISTS guru_ids VARCHAR(255);",
             "ALTER TABLE jadwal ADD COLUMN IF NOT EXISTS siswa_ids VARCHAR(500);",
@@ -221,7 +220,10 @@ async def health_check(db=Depends(get_db)):
         return {"status": "ok", "database": "connected"}
     except Exception as e:
         logger.error(f"Database health check failed: {e}")
-        return {"status": "degraded", "database": "disconnected", "error": str(e)}, 500
+        return JSONResponse(
+            status_code=500,
+            content={"status": "degraded", "database": "disconnected", "error": str(e)}
+        )
 
 from app.api.v1.endpoints.hardware import router as hardware_router
 from app.api.v1.router import api_router

@@ -39,7 +39,7 @@ async def read_guru_list(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    return db.query(Guru).offset(skip).limit(limit).all()
+    return db.query(Guru).filter(Guru.is_deleted == False).offset(skip).limit(limit).all()
 
 @router.get("/{id}", response_model=GuruResponse)
 async def read_guru(
@@ -111,7 +111,6 @@ async def create_new_guru(
         user_guru = User(
             email=email_candidate,
             password=hashed_password,
-            plain_password=plain_password,
             role=UserRole.guru,
             nama=guru_in.nama,
             uid_terhubung=str(new_guru.id)
@@ -308,7 +307,6 @@ async def reset_guru_password(
         user_guru = User(
             email=email_candidate,
             password=hashed_pwd,
-            plain_password=new_pwd,
             role=UserRole.guru,
             nama=db_guru.nama,
             uid_terhubung=str(db_guru.id)
@@ -316,7 +314,6 @@ async def reset_guru_password(
         db.add(user_guru)
     else:
         user_guru.password = hashed_pwd
-        user_guru.plain_password = new_pwd
         user_guru.uid_terhubung = str(db_guru.id)
         if not user_guru.nama:
             user_guru.nama = db_guru.nama
@@ -361,14 +358,12 @@ async def push_whatsapp_guru(
     ).first()
     guru_email = user_guru.email if user_guru else f"guru_{guru.id}@sempoasippariaman.com"
 
-    # Always remember and reuse the exact password. If legacy account doesn't have plain_password, initialize once and persist it.
+    # Generate a fresh secure temporary password upon WhatsApp dispatch
     if user_guru:
-        if not user_guru.plain_password:
-            initial_pwd = generate_random_password(10)
-            user_guru.password = get_password_hash(initial_pwd)
-            user_guru.plain_password = initial_pwd
-            db.commit()
-        guru_sandi = user_guru.plain_password
+        new_pwd = generate_random_password(10)
+        user_guru.password = get_password_hash(new_pwd)
+        db.commit()
+        guru_sandi = new_pwd
     else:
         guru_sandi = "sempoa123"
 
@@ -420,7 +415,7 @@ async def export_guru_sheets(
 ):
     from app.services.google_sheets import send_to_google_sheet
 
-    guru_list = db.query(Guru).all()
+    guru_list = db.query(Guru).filter(Guru.is_deleted == False).all()
     rows = [["UID (RFID)", "Nama Guru", "Kategori Program", "Hari Wajib Mengajar", "No WhatsApp"]]
     for g in guru_list:
         rows.append([g.uid or "-", g.nama, g.kategori_program or "-", g.hari_wajib or "-", g.whatsapp_guru or "-"])

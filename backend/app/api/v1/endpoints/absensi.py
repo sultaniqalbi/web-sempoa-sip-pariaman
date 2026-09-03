@@ -54,7 +54,7 @@ async def read_absensi_list(
     current_user: User = Depends(RoleChecker([UserRole.admin, UserRole.owner, UserRole.guru]))
 ):
     logs = crud_absensi.get_absensi_list(db, skip=skip, limit=limit)
-    gurus = db.query(Guru).all()
+    gurus = db.query(Guru).filter(Guru.is_deleted == False).all()
     guru_map = {}
     for g in gurus:
         if g.uid:
@@ -178,7 +178,7 @@ async def read_izin_guru_list(
     current_user: User = Depends(RoleChecker([UserRole.admin, UserRole.owner]))
 ):
     logs = db.query(AbsensiLog).filter(AbsensiLog.status == StatusAbsensi.IZIN).order_by(AbsensiLog.waktu.desc()).offset(skip).limit(limit).all()
-    gurus = db.query(Guru).all()
+    gurus = db.query(Guru).filter(Guru.is_deleted == False).all()
     guru_map = {}
     for g in gurus:
         if g.uid:
@@ -218,7 +218,7 @@ async def get_laporan_absensi_guru(
     """
     Laporan Tap RFID Guru + Auto-Detect Guru Tidak Hadir (Zona WIB)
     """
-    gurus = db.query(Guru).all()
+    gurus = db.query(Guru).filter(Guru.is_deleted == False).all()
     today_wib = datetime.now(WIB)
     today_str = today_wib.strftime("%Y-%m-%d")
     today_day_name = today_wib.strftime("%A") # e.g. 'Monday'

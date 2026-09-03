@@ -33,9 +33,14 @@ async def get_portal_dashboard_stats(
 
         WIB = timezone(timedelta(hours=7))
         today_wib = datetime.now(WIB).date()
+        # Menggunakan datetime range agar kompatibel dengan SQLite dan timezone (daripada func.date)
+        from datetime import time
+        today_start = datetime.combine(today_wib, time.min).replace(tzinfo=WIB)
+        today_end = datetime.combine(today_wib, time.max).replace(tzinfo=WIB)
+
         absensi_hari_ini = (
             db.query(AbsensiLog)
-            .filter(func.date(AbsensiLog.waktu) == today_wib)
+            .filter(AbsensiLog.waktu >= today_start, AbsensiLog.waktu <= today_end)
             .count()
         )
 

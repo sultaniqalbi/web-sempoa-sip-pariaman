@@ -42,8 +42,7 @@ export const RegisterPage: React.FC = () => {
       setSuccess(true);
     } catch (err: any) {
       console.error('Registration failed:', err);
-      // Fallback for mock simulation if pendaftaran-baru endpoint is pending
-      setSuccess(true);
+      setError(err.response?.data?.detail || 'Pendaftaran gagal. Pastikan data sudah benar dan server aktif.');
     } finally {
       setIsLoading(false);
     }

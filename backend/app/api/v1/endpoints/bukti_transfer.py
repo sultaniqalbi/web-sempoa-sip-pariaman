@@ -56,14 +56,6 @@ def resolve_student_for_parent(db: Session, current_user: User, id_siswa: Option
         db.commit()
         return s
 
-    # 3. Fallback: First active student in database
-    s = db.query(Siswa).filter(Siswa.is_deleted == False).order_by(Siswa.id.asc()).first()
-    if s:
-        current_user.uid_terhubung = str(s.id)
-        db.add(current_user)
-        db.commit()
-        return s
-
     return None
 
 
@@ -140,7 +132,7 @@ async def read_proofs_list(
                 nominal = 350000.0 if is_sempoa else 200000.0
                 pay = PembayaranPeriode(
                     id_siswa=siswa.id,
-                    periode_bulan=datetime.now().strftime("%B %Y"),
+                    periode_bulan=datetime.now().strftime("%Y-%m"),
                     jumlah=nominal,
                     status=StatusPembayaran.PENDING_VERIFIKASI
                 )
@@ -176,12 +168,6 @@ async def read_my_child_proofs(
 
     proofs = db.query(BuktiTransfer).filter(or_(*filter_conditions)).order_by(BuktiTransfer.created_at.desc()).all()
 
-    # If no proofs found but proofs exist and only 1 student in system, fallback to all proofs
-    if not proofs:
-        total_students = db.query(Siswa).filter(Siswa.is_deleted == False).count()
-        if total_students <= 1:
-            proofs = db.query(BuktiTransfer).order_by(BuktiTransfer.created_at.desc()).all()
-
     pay_map = {p.id: p for p in payments}
     result = []
     for pr in proofs:
@@ -193,7 +179,7 @@ async def read_my_child_proofs(
                 nominal = 350000.0 if is_sempoa else 200000.0
                 pay = PembayaranPeriode(
                     id_siswa=siswa.id,
-                    periode_bulan=datetime.now().strftime("%B %Y"),
+                    periode_bulan=datetime.now().strftime("%Y-%m"),
                     jumlah=nominal,
                     status=StatusPembayaran.PENDING_VERIFIKASI
                 )
@@ -220,6 +206,14 @@ async def get_kwitansi(
 
     pay = db.query(PembayaranPeriode).filter(PembayaranPeriode.id == proof.id_pembayaran).first()
     siswa = db.query(Siswa).filter(Siswa.id == pay.id_siswa).first() if pay else None
+
+    # Ownership check: only Admin, Owner, or the linked parent can view kwitansi
+    if current_user.role not in [UserRole.admin, UserRole.owner]:
+        if not siswa or str(siswa.id) != str(current_user.uid_terhubung):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Anda tidak memiliki izin mengakses kwitansi pembayaran ini."
+            )
 
     kwt_id = _generate_kwitansi_id(proof.id, siswa.uid if siswa else None)
     kwt_hash = _generate_kwitansi_hash(kwt_id)
@@ -274,7 +268,7 @@ async def upload_proof(
         if not pembayaran:
             is_sempoa = "sempoa" in (siswa.kategori_program or "").lower()
             nominal = 350000.0 if is_sempoa else 200000.0
-            bulan_str = datetime.now().strftime("%B %Y")
+            bulan_str = datetime.now().strftime("%Y-%m")
 
             pembayaran = PembayaranPeriode(
                 id_siswa=siswa.id,

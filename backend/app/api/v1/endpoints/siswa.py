@@ -97,12 +97,12 @@ async def get_my_child(
             Siswa.is_deleted == False
         ).first()
 
-    # 3. Fallback: Siswa aktif pertama di database (auto-link agar akun demo/ortu langsung aktif)
+    # 3. Validasi keterhubungan: Jika tidak ditemukan kecocokan, tolak akses dan minta hubungi admin
     if not db_siswa:
-        db_siswa = db.query(Siswa).filter(Siswa.is_deleted == False).order_by(Siswa.id.asc()).first()
-
-    if not db_siswa:
-        raise HTTPException(status_code=404, detail="Belum ada data siswa terdaftar di sistem.")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Akun Orang Tua ini belum terhubung dengan data ananda. Silakan hubungi admin cabang."
+        )
 
     # Auto-update uid_terhubung jika belum terhubung
     if current_user.uid_terhubung != str(db_siswa.id):
@@ -241,7 +241,6 @@ async def create_new_siswa(
             user_ortu = User(
                 email=email_candidate,
                 password=hashed_password,
-                plain_password=plain_password,
                 role=UserRole.ortu,
                 nama=siswa_in.nama_orang_tua or f"Ortu {siswa_in.nama}",
                 uid_terhubung=str(new_siswa.id)
@@ -386,7 +385,6 @@ async def reset_siswa_password(
 
     new_pwd = generate_random_password(10)
     user_ortu.password = get_password_hash(new_pwd)
-    user_ortu.plain_password = new_pwd
 
     try:
         audit = AuditLog(
@@ -428,14 +426,12 @@ async def push_whatsapp_siswa(
     user_ortu = db.query(User).filter(User.role == UserRole.ortu, User.uid_terhubung == str(id)).first()
     ortu_email = user_ortu.email if user_ortu else f"ortu_{siswa.id}@sempoasippariaman.com"
 
-    # Always remember and reuse the exact password. If legacy account doesn't have plain_password, initialize once and persist it.
+    # Generate a fresh secure temporary password upon WhatsApp dispatch
     if user_ortu:
-        if not user_ortu.plain_password:
-            initial_pwd = generate_random_password(10)
-            user_ortu.password = get_password_hash(initial_pwd)
-            user_ortu.plain_password = initial_pwd
-            db.commit()
-        ortu_sandi = user_ortu.plain_password
+        new_pwd = generate_random_password(10)
+        user_ortu.password = get_password_hash(new_pwd)
+        db.commit()
+        ortu_sandi = new_pwd
     else:
         ortu_sandi = "sempoa123"
 

@@ -36,10 +36,10 @@ def check_and_send_spp_reminders():
         reminded_parents = set()
         total_pushed = 0
 
-        # 1. Cari siswa aktif dengan status SPP belum lunas / sisa pertemuan menipis
+        # 1. Cari siswa aktif dengan status SPP expired / sisa pertemuan menipis
         siswa_candidates = db.query(Siswa).filter(
             Siswa.is_deleted == False,
-            (Siswa.status_spp != StatusSPP.LUNAS) | (Siswa.sisa_pertemuan <= 2)
+            (Siswa.status_spp == StatusSPP.EXPIRED) | (Siswa.sisa_pertemuan <= 2)
         ).all()
 
         for s in siswa_candidates:

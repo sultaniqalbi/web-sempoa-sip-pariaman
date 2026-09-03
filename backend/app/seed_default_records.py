@@ -57,7 +57,6 @@ def restore_initial_guru_and_siswa(db: Session = None):
             guru_user = User(
                 email=guru_email,
                 password=get_password_hash("rehan12345"),
-                plain_password="rehan12345",
                 role=UserRole.guru,
                 nama=existing_guru.nama,
                 uid_terhubung=str(existing_guru.id)
@@ -66,9 +65,6 @@ def restore_initial_guru_and_siswa(db: Session = None):
             logger.info(f"Created User for Guru: {guru_email}")
         else:
             guru_user.uid_terhubung = str(existing_guru.id)
-            if not guru_user.plain_password:
-                guru_user.plain_password = "rehan12345"
-                guru_user.password = get_password_hash("rehan12345")
 
         # 3. Check or create Siswa: Muhammad Farhan
         existing_siswa = db.query(Siswa).filter(
@@ -117,7 +113,6 @@ def restore_initial_guru_and_siswa(db: Session = None):
             ortu_user = User(
                 email=ortu_email,
                 password=get_password_hash("farhan12345"),
-                plain_password="farhan12345",
                 role=UserRole.ortu,
                 nama=existing_siswa.nama_orang_tua or f"Ortu {existing_siswa.nama}",
                 uid_terhubung=str(existing_siswa.id)
@@ -126,9 +121,6 @@ def restore_initial_guru_and_siswa(db: Session = None):
             logger.info(f"Created User for Ortu: {ortu_email}")
         else:
             ortu_user.uid_terhubung = str(existing_siswa.id)
-            if not ortu_user.plain_password:
-                ortu_user.plain_password = "farhan12345"
-                ortu_user.password = get_password_hash("farhan12345")
 
         db.commit()
         logger.info("Restoration completed successfully.")
