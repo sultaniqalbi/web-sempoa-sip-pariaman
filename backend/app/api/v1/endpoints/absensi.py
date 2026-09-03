@@ -15,6 +15,7 @@ from app.models.guru import Guru
 from app.models.siswa import Siswa, StatusSPP
 from app.models.absensi_log import AbsensiLog, StatusAbsensi, ModeAbsensi
 from app.models.pembayaran_periode import PembayaranPeriode, StatusPembayaran
+from app.core.constants import get_program_spp_nominal
 from app.schemas.absensi import AbsensiCreate, AbsensiResponse
 from app.crud import absensi as crud_absensi
 from pydantic import BaseModel
@@ -396,25 +397,28 @@ async def bulk_absensi_siswa(
                         
                 siswa.sisa_pertemuan = max(0, siswa.sisa_pertemuan - 1)
 
-        if siswa.sisa_pertemuan == 0 and siswa.status_spp != StatusSPP.EXPIRED:
-            siswa.status_spp = StatusSPP.EXPIRED
-            current_month = now.strftime("%Y-%m")
-            due_date = now.date() + timedelta(days=7)
-            existing_bill = db.query(PembayaranPeriode).filter(
-                PembayaranPeriode.id_siswa == siswa.id,
-                PembayaranPeriode.periode_bulan == current_month
-            ).first()
-            if not existing_bill:
-                billing = PembayaranPeriode(
-                    id_siswa=siswa.id,
-                    periode_bulan=current_month,
-                    jumlah=150000.00,
-                    status=StatusPembayaran.MENUNGGAK,
-                    due_date=due_date
-                )
-                db.add(billing)
-        elif siswa.sisa_pertemuan > 0 and siswa.status_spp == StatusSPP.EXPIRED:
-            siswa.status_spp = StatusSPP.AKTIF
+        # Update SPP status based on remaining meetings (khusus non-TK karena TK berbasis kalender bulanan)
+        is_tk = "tk" in (siswa.kategori_program or "").lower()
+        if not is_tk:
+            if siswa.sisa_pertemuan == 0 and siswa.status_spp != StatusSPP.EXPIRED:
+                siswa.status_spp = StatusSPP.EXPIRED
+                current_month = now.strftime("%Y-%m")
+                due_date = now.date() + timedelta(days=7)
+                existing_bill = db.query(PembayaranPeriode).filter(
+                    PembayaranPeriode.id_siswa == siswa.id,
+                    PembayaranPeriode.periode_bulan == current_month
+                ).first()
+                if not existing_bill:
+                    billing = PembayaranPeriode(
+                        id_siswa=siswa.id,
+                        periode_bulan=current_month,
+                        jumlah=get_program_spp_nominal(db, siswa.kategori_program),
+                        status=StatusPembayaran.MENUNGGAK,
+                        due_date=due_date
+                    )
+                    db.add(billing)
+            elif siswa.sisa_pertemuan > 0 and siswa.status_spp == StatusSPP.EXPIRED:
+                siswa.status_spp = StatusSPP.AKTIF
 
         processed += 1
 

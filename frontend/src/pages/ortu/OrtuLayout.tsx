@@ -9,7 +9,7 @@ import ScheduleCard, { ScheduleData, TeacherContact } from './components/Schedul
 import FeatureTiles from './components/FeatureTiles';
 import OrtuBottomNav from './components/OrtuBottomNav';
 import ProductTourModal, { TourStep } from '../../components/ProductTourModal';
-import { UserIcon, CalendarIcon, CubesIcon, DocumentTextIcon, HomeIcon, BookOpenIcon } from '../../components/SvgIcons';
+import { UserIcon, CalendarIcon, CubesIcon, DocumentTextIcon, HomeIcon, BookOpenIcon, BellIcon } from '../../components/SvgIcons';
 import { useAuthenticatedFontAwesome } from '../../hooks/useAuthenticatedFontAwesome';
 
 const TOUR_STEPS: TourStep[] = [
@@ -32,14 +32,21 @@ const TOUR_STEPS: TourStep[] = [
     categoryBadge: 'FITUR BELAJAR',
     icon: <BookOpenIcon size={20} className="text-[#FF7043]" />,
     title: 'Akses Cepat 4 Menu Pembelajaran',
-    description: 'Grid pintasan menuju menu Kelas & Buku (modul aktif ananda), Evaluasi Perkembangan (4 pilar rapor), Absensi Kehadiran (RFID realtime), dan Riwayat Pertemuan.',
+    description: 'Grid pintasan menuju menu Kelas & Buku (modul aktif ananda), Evaluasi Perkembangan (4 pilar rapor), Absensi Kehadiran manual dari guru, dan Riwayat Pertemuan.',
+  },
+  {
+    targetId: 'tour-ortu-push',
+    categoryBadge: 'WAJIB: NOTIFIKASI HP',
+    icon: <BellIcon size={20} className="text-[#FF7043]" />,
+    title: 'Wajib Aktifkan Notifikasi HP',
+    description: 'Setiap orang tua diwajibkan mengaktifkan tombol ini. Dengan notifikasi aktif, Anda langsung menerima pemberitahuan kehadiran saat ananda diabsen guru, pengingat jadwal 30 menit sebelum kelas dimulai, catatan materi guru, dan status lunas pembayaran SPP di layar HP Anda.',
   },
   {
     targetId: 'tour-ortu-contact',
-    categoryBadge: 'PUSAT LAYANAN & SPP',
+    categoryBadge: 'PUSAT LAYANAN & BANTUAN',
     icon: <DocumentTextIcon size={20} className="text-[#FF7043]" />,
-    title: 'Pusat Bantuan & Notifikasi SPP',
-    description: 'Hubungi Admin atau Direktur via WhatsApp untuk bantuan administrasi, aktifkan Notifikasi HP (Push Notification), serta pasang pengingat jatuh tempo SPP ke Google Calendar HP Anda.',
+    title: 'Pusat Bantuan & WhatsApp Admin',
+    description: 'Hubungi Admin atau Direktur via WhatsApp untuk bantuan administrasi, kendala belajar, serta pasang pengingat jadwal SPP ke Google Calendar HP Anda.',
   },
   {
     targetId: 'tour-tab-dashboard',

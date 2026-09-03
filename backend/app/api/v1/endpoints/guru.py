@@ -57,6 +57,52 @@ async def read_guru(
         raise HTTPException(status_code=404, detail="Data guru tidak ditemukan")
     return db_guru
 
+EXCLUSIVE_ROLES = ["Direktur", "Admin", "Kepala Sekolah"]
+
+def check_exclusive_roles(db: Session, kategori_program: Optional[str], current_guru_id: Optional[int] = None):
+    """
+    Pastikan jabatan Direktur, Admin, dan Kepala Sekolah hanya dipegang oleh 1 individu.
+    """
+    if not kategori_program:
+        return
+    progs = [p.strip().lower() for p in kategori_program.split(",") if p.strip()]
+    for ex in EXCLUSIVE_ROLES:
+        if ex.lower() in progs:
+            q = db.query(Guru).filter(
+                Guru.is_deleted == False,
+                func.lower(Guru.kategori_program).like(f"%{ex.lower()}%")
+            )
+            if current_guru_id is not None:
+                q = q.filter(Guru.id != current_guru_id)
+            existing = q.first()
+            if existing:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Jabatan '{ex}' hanya dapat dipegang oleh 1 individu dan saat ini sudah dijabat oleh {existing.nama}."
+                )
+
+def resolve_paket_pengajaran(kategori_program: Optional[str], user_paket: Optional[str] = None) -> str:
+    """
+    Sesuaikan jadwal mengajar sama persis dengan menu Jadwal dan Kelas.
+    Untuk jabatan Direktur, Admin, dan Kepala Sekolah -> selalu 'Fleksibel'.
+    """
+    kat = (kategori_program or "").lower()
+    if any(r in kat for r in ["kepala sekolah", "kepsek", "direktur", "admin"]):
+        return "Fleksibel"
+    
+    if user_paket and user_paket.strip() not in ["", "Reguler", "09:00", "08:00 - 10:00"]:
+        return user_paket.strip()
+        
+    if "tk" in kat:
+        return "07:30 - 13:30 WIB"
+    elif "sempoa" in kat or "fonem" in kat:
+        return "09:00 - 17:00 WIB"
+    elif "inggris" in kat or "tahfidz" in kat:
+        return "12:00 - 17:00 WIB"
+        
+    return user_paket or "09:00 - 17:00 WIB"
+
+
 @router.post("/", response_model=GuruCreateResponse, status_code=status.HTTP_201_CREATED)
 async def create_new_guru(
     guru_in: GuruCreate,
@@ -66,6 +112,9 @@ async def create_new_guru(
     """
     Tambah Guru Baru + Auto-Provisioning Akun Login Guru + Assign RFID UID
     """
+    # Validasi jabatan tunggal
+    check_exclusive_roles(db, guru_in.kategori_program)
+
     existing_uid = db.query(Guru).filter(Guru.uid == guru_in.uid).first()
     if existing_uid:
         raise HTTPException(status_code=400, detail="UID RFID kartu guru sudah terdaftar")
@@ -84,6 +133,7 @@ async def create_new_guru(
     plain_password = generate_random_password(10)
     hashed_password = get_password_hash(plain_password)
     normalized_wa = normalize_whatsapp_number(guru_in.whatsapp_guru or "")
+    final_paket = resolve_paket_pengajaran(guru_in.kategori_program, guru_in.paket_pengajaran)
 
     try:
         new_guru = Guru(
@@ -100,7 +150,7 @@ async def create_new_guru(
             whatsapp_guru=normalized_wa,
             alamat=guru_in.alamat,
             riwayat_pendidikan=guru_in.riwayat_pendidikan,
-            paket_pengajaran=guru_in.paket_pengajaran,
+            paket_pengajaran=final_paket,
             bio=guru_in.bio,
             foto_profil=guru_in.foto_profil
         )
@@ -210,6 +260,13 @@ async def update_existing_guru(
     update_dict = guru_in.model_dump(exclude_unset=True)
     if "whatsapp_guru" in update_dict:
         update_dict["whatsapp_guru"] = normalize_whatsapp_number(update_dict["whatsapp_guru"])
+
+    if "kategori_program" in update_dict:
+        check_exclusive_roles(db, update_dict["kategori_program"], current_guru_id=id)
+        if "paket_pengajaran" not in update_dict or not update_dict["paket_pengajaran"]:
+            update_dict["paket_pengajaran"] = resolve_paket_pengajaran(update_dict["kategori_program"], db_guru.paket_pengajaran)
+    elif "paket_pengajaran" in update_dict:
+        update_dict["paket_pengajaran"] = resolve_paket_pengajaran(db_guru.kategori_program, update_dict["paket_pengajaran"])
 
     for key, value in update_dict.items():
         setattr(db_guru, key, value)

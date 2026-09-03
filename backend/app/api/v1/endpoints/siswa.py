@@ -42,10 +42,10 @@ def get_spp_nominal(program: Optional[str]) -> float:
         if "sempoa" in p:
             total += 350000.00
         elif "tk" in p:
-            total += 0.0
+            total += 400000.00
         else:
             total += 200000.00
-    return total if (total > 0 or not all("tk" in p for p in programs)) else 0.0
+    return total
 
 def calculate_age_from_dob(dob) -> Optional[int]:
     if not dob:
@@ -183,8 +183,12 @@ async def create_new_siswa(
     # Tentukan SPP dan Target Pertemuan
     nominal_spp = get_spp_nominal(siswa_in.kategori_program)
 
-    # Execute DB Transaction
-    is_pure_tk = siswa_in.kategori_program.strip() == "TK"
+    # Tentukan Target Pertemuan & Jadwal Default
+    is_tk = "tk" in (siswa_in.kategori_program or "").lower()
+    default_target = 20 if is_tk else 8
+    default_hari = "Senin, Selasa, Rabu, Kamis, Jumat" if is_tk else "Senin, Rabu"
+    default_jadwal = "Senin - Jumat 07:30 - 13:30 WIB" if is_tk else siswa_in.paket_jadwal
+
     try:
         new_siswa = Siswa(
             uid=siswa_in.uid,
@@ -193,11 +197,11 @@ async def create_new_siswa(
             umur=calculated_umur,
             kelas_sekolah=siswa_in.kelas_sekolah,
             kategori_program=siswa_in.kategori_program,
-            paket_jadwal=siswa_in.paket_jadwal,
-            hari_masuk=siswa_in.hari_masuk or "Senin, Selasa, Rabu, Kamis, Jumat",
+            paket_jadwal=siswa_in.paket_jadwal or default_jadwal,
+            hari_masuk=siswa_in.hari_masuk or default_hari,
             id_guru=siswa_in.id_guru,
-            target_pertemuan=siswa_in.target_pertemuan or 8,
-            sisa_pertemuan=siswa_in.sisa_pertemuan if siswa_in.sisa_pertemuan is not None else (siswa_in.target_pertemuan or 8),
+            target_pertemuan=siswa_in.target_pertemuan or default_target,
+            sisa_pertemuan=siswa_in.sisa_pertemuan if siswa_in.sisa_pertemuan is not None else (siswa_in.target_pertemuan or default_target),
             kuota_program=siswa_in.kuota_program,
             status_spp=StatusSPP.AKTIF,
             nama_orang_tua=siswa_in.nama_orang_tua,
@@ -221,10 +225,9 @@ async def create_new_siswa(
             status=StatusPembayaran.LUNAS,
             due_date=None
         )
-        db.add(pembayaran_awal)
-
         # Auto-create initial book in buku_siswa
-        buku_level = siswa_in.buku_saat_ini or "Junior"
+        default_buku_level = "Kelompok Bermain (KB)" if is_tk else "Junior"
+        buku_level = siswa_in.buku_saat_ini or default_buku_level
         buku_program = siswa_in.kategori_program.split(",")[0].strip() if siswa_in.kategori_program else "Sempoa SIP"
         new_buku = BukuSiswa(
             id_siswa=new_siswa.id,
@@ -236,19 +239,15 @@ async def create_new_siswa(
         )
         db.add(new_buku)
 
-        # Auto-provision parent account if not pure TK
-        if not is_pure_tk:
-            user_ortu = User(
-                email=email_candidate,
-                password=hashed_password,
-                role=UserRole.ortu,
-                nama=siswa_in.nama_orang_tua or f"Ortu {siswa_in.nama}",
-                uid_terhubung=str(new_siswa.id)
-            )
-            db.add(user_ortu)
-        else:
-            email_candidate = None
-            plain_password = None
+        # Auto-provision parent account for all programs (including TK)
+        user_ortu = User(
+            email=email_candidate,
+            password=hashed_password,
+            role=UserRole.ortu,
+            nama=siswa_in.nama_orang_tua or f"Ortu {siswa_in.nama}",
+            uid_terhubung=str(new_siswa.id)
+        )
+        db.add(user_ortu)
 
         db.commit()
         db.refresh(new_siswa)

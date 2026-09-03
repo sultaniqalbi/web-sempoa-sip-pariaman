@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.database import get_db
-from app.core.dependencies import RoleChecker
+from app.core.dependencies import get_current_user
 from app.core.redis import redis_client
 from app.models.users import User, UserRole
 from app.models.push_subscription import PushSubscription
@@ -14,8 +14,6 @@ from app.schemas.push import PushSubscribeRequest, PushUnsubscribeRequest, Vapid
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
-
-ortu_only = RoleChecker([UserRole.ortu])
 
 ALLOWED_PUSH_DOMAINS = {
     "fcm.googleapis.com",
@@ -87,7 +85,7 @@ async def get_vapid_public_key():
 async def subscribe_push(
     sub_in: PushSubscribeRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(ortu_only)
+    current_user: User = Depends(get_current_user)
 ):
     """
     Simpan atau perbarui subscription Web Push milik Orang Tua.
@@ -143,7 +141,7 @@ async def subscribe_push(
 async def unsubscribe_push(
     unsub_in: PushUnsubscribeRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(ortu_only)
+    current_user: User = Depends(get_current_user)
 ):
     """
     Hapus subscription Web Push saat user menonaktifkan notifikasi di browser.

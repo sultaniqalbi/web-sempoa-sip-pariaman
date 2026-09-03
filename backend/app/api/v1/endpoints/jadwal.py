@@ -31,8 +31,8 @@ SCHEDULE_CONFIG = {
         "hari_libur": {"jam_mulai": "12:00", "jam_selesai": "15:30"}
     },
     "TK": {
-        "hari_biasa": {"jam_mulai": "08:00", "jam_selesai": "11:00"},
-        "hari_libur": {"jam_mulai": "08:00", "jam_selesai": "10:30"}
+        "hari_biasa": {"jam_mulai": "07:30", "jam_selesai": "13:30"},
+        "hari_libur": {"jam_mulai": "07:30", "jam_selesai": "13:30"}
     }
 }
 

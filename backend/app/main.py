@@ -136,7 +136,23 @@ def on_startup():
             WHERE s.is_deleted = FALSE 
               AND NOT EXISTS (
                 SELECT 1 FROM buku_siswa b WHERE b.id_siswa = s.id
-              );"""
+              );""",
+            """CREATE TABLE IF NOT EXISTS program_settings (
+                id SERIAL PRIMARY KEY,
+                nama_program VARCHAR(100) UNIQUE NOT NULL,
+                biaya_spp NUMERIC(12, 2) NOT NULL DEFAULT 200000.00,
+                target_pertemuan INTEGER NOT NULL DEFAULT 12,
+                jam_mulai VARCHAR(20) DEFAULT '08:00',
+                jam_selesai VARCHAR(20) DEFAULT '12:00',
+                hari_masuk VARCHAR(255) DEFAULT 'Senin - Jumat',
+                keterangan TEXT,
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );""",
+            "UPDATE jadwal SET jam_mulai = '07:30', jam_selesai = '13:30' WHERE LOWER(kategori_program) LIKE '%tk%';",
+            "UPDATE guru SET paket_pengajaran = 'Fleksibel' WHERE is_deleted = FALSE AND (LOWER(kategori_program) LIKE '%kepala sekolah%' OR LOWER(kategori_program) LIKE '%direktur%' OR LOWER(kategori_program) LIKE '%admin%');",
+            "UPDATE guru SET paket_pengajaran = '07:30 - 13:30 WIB' WHERE is_deleted = FALSE AND LOWER(kategori_program) LIKE '%tk%' AND (paket_pengajaran IS NULL OR paket_pengajaran = 'Reguler' OR paket_pengajaran = '09:00');",
+            "UPDATE guru SET paket_pengajaran = '09:00 - 17:00 WIB' WHERE is_deleted = FALSE AND (LOWER(kategori_program) LIKE '%sempoa%' OR LOWER(kategori_program) LIKE '%fonem%') AND (paket_pengajaran IS NULL OR paket_pengajaran = 'Reguler' OR paket_pengajaran = '09:00');",
+            "UPDATE guru SET paket_pengajaran = '12:00 - 17:00 WIB' WHERE is_deleted = FALSE AND (LOWER(kategori_program) LIKE '%inggris%' OR LOWER(kategori_program) LIKE '%tahfidz%') AND (paket_pengajaran IS NULL OR paket_pengajaran = 'Reguler' OR paket_pengajaran = '09:00');"
         ]
 
         for sql_stmt in auto_sqls:
@@ -211,6 +227,89 @@ def on_startup():
             logger.debug(f"Orphan payment cleanup notice: {cl_e}")
 
         run_seed()
+
+        # Seed default program settings and sync TK parity
+        try:
+            from app.models.program_setting import ProgramSetting
+            from app.models.siswa import Siswa
+            from app.models.users import User, UserRole
+            from app.models.pembayaran_periode import PembayaranPeriode
+            from app.core.security import get_password_hash
+            from app.core.constants import PROGRAM_CONFIG
+
+            db_prog = SessionLocal()
+            for prog_name, p_info in PROGRAM_CONFIG.items():
+                existing_ps = db_prog.query(ProgramSetting).filter(ProgramSetting.nama_program == prog_name).first()
+                if not existing_ps:
+                    new_ps = ProgramSetting(
+                        nama_program=prog_name,
+                        biaya_spp=p_info.get("biaya_spp", 200000.0),
+                        target_pertemuan=p_info.get("default_target_pertemuan", 12),
+                        jam_mulai=p_info.get("jam_default", {}).get("mulai", "08:00"),
+                        jam_selesai=p_info.get("jam_default", {}).get("selesai", "12:00"),
+                        hari_masuk=p_info.get("hari_masuk", "Senin - Jumat"),
+                        keterangan=f"Program Resmi {prog_name}"
+                    )
+                    db_prog.add(new_ps)
+                else:
+                    # Sync TK to 400k, 20 target, 07:30 - 13:30 if still default 200k / 0
+                    if prog_name == "TK" and (float(existing_ps.biaya_spp) != 400000.0 or existing_ps.target_pertemuan != 20):
+                        existing_ps.biaya_spp = 400000.00
+                        existing_ps.target_pertemuan = 20
+                        existing_ps.jam_mulai = "07:30"
+                        existing_ps.jam_selesai = "13:30"
+                        existing_ps.hari_masuk = "Senin - Jumat"
+            db_prog.commit()
+
+            # Auto-sync existing TK students in database: set target 20, hours 07:30-13:30, and auto-provision Ortu accounts
+            tk_students = db_prog.query(Siswa).filter(
+                Siswa.is_deleted == False,
+                func.lower(Siswa.kategori_program).like('%tk%')
+            ).all()
+
+            for s_tk in tk_students:
+                if not s_tk.target_pertemuan or s_tk.target_pertemuan == 0:
+                    s_tk.target_pertemuan = 20
+                    s_tk.sisa_pertemuan = 20
+                if not s_tk.hari_masuk:
+                    s_tk.hari_masuk = "Senin, Selasa, Rabu, Kamis, Jumat"
+                if not s_tk.paket_jadwal:
+                    s_tk.paket_jadwal = "Senin - Jumat 07:30 - 13:30 WIB"
+
+                # Update any 0 amount payments for TK to 400,000
+                tk_pays = db_prog.query(PembayaranPeriode).filter(PembayaranPeriode.id_siswa == s_tk.id).all()
+                for tp in tk_pays:
+                    if float(tp.jumlah or 0) == 0:
+                        tp.jumlah = 400000.00
+
+                # Provision Ortu account if missing
+                has_ortu = db_prog.query(User).filter(
+                    User.role == UserRole.ortu,
+                    User.uid_terhubung == str(s_tk.id)
+                ).first()
+                if not has_ortu:
+                    base_nick = (s_tk.nama_panggilan or s_tk.nama or "siswa").lower().replace(" ", "")
+                    clean_prefix = "".join(c for c in base_nick if c.isalnum()) or "tk"
+                    cand_email = f"{clean_prefix}@sempoasippariaman.com"
+                    suf = 1
+                    while db_prog.query(User).filter(func.lower(User.email) == cand_email.lower()).first():
+                        suf += 1
+                        cand_email = f"{clean_prefix}{suf}@sempoasippariaman.com"
+
+                    ortu_u = User(
+                        email=cand_email,
+                        password=get_password_hash("sempoa123"),
+                        role=UserRole.ortu,
+                        nama=s_tk.nama_orang_tua or f"Ortu {s_tk.nama}",
+                        uid_terhubung=str(s_tk.id)
+                    )
+                    db_prog.add(ortu_u)
+                    logger.info(f"Auto-provisioned Ortu account for TK student {s_tk.nama}: {cand_email}")
+
+            db_prog.commit()
+            db_prog.close()
+        except Exception as prog_sync_err:
+            logger.warning(f"Program settings & TK sync notice: {prog_sync_err}")
 
         # Start SPP background reminder scheduler
         from app.services.scheduler import start_scheduler

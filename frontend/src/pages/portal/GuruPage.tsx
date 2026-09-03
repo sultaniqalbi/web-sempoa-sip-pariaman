@@ -15,6 +15,40 @@ import DateInput from '../../components/DateInput';
 
 const AVAILABLE_PROGRAMS = ['Sempoa SIP', 'Fonem', 'Tahfidz', 'Bahasa Inggris', 'TK', 'Admin', 'Direktur', 'Kepala Sekolah'];
 
+const EXCLUSIVE_SINGLE_ROLES = ['Direktur', 'Admin', 'Kepala Sekolah'];
+
+const PROGRAM_TEACHING_HOURS: Record<string, string> = {
+  'TK': '07:30 - 13:30 WIB',
+  'Sempoa SIP': '09:00 - 17:00 WIB',
+  'Fonem': '09:00 - 17:00 WIB',
+  'Bahasa Inggris': '12:00 - 17:00 WIB',
+  'Tahfidz': '12:00 - 17:00 WIB',
+};
+
+const getJadwalMengajarDisplay = (row: Guru): string => {
+  const pLower = (row.kategori_program || '').toLowerCase();
+  if (['kepala sekolah', 'kepsek', 'direktur', 'admin'].some(role => pLower.includes(role))) {
+    return 'Fleksibel';
+  }
+  
+  if (row.paket_pengajaran && !['reguler', '09:00', '08:00 - 10:00', ''].includes(row.paket_pengajaran.trim().toLowerCase())) {
+    return row.paket_pengajaran.includes('WIB') ? row.paket_pengajaran : `${row.paket_pengajaran} WIB`;
+  }
+
+  const progs = (row.kategori_program || '').split(',').map(p => p.trim());
+  for (const prog of progs) {
+    if (PROGRAM_TEACHING_HOURS[prog]) {
+      return PROGRAM_TEACHING_HOURS[prog];
+    }
+  }
+  
+  if (pLower.includes('tk')) return '07:30 - 13:30 WIB';
+  if (pLower.includes('sempoa') || pLower.includes('fonem')) return '09:00 - 17:00 WIB';
+  if (pLower.includes('inggris') || pLower.includes('tahfidz')) return '12:00 - 17:00 WIB';
+  
+  return '09:00 - 17:00 WIB';
+};
+
 const getProgramBadgeStyle = (program: string) => {
   const p = program.trim().toLowerCase();
   if (p.includes('sempoa')) {
@@ -117,6 +151,22 @@ export const GuruPage: React.FC = () => {
     },
     refetchInterval: 10000
   });
+
+  const existingRoleHolders = useMemo(() => {
+    const map: Record<string, { id: number; nama: string }> = {};
+    guruList.forEach((g) => {
+      if (g.is_deleted) return;
+      const progs = (g.kategori_program || '').split(',').map((p) => p.trim());
+      progs.forEach((p) => {
+        EXCLUSIVE_SINGLE_ROLES.forEach((exRole) => {
+          if (p.toLowerCase() === exRole.toLowerCase()) {
+            map[exRole] = { id: g.id, nama: g.nama };
+          }
+        });
+      });
+    });
+    return map;
+  }, [guruList]);
 
   // Cek tap kartu terakhir dari endpoint backend secara realtime
   const checkLatestTap = async () => {
@@ -328,15 +378,15 @@ export const GuruPage: React.FC = () => {
     lastProcessedTapRef.current = '';
     setEditingGuru(null);
     setIsUidLocked(false);
-    setJamMengajarMulai('08:00');
-    setJamMengajarSelesai('10:00');
+    setJamMengajarMulai('09:00');
+    setJamMengajarSelesai('17:00');
     setFormData({
       uid: '', // Default Kosong
       nama: '',
       nama_panggilan: '',
       umur: '',
       kategori_program: 'Sempoa SIP',
-      paket_pengajaran: '08:00 - 10:00',
+      paket_pengajaran: '09:00 - 17:00 WIB',
       hari_wajib: 'Senin, Selasa, Kamis',
       whatsapp_guru: '',
       alamat: '',
@@ -359,24 +409,25 @@ export const GuruPage: React.FC = () => {
     setIsUidLocked(Boolean(guru.uid && guru.uid.trim()));
     const calculatedAge = calculateAge(guru.tanggal_lahir);
 
-    let start = '08:00';
-    let end = '10:00';
-    if (guru.paket_pengajaran) {
+    const isStructural = EXCLUSIVE_SINGLE_ROLES.some(r => (guru.kategori_program || '').toLowerCase().includes(r.toLowerCase()));
+    let start = '09:00';
+    let end = '17:00';
+    let initialPaket = isStructural ? 'Fleksibel' : getJadwalMengajarDisplay(guru);
+
+    if (!isStructural && guru.paket_pengajaran) {
       const match = guru.paket_pengajaran.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
       if (match) {
         start = match[1];
         end = match[2];
-      } else {
-        const single = guru.paket_pengajaran.match(/\d{2}:\d{2}/);
-        if (single) {
-          start = single[0];
-          try {
-            const h = parseInt(start.split(':')[0], 10) + 2;
-            end = `${String(h).padStart(2, '0')}:${start.split(':')[1]}`;
-          } catch (e) {
-            end = '10:00';
-          }
-        }
+      }
+    } else if (!isStructural) {
+      const progs = (guru.kategori_program || '').split(',').map(p => p.trim());
+      if (progs.some(p => p.toLowerCase().includes('tk'))) {
+        start = '07:30';
+        end = '13:30';
+      } else if (progs.some(p => p.toLowerCase().includes('inggris') || p.toLowerCase().includes('tahfidz'))) {
+        start = '12:00';
+        end = '17:00';
       }
     }
     setJamMengajarMulai(start);
@@ -388,7 +439,7 @@ export const GuruPage: React.FC = () => {
       nama_panggilan: guru.nama_panggilan || '',
       umur: guru.umur !== undefined && guru.umur !== null ? String(guru.umur) : (calculatedAge !== null ? String(calculatedAge) : ''),
       kategori_program: guru.kategori_program || 'Sempoa SIP',
-      paket_pengajaran: `${start} - ${end}`,
+      paket_pengajaran: initialPaket,
       hari_wajib: guru.hari_wajib || 'Senin, Selasa, Kamis',
       whatsapp_guru: guru.whatsapp_guru || '',
       alamat: guru.alamat || '',
@@ -530,23 +581,25 @@ export const GuruPage: React.FC = () => {
     },
     {
       header: 'JADWAL',
-      accessor: (row: Guru) => (
-        <div>
-          <span className="text-xs text-[#475569] font-medium leading-relaxed block">
-            {formatJadwalDisplay(row.hari_wajib)}
-          </span>
-          {row.paket_pengajaran && (
-            <span className="text-[10px] font-bold text-[#E65100] block mt-0.5">
-              Mengajar: {row.paket_pengajaran}
+      accessor: (row: Guru) => {
+        const jadwalMengajar = getJadwalMengajarDisplay(row);
+        const isFleksibel = jadwalMengajar.toLowerCase() === 'fleksibel';
+        return (
+          <div>
+            <span className="text-xs text-[#475569] font-medium leading-relaxed block">
+              {formatJadwalDisplay(row.hari_wajib)}
             </span>
-          )}
-          {row.mode_kelas && (
-            <span className="text-[10px] font-bold text-[#64748B] uppercase block">
-              Mode: {row.mode_kelas}
+            <span className={`text-[10px] font-bold block mt-0.5 ${isFleksibel ? 'text-[#059669]' : 'text-[#E65100]'}`}>
+              Mengajar: {jadwalMengajar}
             </span>
-          )}
-        </div>
-      ),
+            {row.mode_kelas && (
+              <span className="text-[10px] font-bold text-[#64748B] uppercase block">
+                Mode: {row.mode_kelas}
+              </span>
+            )}
+          </div>
+        );
+      },
       className: 'md:w-[200px]',
     },
     {
@@ -874,11 +927,20 @@ export const GuruPage: React.FC = () => {
                   .map((p) => p.trim())
                   .filter(Boolean);
                 const isSelected = selectedList.includes(prog);
+                const isExclusive = EXCLUSIVE_SINGLE_ROLES.includes(prog);
+                const currentHolder = existingRoleHolders[prog];
+                const isHeldByOther = isExclusive && currentHolder && (!editingGuru || editingGuru.id !== currentHolder.id);
+
                 return (
                   <button
                     key={prog}
                     type="button"
+                    disabled={isHeldByOther}
                     onClick={() => {
+                      if (isHeldByOther) {
+                        showToast(`Jabatan ${prog} hanya untuk 1 individu dan saat ini sudah dijabat oleh ${currentHolder.nama}.`, 'error');
+                        return;
+                      }
                       let updatedList: string[];
                       if (isSelected) {
                         updatedList = selectedList.filter((p) => p !== prog);
@@ -889,17 +951,56 @@ export const GuruPage: React.FC = () => {
                       } else {
                         updatedList = [...selectedList, prog];
                       }
-                      setFormData({ ...formData, kategori_program: updatedList.join(', ') });
+
+                      const isNowStructural = EXCLUSIVE_SINGLE_ROLES.some((r) =>
+                        updatedList.some((p) => p.toLowerCase() === r.toLowerCase())
+                      );
+
+                      let newStart = jamMengajarMulai;
+                      let newEnd = jamMengajarSelesai;
+                      let newPaket = 'Fleksibel';
+
+                      if (!isNowStructural) {
+                        if (updatedList.some((p) => p.toLowerCase().includes('tk'))) {
+                          newStart = '07:30';
+                          newEnd = '13:30';
+                        } else if (updatedList.some((p) => p.toLowerCase().includes('inggris') || p.toLowerCase().includes('tahfidz'))) {
+                          newStart = '12:00';
+                          newEnd = '17:00';
+                        } else {
+                          newStart = '09:00';
+                          newEnd = '17:00';
+                        }
+                        newPaket = `${newStart} - ${newEnd} WIB`;
+                        setJamMengajarMulai(newStart);
+                        setJamMengajarSelesai(newEnd);
+                      }
+
+                      setFormData({
+                        ...formData,
+                        kategori_program: updatedList.join(', '),
+                        paket_pengajaran: isNowStructural ? 'Fleksibel' : newPaket,
+                      });
                     }}
-                    className={`flex items-center justify-between p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer select-none active:scale-95 ${
-                      isSelected
-                        ? 'bg-[#FFF3E0] border-[#FF7043] text-[#E65100] shadow-xs ring-1 ring-[#FF7043]'
-                        : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#64748B] hover:bg-[#F1F5F9] hover:border-[#CBD5E1]'
+                    className={`flex items-center justify-between p-2.5 rounded-xl border text-xs font-bold transition-all select-none ${
+                      isHeldByOther
+                        ? 'bg-[#F1F5F9] border-[#E2E8F0] text-[#94A3B8] cursor-not-allowed opacity-60'
+                        : isSelected
+                        ? 'bg-[#FFF3E0] border-[#FF7043] text-[#E65100] shadow-xs ring-1 ring-[#FF7043] cursor-pointer'
+                        : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#64748B] hover:bg-[#F1F5F9] hover:border-[#CBD5E1] cursor-pointer active:scale-95'
                     }`}
+                    title={isHeldByOther ? `Sudah dijabat oleh ${currentHolder.nama}` : ''}
                   >
-                    <span>{prog}</span>
+                    <div className="flex flex-col items-start text-left">
+                      <span>{prog}</span>
+                      {isHeldByOther && (
+                        <span className="text-[9px] text-[#EF4444] font-normal">
+                          (Ada: {currentHolder.nama.split(' ')[0]})
+                        </span>
+                      )}
+                    </div>
                     <span
-                      className={`w-4 h-4 rounded-md flex items-center justify-center text-[10px] font-bold ${
+                      className={`w-4 h-4 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 ml-1 ${
                         isSelected ? 'bg-[#FF7043] text-white' : 'border border-[#CBD5E1] bg-white text-transparent'
                       }`}
                     >
@@ -945,34 +1046,47 @@ export const GuruPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Jam Mengajar (Mulai & Selesai) */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[#1E293B] font-bold mb-1">Jam Mulai Mengajar</label>
-              <input
-                type="time"
-                value={jamMengajarMulai}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setJamMengajarMulai(val);
-                  setFormData(prev => ({ ...prev, paket_pengajaran: `${val} - ${jamMengajarSelesai}` }));
-                }}
-                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
-              />
+          {/* Jam Mengajar (Fleksibel untuk Struktural vs Jam Kelas untuk Pengajar) */}
+          {EXCLUSIVE_SINGLE_ROLES.some((r) => (formData.kategori_program || '').toLowerCase().includes(r.toLowerCase())) ? (
+            <div className="p-3.5 bg-[#ECFDF5] border border-[#A7F3D0] rounded-xl flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-[#065F46]">Jadwal Mengajar: Fleksibel</p>
+                <p className="text-[11px] text-[#047857]">Jabatan struktural (Direktur, Admin, Kepala Sekolah) berstatus fleksibel tanpa jadwal kelas kaku.</p>
+              </div>
+              <span className="px-3 py-1 bg-[#10B981] text-white text-xs font-black rounded-lg shadow-2xs">
+                Fleksibel
+              </span>
             </div>
-            <div>
-              <label className="block text-[#1E293B] font-bold mb-1">Jam Selesai Mengajar</label>
-              <input
-                type="time"
-                value={jamMengajarSelesai}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setJamMengajarSelesai(val);
-                  setFormData(prev => ({ ...prev, paket_pengajaran: `${jamMengajarMulai} - ${val}` }));
-                }}
-                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
-              />
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[#1E293B] font-bold mb-1">Jam Mulai Mengajar</label>
+                <input
+                  type="time"
+                  value={jamMengajarMulai}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setJamMengajarMulai(val);
+                    setFormData((prev) => ({ ...prev, paket_pengajaran: `${val} - ${jamMengajarSelesai} WIB` }));
+                  }}
+                  className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[#1E293B] font-bold mb-1">Jam Selesai Mengajar</label>
+                <input
+                  type="time"
+                  value={jamMengajarSelesai}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setJamMengajarSelesai(val);
+                    setFormData((prev) => ({ ...prev, paket_pengajaran: `${jamMengajarMulai} - ${val} WIB` }));
+                  }}
+                  className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
+                />
+              </div>
             </div>
+          )}
           </div>
 
           {/* No. WhatsApp Guru* */}

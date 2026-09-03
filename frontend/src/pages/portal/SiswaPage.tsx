@@ -63,9 +63,9 @@ export const PROGRAM_CONFIG = {
     ]
   },
   'TK': {
-    spp: 0,
+    spp: 400000,
     packages: [
-      { label: 'Program TK', target: 0, duration: 'Fleksibel', count: 'Reguler' },
+      { label: 'Paket Reguler: 20 Pertemuan (Senin - Jumat, 07:30 - 13:30 WIB)', target: 20, duration: '07:30 - 13:30 WIB', count: '20x' },
     ]
   }
 };

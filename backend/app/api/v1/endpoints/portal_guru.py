@@ -1,3 +1,4 @@
+import logging
 from typing import List, Dict, Any, Optional
 from datetime import datetime, date, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
@@ -5,6 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, or_, and_
 from pydantic import BaseModel
 
+logger = logging.getLogger(__name__)
 WIB = timezone(timedelta(hours=7))
 
 from app.core.database import get_db
@@ -17,6 +19,7 @@ from app.models.absensi_log import AbsensiLog, StatusAbsensi, ModeAbsensi
 from app.models.jadwal import Jadwal
 from app.models.catatan_pembelajaran import CatatanPembelajaran
 from app.models.pembayaran_periode import PembayaranPeriode, StatusPembayaran
+from app.core.constants import get_program_spp_nominal
 
 router = APIRouter()
 teacher_only = RoleChecker([UserRole.guru])
@@ -713,26 +716,28 @@ async def save_siswa_absensi(
             if status_enum in [StatusAbsensi.HADIR, StatusAbsensi.ALFA]:
                 _update_student_program_quota(siswa, active_program, -sesi_count)
 
-        # Update SPP status based on remaining meetings
-        if siswa.sisa_pertemuan == 0 and siswa.status_spp != StatusSPP.EXPIRED:
-            siswa.status_spp = StatusSPP.EXPIRED
-            current_month = now.strftime("%Y-%m")
-            due_date = now.date() + timedelta(days=7)
-            existing_bill = db.query(PembayaranPeriode).filter(
-                PembayaranPeriode.id_siswa == siswa.id,
-                PembayaranPeriode.periode_bulan == current_month
-            ).first()
-            if not existing_bill:
-                billing = PembayaranPeriode(
-                    id_siswa=siswa.id,
-                    periode_bulan=current_month,
-                    jumlah=150000.00,
-                    status=StatusPembayaran.MENUNGGAK,
-                    due_date=due_date
-                )
-                db.add(billing)
-        elif siswa.sisa_pertemuan > 0 and siswa.status_spp == StatusSPP.EXPIRED:
-            siswa.status_spp = StatusSPP.AKTIF
+        # Update SPP status based on remaining meetings (khusus non-TK karena TK berbasis kalender bulanan)
+        is_tk = "tk" in (active_program or "").lower()
+        if not is_tk:
+            if siswa.sisa_pertemuan == 0 and siswa.status_spp != StatusSPP.EXPIRED:
+                siswa.status_spp = StatusSPP.EXPIRED
+                current_month = now.strftime("%Y-%m")
+                due_date = now.date() + timedelta(days=7)
+                existing_bill = db.query(PembayaranPeriode).filter(
+                    PembayaranPeriode.id_siswa == siswa.id,
+                    PembayaranPeriode.periode_bulan == current_month
+                ).first()
+                if not existing_bill:
+                    billing = PembayaranPeriode(
+                        id_siswa=siswa.id,
+                        periode_bulan=current_month,
+                        jumlah=get_program_spp_nominal(db, siswa.kategori_program),
+                        status=StatusPembayaran.MENUNGGAK,
+                        due_date=due_date
+                    )
+                    db.add(billing)
+            elif siswa.sisa_pertemuan > 0 and siswa.status_spp == StatusSPP.EXPIRED:
+                siswa.status_spp = StatusSPP.AKTIF
 
         saved_count += 1
         updated_students_data.append({
@@ -782,6 +787,47 @@ async def save_siswa_absensi(
             "catatan": catatan_saved,
             "waktu": now.strftime("%H:%M WIB")
         })
+
+    # Dispatch Web Push Notification langsung ke akun Ortu (Netral tanpa unsur agama)
+    try:
+        from app.services.push_notification import send_push_to_user
+        for std in updated_students_data:
+            ortu_user = db.query(User).filter(
+                User.role == UserRole.ortu,
+                (User.uid_terhubung == str(std["siswa_id"])) | (User.uid_terhubung == std["uid"])
+            ).first()
+
+            if ortu_user:
+                st_val = std["status"].upper()
+                if st_val == "HADIR":
+                    push_title = f"Kehadiran Kelas {active_program}"
+                    sisa_text = f" Sisa kuota: {std['sisa_pertemuan']} sesi." if std.get('sisa_pertemuan') is not None and "tk" not in active_program.lower() else ""
+                    push_body = f"Ananda {std['nama']} telah hadir dan mengikuti kelas {active_program} bersama Guru {guru.nama} pada pukul {std['waktu']}.{sisa_text}"
+                elif st_val == "IZIN":
+                    push_title = f"Izin Kelas {active_program}"
+                    push_body = f"Ananda {std['nama']} tercatat izin pada kelas {active_program} hari ini ({std['tanggal']})."
+                else:
+                    push_title = f"Ketidakhadiran Kelas {active_program}"
+                    push_body = f"Ananda {std['nama']} tercatat tidak hadir pada jadwal kelas {active_program} hari ini."
+
+                send_push_to_user(
+                    db=db,
+                    user_id=ortu_user.id,
+                    title=push_title,
+                    body=push_body,
+                    url="/ortu/absensi"
+                )
+
+                if catatan_saved and st_val == "HADIR":
+                    send_push_to_user(
+                        db=db,
+                        user_id=ortu_user.id,
+                        title=f"Catatan Belajar - {active_program}",
+                        body=f"Guru {guru.nama} telah menambahkan catatan belajar untuk ananda {std['nama']}: '{catatan_saved[:80]}'",
+                        url="/ortu/dashboard"
+                    )
+    except Exception as push_err:
+        logger.debug(f"Attendance push notification notice: {push_err}")
 
     return {
         "status": "success",

@@ -53,10 +53,10 @@ def get_spp_nominal(program: Optional[str]) -> float:
         if "sempoa" in p:
             total += 350000.00
         elif "tk" in p:
-            total += 0.0
+            total += 400000.00
         else:
             total += 200000.00
-    return total if (total > 0 or not all("tk" in p for p in programs)) else 0.0
+    return total
 
 @router.get("/reminder")
 @router.get("/reminder-spp")
@@ -114,32 +114,108 @@ async def get_pembayaran_reminders(
         due_date_str = str(due_date)
 
         # Thresholds:
-        # Merah/Urgent: Lewat 30 hari (expired/hangus) ATAU sisa < 20%
-        # Kuning/Peringatan: Belum lewat 30 hari DAN sisa <= 40%
-        # Hijau/Lancar: Sisa > 40% dan masih dalam 30 hari
-        if is_expired_30_hari:
-            status_code = "urgent"
-            status_label = f"Hangus (Lewat {abs(days_remaining)} Hari)" if is_hangus else "Expired (Lewat 30 Hari)"
-            color = "merah"
-            urgent_count += 1
-        elif persen < 20:
-            status_code = "urgent"
-            status_label = "Urgent (< 20%)"
-            color = "merah"
-            urgent_count += 1
-        elif persen <= 40:
-            status_code = "peringatan"
-            status_label = "Peringatan (Siap Bayar)"
-            color = "kuning"
-            peringatan_count += 1
-        else:
-            status_code = "lancar"
-            status_label = "Lancar"
-            color = "hijau"
-            lancar_count += 1
+        is_tk = "tk" in (s.kategori_program or "").lower()
 
-        # Kuning Template (Peringatan Persiapan SPP - Tanpa Rekening)
-        wa_peringatan = f"""Assalamualaikum Ibu/Pak {ortu_name},
+        if is_tk:
+            # Mekanisme Khusus TK (Sekolah Formal):
+            # 10 hari terakhir bulan (tgl >= 20): Kuning (Siap Bayar SPP bulan depan)
+            # 10 hari awal bulan (tgl 1-10): Merah (Tagihan Jatuh Tempo bulan berjalan)
+            # Di atas tgl 10: Merah (Menunggak) jika belum lunas
+            current_month_str = today.strftime("%Y-%m")
+            tk_lunas_current = db.query(PembayaranPeriode).filter(
+                PembayaranPeriode.id_siswa == s.id,
+                PembayaranPeriode.periode_bulan == current_month_str,
+                PembayaranPeriode.status == StatusPembayaran.LUNAS
+            ).first() is not None
+
+            if tk_lunas_current:
+                if today.day >= 20:
+                    status_code = "peringatan"
+                    status_label = "Peringatan (10 Hari Terakhir Bulan)"
+                    color = "kuning"
+                    peringatan_count += 1
+                else:
+                    status_code = "lancar"
+                    status_label = "Lancar (Lunas)"
+                    color = "hijau"
+                    lancar_count += 1
+            else:
+                if today.day <= 10:
+                    status_code = "urgent"
+                    status_label = "Urgent (10 Hari Awal Bulan)"
+                    color = "merah"
+                    urgent_count += 1
+                else:
+                    status_code = "urgent"
+                    status_label = "Menunggak (Lewat Tanggal 10)"
+                    color = "merah"
+                    urgent_count += 1
+
+            # Template WA Khusus TK
+            wa_peringatan = f"""Halo Ibu/Pak {ortu_name},
+
+Kami menginformasikan bahwa saat ini telah memasuki akhir bulan. Mohon bersiap untuk melakukan pembayaran SPP TK untuk Ananda {s.nama} periode bulan depan.
+
+- Nama Anak: {s.nama}
+- Program: TK (Sekolah Formal)
+- Jadwal Masuk: {s.paket_jadwal or 'Senin - Jumat 07:30 - 13:30 WIB'}
+- Biaya SPP: Rp {int(jumlah_tagihan):,} / bulan
+
+Pembayaran dapat dilakukan sebelum tanggal 10 awal bulan. Terima kasih atas kerja samanya.
+
+---
+Tim Sempoa SIP TC Pariaman
+Admin: 082385813163 | Owner: 08126784986""".replace(",", ".")
+
+            wa_urgent = f"""Halo Ibu/Pak {ortu_name},
+
+[TAGIHAN SPP TK - JATUH TEMPO]
+Kami menginformasikan tagihan SPP TK untuk Ananda {s.nama} telah aktif untuk periode bulan {today.strftime('%B %Y')}.
+
+- Nama Anak: {s.nama}
+- Program: TK (Sekolah Formal)
+- Jadwal Masuk: {s.paket_jadwal or 'Senin - Jumat 07:30 - 13:30 WIB'}
+- Total Tagihan: Rp {int(jumlah_tagihan):,}
+
+REKENING RESMI PEMBAYARAN:
+1. Bank BRI
+   No. Rekening: 0321 0100 2859536
+   A/N: ZULHEMAWATI
+2. Bank BPD (Bank Nagari)
+   No. Rekening: 0500 0201 085065
+   A/N: ZULHEMAWATI
+
+Mohon segera lakukan pembayaran dan konfirmasi bukti transfer melalui portal atau WhatsApp ini. Terima kasih.
+
+---
+Tim Sempoa SIP TC Pariaman
+Admin: 082385813163 | Owner: 08126784986""".replace(",", ".")
+
+        else:
+            # Thresholds untuk program Non-TK (Sempoa, Fonem, Tahfidz, Bahasa Inggris):
+            if is_expired_30_hari:
+                status_code = "urgent"
+                status_label = f"Hangus (Lewat {abs(days_remaining)} Hari)" if is_hangus else "Expired (Lewat 30 Hari)"
+                color = "merah"
+                urgent_count += 1
+            elif persen < 20:
+                status_code = "urgent"
+                status_label = "Urgent (< 20%)"
+                color = "merah"
+                urgent_count += 1
+            elif persen <= 40:
+                status_code = "peringatan"
+                status_label = "Peringatan (Siap Bayar)"
+                color = "kuning"
+                peringatan_count += 1
+            else:
+                status_code = "lancar"
+                status_label = "Lancar"
+                color = "hijau"
+                lancar_count += 1
+
+            # Kuning Template (Peringatan Persiapan SPP - Tanpa Rekening)
+            wa_peringatan = f"""Halo Ibu/Pak {ortu_name},
 
 Kami ingin memberitahukan bahwa kuota pertemuan {s.nama} untuk program {s.kategori_program} tinggal sedikit (sisa {sisa} sesi / {int(persen)}%).
 
@@ -154,9 +230,9 @@ Mohon bersiap untuk melakukan pembayaran SPP periode berikutnya.
 Tim Sempoa SIP TC Pariaman
 Admin: 082385813163 | Owner: 08126784986"""
 
-        # Merah Template (Tagihan Urgent / Expired - Dilengkapi Rekening Resmi ZULHEMAWATI)
-        alasan_merah = "Masa aktif 30 hari telah berakhir (sisa pertemuan hangus)" if is_hangus else ("Masa aktif 30 hari telah berakhir" if is_expired_30_hari else f"Sisa pertemuan tinggal {sisa} sesi ({int(persen)}%)")
-        wa_urgent = f"""Assalamualaikum Ibu/Pak {ortu_name},
+            # Merah Template (Tagihan Urgent / Expired - Dilengkapi Rekening Resmi ZULHEMAWATI)
+            alasan_merah = "Masa aktif 30 hari telah berakhir (sisa pertemuan hangus)" if is_hangus else ("Masa aktif 30 hari telah berakhir" if is_expired_30_hari else f"Sisa pertemuan tinggal {sisa} sesi ({int(persen)}%)")
+            wa_urgent = f"""Halo Ibu/Pak {ortu_name},
 
 [PEMBERITAHUAN TAGIHAN SPP]
 
@@ -355,7 +431,7 @@ async def update_siswa_due_date(
             elif p == "Bahasa Inggris":
                 target = 8
             elif p == "TK":
-                target = 0
+                target = 20
             kuota_dict[p] = {"sisa": target, "target": target}
         siswa.kuota_program = json.dumps(kuota_dict)
         db.add(siswa)

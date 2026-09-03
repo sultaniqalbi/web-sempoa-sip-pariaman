@@ -40,10 +40,10 @@ def send_push_to_user(
         "title": title,
         "body": body,
         "url": url or "/ortu/pembayaran",
-        "icon": icon or "/assets/logo/logo-sempoa-sip.png",
-        "badge": "/assets/logo/logo-sempoa-sip.png",
+        "icon": icon or "/assets/logo/logo-sempoa-sip.webp",
+        "badge": "/assets/logo/logo-sempoa-sip.webp",
         "timestamp": datetime.utcnow().isoformat()
-    })
+    }, ensure_ascii=False)
 
     success_count = 0
     fail_count = 0

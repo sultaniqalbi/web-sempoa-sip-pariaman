@@ -34,8 +34,8 @@ const SCHEDULE_CONFIG: Record<string, { hari_biasa: { jam_mulai: string; jam_sel
     defaultRoom: 'TC Pariaman - Ruang English',
   },
   'TK': {
-    hari_biasa: { jam_mulai: '08:00', jam_selesai: '11:00' },
-    hari_libur: { jam_mulai: '08:00', jam_selesai: '10:30' },
+    hari_biasa: { jam_mulai: '07:30', jam_selesai: '13:30' },
+    hari_libur: { jam_mulai: '07:30', jam_selesai: '13:30' },
     defaultRoom: 'TC Pariaman - Ruang TK',
   },
 };

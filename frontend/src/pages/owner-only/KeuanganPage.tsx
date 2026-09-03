@@ -33,6 +33,18 @@ interface ReminderStudentItem {
   jumlah_tagihan?: number;
 }
 
+interface SppProgramItem {
+  id: number;
+  nama_program: string;
+  biaya_spp: number;
+  target_pertemuan: number;
+  jam_mulai: string;
+  jam_selesai: string;
+  hari_masuk: string;
+  keterangan: string;
+  updated_at?: string;
+}
+
 export const KeuanganPage: React.FC = () => {
   const [selectedRange, setSelectedRange] = useState<RangeOption>('3 Bulan Terakhir');
   const [customStartDate, setCustomStartDate] = useState('');
@@ -42,6 +54,49 @@ export const KeuanganPage: React.FC = () => {
   const [selectedWADraft, setSelectedWADraft] = useState<{ name: string; draft: string; wa: string; title: string } | null>(null);
   const [isWADraftModalOpen, setIsWADraftModalOpen] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [editingProgram, setEditingProgram] = useState<SppProgramItem | null>(null);
+  const [editSppForm, setEditSppForm] = useState({
+    biaya_spp: 0,
+    target_pertemuan: 12,
+    jam_mulai: '',
+    jam_selesai: '',
+    hari_masuk: '',
+    keterangan: ''
+  });
+
+  const { data: sppPrograms = [], refetch: refetchPrograms } = useQuery<SppProgramItem[]>({
+    queryKey: ['ownerSppPrograms'],
+    queryFn: async () => {
+      const res = await apiClient.get('/owner/spp-programs');
+      return res.data;
+    }
+  });
+
+  const updateProgramMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: typeof editSppForm }) => {
+      const res = await apiClient.put(`/owner/spp-programs/${id}`, data);
+      return res.data;
+    },
+    onSuccess: (res) => {
+      refetchPrograms();
+      setEditingProgram(null);
+    },
+    onError: (err: any) => {
+      alert(`Gagal memperbarui tarif SPP: ${err.response?.data?.detail || err.message}`);
+    }
+  });
+
+  const openEditProgramModal = (prog: SppProgramItem) => {
+    setEditingProgram(prog);
+    setEditSppForm({
+      biaya_spp: prog.biaya_spp,
+      target_pertemuan: prog.target_pertemuan,
+      jam_mulai: prog.jam_mulai !== '-' ? prog.jam_mulai : '08:00',
+      jam_selesai: prog.jam_selesai !== '-' ? prog.jam_selesai : '12:00',
+      hari_masuk: prog.hari_masuk !== '-' ? prog.hari_masuk : 'Senin - Jumat',
+      keterangan: prog.keterangan !== '-' ? prog.keterangan : ''
+    });
+  };
 
   const selectedBulan = new Date().toISOString().substring(0, 7);
 
@@ -112,7 +167,7 @@ export const KeuanganPage: React.FC = () => {
         ? 'Masa aktif 30 hari telah berakhir' 
         : `Sisa pertemuan tinggal ${student.sisa_pertemuan} sesi`;
 
-      draftText = `Assalamualaikum Ibu/Pak ${ortuName},
+      draftText = `Halo Ibu/Pak ${ortuName},
 
 [PEMBERITAHUAN TAGIHAN SPP]
 
@@ -139,7 +194,7 @@ Tim Sempoa SIP TC Pariaman
 Direktur: 08126784986 | Admin: 082385813163`;
     } else if (student.status === 'peringatan') {
       modalTitle = `Kirim Pengingat Persiapan SPP - ${student.nama_siswa}`;
-      draftText = `Assalamualaikum Ibu/Pak ${ortuName},
+      draftText = `Halo Ibu/Pak ${ortuName},
 
 Kami ingin memberitahukan bahwa kuota pertemuan ananda ${student.nama_siswa} untuk program ${student.program} tersisa ${student.sisa_pertemuan} dari ${student.target_pertemuan} sesi bimbingan.
 
@@ -155,7 +210,7 @@ Tim Sempoa SIP TC Pariaman
 Admin: 082385813163 | Direktur: 08126784986`;
     } else {
       modalTitle = `Kirim Info Status SPP - ${student.nama_siswa}`;
-      draftText = `Assalamualaikum Ibu/Pak ${ortuName},
+      draftText = `Halo Ibu/Pak ${ortuName},
 
 Sempoa SIP TC Pariaman menginformasikan bahwa bimbingan belajar ananda ${student.nama_siswa} pada program ${student.program} berjalan dengan lancar dan aktif (sisa ${student.sisa_pertemuan} dari ${student.target_pertemuan} sesi bimbingan).
 
@@ -282,6 +337,76 @@ Admin: 082385813163 | Direktur: 08126784986`;
             </p>
             <p className="text-[11px] text-[#757575] font-medium">Sisa pertemuan {'<= 40%'}</p>
           </div>
+        </div>
+      </div>
+
+      {/* SECTION KHUSUS: Tarif & SPP Resmi Lembaga (Bisa Diubah Kapan Saja) */}
+      <div className="bg-white rounded-2xl border border-[#E0E0E0] shadow-sm overflow-hidden p-5 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#F1F5F9] pb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-[#FFF3E0] text-[#FF7043] rounded-xl flex items-center justify-center">
+              <UangIcon size={22} />
+            </div>
+            <div>
+              <h2 className="text-base font-extrabold text-[#1E293B]">Tarif & Jadwal SPP Program Resmi</h2>
+              <p className="text-xs text-[#64748B]">Pantau dan ubah rincian biaya SPP, kuota sesi, dan jam belajar tiap program secara fleksibel.</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+          {sppPrograms.map((prog) => {
+            const isTK = prog.nama_program.toUpperCase() === 'TK';
+            const badgeBg = isTK ? 'bg-[#EDE9FE] text-[#6D28D9] border-[#DDD6FE]' : 'bg-[#EFF6FF] text-[#1D4ED8] border-[#BFDBFE]';
+            return (
+              <div
+                key={prog.id}
+                className={`p-4 rounded-xl border transition-all flex flex-col justify-between ${
+                  isTK ? 'bg-gradient-to-b from-[#F5F3FF] to-white border-[#C4B5FD] shadow-xs' : 'bg-white border-[#E2E8F0] shadow-2xs hover:border-[#CBD5E1]'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-md border ${badgeBg}`}>
+                      {prog.nama_program}
+                    </span>
+                    {isTK && (
+                      <span className="text-[9px] font-black text-[#6D28D9] bg-[#DDD6FE] px-1.5 py-0.5 rounded">
+                        Full Sesi
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-lg font-black text-[#1E293B] mt-1">
+                    Rp {prog.biaya_spp.toLocaleString('id-ID')}
+                    <span className="text-[10px] font-medium text-[#64748B]"> /bln</span>
+                  </p>
+                  <div className="mt-2.5 space-y-1 text-[11px] text-[#64748B]">
+                    <p className="flex items-center gap-1.5">
+                      <span className="font-semibold text-[#475569]">Waktu:</span> {prog.jam_mulai} - {prog.jam_selesai}
+                    </p>
+                    <p className="flex items-center gap-1.5">
+                      <span className="font-semibold text-[#475569]">Hari:</span> {prog.hari_masuk}
+                    </p>
+                    <p className="flex items-center gap-1.5">
+                      <span className="font-semibold text-[#475569]">Target:</span> {prog.target_pertemuan} Sesi/Bln
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => openEditProgramModal(prog)}
+                  className="mt-4 w-full py-1.5 px-3 bg-white hover:bg-[#F8FAFC] border border-[#CBD5E1] text-[#334155] hover:text-[#0F172A] font-bold text-xs rounded-lg transition-colors flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                  Edit SPP
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -607,6 +732,116 @@ Admin: 082385813163 | Direktur: 08126784986`;
         onClose={() => setExportResult(null)}
         result={exportResult}
       />
+
+      {/* Modal Edit Tarif SPP Program */}
+      <Modal
+        isOpen={!!editingProgram}
+        onClose={() => setEditingProgram(null)}
+        title={`Ubah Detail SPP - ${editingProgram?.nama_program || ''}`}
+        size="md"
+      >
+        {editingProgram && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              updateProgramMutation.mutate({ id: editingProgram.id, data: editSppForm });
+            }}
+            className="space-y-4 text-xs"
+          >
+            <div>
+              <label className="block font-bold text-[#334155] mb-1">Nama Program</label>
+              <input
+                type="text"
+                disabled
+                value={editingProgram.nama_program}
+                className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-xl p-2.5 text-[#64748B] font-bold"
+              />
+            </div>
+
+            <div>
+              <label className="block font-bold text-[#334155] mb-1">
+                Biaya SPP Bulanan (Rp) <span className="text-[#EF4444]">*</span>
+              </label>
+              <input
+                type="number"
+                required
+                min={0}
+                step={5000}
+                value={editSppForm.biaya_spp}
+                onChange={(e) => setEditSppForm({ ...editSppForm, biaya_spp: parseFloat(e.target.value) || 0 })}
+                className="w-full bg-white border border-[#CBD5E1] rounded-xl p-2.5 text-[#0F172A] font-bold text-sm focus:outline-none focus:border-[#FF7043]"
+              />
+              <p className="text-[11px] text-[#64748B] mt-0.5">
+                Pratinjau: <strong>Rp {editSppForm.biaya_spp.toLocaleString('id-ID')} / bulan</strong>
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block font-bold text-[#334155] mb-1">Jam Masuk</label>
+                <input
+                  type="text"
+                  placeholder="Contoh: 07:30"
+                  value={editSppForm.jam_mulai}
+                  onChange={(e) => setEditSppForm({ ...editSppForm, jam_mulai: e.target.value })}
+                  className="w-full bg-white border border-[#CBD5E1] rounded-xl p-2.5 text-[#0F172A] font-medium focus:outline-none focus:border-[#FF7043]"
+                />
+              </div>
+              <div>
+                <label className="block font-bold text-[#334155] mb-1">Jam Pulang</label>
+                <input
+                  type="text"
+                  placeholder="Contoh: 13:30"
+                  value={editSppForm.jam_selesai}
+                  onChange={(e) => setEditSppForm({ ...editSppForm, jam_selesai: e.target.value })}
+                  className="w-full bg-white border border-[#CBD5E1] rounded-xl p-2.5 text-[#0F172A] font-medium focus:outline-none focus:border-[#FF7043]"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block font-bold text-[#334155] mb-1">Hari Masuk</label>
+                <input
+                  type="text"
+                  placeholder="Contoh: Senin - Jumat"
+                  value={editSppForm.hari_masuk}
+                  onChange={(e) => setEditSppForm({ ...editSppForm, hari_masuk: e.target.value })}
+                  className="w-full bg-white border border-[#CBD5E1] rounded-xl p-2.5 text-[#0F172A] font-medium focus:outline-none focus:border-[#FF7043]"
+                />
+              </div>
+              <div>
+                <label className="block font-bold text-[#334155] mb-1">Target Pertemuan (Sesi/Bulan)</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={31}
+                  value={editSppForm.target_pertemuan}
+                  onChange={(e) => setEditSppForm({ ...editSppForm, target_pertemuan: parseInt(e.target.value) || 1 })}
+                  className="w-full bg-white border border-[#CBD5E1] rounded-xl p-2.5 text-[#0F172A] font-medium focus:outline-none focus:border-[#FF7043]"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end items-center gap-2 pt-3 border-t border-[#F1F5F9]">
+              <button
+                type="button"
+                onClick={() => setEditingProgram(null)}
+                className="px-4 py-2 bg-[#F1F5F9] text-[#475569] font-bold rounded-xl hover:bg-[#E2E8F0] cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                disabled={updateProgramMutation.isPending}
+                className="px-5 py-2 bg-[#FF7043] hover:bg-[#F4511E] text-white font-bold rounded-xl transition-colors shadow-xs cursor-pointer disabled:opacity-50"
+              >
+                {updateProgramMutation.isPending ? 'Menyimpan...' : 'Simpan Perubahan'}
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
     </div>
   );
 };

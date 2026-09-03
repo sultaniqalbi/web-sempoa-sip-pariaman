@@ -14,6 +14,7 @@ from app.models.push_subscription import PushSubscription
 from app.models.catatan_pembelajaran import CatatanPembelajaran
 from app.models.buku_siswa import BukuSiswa, StatusBuku
 from app.models.evaluasi_siswa import EvaluasiSiswa
+from app.models.program_setting import ProgramSetting
 
 __all__ = [
     "Base",
@@ -41,5 +42,6 @@ __all__ = [
     "BukuSiswa",
     "StatusBuku",
     "EvaluasiSiswa",
+    "ProgramSetting",
 ]
 

@@ -31,11 +31,37 @@ PROGRAM_CONFIG = {
     },
     "TK": {
         "nama": "TK",
-        "default_target_pertemuan": 0,
-        "biaya_spp": 200000.0,
-        "jam_default": {"mulai": "08:00", "selesai": "11:00"}
+        "default_target_pertemuan": 20,
+        "biaya_spp": 400000.0,
+        "jam_default": {"mulai": "07:30", "selesai": "13:30"},
+        "hari_masuk": "Senin - Jumat"
     }
 }
 
 DEFAULT_DENDA_PER_TERLAMBAT = 1000
 MAX_UPLOAD_SIZE_BYTES = 50 * 1024 * 1024  # 50MB
+
+def get_program_spp_nominal(db, program_name: str) -> float:
+    """
+    Get dynamic SPP fee from database ProgramSetting with fallback to constants.
+    """
+    if not program_name:
+        return 200000.0
+
+    # Check database ProgramSetting first
+    try:
+        from app.models.program_setting import ProgramSetting
+        setting = db.query(ProgramSetting).filter(ProgramSetting.nama_program == program_name.strip()).first()
+        if setting and setting.biaya_spp:
+            return float(setting.biaya_spp)
+    except Exception:
+        pass
+
+    # Fallback to in-memory config
+    p_lower = program_name.strip().lower()
+    if "sempoa" in p_lower:
+        return 350000.0
+    elif "tk" in p_lower:
+        return 400000.0
+    return 200000.0
+
