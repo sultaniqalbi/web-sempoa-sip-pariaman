@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import useAuth from '../../features/auth/useAuth';
 import apiClient from '../../features/api/apiClient';
 import { Siswa, AbsensiLog } from '../../types';
-import { PresensiIcon, CalendarIcon, UserIcon } from '../../components/SvgIcons';
+import { PresensiIcon, CalendarIcon, UserIcon, CatatanIcon } from '../../components/SvgIcons';
 import { formatIndoDateTime } from '../../utils/dateFormatter';
 import { parseProgramDetails, getProgramBadgeStyle } from '../portal/SiswaPage';
 
@@ -165,7 +165,7 @@ export const OrtuAbsensiPage: React.FC = () => {
           <div className="bg-gradient-to-br from-[#FFF9C4]/50 to-[#FFF3E0]/70 border border-[#FFE082] rounded-2xl p-4 shadow-2xs space-y-2 mt-2">
             <div className="flex items-center justify-between flex-wrap gap-1">
               <div className="flex items-center gap-2">
-                <span className="text-base">📝</span>
+                <CatatanIcon size={16} className="text-[#E65100]" />
                 <h4 className="text-xs font-black text-[#E65100] uppercase tracking-wider">
                   Catatan Guru
                 </h4>
@@ -256,8 +256,8 @@ export const OrtuAbsensiPage: React.FC = () => {
 
                   {catatanGuruText ? (
                     <div className="p-2.5 rounded-xl bg-white border border-[#FFE082] text-xs space-y-1 shadow-2xs">
-                      <span className="text-[10px] font-black text-[#E65100] uppercase tracking-wider flex items-center gap-1">
-                        <span>📝</span>
+                      <span className="text-[10px] font-black text-[#E65100] uppercase tracking-wider flex items-center gap-1.5">
+                        <CatatanIcon size={14} className="text-[#E65100]" />
                         <span>Catatan Guru:</span>
                       </span>
                       <p className="text-[#334155] font-medium leading-relaxed pl-4">
