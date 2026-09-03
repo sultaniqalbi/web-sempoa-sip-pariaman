@@ -8,6 +8,12 @@ interface IzinGuruModalProps {
   onClose: () => void;
   guruNama: string;
   onSuccess: (message: string) => void;
+  initialData?: {
+    id: number;
+    waktu?: string;
+    catatan?: string;
+    sumber?: string;
+  } | null;
 }
 
 export const IzinGuruModal: React.FC<IzinGuruModalProps> = ({
@@ -15,6 +21,7 @@ export const IzinGuruModal: React.FC<IzinGuruModalProps> = ({
   onClose,
   guruNama,
   onSuccess,
+  initialData = null,
 }) => {
   const queryClient = useQueryClient();
   const todayStr = new Date().toISOString().split('T')[0];
@@ -29,16 +36,44 @@ export const IzinGuruModal: React.FC<IzinGuruModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      const today = new Date().toISOString().split('T')[0];
-      setTipeIzin('HARIAN');
-      setAlasan('');
-      setTanggalMulai(today);
-      setTanggalSelesai(today);
-      setJamMulai('08:00');
-      setJamSelesai('10:00');
       setErrorMsg(null);
+      if (initialData) {
+        // Edit mode
+        const isJadwal = (initialData.sumber || '').includes('JADWAL');
+        setTipeIzin(isJadwal ? 'JADWAL' : 'HARIAN');
+
+        let rawCatatan = initialData.catatan || '';
+        const jadwalMatch = rawCatatan.match(/\[Izin Jadwal (\d{2}:\d{2})-(\d{2}:\d{2}) WIB\]\s*(.*)/i);
+        if (jadwalMatch) {
+          setJamMulai(jadwalMatch[1]);
+          setJamSelesai(jadwalMatch[2]);
+          setAlasan(jadwalMatch[3]);
+        } else {
+          const generalMatch = rawCatatan.match(/^\[(.*?)\]\s*(.*)$/);
+          if (generalMatch) {
+            setAlasan(generalMatch[2]);
+          } else {
+            setAlasan(rawCatatan);
+          }
+        }
+
+        if (initialData.waktu) {
+          const tgl = initialData.waktu.split(' ')[0].split('T')[0];
+          setTanggalMulai(tgl);
+          setTanggalSelesai(tgl);
+        }
+      } else {
+        // Create mode
+        const today = new Date().toISOString().split('T')[0];
+        setTipeIzin('HARIAN');
+        setAlasan('');
+        setTanggalMulai(today);
+        setTanggalSelesai(today);
+        setJamMulai('08:00');
+        setJamSelesai('10:00');
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, initialData]);
 
   const mutation = useMutation({
     mutationFn: async (payload: {
@@ -49,18 +84,23 @@ export const IzinGuruModal: React.FC<IzinGuruModalProps> = ({
       jam_mulai?: string;
       jam_selesai?: string;
     }) => {
-      const res = await apiClient.post('/portal-guru/izin-guru', payload);
-      return res.data;
+      if (initialData?.id) {
+        const res = await apiClient.put(`/portal-guru/izin-guru/${initialData.id}`, payload);
+        return res.data;
+      } else {
+        const res = await apiClient.post('/portal-guru/izin-guru', payload);
+        return res.data;
+      }
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['guru-dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['guru-absensi-list'] });
       queryClient.invalidateQueries({ queryKey: ['guru-rekap-absensi'] });
-      onSuccess(data.message || 'Izin pengajar berhasil dicatat!');
+      onSuccess(data.message || (initialData ? 'Izin pengajar berhasil diperbarui!' : 'Izin pengajar berhasil dicatat!'));
       onClose();
     },
     onError: (err: any) => {
-      setErrorMsg(err.response?.data?.detail || 'Gagal mengajukan izin.');
+      setErrorMsg(err.response?.data?.detail || 'Gagal memproses izin.');
     },
   });
 
@@ -112,8 +152,12 @@ export const IzinGuruModal: React.FC<IzinGuruModalProps> = ({
               </svg>
             </div>
             <div>
-              <h3 className="font-black text-base sm:text-lg leading-tight">Formulir Izin Pengajar</h3>
-              <p className="text-[11px] text-white/90 font-medium">Permohonan izin / ketidakhadiran pengajar</p>
+              <h3 className="font-black text-base sm:text-lg leading-tight">
+                {initialData ? 'Edit Permohonan Izin' : 'Formulir Izin Pengajar'}
+              </h3>
+              <p className="text-[11px] text-white/90 font-medium">
+                {initialData ? 'Perbarui data permohonan izin pengajar' : 'Permohonan izin / ketidakhadiran pengajar'}
+              </p>
             </div>
           </div>
           <button
@@ -309,14 +353,14 @@ export const IzinGuruModal: React.FC<IzinGuruModalProps> = ({
               {mutation.isPending ? (
                 <>
                   <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Mengajukan...</span>
+                  <span>{initialData ? 'Menyimpan...' : 'Mengajukan...'}</span>
                 </>
               ) : (
                 <>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  <span>Kirim Izin</span>
+                  <span>{initialData ? 'Simpan Perubahan' : 'Kirim Izin'}</span>
                 </>
               )}
             </button>

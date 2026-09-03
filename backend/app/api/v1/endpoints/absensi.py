@@ -607,6 +607,52 @@ async def create_guru_izin(
     return {"status": "success", "message": f"Izin untuk {guru.nama} berhasil dicatat selama {count} hari"}
 
 
+class GuruIzinUpdateRequest(BaseModel):
+    tanggal: str
+    jenis_izin: str = "Izin"
+    keterangan: Optional[str] = None
+    id_guru: Optional[int] = None
+
+
+@router.put("/guru-izin/{id}")
+async def update_guru_izin(
+    id: int,
+    req: GuruIzinUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(RoleChecker([UserRole.admin, UserRole.owner, UserRole.guru]))
+):
+    log = db.query(AbsensiLog).filter(AbsensiLog.id == id).first()
+    if not log:
+        raise HTTPException(status_code=404, detail="Data izin tidak ditemukan")
+
+    # If current user is guru, verify that this log belongs to them
+    if current_user.role == UserRole.guru:
+        guru_user = db.query(Guru).filter(Guru.id_user == current_user.id).first()
+        if not guru_user or guru_user.uid != log.uid:
+            raise HTTPException(status_code=403, detail="Anda hanya dapat mengedit izin milik Anda sendiri")
+    elif req.id_guru:
+        new_guru = db.query(Guru).filter(Guru.id == req.id_guru).first()
+        if new_guru and new_guru.uid:
+            log.uid = new_guru.uid
+
+    try:
+        target_date = datetime.strptime(req.tanggal, "%Y-%m-%d").date()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Format tanggal tidak valid (YYYY-MM-DD)")
+
+    waktu_target = datetime.combine(target_date, datetime.strptime("08:00", "%H:%M").time()).replace(tzinfo=WIB)
+    catatan_str = f"[{req.jenis_izin}] {req.keterangan.strip()}" if req.keterangan and req.keterangan.strip() else f"[{req.jenis_izin}]"
+
+    log.waktu = waktu_target
+    log.status = StatusAbsensi.IZIN
+    log.catatan = catatan_str
+    log.sumber = "PORTAL_EDIT"
+
+    db.commit()
+    return {"status": "success", "message": "Data izin berhasil diperbarui"}
+
+
+
 @router.post("/export-sheets")
 async def export_absensi_sheets(
     db: Session = Depends(get_db),

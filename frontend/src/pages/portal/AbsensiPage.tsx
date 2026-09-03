@@ -114,6 +114,7 @@ export const SharedAbsensiPage: React.FC = () => {
 
   // Guru Izin Modal State
   const [isIzinModalOpen, setIsIzinModalOpen] = useState(false);
+  const [editingIzinId, setEditingIzinId] = useState<number | null>(null);
   const [izinForm, setIzinForm] = useState({
     id_guru: '',
     tanggal_mulai: new Date().toISOString().split('T')[0],
@@ -299,22 +300,33 @@ export const SharedAbsensiPage: React.FC = () => {
     }
   });
 
-  // Mutation Guru Izin
+  // Mutation Input / Edit Izin Guru
   const izinGuruMutation = useMutation({
     mutationFn: async (data: typeof izinForm) => {
-      const res = await apiClient.post('/absensi/guru-izin', {
-        ...data,
-        id_guru: parseInt(data.id_guru, 10)
-      });
-      return res.data;
+      if (editingIzinId) {
+        const res = await apiClient.put(`/absensi/guru-izin/${editingIzinId}`, {
+          id_guru: parseInt(data.id_guru, 10),
+          tanggal: data.tanggal_mulai,
+          jenis_izin: data.jenis_izin,
+          keterangan: data.keterangan
+        });
+        return res.data;
+      } else {
+        const res = await apiClient.post('/absensi/guru-izin', {
+          ...data,
+          id_guru: parseInt(data.id_guru, 10)
+        });
+        return res.data;
+      }
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['absensi'] });
       setIsIzinModalOpen(false);
-      showToast(data.message || 'Izin pengajar berhasil dicatat');
+      setEditingIzinId(null);
+      showToast(data.message || (editingIzinId ? 'Izin pengajar berhasil diperbarui' : 'Izin pengajar berhasil dicatat'));
     },
     onError: (err: any) => {
-      showToast(`Gagal input izin: ${err.response?.data?.detail || err.message}`, 'error');
+      showToast(`Gagal memproses izin: ${err.response?.data?.detail || err.message}`, 'error');
     }
   });
 
@@ -772,11 +784,12 @@ export const SharedAbsensiPage: React.FC = () => {
             </button>
             <button
               onClick={() => {
+                setEditingIzinId(null);
                 setIzinForm({
                   id_guru: guruList[0]?.id ? String(guruList[0].id) : '',
                   tanggal_mulai: new Date().toISOString().split('T')[0],
                   tanggal_selesai: new Date().toISOString().split('T')[0],
-                  jenis_izin: 'Izin',
+                  jenis_izin: 'Sakit',
                   keterangan: ''
                 });
                 setIsIzinModalOpen(true);
@@ -998,6 +1011,33 @@ export const SharedAbsensiPage: React.FC = () => {
                   const info = getGuruInfo(row.uid, row.guru_nama, row.kategori_program);
                   return (
                     <div className="flex items-center gap-1.5 justify-end">
+                      <button
+                        onClick={() => {
+                          const guru = guruList.find((g: any) => g.uid === row.uid || g.nama.toLowerCase() === info.nama.toLowerCase());
+                          let jenis = 'Sakit';
+                          let ket = row.catatan || '';
+                          const match = ket.match(/^\[(.*?)\]\s*(.*)$/);
+                          if (match) {
+                            jenis = match[1];
+                            ket = match[2];
+                          }
+                          const tgl = extractLogDate(row.waktu) || new Date().toISOString().split('T')[0];
+
+                          setEditingIzinId(row.id);
+                          setIzinForm({
+                            id_guru: guru ? String(guru.id) : (guruList[0]?.id ? String(guruList[0].id) : ''),
+                            tanggal_mulai: tgl,
+                            tanggal_selesai: tgl,
+                            jenis_izin: jenis,
+                            keterangan: ket
+                          });
+                          setIsIzinModalOpen(true);
+                        }}
+                        className="p-1.5 bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#E65100] rounded-lg border border-[#FFCC80] transition-colors flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
+                        title="Edit Izin"
+                      >
+                        <EditIcon size={14} />
+                      </button>
                       <button
                         onClick={() => setDeleteLogConfirm({ id: row.id, nama: info.nama, waktu: formatWaktuTap(row.waktu) })}
                         className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
@@ -1257,11 +1297,14 @@ export const SharedAbsensiPage: React.FC = () => {
         </form>
       </Modal>
 
-      {/* Modal Input Izin Guru */}
+      {/* Modal Input / Edit Izin Guru */}
       <Modal
         isOpen={isIzinModalOpen}
-        onClose={() => setIsIzinModalOpen(false)}
-        title="Input Izin / Cuti Pengajar"
+        onClose={() => {
+          setIsIzinModalOpen(false);
+          setEditingIzinId(null);
+        }}
+        title={editingIzinId ? "Edit Izin / Cuti Pengajar" : "Input Izin / Cuti Pengajar"}
       >
         <form
           onSubmit={(e) => {
@@ -1350,7 +1393,10 @@ export const SharedAbsensiPage: React.FC = () => {
           <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E2E8F0]">
             <button
               type="button"
-              onClick={() => setIsIzinModalOpen(false)}
+              onClick={() => {
+                setIsIzinModalOpen(false);
+                setEditingIzinId(null);
+              }}
               className="px-4 py-2 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#475569] font-bold rounded-lg transition-colors cursor-pointer"
             >
               Batal
@@ -1358,9 +1404,13 @@ export const SharedAbsensiPage: React.FC = () => {
             <button
               type="submit"
               disabled={izinGuruMutation.isPending}
-              className="px-5 py-2 bg-[#FF7043] hover:bg-[#F4511E] text-white font-bold rounded-lg transition-colors shadow-sm cursor-pointer disabled:opacity-50"
+              className="px-4 py-2 bg-[#FF7043] hover:bg-[#F4511E] text-white font-bold rounded-lg transition-all shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
-              {izinGuruMutation.isPending ? 'Menyimpan...' : 'Simpan Izin'}
+              {izinGuruMutation.isPending
+                ? 'Menyimpan...'
+                : editingIzinId
+                ? 'Simpan Perubahan'
+                : 'Simpan Izin'}
             </button>
           </div>
         </form>

@@ -1106,6 +1106,67 @@ async def input_izin_guru(
         "tipe": tipe
     }
 
+@router.put("/izin-guru/{id}")
+async def update_guru_izin_portal(
+    id: int,
+    payload: IzinGuruRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    guru = db.query(Guru).filter(Guru.id_user == current_user.id).first()
+    if not guru:
+        raise HTTPException(status_code=404, detail="Profil guru tidak ditemukan.")
+
+    log = db.query(AbsensiLog).filter(AbsensiLog.id == id, AbsensiLog.uid == guru.uid).first()
+    if not log:
+        raise HTTPException(status_code=404, detail="Data izin tidak ditemukan.")
+
+    if not payload.alasan.strip():
+        raise HTTPException(status_code=400, detail="Alasan izin wajib diisi.")
+
+    tipe = payload.tipe_izin.upper()
+    try:
+        target_date = datetime.strptime(payload.tanggal_mulai, "%Y-%m-%d").date()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Format tanggal tidak valid.")
+
+    if tipe == "JADWAL":
+        jam_mulai_str = payload.jam_mulai or "08:00"
+        jam_selesai_str = payload.jam_selesai or "10:00"
+        try:
+            h, m = [int(x) for x in jam_mulai_str.split(":")]
+        except Exception:
+            h, m = 8, 0
+        waktu_target = datetime(target_date.year, target_date.month, target_date.day, h, m).replace(tzinfo=WIB)
+        note_text = f"[Izin Jadwal {jam_mulai_str}-{jam_selesai_str} WIB] {payload.alasan.strip()}"
+        log.sumber = "IZIN_JADWAL"
+    else:
+        waktu_target = datetime(target_date.year, target_date.month, target_date.day, 8, 0).replace(tzinfo=WIB)
+        note_text = f"[Izin Harian] {payload.alasan.strip()}"
+        log.sumber = "IZIN_HARIAN"
+
+    log.waktu = waktu_target
+    log.status = StatusAbsensi.IZIN
+    log.catatan = note_text
+
+    db.commit()
+
+    manager.broadcast_sync("ABSENSI_GURU_UPDATE", {
+        "guru_id": guru.id,
+        "guru_nama": guru.nama,
+        "uid": guru.uid,
+        "status": "IZIN",
+        "sumber": log.sumber,
+        "alasan": payload.alasan,
+        "keterangan": f"Tanggal {target_date.strftime('%d/%m/%Y')}"
+    })
+
+    return {
+        "status": "success",
+        "message": f"Izin guru {guru.nama} berhasil diperbarui!"
+    }
+
+
 class GuruProfilUpdate(BaseModel):
     nama: Optional[str] = None
     nama_panggilan: Optional[str] = None

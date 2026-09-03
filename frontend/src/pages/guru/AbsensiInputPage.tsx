@@ -6,7 +6,7 @@ import ManualAttendanceModal from './components/ManualAttendanceModal';
 import IzinGuruModal from './components/IzinGuruModal';
 import DateInput from '../../components/DateInput';
 import useAuth from '../../features/auth/useAuth';
-import { GlobeIcon, SchoolIcon } from '../../components/SvgIcons';
+import { GlobeIcon, SchoolIcon, EditIcon } from '../../components/SvgIcons';
 import { getProgramBadgeStyle } from '../portal/SiswaPage';
 
 export const AbsensiInputPage: React.FC = () => {
@@ -18,6 +18,7 @@ export const AbsensiInputPage: React.FC = () => {
   // Modal states for manual attendance and teacher leave
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
   const [isIzinModalOpen, setIsIzinModalOpen] = useState(false);
+  const [editingIzinData, setEditingIzinData] = useState<{ id: number; waktu?: string; catatan?: string; sumber?: string } | null>(null);
 
   // Input date filter state (defaults to today)
   const todayStr = new Date().toISOString().split('T')[0];
@@ -204,9 +205,13 @@ export const AbsensiInputPage: React.FC = () => {
       {/* Izin Guru Modal */}
       <IzinGuruModal
         isOpen={isIzinModalOpen}
-        onClose={() => setIsIzinModalOpen(false)}
+        onClose={() => {
+          setIsIzinModalOpen(false);
+          setEditingIzinData(null);
+        }}
         guruNama={guruNama}
         onSuccess={handleActionSuccess}
+        initialData={editingIzinData}
       />
 
       {/* TAB 1: Input Absensi */}
@@ -548,12 +553,13 @@ export const AbsensiInputPage: React.FC = () => {
                     <th className="p-3 font-bold text-[#64748B] text-center">Metode / Sumber</th>
                     <th className="p-3 font-bold text-[#64748B] text-center">Status</th>
                     <th className="p-3 font-bold text-[#64748B]">Keterangan</th>
+                    <th className="p-3 font-bold text-[#64748B] text-right">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#F1F5F9]">
                   {!logData?.logs || logData.logs.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="p-8 text-center text-[#94A3B8]">
+                      <td colSpan={6} className="p-8 text-center text-[#94A3B8]">
                         Belum ada riwayat presensi pengajar.
                       </td>
                     </tr>
@@ -614,6 +620,27 @@ export const AbsensiInputPage: React.FC = () => {
                           </td>
                           <td className="p-3 text-[#64748B] max-w-[250px] truncate">
                             {log.catatan || '-'}
+                          </td>
+                          <td className="p-3 text-right">
+                            {isIzin ? (
+                              <button
+                                onClick={() => {
+                                  setEditingIzinData({
+                                    id: log.id,
+                                    waktu: log.waktu || log.waktu_tap,
+                                    catatan: log.catatan,
+                                    sumber: log.sumber
+                                  });
+                                  setIsIzinModalOpen(true);
+                                }}
+                                className="p-1.5 bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#E65100] rounded-lg border border-[#FFCC80] transition-colors inline-flex items-center justify-center cursor-pointer shadow-2xs active:scale-95"
+                                title="Edit Izin"
+                              >
+                                <EditIcon size={13} />
+                              </button>
+                            ) : (
+                              <span className="text-[#CBD5E1] text-[10px]">-</span>
+                            )}
                           </td>
                         </tr>
                       );
