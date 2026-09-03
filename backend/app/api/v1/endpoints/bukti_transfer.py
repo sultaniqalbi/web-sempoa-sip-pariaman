@@ -1,7 +1,8 @@
 import os
 import hashlib
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+WIB = timezone(timedelta(hours=7))
 from typing import List, Optional
 from fastapi import APIRouter, Depends, Form, File, UploadFile, HTTPException, status
 from sqlalchemy.orm import Session
@@ -231,7 +232,7 @@ async def get_kwitansi(
         "jumlah": float(pay.jumlah) if pay and pay.jumlah else 0.0,
         "status_pembayaran": pay.status.value if pay and hasattr(pay.status, 'value') else "-",
         "tanggal_bayar": proof.created_at.strftime("%d %B %Y, %H:%M WIB") if proof.created_at else "-",
-        "tanggal_verifikasi": datetime.utcnow().strftime("%d %B %Y, %H:%M WIB"),
+        "tanggal_verifikasi": datetime.now(WIB).strftime("%d %B %Y, %H:%M WIB"),
         "lembaga": "Sempoa SIP TC Pariaman",
         "alamat_lembaga": "Jl. Imam Bonjol No. 34, Pariaman, Sumatera Barat",
         "file_path": proof.file_path or "",

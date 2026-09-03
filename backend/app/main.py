@@ -85,6 +85,7 @@ def on_startup():
             "ALTER TABLE absensi_log ADD COLUMN IF NOT EXISTS sumber VARCHAR(50);",
             "ALTER TABLE absensi_log ADD COLUMN IF NOT EXISTS catatan TEXT;",
             "ALTER TABLE absensi_log ADD COLUMN IF NOT EXISTS jumlah_sesi INTEGER DEFAULT 1;",
+            "CREATE INDEX IF NOT EXISTS idx_absensi_uid_waktu ON absensi_log (uid, waktu);",
             """DO $$ BEGIN
                 CREATE TYPE status_buku_enum AS ENUM ('SEDANG_DIPELAJARI', 'SELESAI', 'LANJUT_LEVEL');
             EXCEPTION

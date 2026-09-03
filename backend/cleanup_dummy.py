@@ -40,4 +40,8 @@ def clean_dummy():
         db.close()
 
 if __name__ == "__main__":
+    import sys
+    if "--force-wipe-confirm" not in sys.argv:
+        print("ABORTED: Destructive wipe script. Pass '--force-wipe-confirm' to execute.")
+        sys.exit(1)
     clean_dummy()

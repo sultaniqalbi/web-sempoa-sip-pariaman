@@ -70,11 +70,9 @@ async def read_absensi_list(
 
     result = []
     
-    # Auto-reconcile: sinkronkan status log guru yang telat tapi tercatat HADIR menjadi TERLAMBAT
+    # Auto-reconcile: sinkronkan status log guru yang telat tapi tercatat HADIR menjadi TERLAMBAT untuk halaman aktif
     try:
-        unmarked_late_logs = db.query(AbsensiLog).filter(
-            AbsensiLog.status == StatusAbsensi.HADIR
-        ).all()
+        unmarked_late_logs = [l for l in logs if l.status == StatusAbsensi.HADIR]
         needs_commit = False
         for ul_log in unmarked_late_logs:
             u_clean = ul_log.uid.strip().upper().replace(" ", "") if ul_log.uid else ""
