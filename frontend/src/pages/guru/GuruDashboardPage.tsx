@@ -7,6 +7,7 @@ import JadwalCard from './components/JadwalCard';
 import AbsensiGuruCard from './components/AbsensiGuruCard';
 import AbsensiSiswaCard from './components/AbsensiSiswaCard';
 import { requestAndSubscribePush, getNotificationPermissionStatus } from '../../utils/pushManager';
+import { useRealtime } from '../../features/realtime/RealtimeContext';
 
 const GuruDashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -36,13 +37,23 @@ const GuruDashboardPage: React.FC = () => {
     }
   };
 
+  const { lastEvent } = useRealtime();
+
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['guru-dashboard'],
     queryFn: async () => {
       const res = await apiClient.get('/portal-guru/dashboard');
       return res.data;
     },
+    refetchInterval: 3000,
+    staleTime: 2000,
   });
+
+  useEffect(() => {
+    if (lastEvent) {
+      refetch();
+    }
+  }, [lastEvent, refetch]);
 
   if (isLoading) {
     return (

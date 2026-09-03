@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -28,14 +28,14 @@ async def get_portal_dashboard_stats(
         total_siswa = db.query(Siswa).filter(Siswa.is_deleted == False).count()
         siswa_aktif = db.query(Siswa).filter(Siswa.is_deleted == False, Siswa.status_spp == StatusSPP.AKTIF).count()
         siswa_expired = db.query(Siswa).filter(Siswa.is_deleted == False, Siswa.status_spp == StatusSPP.EXPIRED).count()
-        total_guru = db.query(Guru).count()
+        total_guru = db.query(Guru).filter(Guru.is_deleted == False).count()
         total_jadwal = db.query(Jadwal).count()
 
         WIB = timezone(timedelta(hours=7))
         today_wib = datetime.now(WIB).date()
         absensi_hari_ini = (
             db.query(AbsensiLog)
-            .filter(func.date(func.timezone('Asia/Jakarta', AbsensiLog.waktu)) == today_wib)
+            .filter(func.date(AbsensiLog.waktu) == today_wib)
             .count()
         )
 
@@ -45,6 +45,8 @@ async def get_portal_dashboard_stats(
             .count()
         )
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         total_siswa = 0
         siswa_aktif = 0
         siswa_expired = 0

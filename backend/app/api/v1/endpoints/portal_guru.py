@@ -131,16 +131,13 @@ def _get_guru_students(db: Session, guru: Guru, matching_guru_ids: List[int], fi
         prog_conds = [Siswa.kategori_program.ilike(f"%{p}%") for p in programs]
 
         if assigned > 0:
-            # Ada siswa yang ditugaskan ke guru ini — ambil mereka + siswa tanpa guru yang programnya cocok
+            # Guru memiliki murid bimbingan yang ditugaskan khusus — HANYA ambil murid bimbingannya sendiri!
             q = db.query(Siswa).filter(
                 Siswa.is_deleted == False,
-                or_(
-                    Siswa.id_guru.in_(matching_guru_ids),
-                    and_(Siswa.id_guru == None, or_(*prog_conds)) if prog_conds else Siswa.id_guru.in_(matching_guru_ids)
-                )
+                Siswa.id_guru.in_(matching_guru_ids)
             )
         else:
-            # Tidak ada siswa yang ditugaskan — fallback ke program saja
+            # Tidak ada siswa yang ditugaskan — fallback ke program siswa yang belum memiliki guru
             q = db.query(Siswa).filter(
                 Siswa.is_deleted == False,
                 or_(*prog_conds) if prog_conds else Siswa.id_guru.in_(matching_guru_ids)
@@ -218,20 +215,21 @@ async def get_guru_dashboard(
     }
 
     # Count real students marked today
-    hadir_count = 0
-    absen_count = 0
+    status_by_uid = {}
     uids_program = [s.uid for s in active_students if s.uid]
     if uids_program:
         logs_today = db.query(AbsensiLog).filter(
             AbsensiLog.uid.in_(uids_program),
             func.date(AbsensiLog.waktu) == today
-        ).all()
+        ).order_by(AbsensiLog.waktu.desc()).all()
         for l in logs_today:
-            s_str = l.status.value if hasattr(l.status, 'value') else str(l.status).lower()
-            if "hadir" in s_str:
-                hadir_count += 1
-            else:
-                absen_count += 1
+            if l.uid not in status_by_uid:
+                s_str = (l.status.value if hasattr(l.status, 'value') else str(l.status)).lower()
+                status_by_uid[l.uid] = s_str
+
+    hadir_count = sum(1 for s in status_by_uid.values() if "hadir" in s)
+    absen_count = sum(1 for s in status_by_uid.values() if any(k in s for k in ["izin", "alfa", "sakit", "tidak_hadir"]))
+    belum_absen_count = max(0, total_siswa - (hadir_count + absen_count))
 
     # Latest learning note
     note_conds = [CatatanPembelajaran.id_guru.in_(matching_ids)]
@@ -264,7 +262,8 @@ async def get_guru_dashboard(
         "absensi_siswa": {
             "total_siswa": total_siswa,
             "jumlah_hadir": hadir_count,
-            "jumlah_absen": absen_count
+            "jumlah_absen": absen_count,
+            "jumlah_belum_absen": belum_absen_count
         },
         "mode_kelas": guru.mode_kelas or "OFFLINE",
         "catatan_terbaru": catatan_terbaru
@@ -656,7 +655,15 @@ async def save_siswa_absensi(
         ).first()
 
         sesi_count = max(1, item.jumlah_sesi or 1)
-        catatan_text = f"{sesi_count} Sesi Gabungan" if sesi_count > 1 else None
+        sesi_prefix = f"{sesi_count} Sesi Gabungan" if sesi_count > 1 else ""
+        
+        full_note_parts = []
+        if sesi_prefix:
+            full_note_parts.append(sesi_prefix)
+        if data.catatan_pembelajaran and data.catatan_pembelajaran.strip():
+            full_note_parts.append(f"Catatan Guru: {data.catatan_pembelajaran.strip()}")
+        
+        catatan_text = " • ".join(full_note_parts) if full_note_parts else None
 
         if existing_log:
             prev_status = existing_log.status

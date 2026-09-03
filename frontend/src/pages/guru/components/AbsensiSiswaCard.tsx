@@ -5,11 +5,14 @@ interface AbsensiSiswaCardProps {
     total_siswa: number;
     jumlah_hadir: number;
     jumlah_absen: number;
+    jumlah_belum_absen?: number;
   } | null;
 }
 
 const AbsensiSiswaCard: React.FC<AbsensiSiswaCardProps> = ({ stats }) => {
   if (!stats) return null;
+
+  const belumAbsen = stats.jumlah_belum_absen ?? Math.max(0, stats.total_siswa - (stats.jumlah_hadir + stats.jumlah_absen));
 
   return (
     <div className="bg-white rounded-xl border border-[#E0E0E0] p-5 shadow-[0_2px_6px_rgba(0,0,0,0.04)] h-full flex flex-col">
@@ -31,19 +34,26 @@ const AbsensiSiswaCard: React.FC<AbsensiSiswaCardProps> = ({ stats }) => {
           <span className="text-sm font-bold text-[#64748B] uppercase tracking-wider">Siswa Aktif</span>
         </div>
         
-        <div className="grid grid-cols-2 gap-3 mt-auto pt-4 border-t border-[#F5F5F5]">
-          <div className="flex items-center gap-2.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-[#2E7D32]"></div>
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-auto pt-4 border-t border-[#F5F5F5]">
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-[#2E7D32] shrink-0"></div>
             <div>
               <p className="text-[10px] text-[#94A3B8] font-bold uppercase tracking-wider">Hadir</p>
               <p className="text-sm font-mono text-[#2E7D32] font-bold mt-0.5">{stats.jumlah_hadir}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-[#C62828]"></div>
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-[#C62828] shrink-0"></div>
             <div>
               <p className="text-[10px] text-[#94A3B8] font-bold uppercase tracking-wider">Absen/Izin</p>
               <p className="text-sm font-mono text-[#C62828] font-bold mt-0.5">{stats.jumlah_absen}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-[#E65100] shrink-0"></div>
+            <div>
+              <p className="text-[10px] text-[#94A3B8] font-bold uppercase tracking-wider">Belum Absen</p>
+              <p className="text-sm font-mono text-[#E65100] font-bold mt-0.5">{belumAbsen}</p>
             </div>
           </div>
         </div>
@@ -53,4 +63,3 @@ const AbsensiSiswaCard: React.FC<AbsensiSiswaCardProps> = ({ stats }) => {
 };
 
 export default AbsensiSiswaCard;
-

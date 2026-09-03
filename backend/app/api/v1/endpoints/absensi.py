@@ -315,7 +315,27 @@ async def read_absensi_by_siswa(
         pass
     else:
         raise HTTPException(status_code=403, detail="Anda tidak memiliki akses ke log absensi siswa ini")
-    return crud_absensi.get_absensi_by_siswa(db, uid=siswa.uid, skip=skip, limit=limit)
+
+    logs = crud_absensi.get_absensi_by_siswa(db, uid=siswa.uid, skip=skip, limit=limit)
+    from app.models.catatan_pembelajaran import CatatanPembelajaran
+    for log in logs:
+        cur_catatan = getattr(log, "catatan", "") or ""
+        if "catatan guru" not in cur_catatan.lower():
+            log_date = log.waktu.date() if hasattr(log.waktu, 'date') else None
+            if log_date:
+                note_row = db.query(CatatanPembelajaran).filter(
+                    CatatanPembelajaran.tanggal == log_date,
+                    or_(
+                        CatatanPembelajaran.id_guru == siswa.id_guru,
+                        CatatanPembelajaran.kategori_program.ilike(f"%{siswa.kategori_program or ''}%")
+                    )
+                ).order_by(CatatanPembelajaran.id.desc()).first()
+                if note_row and note_row.catatan:
+                    if cur_catatan:
+                        log.catatan = f"{cur_catatan} • Catatan Guru: {note_row.catatan.strip()}"
+                    else:
+                        log.catatan = f"Catatan Guru: {note_row.catatan.strip()}"
+    return logs
 
 @router.post("/bulk-siswa")
 async def bulk_absensi_siswa(

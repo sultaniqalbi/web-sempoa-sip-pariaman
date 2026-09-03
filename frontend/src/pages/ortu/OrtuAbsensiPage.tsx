@@ -159,6 +159,32 @@ export const OrtuAbsensiPage: React.FC = () => {
             <span className="text-sm sm:text-base font-black text-[#B91C1C] mt-0.5 block">{alfaCount} Sesi</span>
           </div>
         </div>
+
+        {/* Catatan Guru Pembelajaran Terakhir */}
+        {latestLog && (
+          <div className="bg-gradient-to-br from-[#FFF9C4]/50 to-[#FFF3E0]/70 border border-[#FFE082] rounded-2xl p-4 shadow-2xs space-y-2 mt-2">
+            <div className="flex items-center justify-between flex-wrap gap-1">
+              <div className="flex items-center gap-2">
+                <span className="text-base">📝</span>
+                <h4 className="text-xs font-black text-[#E65100] uppercase tracking-wider">
+                  Catatan Guru
+                </h4>
+              </div>
+              <span className="text-[11px] font-bold text-[#8D6E63]">
+                {formatWaktu(latestLog.waktu)}
+              </span>
+            </div>
+            <div className="bg-white/90 p-3 rounded-xl border border-[#FFE082]/60 text-xs text-[#1E293B] shadow-2xs">
+              <p className="leading-relaxed font-medium">
+                {latestLog.catatan ? (
+                  latestLog.catatan.includes('Catatan Guru:')
+                    ? latestLog.catatan.split('Catatan Guru:')[1].trim()
+                    : latestLog.catatan
+                ) : 'Belum ada catatan khusus untuk pertemuan terakhir.'}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Daftar Log Absensi */}
@@ -177,35 +203,72 @@ export const OrtuAbsensiPage: React.FC = () => {
             <p className="font-semibold">Belum ada riwayat presensi yang tercatat.</p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {absensiLogs.map((log) => {
               const isHadir = log.status === 'HADIR';
               const isIzin = log.status === 'IZIN';
+
+              let sesiText = '';
+              let catatanGuruText = '';
+              if (log.catatan) {
+                if (log.catatan.includes('• Catatan Guru:')) {
+                  const parts = log.catatan.split('• Catatan Guru:');
+                  sesiText = parts[0].trim();
+                  catatanGuruText = parts[1].trim();
+                } else if (log.catatan.startsWith('Catatan Guru:')) {
+                  catatanGuruText = log.catatan.replace('Catatan Guru:', '').trim();
+                } else if (log.catatan.includes('Sesi')) {
+                  sesiText = log.catatan;
+                } else {
+                  catatanGuruText = log.catatan;
+                }
+              }
+
               return (
                 <div
                   key={log.id}
-                  className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-between gap-3 text-xs"
+                  className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-2 text-xs transition-all hover:bg-[#F1F5F9]/70"
                 >
-                  <div>
-                    <span className="font-bold text-[#1E293B] block">
-                      {formatWaktu(log.waktu)}
-                    </span>
-                    <span className="text-[11px] text-[#64748B] mt-0.5 block">
-                      {log.catatan || log.keterangan || (isHadir ? 'Hadir mengikuti sesi belajar' : isIzin ? 'Izin tidak hadir' : 'Tidak hadir')}
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <span className="font-bold text-[#1E293B] block">
+                        {formatWaktu(log.waktu)}
+                      </span>
+                      {sesiText && (
+                        <span className="text-[11px] font-semibold text-[#FF7043] bg-[#FFF3E0] px-2 py-0.5 rounded-md border border-[#FFCC80] inline-block mt-0.5">
+                          {sesiText}
+                        </span>
+                      )}
+                    </div>
+
+                    <span
+                      className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border shrink-0 ${
+                        isHadir
+                          ? 'bg-[#DCFCE7] text-[#16A34A] border-[#86EFAC]'
+                          : isIzin
+                          ? 'bg-[#FEF3C7] text-[#D97706] border-[#FDE68A]'
+                          : 'bg-[#FEE2E2] text-[#DC2626] border-[#FCA5A5]'
+                      }`}
+                    >
+                      {log.status}
                     </span>
                   </div>
 
-                  <span
-                    className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border shrink-0 ${
-                      isHadir
-                        ? 'bg-[#DCFCE7] text-[#16A34A] border-[#86EFAC]'
-                        : isIzin
-                        ? 'bg-[#FEF3C7] text-[#D97706] border-[#FDE68A]'
-                        : 'bg-[#FEE2E2] text-[#DC2626] border-[#FCA5A5]'
-                    }`}
-                  >
-                    {log.status}
-                  </span>
+                  {catatanGuruText ? (
+                    <div className="p-2.5 rounded-xl bg-white border border-[#FFE082] text-xs space-y-1 shadow-2xs">
+                      <span className="text-[10px] font-black text-[#E65100] uppercase tracking-wider flex items-center gap-1">
+                        <span>📝</span>
+                        <span>Catatan Guru:</span>
+                      </span>
+                      <p className="text-[#334155] font-medium leading-relaxed pl-4">
+                        {catatanGuruText}
+                      </p>
+                    </div>
+                  ) : (
+                    <span className="text-[11px] text-[#64748B] block">
+                      {isHadir ? 'Hadir mengikuti sesi bimbingan belajar.' : isIzin ? 'Izin tidak hadir.' : 'Tidak hadir.'}
+                    </span>
+                  )}
                 </div>
               );
             })}
