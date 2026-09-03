@@ -508,11 +508,44 @@ void prosesTap(const RtcDateTime& now) {
   String cachedNama = ambilGuruCache(uid);
 
   if (cachedNama.length() > 0) {
-    // A. KARTU GURU TERDAFTAR: Tampilkan Nama Guru & Bip 1x Panjang (1 Detik)
+    // Cek Keterlambatan Lokal (Instant)
+    bool isLate = false;
+    String nmLower = cachedNama;
+    nmLower.toLowerCase();
+    
+    if (nmLower.indexOf("direktur") != -1) {
+      isLate = false;
+    } else if (nmLower.indexOf("dinda") != -1) {
+      if (now.DayOfWeek() == 5) { // Jumat (12:00 + 1 = 13)
+        isLate = (now.Hour() >= 13);
+      } else if (now.DayOfWeek() == 6) { // Sabtu (09:00 + 1 = 10)
+        isLate = (now.Hour() >= 10);
+      } else {
+        isLate = (now.Hour() >= 8); // Fallback
+      }
+    } else if (nmLower.indexOf("husna") != -1) {
+      isLate = (now.Hour() >= 8);
+    } else {
+      isLate = (now.Hour() >= 8); // Default jam masuk 07:00, telat jika >= 08:00
+    }
+
     String dispNama = cachedNama;
     if (dispNama.length() > 16) dispNama = dispNama.substring(0, 16);
-    cetakDuaBarisCenter("Selamat Datang", dispNama.c_str());
-    triggerBuzzerTerdaftar(); // Bip 1x panjang (non-blocking)
+
+    if (isLate) {
+      // TERLAMBAT: Tampilkan TERLAMBAT & Bip 5x
+      cetakDuaBarisCenter("TERLAMBAT", dispNama.c_str());
+      // Re-use triggerBuzzerBaru untuk bunyi cepat 5x (perlu penyesuaian jika 5x)
+      buzzerBeepCount = 0;
+      buzzerBeepTarget = 5;
+      buzzerNextToggle = millis();
+      buzzerState = false;
+      buzzerDurasi = 0;
+    } else {
+      // A. KARTU GURU TERDAFTAR TEPAT WAKTU: Tampilkan Nama Guru & Bip 1x Panjang (1 Detik)
+      cetakDuaBarisCenter("Selamat Datang", dispNama.c_str());
+      triggerBuzzerTerdaftar(); // Bip 1x panjang (non-blocking)
+    }
   } else {
     // B. KARTU BARU: Tampilkan Status Baru & Bip 3x Cepat dalam 1 detik
     cetakDuaBarisCenter("KARTU BARU", uid.c_str());

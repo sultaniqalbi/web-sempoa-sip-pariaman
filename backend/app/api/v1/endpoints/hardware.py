@@ -135,6 +135,35 @@ async def post_absensi(request: Request, db: Session = Depends(get_db)):
                 
             return PlainTextResponse(f"OK|{nama_guru}", status_code=200)
 
+        # Cek Keterlambatan
+        is_late = False
+        nama_lower = nama_guru.lower()
+        waktu_wib = waktu_dt.astimezone(WIB)
+        
+        if "direktur" in nama_lower:
+            is_late = False
+        else:
+            if "dinda" in nama_lower:
+                if waktu_wib.weekday() == 4: # Jumat (masuk 12:00)
+                    batas_telat = 13
+                elif waktu_wib.weekday() == 5: # Sabtu (masuk 09:00)
+                    batas_telat = 10
+                else:
+                    batas_telat = 8
+            elif "husna" in nama_lower:
+                batas_telat = 8
+            else:
+                jam_masuk_str = getattr(guru, "jam_masuk", "07:00")
+                try:
+                    batas_telat = int(jam_masuk_str.split(":")[0]) + 1
+                except:
+                    batas_telat = 8
+                    
+            if waktu_wib.hour >= batas_telat:
+                is_late = True
+
+        status_absen = StatusAbsensi.TERLAMBAT if is_late else StatusAbsensi.HADIR
+
         # Catat Log Absensi Kehadiran Guru (Tap Masuk)
         mode = ModeAbsensi.OFFLINE if mode_str == "OFFLINE" else ModeAbsensi.ONLINE
         new_log = AbsensiLog(
@@ -142,7 +171,7 @@ async def post_absensi(request: Request, db: Session = Depends(get_db)):
             waktu=waktu_dt,
             waktu_keluar=None,
             mode=mode,
-            status=StatusAbsensi.HADIR
+            status=status_absen
         )
         db.add(new_log)
         db.commit()
@@ -155,9 +184,11 @@ async def post_absensi(request: Request, db: Session = Depends(get_db)):
             "role": "guru",
             "waktu": waktu_str,
             "waktu_keluar": None,
-            "status": "HADIR"
+            "status": "TERLAMBAT" if is_late else "HADIR"
         })
 
+        if is_late:
+            return PlainTextResponse(f"LATE|{nama_guru}", status_code=200)
         return PlainTextResponse(f"OK|{nama_guru}", status_code=200)
 
     except Exception as e:

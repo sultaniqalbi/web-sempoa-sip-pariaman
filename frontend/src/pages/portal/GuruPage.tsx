@@ -55,6 +55,8 @@ export interface Guru {
   riwayat_pendidikan?: string;
   bio?: string;
   foto_profil?: string;
+  jam_masuk?: string;
+  jam_keluar?: string;
   created_at: string;
 }
 
@@ -93,6 +95,8 @@ export const GuruPage: React.FC = () => {
     tanggal_lahir: '',
     asal_sekolah: '',
     riwayat_pendidikan: '',
+    jam_masuk: '07:00',
+    jam_keluar: '17:00',
   });
 
   const showToast = (text: string, type: 'success' | 'error' = 'success') => {
@@ -330,6 +334,8 @@ export const GuruPage: React.FC = () => {
       tanggal_lahir: '',
       asal_sekolah: '',
       riwayat_pendidikan: '',
+      jam_masuk: '07:00',
+      jam_keluar: '17:00',
     });
     setSelectedPhoto(null);
     setPhoneError(null);
@@ -355,6 +361,8 @@ export const GuruPage: React.FC = () => {
       tanggal_lahir: guru.tanggal_lahir || '',
       asal_sekolah: guru.asal_sekolah || '',
       riwayat_pendidikan: guru.riwayat_pendidikan || '',
+      jam_masuk: guru.jam_masuk || '07:00',
+      jam_keluar: guru.jam_keluar || '17:00',
     });
     setSelectedPhoto(null);
     setPhoneError(null);
@@ -828,6 +836,28 @@ export const GuruPage: React.FC = () => {
             multiSelect={true}
             required={true}
           />
+
+          {/* Jam Operasional Guru */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">Jam Masuk</label>
+              <input
+                type="time"
+                value={formData.jam_masuk}
+                onChange={(e) => setFormData({ ...formData, jam_masuk: e.target.value })}
+                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">Jam Pulang</label>
+              <input
+                type="time"
+                value={formData.jam_keluar}
+                onChange={(e) => setFormData({ ...formData, jam_keluar: e.target.value })}
+                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
+              />
+            </div>
+          </div>
 
           {/* No. WhatsApp Guru* */}
           <div>

@@ -69,6 +69,16 @@ async def read_absensi_list(
             siswa_map[s.uid.strip().upper().replace(" ", "")] = s
 
     result = []
+    
+    # Pre-calculate denda (1000 per TERLAMBAT) for gurus
+    denda_map = {}
+    late_counts = db.query(AbsensiLog.uid, func.count(AbsensiLog.id)).filter(AbsensiLog.status == StatusAbsensi.TERLAMBAT).group_by(AbsensiLog.uid).all()
+    for row in late_counts:
+        uid_val, count = row
+        if uid_val:
+            denda_map[uid_val.strip().upper()] = count * 1000
+            denda_map[uid_val.strip().upper().replace(" ", "")] = count * 1000
+
     for log in logs:
         clean_uid = log.uid.strip().upper() if log.uid else ""
         nospace_uid = clean_uid.replace(" ", "")
@@ -92,14 +102,17 @@ async def read_absensi_list(
             resp.guru_nama = g.nama
             resp.kategori_program = g.kategori_program
             resp.role = "guru"
+            resp.denda_terakumulasi = denda_map.get(clean_uid) or denda_map.get(nospace_uid) or 0
         elif s:
             resp.guru_nama = s.nama
             resp.kategori_program = s.kategori_program
             resp.role = "siswa"
+            resp.denda_terakumulasi = 0
         else:
             resp.guru_nama = "Kartu Belum Terdaftar"
             resp.kategori_program = "-"
             resp.role = "unregistered"
+            resp.denda_terakumulasi = 0
         result.append(resp)
     return result
 

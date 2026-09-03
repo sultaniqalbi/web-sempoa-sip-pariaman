@@ -48,8 +48,9 @@ interface AbsensiGuruLog {
   guru_nama?: string;
   kategori_program?: string;
   role?: string;
-  catatan?: string;
   waktu_keluar?: string;
+  denda_terakumulasi?: number;
+  catatan?: string;
 }
 
 export const SharedAbsensiPage: React.FC = () => {
@@ -617,17 +618,62 @@ export const SharedAbsensiPage: React.FC = () => {
     },
     {
       header: 'Status Kehadiran',
-      accessor: (row: AbsensiGuruLog) => (
-        <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase border ${
-          row.status === 'HADIR'
-            ? 'bg-[#DCFCE7] text-[#16A34A] border-[#86EFAC]'
-            : row.status === 'IZIN'
-            ? 'bg-[#FEF3C7] text-[#D97706] border-[#FCD34D]'
-            : 'bg-[#FEE2E2] text-[#DC2626] border-[#FCA5A5]'
-        }`}>
-          {row.status}
-        </span>
-      )
+      accessor: (row: AbsensiGuruLog) => {
+        let statusText = row.status;
+        let style = 'bg-[#FEE2E2] text-[#DC2626] border-[#FCA5A5]';
+        
+        if (row.status === 'HADIR') {
+          statusText = 'Hadir, Tepat Waktu';
+          style = 'bg-[#DCFCE7] text-[#16A34A] border-[#86EFAC]';
+        } else if (row.status === 'TERLAMBAT') {
+          statusText = 'Hadir, Terlambat';
+          style = 'bg-[#FEF08A] text-[#CA8A04] border-[#FDE047]';
+        } else if (row.status === 'IZIN') {
+          statusText = row.catatan ? `Izin / ${row.catatan}` : 'Izin';
+          style = 'bg-[#FEF3C7] text-[#D97706] border-[#FCD34D]';
+        }
+
+        return (
+          <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold uppercase border ${style}`}>
+            {statusText}
+          </span>
+        );
+      }
+    },
+    {
+      header: 'Denda',
+      accessor: (row: AbsensiGuruLog) => {
+        const denda = row.denda_terakumulasi || 0;
+        if (denda > 0) {
+          return (
+            <span className="text-xs font-bold text-red-600">
+              Rp. {denda.toLocaleString('id-ID')}
+            </span>
+          );
+        }
+        return <span className="text-xs font-medium text-gray-400">Rp. -</span>;
+      }
+    },
+    {
+      header: 'Perizinan',
+      accessor: (row: AbsensiGuruLog) => {
+        if (row.status === 'IZIN') {
+          return (
+            <button 
+              onClick={() => alert(`Detail Izin: ${row.catatan || 'Tidak ada keterangan'}`)}
+              className="p-1.5 hover:bg-gray-100 rounded-full transition-colors group cursor-pointer"
+              title="Lihat Detail Izin"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500 group-hover:text-blue-600">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+            </button>
+          );
+        }
+        return <span className="text-xs text-gray-300">-</span>;
+      }
     },
     {
       header: 'Aksi',

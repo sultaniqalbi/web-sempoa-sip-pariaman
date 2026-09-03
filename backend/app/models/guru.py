@@ -23,5 +23,7 @@ class Guru(Base):
     bio = Column(Text, nullable=True)
     foto_profil = Column(String(255), nullable=True)
     mode_kelas = Column(String(20), nullable=True, default="OFFLINE")
+    jam_masuk = Column(String(10), nullable=False, default="07:00")
+    jam_keluar = Column(String(10), nullable=False, default="17:00")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     is_deleted = Column(Boolean, default=False, nullable=False)

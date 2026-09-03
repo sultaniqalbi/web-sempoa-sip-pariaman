@@ -19,6 +19,8 @@ class GuruBase(BaseModel):
     paket_pengajaran: Optional[str] = None
     bio: Optional[str] = None
     foto_profil: Optional[str] = None
+    jam_masuk: str = "07:00"
+    jam_keluar: str = "17:00"
 
 class GuruCreate(GuruBase):
     pass
@@ -40,6 +42,8 @@ class GuruUpdate(BaseModel):
     paket_pengajaran: Optional[str] = None
     bio: Optional[str] = None
     foto_profil: Optional[str] = None
+    jam_masuk: Optional[str] = "07:00"
+    jam_keluar: Optional[str] = "17:00"
 
 class GuruResponse(GuruBase):
     id: int
