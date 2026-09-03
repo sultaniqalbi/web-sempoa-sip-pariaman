@@ -70,14 +70,67 @@ async def read_absensi_list(
 
     result = []
     
-    # Pre-calculate denda (1000 per TERLAMBAT) for gurus
+    # Auto-reconcile: sinkronkan status log guru yang telat tapi tercatat HADIR menjadi TERLAMBAT
+    try:
+        unmarked_late_logs = db.query(AbsensiLog).filter(
+            AbsensiLog.status == StatusAbsensi.HADIR
+        ).all()
+        needs_commit = False
+        for ul_log in unmarked_late_logs:
+            u_clean = ul_log.uid.strip().upper().replace(" ", "") if ul_log.uid else ""
+            matched_g = guru_map.get(u_clean)
+            if matched_g:
+                nama_lower = matched_g.nama.lower()
+                if "direktur" in nama_lower:
+                    continue
+                w_time = ul_log.waktu.astimezone(WIB) if ul_log.waktu.tzinfo else ul_log.waktu.replace(tzinfo=WIB)
+                is_u_late = False
+                if "dinda" in nama_lower:
+                    if w_time.weekday() == 4:
+                        is_u_late = (w_time.hour >= 13)
+                    elif w_time.weekday() == 5:
+                        is_u_late = (w_time.hour >= 10)
+                    else:
+                        is_u_late = (w_time.hour >= 8)
+                elif "husna" in nama_lower:
+                    is_u_late = (w_time.hour >= 8)
+                else:
+                    jam_ajar_str = getattr(matched_g, "paket_pengajaran", "") or ""
+                    jam_masuk_str = getattr(matched_g, "jam_masuk", "07:00") or "07:00"
+                    th, tm = 8, 0
+                    if jam_ajar_str and ":" in jam_ajar_str:
+                        try:
+                            th = int(jam_ajar_str.split(":")[0])
+                            tm = int(jam_ajar_str.split(":")[1][:2])
+                        except Exception:
+                            th = 8
+                    elif jam_masuk_str and ":" in jam_masuk_str:
+                        try:
+                            th = int(jam_masuk_str.split(":")[0]) + 1
+                        except Exception:
+                            th = 8
+                    if w_time.hour > th or (w_time.hour == th and w_time.minute > tm):
+                        is_u_late = True
+
+                if is_u_late:
+                    ul_log.status = StatusAbsensi.TERLAMBAT
+                    needs_commit = True
+        if needs_commit:
+            db.commit()
+    except Exception:
+        db.rollback()
+
+    # Pre-calculate denda (1000 per TERLAMBAT) for gurus dengan UID ter-normalisasi (tanpa spasi)
     denda_map = {}
-    late_counts = db.query(AbsensiLog.uid, func.count(AbsensiLog.id)).filter(AbsensiLog.status == StatusAbsensi.TERLAMBAT).group_by(AbsensiLog.uid).all()
+    norm_uid_expr = func.replace(func.upper(AbsensiLog.uid), " ", "")
+    late_counts = db.query(norm_uid_expr, func.count(AbsensiLog.id)).filter(
+        AbsensiLog.status == StatusAbsensi.TERLAMBAT
+    ).group_by(norm_uid_expr).all()
+
     for row in late_counts:
         uid_val, count = row
         if uid_val:
             denda_map[uid_val.strip().upper()] = count * 1000
-            denda_map[uid_val.strip().upper().replace(" ", "")] = count * 1000
 
     for log in logs:
         clean_uid = log.uid.strip().upper() if log.uid else ""
@@ -99,10 +152,11 @@ async def read_absensi_list(
                 resp.waktu_keluar = log.waktu_keluar.replace(tzinfo=WIB)
 
         if g:
+            norm_g_uid = g.uid.strip().upper().replace(" ", "") if g.uid else ""
             resp.guru_nama = g.nama
             resp.kategori_program = g.kategori_program
             resp.role = "guru"
-            resp.denda_terakumulasi = denda_map.get(clean_uid) or denda_map.get(nospace_uid) or 0
+            resp.denda_terakumulasi = denda_map.get(norm_g_uid) or denda_map.get(nospace_uid) or denda_map.get(clean_uid) or 0
         elif s:
             resp.guru_nama = s.nama
             resp.kategori_program = s.kategori_program
@@ -528,13 +582,53 @@ async def create_guru_manual_absensi(
     except Exception:
         mode_val = ModeAbsensi.OFFLINE
 
+    # Cek Keterlambatan Otomatis pada Input Manual
+    final_status = req.status
+    if req.status in [StatusAbsensi.HADIR, StatusAbsensi.TERLAMBAT]:
+        nama_lower = guru.nama.lower()
+        is_late = False
+        if "direktur" in nama_lower:
+            is_late = False
+        elif "dinda" in nama_lower:
+            if t_date.weekday() == 4:
+                is_late = (t_time.hour >= 13)
+            elif t_date.weekday() == 5:
+                is_late = (t_time.hour >= 10)
+            else:
+                is_late = (t_time.hour >= 8)
+        elif "husna" in nama_lower:
+            is_late = (t_time.hour >= 8)
+        else:
+            jam_ajar_str = getattr(guru, "paket_pengajaran", "") or ""
+            jam_masuk_str = getattr(guru, "jam_masuk", "07:00") or "07:00"
+            th, tm = 8, 0
+            if jam_ajar_str and ":" in jam_ajar_str:
+                try:
+                    parts = jam_ajar_str.split(":")
+                    th = int(parts[0])
+                    tm = int(parts[1][:2])
+                except Exception:
+                    th = 8
+            elif jam_masuk_str and ":" in jam_masuk_str:
+                try:
+                    th = int(jam_masuk_str.split(":")[0]) + 1
+                except Exception:
+                    th = 8
+
+            if t_time.hour > th or (t_time.hour == th and t_time.minute > tm):
+                is_late = True
+            elif req.status == StatusAbsensi.TERLAMBAT:
+                is_late = True
+
+        final_status = StatusAbsensi.TERLAMBAT if is_late else StatusAbsensi.HADIR
+
     existing_log = db.query(AbsensiLog).filter(
         AbsensiLog.uid == guru.uid,
         func.date(func.timezone('Asia/Jakarta', AbsensiLog.waktu)) == t_date
     ).first()
 
     if existing_log:
-        existing_log.status = req.status
+        existing_log.status = final_status
         existing_log.waktu = waktu_target
         existing_log.mode = mode_val
         existing_log.catatan = req.catatan or "Presensi manual admin"
@@ -544,14 +638,14 @@ async def create_guru_manual_absensi(
             uid=guru.uid,
             waktu=waktu_target,
             mode=mode_val,
-            status=req.status,
+            status=final_status,
             catatan=req.catatan or "Presensi manual admin",
             sumber="PORTAL_ADMIN"
         )
         db.add(new_log)
 
     db.commit()
-    return {"status": "success", "message": f"Presensi untuk {guru.nama} berhasil dicatat pada {req.tanggal}"}
+    return {"status": "success", "message": f"Presensi untuk {guru.nama} berhasil dicatat pada {req.tanggal} (Status: {final_status.value})"}
 
 
 @router.post("/guru-izin")

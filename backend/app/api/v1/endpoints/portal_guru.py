@@ -925,6 +925,42 @@ async def input_kehadiran_manual_guru(
     except ValueError:
         mode_enum = ModeAbsensi.OFFLINE
 
+    # Evaluasi status keterlambatan guru
+    nama_lower = guru.nama.lower()
+    is_late = False
+    if "direktur" in nama_lower:
+        is_late = False
+    elif "dinda" in nama_lower:
+        if tgl_obj.weekday() == 4:
+            is_late = (hour >= 13)
+        elif tgl_obj.weekday() == 5:
+            is_late = (hour >= 10)
+        else:
+            is_late = (hour >= 8)
+    elif "husna" in nama_lower:
+        is_late = (hour >= 8)
+    else:
+        jam_ajar_str = getattr(guru, "paket_pengajaran", "") or ""
+        jam_masuk_str = getattr(guru, "jam_masuk", "07:00") or "07:00"
+        th, tm = 8, 0
+        if jam_ajar_str and ":" in jam_ajar_str:
+            try:
+                parts = jam_ajar_str.split(":")
+                th = int(parts[0])
+                tm = int(parts[1][:2])
+            except Exception:
+                th = 8
+        elif jam_masuk_str and ":" in jam_masuk_str:
+            try:
+                th = int(jam_masuk_str.split(":")[0]) + 1
+            except Exception:
+                th = 8
+
+        if hour > th or (hour == th and minute > tm):
+            is_late = True
+
+    final_status = StatusAbsensi.TERLAMBAT if is_late else StatusAbsensi.HADIR
+
     # Cek apakah sudah ada log kehadiran guru pada tanggal tersebut
     existing_log = db.query(AbsensiLog).filter(
         AbsensiLog.uid == guru.uid,
@@ -934,7 +970,7 @@ async def input_kehadiran_manual_guru(
     if existing_log:
         existing_log.waktu = target_datetime
         existing_log.mode = mode_enum
-        existing_log.status = StatusAbsensi.HADIR
+        existing_log.status = final_status
         existing_log.sumber = "MANUAL"
         existing_log.catatan = f"Kehadiran manual web oleh {guru.nama}"
     else:
@@ -942,7 +978,7 @@ async def input_kehadiran_manual_guru(
             uid=guru.uid,
             waktu=target_datetime,
             mode=mode_enum,
-            status=StatusAbsensi.HADIR,
+            status=final_status,
             sumber="MANUAL",
             catatan=f"Kehadiran manual web oleh {guru.nama}"
         )
@@ -954,7 +990,7 @@ async def input_kehadiran_manual_guru(
         "guru_id": guru.id,
         "guru_nama": guru.nama,
         "uid": guru.uid,
-        "status": "HADIR",
+        "status": final_status.value,
         "sumber": "MANUAL",
         "waktu": target_datetime.strftime("%H:%M:%S WIB"),
         "tanggal": target_datetime.strftime("%d/%m/%Y")
@@ -962,7 +998,7 @@ async def input_kehadiran_manual_guru(
 
     return {
         "status": "success",
-        "message": f"Kehadiran guru {guru.nama} berhasil dicatat pada {target_datetime.strftime('%d/%m/%Y %H:%M:%S WIB')} (Manual Web)",
+        "message": f"Kehadiran guru {guru.nama} berhasil dicatat pada {target_datetime.strftime('%d/%m/%Y %H:%M:%S WIB')} ({final_status.value})",
         "waktu_tercatat": target_datetime.isoformat()
     }
 

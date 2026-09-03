@@ -1242,7 +1242,17 @@ export const SharedAbsensiPage: React.FC = () => {
                 type="time"
                 required
                 value={manualForm.jam}
-                onChange={(e) => setManualForm({ ...manualForm, jam: e.target.value })}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const autoLate = val >= '08:00';
+                  setManualForm({
+                    ...manualForm,
+                    jam: val,
+                    status: (manualForm.status === 'HADIR' || manualForm.status === 'TERLAMBAT')
+                      ? (autoLate ? 'TERLAMBAT' : 'HADIR')
+                      : manualForm.status
+                  });
+                }}
                 className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-mono font-bold focus:border-[#FF7043] focus:outline-none"
               />
             </div>
@@ -1258,7 +1268,8 @@ export const SharedAbsensiPage: React.FC = () => {
                 onChange={(e) => setManualForm({ ...manualForm, status: e.target.value })}
                 className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none"
               >
-                <option value="HADIR">HADIR</option>
+                <option value="HADIR">HADIR (Tepat Waktu)</option>
+                <option value="TERLAMBAT">TERLAMBAT</option>
                 <option value="IZIN">IZIN</option>
                 <option value="ALFA">ALFA</option>
               </select>
