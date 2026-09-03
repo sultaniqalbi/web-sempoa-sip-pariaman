@@ -4,6 +4,7 @@ import apiClient from '../../features/api/apiClient';
 import StudentAttendanceTable from './components/StudentAttendanceTable';
 import ManualAttendanceModal from './components/ManualAttendanceModal';
 import IzinGuruModal from './components/IzinGuruModal';
+import DateInput from '../../components/DateInput';
 import useAuth from '../../features/auth/useAuth';
 import { GlobeIcon, SchoolIcon } from '../../components/SvgIcons';
 import { getProgramBadgeStyle } from '../portal/SiswaPage';
@@ -321,12 +322,13 @@ export const AbsensiInputPage: React.FC = () => {
             {/* Date Filter */}
             <div className="flex items-center gap-2">
               <label className="text-xs font-bold text-[#64748B]">Tanggal:</label>
-              <input
-                type="date"
-                value={rekapDate}
-                onChange={(e) => setRekapDate(e.target.value)}
-                className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-3 py-1.5 text-xs text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none"
-              />
+              <div className="w-36">
+                <DateInput
+                  value={rekapDate}
+                  onChange={(e) => setRekapDate(e.target.value)}
+                  className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-3 py-1.5 text-xs text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none"
+                />
+              </div>
             </div>
           </div>
 

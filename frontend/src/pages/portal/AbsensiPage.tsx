@@ -20,6 +20,8 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon
 } from '../../components/SvgIcons';
+import DateInput from '../../components/DateInput';
+import { formatIndoDate, formatIndoDateTime } from '../../utils/dateFormatter';
 import { parseProgramDetails, getProgramBadgeStyle, parseProgramQuotas } from './SiswaPage';
 
 interface SiswaItem {
@@ -126,30 +128,7 @@ export const SharedAbsensiPage: React.FC = () => {
   };
 
   const formatWaktuTap = (waktuStr: string) => {
-    if (!waktuStr) return '-';
-    try {
-      let d: Date;
-      if (typeof waktuStr === 'string' && !waktuStr.includes('Z') && !waktuStr.includes('+')) {
-        d = new Date(waktuStr.replace(' ', 'T') + '+07:00');
-      } else {
-        d = new Date(waktuStr);
-      }
-      if (isNaN(d.getTime())) return waktuStr;
-      return (
-        d.toLocaleString('id-ID', {
-          timeZone: 'Asia/Jakarta',
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          hour12: false,
-        }).replace(/\./g, ':') + ' WIB'
-      );
-    } catch (e) {
-      return waktuStr;
-    }
+    return formatIndoDateTime(waktuStr);
   };
 
   // Helper mengambil string tanggal YYYY-MM-DD (WIB) dari string log waktu
@@ -172,14 +151,9 @@ export const SharedAbsensiPage: React.FC = () => {
     }
   };
 
-  // Format label tanggal header (e.g. "Selasa, 1 September 2026")
+  // Format label tanggal header (e.g. "03/09/2026")
   const formatHeaderDate = (dateStr: string) => {
-    try {
-      const d = new Date(dateStr + 'T00:00:00');
-      return d.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    } catch (e) {
-      return dateStr;
-    }
+    return formatIndoDate(dateStr);
   };
 
   const handlePrevDay = () => {
@@ -1200,8 +1174,7 @@ export const SharedAbsensiPage: React.FC = () => {
               <label className="block text-[#1E293B] font-bold mb-1">
                 Tanggal Kehadiran*
               </label>
-              <input
-                type="date"
+              <DateInput
                 required
                 value={manualForm.tanggal}
                 onChange={(e) => setManualForm({ ...manualForm, tanggal: e.target.value })}
@@ -1325,8 +1298,7 @@ export const SharedAbsensiPage: React.FC = () => {
               <label className="block text-[#1E293B] font-bold mb-1">
                 Tanggal Mulai*
               </label>
-              <input
-                type="date"
+              <DateInput
                 required
                 value={izinForm.tanggal_mulai}
                 onChange={(e) => setIzinForm({ ...izinForm, tanggal_mulai: e.target.value })}
@@ -1337,8 +1309,7 @@ export const SharedAbsensiPage: React.FC = () => {
               <label className="block text-[#1E293B] font-bold mb-1">
                 Tanggal Selesai*
               </label>
-              <input
-                type="date"
+              <DateInput
                 required
                 value={izinForm.tanggal_selesai}
                 onChange={(e) => setIzinForm({ ...izinForm, tanggal_selesai: e.target.value })}
@@ -1443,8 +1414,7 @@ export const SharedAbsensiPage: React.FC = () => {
                 <label className="block text-[#1E293B] font-bold mb-1">
                   Tanggal Presensi*
                 </label>
-                <input
-                  type="date"
+                <DateInput
                   required
                   value={editLogForm.tanggal}
                   onChange={(e) => setEditLogForm({ ...editLogForm, tanggal: e.target.value })}

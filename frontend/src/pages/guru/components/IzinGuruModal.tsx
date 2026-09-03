@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../../features/api/apiClient';
+import DateInput from '../../../components/DateInput';
 
 interface IzinGuruModalProps {
   isOpen: boolean;
@@ -214,8 +215,7 @@ export const IzinGuruModal: React.FC<IzinGuruModalProps> = ({
                 <label className="block text-xs font-bold text-[#78350F] mb-1">
                   Mulai Tanggal <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="date"
+                <DateInput
                   value={tanggalMulai}
                   onChange={(e) => setTanggalMulai(e.target.value)}
                   required
@@ -226,8 +226,7 @@ export const IzinGuruModal: React.FC<IzinGuruModalProps> = ({
                 <label className="block text-xs font-bold text-[#78350F] mb-1">
                   Sampai Tanggal <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="date"
+                <DateInput
                   value={tanggalSelesai}
                   min={tanggalMulai}
                   onChange={(e) => setTanggalSelesai(e.target.value)}
@@ -242,8 +241,7 @@ export const IzinGuruModal: React.FC<IzinGuruModalProps> = ({
                 <label className="block text-xs font-bold text-[#78350F] mb-1">
                   Tanggal Izin <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="date"
+                <DateInput
                   value={tanggalMulai}
                   onChange={(e) => setTanggalMulai(e.target.value)}
                   required

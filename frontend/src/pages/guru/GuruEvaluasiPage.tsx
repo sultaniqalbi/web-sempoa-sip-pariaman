@@ -7,6 +7,8 @@ import Modal from '../../components/Modal';
 import ConfirmModal from '../../components/ConfirmModal';
 import EmptyState from '../../components/EmptyState';
 import { EvaluasiIcon, TrashIcon, BookIcon, CalendarIcon, CheckIcon } from '../../components/SvgIcons';
+import DateInput from '../../components/DateInput';
+import { formatIndoDate } from '../../utils/dateFormatter';
 import { getProgramBadgeStyle } from '../portal/SiswaPage';
 import { BukuItem } from '../portal/BukuPage';
 
@@ -267,7 +269,7 @@ export const GuruEvaluasiPage: React.FC = () => {
               </span>
               <span className="text-[10px] text-[#64748B] flex items-center gap-1">
                 <CalendarIcon size={10} />
-                {new Date(row.evaluasi.tanggal_evaluasi).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                {formatIndoDate(row.evaluasi.tanggal_evaluasi)}
               </span>
             </div>
             <p className="text-xs text-[#1E293B] font-medium italic line-clamp-2">
@@ -437,8 +439,7 @@ export const GuruEvaluasiPage: React.FC = () => {
                 <label className="block text-[#1E293B] font-bold mb-1">
                   Tanggal Evaluasi*
                 </label>
-                <input
-                  type="date"
+                <DateInput
                   required
                   value={formData.tanggal_evaluasi}
                   onChange={(e) => setFormData({ ...formData, tanggal_evaluasi: e.target.value })}

@@ -8,6 +8,8 @@ import ConfirmModal from '../../components/ConfirmModal';
 import EmptyState from '../../components/EmptyState';
 import SearchableSelect from '../../components/SearchableSelect';
 import { BookIcon, EditIcon, TrashIcon, CheckIcon, StarIcon, TrophyIcon, CalendarIcon } from '../../components/SvgIcons';
+import DateInput from '../../components/DateInput';
+import { formatIndoDate } from '../../utils/dateFormatter';
 import { getProgramBadgeStyle, AVAILABLE_PROGRAMS } from './SiswaPage';
 
 export interface BukuItem {
@@ -283,7 +285,7 @@ export const SharedBukuPage: React.FC = () => {
       accessor: (row: BukuItem) => (
         <div className="text-xs text-[#1E293B] font-bold flex items-center gap-1.5">
           <CalendarIcon size={12} className="text-[#64748B]" />
-          <span>{new Date(row.tanggal_mulai).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+          <span>{formatIndoDate(row.tanggal_mulai)}</span>
         </div>
       ),
       className: 'md:w-[140px]'
@@ -295,7 +297,7 @@ export const SharedBukuPage: React.FC = () => {
           {row.tanggal_selesai ? (
             <span className="text-[11px] font-bold text-[#16A34A] bg-[#DCFCE7] border border-[#86EFAC] px-2.5 py-0.5 rounded-lg inline-flex items-center gap-1 shadow-2xs">
               <CheckIcon size={11} className="text-[#16A34A]" />
-              <span>{new Date(row.tanggal_selesai).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+              <span>{formatIndoDate(row.tanggal_selesai)}</span>
             </span>
           ) : (
             <span className="text-[11px] font-bold text-[#D97706] bg-[#FEF3C7] border border-[#FDE68A] px-2.5 py-0.5 rounded-lg inline-block shadow-2xs">
@@ -518,8 +520,7 @@ export const SharedBukuPage: React.FC = () => {
                 <label className="block text-[#1E293B] font-bold mb-1">
                   Tanggal Mulai Buku*
                 </label>
-                <input
-                  type="date"
+                <DateInput
                   required
                   value={formData.tanggal_mulai}
                   onChange={(e) => setFormData({ ...formData, tanggal_mulai: e.target.value })}
@@ -531,9 +532,8 @@ export const SharedBukuPage: React.FC = () => {
                 <label className="block text-[#1E293B] font-bold mb-1">
                   Tanggal Selesai Buku (Opsional)
                 </label>
-                <input
-                  type="date"
-                  value={formData.tanggal_selesai}
+                <DateInput
+                  value={formData.tanggal_selesai || ''}
                   onChange={(e) => setFormData({ ...formData, tanggal_selesai: e.target.value })}
                   className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold text-xs focus:border-[#FF7043] focus:outline-none"
                 />

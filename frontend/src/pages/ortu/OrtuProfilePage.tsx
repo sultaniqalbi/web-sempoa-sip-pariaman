@@ -5,6 +5,8 @@ import useAuth from '../../features/auth/useAuth';
 import apiClient from '../../features/api/apiClient';
 import { Siswa } from '../../types';
 import { UserIcon, EditIcon, CheckIcon, LogoutIcon, InfoIcon } from '../../components/SvgIcons';
+import DateInput from '../../components/DateInput';
+import { formatIndoDate } from '../../utils/dateFormatter';
 
 interface ChildFormData {
   nama: string;
@@ -291,7 +293,7 @@ export const OrtuProfilePage: React.FC = () => {
                   )}
                 </div>
                 <span className="font-bold text-[#1E293B] text-xs">
-                  {child?.tanggal_lahir ? new Date(child.tanggal_lahir).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}
+                  {child?.tanggal_lahir ? formatIndoDate(child.tanggal_lahir) : '-'}
                 </span>
               </div>
 
@@ -380,8 +382,7 @@ export const OrtuProfilePage: React.FC = () => {
                     </span>
                   )}
                 </div>
-                <input
-                  type="date"
+                <DateInput
                   required
                   value={formData.tanggal_lahir}
                   onChange={(e) => {
@@ -394,7 +395,7 @@ export const OrtuProfilePage: React.FC = () => {
                       umur: newUmur,
                     });
                   }}
-                  className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none"
+                  className="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none font-medium"
                 />
               </div>
             </div>

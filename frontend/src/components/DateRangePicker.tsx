@@ -1,4 +1,5 @@
 import React from 'react';
+import DateInput from './DateInput';
 
 export type RangeOption = 'Hari Ini' | '7 Hari Terakhir' | '30 Hari Terakhir' | '3 Bulan Terakhir' | 'Pilih Tanggal Custom';
 
@@ -44,19 +45,21 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
       {selectedRange === 'Pilih Tanggal Custom' && onCustomDateChange && (
         <div className="flex items-center gap-2 bg-[#F5F5F5] p-1.5 rounded-lg border border-[#E0E0E0] w-full xl:w-auto">
-          <input
-            type="date"
-            value={customStartDate || ''}
-            onChange={(e) => onCustomDateChange(e.target.value, customEndDate || '')}
-            className="bg-transparent text-[#424242] text-xs font-mono outline-none px-2 w-full"
-          />
+          <div className="w-36">
+            <DateInput
+              value={customStartDate || ''}
+              onChange={(e) => onCustomDateChange(e.target.value, customEndDate || '')}
+              className="bg-transparent text-[#424242] text-xs font-mono outline-none px-2 w-full"
+            />
+          </div>
           <span className="text-[#757575] font-bold">-</span>
-          <input
-            type="date"
-            value={customEndDate || ''}
-            onChange={(e) => onCustomDateChange(customStartDate || '', e.target.value)}
-            className="bg-transparent text-[#424242] text-xs font-mono outline-none px-2 w-full"
-          />
+          <div className="w-36">
+            <DateInput
+              value={customEndDate || ''}
+              onChange={(e) => onCustomDateChange(customStartDate || '', e.target.value)}
+              className="bg-transparent text-[#424242] text-xs font-mono outline-none px-2 w-full"
+            />
+          </div>
         </div>
       )}
     </div>

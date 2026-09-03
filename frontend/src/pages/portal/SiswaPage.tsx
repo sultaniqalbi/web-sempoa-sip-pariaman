@@ -9,6 +9,7 @@ import PageHeader from '../../components/PageHeader';
 import EmptyState from '../../components/EmptyState';
 import { PhotoModal } from '../../components/PhotoModal';
 import { DataSiswaIcon, TrashIcon, CheckIcon, InfoIcon, CalendarIcon, PengajarIcon, BookIcon } from '../../components/SvgIcons';
+import DateInput from '../../components/DateInput';
 import { PROGRAM_LEVEL_PRESETS } from './BukuPage';
 
 interface Siswa {
@@ -1062,8 +1063,7 @@ export const SiswaPage: React.FC = () => {
                   </span>
                 )}
               </div>
-              <input
-                type="date"
+              <DateInput
                 required
                 value={formData.tanggal_lahir}
                 onChange={(e) => {
@@ -1078,7 +1078,7 @@ export const SiswaPage: React.FC = () => {
                     uid: newUid
                   });
                 }}
-                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none font-medium"
+                className="w-full bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
               />
             </div>
           </div>

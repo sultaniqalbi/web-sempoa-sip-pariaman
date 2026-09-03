@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../../features/api/apiClient';
 import { EditIcon } from '../../../components/SvgIcons';
+import DateInput from '../../../components/DateInput';
 import { parseProgramQuotas } from '../../portal/SiswaPage';
 
 export interface SiswaAbsensi {
@@ -169,12 +170,13 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-sm sm:text-base font-black text-[#1E293B]">Input Absensi Siswa</h2>
-            <input
-              type="date"
-              value={tanggalTerpilih}
-              onChange={(e) => onTanggalChange(e.target.value)}
-              className="px-2.5 py-1 bg-[#FFF3E0] text-[#E65100] border border-[#FFE082] rounded-lg text-xs font-black uppercase focus:outline-none focus:border-[#FF7043]"
-            />
+            <div className="w-36">
+              <DateInput
+                value={tanggalTerpilih}
+                onChange={(e) => onTanggalChange(e.target.value)}
+                className="px-2.5 py-1 bg-[#FFF3E0] text-[#E65100] border border-[#FFE082] rounded-lg text-xs font-black uppercase focus:outline-none focus:border-[#FF7043]"
+              />
+            </div>
             <input
               type="time"
               value={jamTerpilih}

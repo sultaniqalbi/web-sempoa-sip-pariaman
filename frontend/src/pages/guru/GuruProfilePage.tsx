@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
 import useAuth from '../../features/auth/useAuth';
 import { PengajarIcon, LockIcon, GlobeIcon, SchoolIcon } from '../../components/SvgIcons';
+import DateInput from '../../components/DateInput';
 
 interface GuruProfileData {
   id: number;
@@ -336,8 +337,7 @@ export const GuruProfilePage: React.FC = () => {
                 </span>
               )}
             </div>
-            <input
-              type="date"
+            <DateInput
               value={formData.tanggal_lahir}
               onChange={(e) => setFormData({ ...formData, tanggal_lahir: e.target.value })}
               className="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none font-medium"

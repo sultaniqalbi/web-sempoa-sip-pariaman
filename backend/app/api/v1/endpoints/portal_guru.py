@@ -178,10 +178,10 @@ async def get_guru_dashboard(
 
     if last_tap and last_tap.waktu:
         lt_wib = last_tap.waktu.astimezone(WIB) if last_tap.waktu.tzinfo else last_tap.waktu.replace(tzinfo=WIB)
-        tanggal_str = lt_wib.strftime("%d-%m")
-        jam_str = lt_wib.strftime("%H:%M")
+        tanggal_str = lt_wib.strftime("%d/%m/%Y")
+        jam_str = lt_wib.strftime("%H:%M:%S WIB")
     else:
-        tanggal_str = today.strftime("%d-%m")
+        tanggal_str = today.strftime("%d/%m/%Y")
         jam_str = "-"
 
     absensi_guru = {
@@ -956,13 +956,13 @@ async def input_kehadiran_manual_guru(
         "uid": guru.uid,
         "status": "HADIR",
         "sumber": "MANUAL",
-        "waktu": target_datetime.strftime("%H:%M WIB"),
-        "tanggal": target_datetime.strftime("%d %B %Y")
+        "waktu": target_datetime.strftime("%H:%M:%S WIB"),
+        "tanggal": target_datetime.strftime("%d/%m/%Y")
     })
 
     return {
         "status": "success",
-        "message": f"Kehadiran guru {guru.nama} berhasil dicatat pada {target_datetime.strftime('%d %B %Y %H:%M WIB')} (Manual Web)",
+        "message": f"Kehadiran guru {guru.nama} berhasil dicatat pada {target_datetime.strftime('%d/%m/%Y %H:%M:%S WIB')} (Manual Web)",
         "waktu_tercatat": target_datetime.isoformat()
     }
 

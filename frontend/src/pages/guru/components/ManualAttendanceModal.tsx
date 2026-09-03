@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../../features/api/apiClient';
+import DateInput from '../../../components/DateInput';
 
 interface ManualAttendanceModalProps {
   isOpen: boolean;
@@ -133,8 +134,7 @@ export const ManualAttendanceModal: React.FC<ManualAttendanceModalProps> = ({
               <label className="block text-xs font-bold text-[#475569] mb-1.5">
                 Tanggal Kehadiran <span className="text-red-500">*</span>
               </label>
-              <input
-                type="date"
+              <DateInput
                 value={tanggal}
                 onChange={(e) => setTanggal(e.target.value)}
                 required

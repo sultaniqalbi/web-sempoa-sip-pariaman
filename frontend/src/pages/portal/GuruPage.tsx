@@ -11,6 +11,7 @@ import EmptyState from '../../components/EmptyState';
 import DayPicker from '../../components/DayPicker';
 import { PhotoModal } from '../../components/PhotoModal';
 import { PengajarIcon, TrashIcon, CheckIcon } from '../../components/SvgIcons';
+import DateInput from '../../components/DateInput';
 
 const AVAILABLE_PROGRAMS = ['Sempoa SIP', 'Fonem', 'Tahfidz', 'Bahasa Inggris', 'TK', 'Admin', 'Direktur', 'Kepala Sekolah'];
 
@@ -710,8 +711,7 @@ export const GuruPage: React.FC = () => {
                   </span>
                 )}
               </div>
-              <input
-                type="date"
+              <DateInput
                 value={formData.tanggal_lahir}
                 onChange={(e) => {
                   const val = e.target.value;

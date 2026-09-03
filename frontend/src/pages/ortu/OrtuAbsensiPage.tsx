@@ -4,6 +4,7 @@ import useAuth from '../../features/auth/useAuth';
 import apiClient from '../../features/api/apiClient';
 import { Siswa, AbsensiLog } from '../../types';
 import { PresensiIcon, CalendarIcon, UserIcon } from '../../components/SvgIcons';
+import { formatIndoDateTime } from '../../utils/dateFormatter';
 import { parseProgramDetails, getProgramBadgeStyle } from '../portal/SiswaPage';
 
 export const OrtuAbsensiPage: React.FC = () => {
@@ -55,26 +56,7 @@ export const OrtuAbsensiPage: React.FC = () => {
   const latestLog = absensiLogs.length > 0 ? absensiLogs[0] : null;
 
   const formatWaktu = (waktuStr: string) => {
-    if (!waktuStr) return '-';
-    try {
-      let d: Date;
-      if (typeof waktuStr === 'string' && !waktuStr.includes('Z') && !waktuStr.includes('+')) {
-        d = new Date(waktuStr.replace(' ', 'T') + '+07:00');
-      } else {
-        d = new Date(waktuStr);
-      }
-      if (isNaN(d.getTime())) return waktuStr;
-      return d.toLocaleDateString('id-ID', {
-        timeZone: 'Asia/Jakarta',
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      }).replace(/\./g, ':') + ' WIB';
-    } catch {
-      return waktuStr;
-    }
+    return formatIndoDateTime(waktuStr);
   };
 
   return (

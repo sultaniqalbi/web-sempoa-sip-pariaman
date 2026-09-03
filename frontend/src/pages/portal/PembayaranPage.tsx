@@ -9,6 +9,8 @@ import KwitansiModal from '../../components/KwitansiModal';
 import PageHeader from '../../components/PageHeader';
 import EmptyState from '../../components/EmptyState';
 import { PembayaranIcon, EditIcon, WhatsAppIcon, CameraIcon, DocumentTextIcon, TrashIcon } from '../../components/SvgIcons';
+import DateInput from '../../components/DateInput';
+import { formatIndoDate, formatIndoDateTime } from '../../utils/dateFormatter';
 import { parseProgramDetails, getProgramBadgeStyle, parseProgramQuotas } from './SiswaPage';
 
 interface ReminderItem {
@@ -483,7 +485,7 @@ export const SharedPembayaranPage: React.FC = () => {
         const dtStr = row.created_at || '';
         const isUtc = dtStr.endsWith('Z') || dtStr.includes('+');
         const finalDtStr = dtStr ? (isUtc ? dtStr : dtStr + 'Z') : '';
-        const displayDate = finalDtStr ? new Date(finalDtStr).toLocaleString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '-';
+        const displayDate = finalDtStr ? formatIndoDateTime(finalDtStr) : '-';
         return (
           <span className="text-[11px] font-semibold text-[#475569]">
             {displayDate}
@@ -768,7 +770,7 @@ export const SharedPembayaranPage: React.FC = () => {
                 </p>
               </div>
               <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-white text-[#FF7043] border border-[#FFCC80]">
-                Jatuh Tempo Saat Ini: {editingDueDateSiswa.due_date || '-'}
+                Jatuh Tempo Saat Ini: {editingDueDateSiswa.due_date ? formatIndoDate(editingDueDateSiswa.due_date) : '-'}
               </span>
             </div>
 
@@ -776,8 +778,7 @@ export const SharedPembayaranPage: React.FC = () => {
               <label className="block text-[#1E293B] font-bold mb-1">
                 Tanggal Jatuh Tempo Baru*
               </label>
-              <input
-                type="date"
+              <DateInput
                 required
                 value={dueDateForm.due_date}
                 onChange={(e) => setDueDateForm({ ...dueDateForm, due_date: e.target.value })}

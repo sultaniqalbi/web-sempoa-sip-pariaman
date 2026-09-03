@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatIndoDate } from '../../../utils/dateFormatter';
 
 interface AbsensiGuruCardProps {
   absensi: {
@@ -36,7 +37,7 @@ const AbsensiGuruCard: React.FC<AbsensiGuruCardProps> = ({ absensi }) => {
             </div>
           ) : (
             <div className="w-10 h-10 rounded-xl bg-[#F1F5F9] text-[#64748B] border border-[#E2E8F0] flex items-center justify-center flex-shrink-0">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10" />
                 <polyline points="12 6 12 12 16 14" />
               </svg>
@@ -55,11 +56,13 @@ const AbsensiGuruCard: React.FC<AbsensiGuruCardProps> = ({ absensi }) => {
         <div className="grid grid-cols-2 gap-3 mt-auto pt-4 border-t border-[#F5F5F5]">
           <div>
             <p className="text-[10px] text-[#94A3B8] font-bold uppercase tracking-wider">Tanggal</p>
-            <p className="text-sm font-mono text-[#1E293B] font-bold mt-0.5">{absensi.tanggal}</p>
+            <p className="text-sm font-mono text-[#1E293B] font-bold mt-0.5">{formatIndoDate(absensi.tanggal)}</p>
           </div>
           <div>
             <p className="text-[10px] text-[#94A3B8] font-bold uppercase tracking-wider">Jam Tap</p>
-            <p className="text-sm font-mono text-[#1E293B] font-bold mt-0.5">{absensi.jam}</p>
+            <p className="text-sm font-mono text-[#1E293B] font-bold mt-0.5">
+              {absensi.jam ? (absensi.jam === '-' ? '-' : (absensi.jam.includes('WIB') ? absensi.jam : `${absensi.jam} WIB`)) : '-'}
+            </p>
           </div>
         </div>
       </div>
