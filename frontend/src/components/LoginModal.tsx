@@ -341,7 +341,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
 
             <div className="login-modal-footer">
               <p className="login-info-text">
-                <InfoIcon size={15} style={{ flexShrink: 0, marginTop: '2px' }} />
+                <InfoIcon size={15} className="login-footer-info-icon" />
                 <span>
                   Belum punya akun? Hubungi <strong>Admin</strong> via WhatsApp{' '}
                   <a 

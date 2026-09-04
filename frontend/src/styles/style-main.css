@@ -2290,6 +2290,11 @@ img {
   text-align: center;
 }
 
+.login-footer-info-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
 .login-info-text i {
   color: #FF6B35;
   margin-right: 0.4rem;

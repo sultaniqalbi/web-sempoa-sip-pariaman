@@ -1,9 +1,10 @@
 import React from 'react';
 
-export interface IconProps {
+export interface IconProps extends React.SVGProps<SVGSVGElement> {
   size?: number;
   className?: string;
   color?: string;
+  style?: React.CSSProperties;
 }
 
 // ──────────────────────────────────────────────
@@ -619,8 +620,8 @@ export const SchoolIcon: React.FC<IconProps> = ({ size = 16, className = 'text-c
   </svg>
 );
 
-export const InfoIcon: React.FC<IconProps> = ({ size = 16, className = 'text-current' }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 ${className}`}>
+export const InfoIcon: React.FC<IconProps> = ({ size = 16, className = 'text-current', style, ...props }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 ${className}`} style={style} {...props}>
     <circle cx="12" cy="12" r="10" />
     <line x1="12" y1="16" x2="12" y2="12" />
     <line x1="12" y1="8" x2="12.01" y2="8" />
