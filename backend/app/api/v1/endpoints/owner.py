@@ -820,10 +820,35 @@ async def get_riwayat_aktivitas(
 
     # Statistik ringkasan seluruh log audit
     total_aktivitas = db.query(AuditLog).count()
-    total_penambahan = db.query(AuditLog).filter(func.upper(AuditLog.action) == "PENAMBAHAN").count()
-    total_perubahan = db.query(AuditLog).filter(func.upper(AuditLog.action) == "PERUBAHAN").count()
-    total_penghapusan = db.query(AuditLog).filter(func.upper(AuditLog.action) == "PENGHAPUSAN").count()
-    total_verifikasi = db.query(AuditLog).filter(func.upper(AuditLog.action) == "VERIFIKASI").count()
+    total_penambahan = db.query(AuditLog).filter(
+        or_(
+            func.upper(AuditLog.action).like("%PENAMBAHAN%"),
+            func.upper(AuditLog.action).like("%CREATE%"),
+            func.upper(AuditLog.action).like("%ADD%")
+        )
+    ).count()
+    total_perubahan = db.query(AuditLog).filter(
+        or_(
+            func.upper(AuditLog.action).like("%PERUBAHAN%"),
+            func.upper(AuditLog.action).like("%UPDATE%"),
+            func.upper(AuditLog.action).like("%EDIT%"),
+            func.upper(AuditLog.action).like("%RESET%")
+        )
+    ).count()
+    total_penghapusan = db.query(AuditLog).filter(
+        or_(
+            func.upper(AuditLog.action).like("%PENGHAPUSAN%"),
+            func.upper(AuditLog.action).like("%DELETE%"),
+            func.upper(AuditLog.action).like("%HAPUS%")
+        )
+    ).count()
+    total_verifikasi = db.query(AuditLog).filter(
+        or_(
+            func.upper(AuditLog.action).like("%VERIFIKASI%"),
+            func.upper(AuditLog.action).like("%APPROVE%"),
+            func.upper(AuditLog.action).like("%REJECT%")
+        )
+    ).count()
 
     total_filtered = query.count()
     total_pages = (total_filtered + limit - 1) // limit if total_filtered > 0 else 1
