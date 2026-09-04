@@ -6,6 +6,7 @@ interface ModalProps {
   title: string;
   children: React.ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  maxWidth?: string;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -14,6 +15,7 @@ export const Modal: React.FC<ModalProps> = ({
   title,
   children,
   size = 'md',
+  maxWidth,
 }) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -51,7 +53,7 @@ export const Modal: React.FC<ModalProps> = ({
     >
       <div
         className={`bg-white border border-[#E2E8F0] rounded-2xl p-4 sm:p-6 shadow-2xl relative text-[#424242] w-full max-h-[86dvh] sm:max-h-[85vh] flex flex-col my-auto ${
-          sizeClasses[size] || sizeClasses.md
+          maxWidth || sizeClasses[size] || sizeClasses.md
         }`}
         onClick={(e) => e.stopPropagation()}
       >

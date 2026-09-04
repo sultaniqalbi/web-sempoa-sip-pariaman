@@ -592,7 +592,7 @@ export const RiwayatPage: React.FC = () => {
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
         title="Rincian Audit Log Aktivitas"
-        maxWidth="max-w-xl"
+        size="md"
       >
         {selectedLog && (
           <div className="space-y-4 text-xs">
