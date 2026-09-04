@@ -299,9 +299,6 @@ async def get_guru_cache(request: Request, db: Session = Depends(get_db)):
                 nama = g.nama.strip()
                 kat_lower = (g.kategori_program or "").lower()
                 paket_lower = (g.paket_pengajaran or "").lower()
-                is_direktur = ("direktur" in nama.lower()) or ("direktur" in kat_lower) or ("zulhemawati" in nama.lower())
-                if is_direktur and "direktur" not in nama.lower():
-                    nama = f"{nama} (Direktur)"
                 records.append(f"{clean_uid}:{nama}")
         return PlainTextResponse("|".join(records), status_code=200)
     except Exception:
