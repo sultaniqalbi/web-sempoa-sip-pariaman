@@ -341,8 +341,18 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
 
             <div className="login-modal-footer">
               <p className="login-info-text">
-                <InfoIcon size={14} />
-                Belum punya akun? Hubungi <strong>Admin</strong> via WhatsApp <a href="https://wa.me/6282385813163?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak." target="_blank" rel="noreferrer" className="login-info-link">di sini</a>
+                <InfoIcon size={15} style={{ flexShrink: 0, marginTop: '2px' }} />
+                <span>
+                  Belum punya akun? Hubungi <strong>Admin</strong> via WhatsApp{' '}
+                  <a 
+                    href="https://wa.me/6282385813163?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak." 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="login-info-link"
+                  >
+                    di sini
+                  </a>
+                </span>
               </p>
             </div>
           </div>

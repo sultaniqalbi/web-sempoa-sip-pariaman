@@ -3,8 +3,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 from app.core.config import settings
-from app.core.database import get_db
-from sqlalchemy import text
+from app.core.database import get_db, SessionLocal, engine, Base
+from sqlalchemy import text, func
 
 logging.basicConfig(level=settings.log_level)
 logger = logging.getLogger(__name__)

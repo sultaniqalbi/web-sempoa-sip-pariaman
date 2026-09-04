@@ -1941,7 +1941,7 @@ img {
   border-radius: 24px;
   max-width: 900px;  /* Landscape width */
   width: 95%;
-  max-height: 85vh;
+  max-height: 90vh;
   overflow: hidden;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -1953,15 +1953,15 @@ img {
 /* Close button (tetap di kanan atas, di atas form) */
 .login-modal-close {
   position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
-  width: 40px;
-  height: 40px;
+  top: 1.2rem;
+  right: 1.2rem;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   background: rgba(15, 23, 42, 0.1);
   border: none;
   cursor: pointer;
-  font-size: 24px;
+  font-size: 22px;
   color: #0F172A;
   display: flex;
   align-items: center;
@@ -2000,13 +2000,14 @@ img {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 500px;
-  padding: 2rem;
+  min-height: 480px;
+  padding: 1.5rem;
 }
 
 .login-modal-image {
   width: 100%;
   height: 100%;
+  max-height: 420px;
   object-fit: contain;
   object-position: center;
   display: block;
@@ -2021,10 +2022,12 @@ img {
 .login-modal-form-side {
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  max-height: 90vh;
 }
 
 .login-modal-header {
-  padding: 1.5rem 2.5rem 1rem;
+  padding: 1.25rem 2rem 0.75rem;
   text-align: center;
   border-bottom: 1px solid #e2e8f0;
   position: relative;
@@ -2032,23 +2035,23 @@ img {
 }
 
 .login-modal-logo {
-  height: 65px;
-  max-width: 130px;
+  height: 56px;
+  max-width: 120px;
   object-fit: contain;
   display: block;
-  margin: 0 auto 0.8rem auto;
+  margin: 0 auto 0.5rem auto;
 }
 
 .login-modal-title {
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-weight: 800;
   color: #0F172A;
-  margin: 0 0 0.4rem 0;
+  margin: 0 0 0.25rem 0;
   font-family: var(--font-heading), "Poppins", sans-serif;
 }
 
 .login-modal-subtitle {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: #64748b;
   margin: 0;
 }
@@ -2056,11 +2059,11 @@ img {
 /* Form Styles */
 .login-form {
   flex: 1;
-  padding: 1rem 2.5rem 0;
+  padding: 0.8rem 2rem 0;
 }
 
 .login-form-group {
-  margin-bottom: 1.2rem;
+  margin-bottom: 0.95rem;
 }
 
 .login-form-label {
@@ -2202,7 +2205,7 @@ img {
 }
 
 .login-forgot-wrapper {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.9rem;
   text-align: right;
 }
 
@@ -2225,12 +2228,12 @@ img {
 
 /* Buttons */
 .login-button-wrapper {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.1rem;
 }
 
 .login-btn-submit {
   width: 100%;
-  padding: 0.9rem;
+  padding: 0.85rem;
   background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
   color: white;
   border: none;
@@ -2268,7 +2271,7 @@ img {
 
 /* Footer / Alerts */
 .login-modal-footer {
-  padding: 1.5rem 2.5rem;
+  padding: 1rem 2rem;
   border-top: 1px solid #e2e8f0;
   background: #f9fafb;
   flex-shrink: 0;
@@ -2276,9 +2279,15 @@ img {
 
 .login-info-text {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: #64748b;
-  line-height: 1.5;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  text-align: center;
 }
 
 .login-info-text i {
