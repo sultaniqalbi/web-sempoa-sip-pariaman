@@ -396,7 +396,7 @@ void setup() {
   Wire.setTimeOut(50);
   lcd.init();
   lcd.backlight();
-  cetakDuaBarisCenter("SEMPOA SIP", "TC PARIAMAN");
+  cetakDuaBarisCenter("Sempoa SIP", "TC Pariaman");
 
   // 3. Inisialisasi RFID RC522 & BOOST SENSITIVITAS ANTENA MAKSIMAL
   SPI.begin();
@@ -477,7 +477,7 @@ void loop() {
         preferences.putString("apikey", input.substring(sep2 + 1));
         preferences.end();
         Serial.println("[OK] Kredensial baru disimpan ke NVS. Me-restart ESP32...");
-        cetakDuaBarisCenter("SETTING WIFI", "Restarting...");
+        cetakDuaBarisCenter("Setting WiFi", "Restarting...");
         delay(1500);
         ESP.restart();
       }
@@ -541,12 +541,12 @@ void prosesTap(const RtcDateTime& now) {
     if (dispNama.length() > 16) dispNama = dispNama.substring(0, 16);
 
     if (now.Hour() >= 16) {
-      // Tap Out (Pulang): Tampilkan "sampai jumpa" di baris 1 dan nama di baris 2 (Rata Tengah)
-      cetakDuaBarisCenter("sampai jumpa", dispNama.c_str());
+      // Tap Out (Pulang): Tampilkan "Sampai Jumpa" di baris 1 dan nama di baris 2 (Rata Tengah)
+      cetakDuaBarisCenter("Sampai Jumpa", dispNama.c_str());
       triggerBuzzerTerdaftar(); // Bip 1x panjang (non-blocking)
     } else if (isLate) {
-      // TERLAMBAT: Tampilkan TERLAMBAT & Bip 5x
-      cetakDuaBarisCenter("TERLAMBAT", dispNama.c_str());
+      // TERLAMBAT: Tampilkan Terlambat & Bip 5x
+      cetakDuaBarisCenter("Terlambat", dispNama.c_str());
       buzzerBeepCount = 0;
       buzzerBeepTarget = 5;
       buzzerNextToggle = millis();
@@ -559,7 +559,7 @@ void prosesTap(const RtcDateTime& now) {
     }
   } else {
     // B. KARTU BARU: Tampilkan Status Baru & Bip 3x Cepat dalam 1 detik
-    cetakDuaBarisCenter("KARTU BARU", uid.c_str());
+    cetakDuaBarisCenter("Kartu Baru", uid.c_str());
     triggerBuzzerBaru(); // Bip 3x cepat (non-blocking)
   }
 
@@ -756,12 +756,12 @@ void jalankanStandby() {
 }
 
 // TEKS 1 (5 Detik):
-// Atas: "SEMPOA SIP"
-// Bawah: "TC PARIAMAN"
+// Atas: "Sempoa SIP"
+// Bawah: "TC Pariaman"
 void tampilkanTeks1() {
   if (detikTerakhir == 1) return;
   detikTerakhir = 1;
-  cetakDuaBarisCenter("SEMPOA SIP", "TC PARIAMAN");
+  cetakDuaBarisCenter("Sempoa SIP", "TC Pariaman");
 }
 
 // TEKS 2 (5 Detik):
