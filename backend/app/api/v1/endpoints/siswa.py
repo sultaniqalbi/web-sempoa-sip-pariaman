@@ -18,6 +18,7 @@ from app.models.siswa import Siswa, StatusSPP
 from app.models.buku_siswa import BukuSiswa
 from app.models.pembayaran_periode import PembayaranPeriode, StatusPembayaran
 from app.models.audit_log import AuditLog
+from app.services.audit_service import log_activity
 from app.schemas.siswa import SiswaCreate, SiswaUpdate, SiswaResponse, SiswaCreateResponse, SiswaPertemuanUpdate
 from pydantic import BaseModel
 
@@ -190,6 +191,19 @@ async def create_new_siswa(
     default_jadwal = "Senin - Jumat 07:30 - 13:30 WIB" if is_tk else siswa_in.paket_jadwal
 
     try:
+        # Derive id_guru from guru_per_program if available (backward-compatible)
+        effective_id_guru = siswa_in.id_guru
+        if siswa_in.guru_per_program:
+            try:
+                import json
+                gpp = json.loads(siswa_in.guru_per_program)
+                if isinstance(gpp, dict) and gpp:
+                    first_guru_id = next(iter(gpp.values()), None)
+                    if first_guru_id is not None:
+                        effective_id_guru = int(first_guru_id)
+            except (json.JSONDecodeError, ValueError, TypeError):
+                pass
+
         new_siswa = Siswa(
             uid=siswa_in.uid,
             nama=siswa_in.nama,
@@ -199,11 +213,12 @@ async def create_new_siswa(
             kategori_program=siswa_in.kategori_program,
             paket_jadwal=siswa_in.paket_jadwal or default_jadwal,
             hari_masuk=siswa_in.hari_masuk or default_hari,
-            id_guru=siswa_in.id_guru,
+            id_guru=effective_id_guru,
             target_pertemuan=siswa_in.target_pertemuan or default_target,
-            sisa_pertemuan=siswa_in.sisa_pertemuan if siswa_in.sisa_pertemuan is not None else (siswa_in.target_pertemuan or default_target),
+            sisa_pertemuan=siswa_in.sisa_pertemuan if siswa_in.sisa_pertemuan is not None else 0,
             kuota_program=siswa_in.kuota_program,
-            status_spp=StatusSPP.AKTIF,
+            guru_per_program=siswa_in.guru_per_program,
+            status_spp=StatusSPP.AKTIF if (siswa_in.sisa_pertemuan is not None and siswa_in.sisa_pertemuan > 0) else StatusSPP.EXPIRED,
             nama_orang_tua=siswa_in.nama_orang_tua,
             whatsapp_orang_tua=normalized_wa,
             alamat=siswa_in.alamat,
@@ -216,15 +231,16 @@ async def create_new_siswa(
         db.add(new_siswa)
         db.flush() # get new_siswa.id
 
-        # Initial payment record (status LUNAS, siklus 30 hari dimulai dari absensi pertama)
+        # Initial payment record (status MENUNGGAK sampai bukti bayar di-ACC)
         periode_now = datetime.utcnow().strftime("%Y-%m")
         pembayaran_awal = PembayaranPeriode(
             id_siswa=new_siswa.id,
             periode_bulan=periode_now,
             jumlah=nominal_spp,
-            status=StatusPembayaran.LUNAS,
+            status=StatusPembayaran.MENUNGGAK,
             due_date=None
         )
+        db.add(pembayaran_awal)
         # Auto-create initial book in buku_siswa
         default_buku_level = "Kelompok Bermain (KB)" if is_tk else "Junior"
         buku_level = siswa_in.buku_saat_ini or default_buku_level
@@ -248,6 +264,25 @@ async def create_new_siswa(
             uid_terhubung=str(new_siswa.id)
         )
         db.add(user_ortu)
+
+        # Log activity
+        log_activity(
+            db=db,
+            action="PENAMBAHAN",
+            role=current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
+            email=current_user.email,
+            modul="Data Siswa",
+            deskripsi=f"Menambahkan siswa baru: {new_siswa.nama} ({new_siswa.kategori_program})",
+            status="SUCCESS",
+            target_id=new_siswa.id,
+            target_nama=new_siswa.nama,
+            after={
+                "nama": new_siswa.nama,
+                "program": new_siswa.kategori_program,
+                "ortu": new_siswa.nama_orang_tua,
+                "status_spp": "MENUNGGAK"
+            }
+        )
 
         db.commit()
         db.refresh(new_siswa)
@@ -293,6 +328,18 @@ async def update_existing_siswa(
     for key, value in update_dict.items():
         setattr(db_siswa, key, value)
 
+    # Sync id_guru from guru_per_program for backward compatibility
+    if "guru_per_program" in update_dict and update_dict["guru_per_program"]:
+        try:
+            import json
+            gpp = json.loads(update_dict["guru_per_program"])
+            if isinstance(gpp, dict) and gpp:
+                first_guru_id = next(iter(gpp.values()), None)
+                if first_guru_id is not None:
+                    db_siswa.id_guru = int(first_guru_id)
+        except (json.JSONDecodeError, ValueError, TypeError):
+            pass
+
     # Sync buku_siswa record if provided
     if buku_saat_ini is not None:
         active_buku = db.query(BukuSiswa).filter(
@@ -326,6 +373,20 @@ async def update_existing_siswa(
         if ortu_user and "whatsapp_orang_tua" in update_dict and update_dict["whatsapp_orang_tua"]:
             ortu_user.bio = update_dict["whatsapp_orang_tua"]
 
+    # Log activity
+    log_activity(
+        db=db,
+        action="PERUBAHAN",
+        role=current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
+        email=current_user.email,
+        modul="Data Siswa",
+        deskripsi=f"Memperbarui data siswa: {db_siswa.nama}",
+        status="SUCCESS",
+        target_id=db_siswa.id,
+        target_nama=db_siswa.nama,
+        after={k: str(v) for k, v in update_dict.items() if k != "foto_profil"}
+    )
+
     db.commit()
     db.refresh(db_siswa)
     return db_siswa
@@ -350,17 +411,17 @@ async def delete_siswa(
     except Exception:
         pass
     
-    try:
-        audit = AuditLog(
-            action="DELETE_SISWA",
-            role=current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
-            email=current_user.email,
-            details={"siswa_id": id, "siswa_nama": db_siswa.nama},
-            status="SUCCESS"
-        )
-        db.add(audit)
-    except Exception:
-        pass
+    log_activity(
+        db=db,
+        action="PENGHAPUSAN",
+        role=current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
+        email=current_user.email,
+        modul="Data Siswa",
+        deskripsi=f"Menghapus data siswa: {db_siswa.nama} ({db_siswa.kategori_program})",
+        status="SUCCESS",
+        target_id=id,
+        target_nama=db_siswa.nama
+    )
 
     db.commit()
     return {"status": "success", "message": "Siswa dan akun ortu berhasil dihapus"}
@@ -385,17 +446,17 @@ async def reset_siswa_password(
     new_pwd = generate_random_password(10)
     user_ortu.password = get_password_hash(new_pwd)
 
-    try:
-        audit = AuditLog(
-            action="RESET_PASSWORD_ORTU",
-            role=current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
-            email=current_user.email,
-            details={"siswa_id": id, "ortu_email": user_ortu.email},
-            status="SUCCESS"
-        )
-        db.add(audit)
-    except Exception:
-        pass
+    log_activity(
+        db=db,
+        action="PERUBAHAN",
+        role=current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
+        email=current_user.email,
+        modul="Akun Ortu",
+        deskripsi=f"Mereset kata sandi akun ortu untuk siswa: {db_siswa.nama}",
+        status="SUCCESS",
+        target_id=id,
+        target_nama=db_siswa.nama
+    )
 
     db.commit()
 

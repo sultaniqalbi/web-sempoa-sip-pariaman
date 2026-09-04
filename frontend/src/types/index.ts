@@ -30,6 +30,7 @@ export interface Siswa {
   paket_jadwal?: string;
   hari_masuk: string;
   id_guru?: number;
+  guru_per_program?: string;
   target_pertemuan: number;
   sisa_pertemuan: number;
   status_spp: 'AKTIF' | 'EXPIRED';
@@ -91,6 +92,7 @@ export interface AbsensiLog {
   status: 'HADIR' | 'IZIN' | 'ALFA' | 'TERLAMBAT' | 'TIDAK_HADIR';
   catatan?: string;
   keterangan?: string;
+  kategori_program?: string;
   created_at: string;
 }
 

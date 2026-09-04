@@ -17,12 +17,17 @@ from app.models.guru import Guru
 from app.models.jadwal import Jadwal
 from app.models.absensi_log import AbsensiLog
 from app.models.pembayaran_periode import PembayaranPeriode, StatusPembayaran
-from app.models.bukti_transfer import BuktiTransfer
+from app.models.bukti_transfer import BuktiTransfer, StatusBuktiTransfer
 from app.models.galeri import Galeri
 from app.models.audit_log import AuditLog
 from app.models.catatan_pembelajaran import CatatanPembelajaran
 from app.models.keuangan import Keuangan
 from app.models.pendaftaran_baru import PendaftaranBaru
+from app.services.audit_service import log_activity
+from fastapi.responses import Response
+from sqlalchemy import func, extract, or_, String
+import csv
+import io
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -104,22 +109,32 @@ async def get_laporan_keuangan(
 ):
     """
     Owner Exclusive: Data Keuangan Lengkap
+    Hanya menghitung pembayaran yang bukti pembayarannya telah disetujui (di-ACC).
+    Pendapatan per program dipisahkan secara murni per program resmi.
     """
     if not bulan:
         bulan = datetime.utcnow().strftime("%Y-%m")
 
-    # 1. Total revenue for specified month (LUNAS)
+    # 1. Subquery pembayaran yang telah diverifikasi (memiliki BuktiTransfer approved)
+    verified_pay_subq = (
+        db.query(BuktiTransfer.id_pembayaran)
+        .filter(BuktiTransfer.status == StatusBuktiTransfer.approved)
+        .subquery()
+    )
+
+    # 2. Total revenue for specified month (Hanya pembayaran LUNAS yang bukti transfernya telah disetujui)
     revenue_q = (
         db.query(func.sum(PembayaranPeriode.jumlah))
         .filter(
             PembayaranPeriode.periode_bulan == bulan,
-            PembayaranPeriode.status == StatusPembayaran.LUNAS
+            PembayaranPeriode.status == StatusPembayaran.LUNAS,
+            PembayaranPeriode.id.in_(verified_pay_subq)
         )
         .scalar()
     )
     total_pendapatan = float(revenue_q or 0.0)
 
-    # 2. Breakdown per status for specified month
+    # 3. Breakdown per status tagihan siswa pada bulan yang dipilih
     status_q = (
         db.query(PembayaranPeriode.status, func.count(PembayaranPeriode.id))
         .filter(PembayaranPeriode.periode_bulan == bulan)
@@ -128,24 +143,101 @@ async def get_laporan_keuangan(
     )
     per_status = [{"status": s.value, "jumlah": c} for s, c in status_q]
 
-    # 3. Revenue per program
-    program_rev = (
-        db.query(Siswa.kategori_program, func.sum(PembayaranPeriode.jumlah))
-        .join(PembayaranPeriode, Siswa.id == PembayaranPeriode.id_siswa)
+    # 4. Revenue per program (Dipisah murni per program resmi: Sempoa SIP, Fonem, Tahfidz, Bahasa Inggris, TK)
+    from app.models.program_setting import ProgramSetting
+    program_settings = db.query(ProgramSetting).all()
+    program_tariffs = {}
+    for ps in program_settings:
+        program_tariffs[ps.nama_program.strip()] = float(ps.biaya_spp)
+
+    defaults = {
+        "Sempoa SIP": 350000.0,
+        "Fonem": 200000.0,
+        "Tahfidz": 200000.0,
+        "Bahasa Inggris": 200000.0,
+        "TK": 400000.0
+    }
+    for k, v in defaults.items():
+        if k not in program_tariffs:
+            program_tariffs[k] = v
+
+    # Inisialisasi peta pendapatan tiap program
+    program_revenue_map = {p: 0.0 for p in program_tariffs.keys()}
+
+    # Ambil semua pembayaran terverifikasi bulan ini beserta data siswa
+    verified_payments = (
+        db.query(PembayaranPeriode, Siswa)
+        .join(Siswa, Siswa.id == PembayaranPeriode.id_siswa)
         .filter(
             PembayaranPeriode.periode_bulan == bulan,
             PembayaranPeriode.status == StatusPembayaran.LUNAS,
+            PembayaranPeriode.id.in_(verified_pay_subq),
             Siswa.is_deleted == False
         )
-        .group_by(Siswa.kategori_program)
         .all()
     )
-    per_program = [{"program": p, "pendapatan": float(amt or 0)} for p, amt in program_rev]
 
-    # 4. 6-Month Trend
+    for pay, siswa in verified_payments:
+        raw_programs = [p.strip() for p in (siswa.kategori_program or "").split(",") if p.strip()]
+        if not raw_programs:
+            raw_programs = ["Sempoa SIP"]
+
+        # Cocokkan dengan nama program resmi (case-insensitive)
+        matched_programs = []
+        for p in raw_programs:
+            found = False
+            for off_prog in program_tariffs.keys():
+                if off_prog.lower() == p.lower():
+                    matched_programs.append(off_prog)
+                    found = True
+                    break
+            if not found:
+                matched_programs.append(p)
+                if p not in program_revenue_map:
+                    program_revenue_map[p] = 0.0
+
+        pay_amount = float(pay.jumlah or 0.0)
+
+        if len(matched_programs) == 1:
+            prog_name = matched_programs[0]
+            program_revenue_map[prog_name] = program_revenue_map.get(prog_name, 0.0) + pay_amount
+        else:
+            # Multi-program: Bagi proporsional berdasarkan tarif resmi masing-masing program
+            sum_tariffs = sum(program_tariffs.get(p, 200000.0) for p in matched_programs)
+            if sum_tariffs > 0:
+                for p in matched_programs:
+                    share = (program_tariffs.get(p, 200000.0) / sum_tariffs) * pay_amount
+                    program_revenue_map[p] = program_revenue_map.get(p, 0.0) + share
+            else:
+                equal_share = pay_amount / len(matched_programs)
+                for p in matched_programs:
+                    program_revenue_map[p] = program_revenue_map.get(p, 0.0) + equal_share
+
+    # Susun list per_program tanpa ada nama gabungan (koma)
+    per_program = [
+        {"program": prog, "pendapatan": round(amt, 2)}
+        for prog, amt in program_revenue_map.items()
+        if amt > 0 or prog in defaults
+    ]
+
+    # Urutkan agar Sempoa SIP selalu di awal
+    def sort_key(item):
+        p = item["program"].lower()
+        if "sempoa" in p: return 0
+        if "fonem" in p: return 1
+        if "tahfidz" in p: return 2
+        if "inggris" in p: return 3
+        if "tk" in p: return 4
+        return 5
+    per_program.sort(key=sort_key)
+
+    # 5. Tren 6 Bulan (Hanya pembayaran terverifikasi di-ACC)
     all_periodes = (
         db.query(PembayaranPeriode.periode_bulan, func.sum(PembayaranPeriode.jumlah))
-        .filter(PembayaranPeriode.status == StatusPembayaran.LUNAS)
+        .filter(
+            PembayaranPeriode.status == StatusPembayaran.LUNAS,
+            PembayaranPeriode.id.in_(verified_pay_subq)
+        )
         .group_by(PembayaranPeriode.periode_bulan)
         .order_by(PembayaranPeriode.periode_bulan.desc())
         .limit(6)
@@ -626,6 +718,20 @@ async def update_spp_program(
     db.commit()
     db.refresh(setting)
 
+    # Log activity
+    log_activity(
+        db=db,
+        action="PERUBAHAN",
+        role=current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
+        email=current_user.email,
+        modul="Pengaturan SPP",
+        deskripsi=f"Mengubah tarif SPP {setting.nama_program} menjadi Rp {float(setting.biaya_spp):,.0f}",
+        status="SUCCESS",
+        target_id=setting.id,
+        target_nama=setting.nama_program,
+        after={"biaya_spp": float(setting.biaya_spp), "target_pertemuan": setting.target_pertemuan}
+    )
+
     # Broadcast notification to portals that pricing updated
     try:
         from app.core.websocket import manager
@@ -650,4 +756,187 @@ async def update_spp_program(
             "hari_masuk": setting.hari_masuk
         }
     }
+
+
+@router.get("/riwayat")
+async def get_riwayat_aktivitas(
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+    q: Optional[str] = None,
+    action: Optional[str] = None,
+    modul: Optional[str] = None,
+    role: Optional[str] = None,
+    status: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(owner_only)
+):
+    """
+    Owner Exclusive: Riwayat & Log Aktivitas Sistem (Audit Trail Lengkap)
+    """
+    query = db.query(AuditLog)
+
+    # Filter jenis aksi (Penambahan, Perubahan, Penghapusan, Verifikasi, dll)
+    if action and action.upper() != "SEMUA":
+        query = query.filter(func.upper(AuditLog.action) == action.upper())
+
+    # Filter role pelaksana (admin, guru, ortu, owner)
+    if role and role.lower() != "semua":
+        query = query.filter(func.lower(AuditLog.role) == role.lower())
+
+    # Filter status aksi (SUCCESS / FAILED)
+    if status and status.upper() != "SEMUA":
+        query = query.filter(func.upper(AuditLog.status) == status.upper())
+
+    # Filter rentang tanggal
+    if start_date:
+        try:
+            s_dt = datetime.strptime(start_date, "%Y-%m-%d")
+            query = query.filter(AuditLog.timestamp >= s_dt)
+        except Exception:
+            pass
+    if end_date:
+        try:
+            e_dt = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1)
+            query = query.filter(AuditLog.timestamp < e_dt)
+        except Exception:
+            pass
+
+    # Filter modul (Siswa, Guru, Keuangan, Absensi, Buku, dll)
+    if modul and modul.lower() != "semua":
+        query = query.filter(func.cast(AuditLog.details, String).ilike(f"%{modul}%"))
+
+    # Pencarian teks (email, aksi, atau detail payload)
+    if q and q.strip():
+        search_kw = f"%{q.strip()}%"
+        query = query.filter(
+            or_(
+                AuditLog.email.ilike(search_kw),
+                AuditLog.action.ilike(search_kw),
+                func.cast(AuditLog.details, String).ilike(search_kw)
+            )
+        )
+
+    # Statistik ringkasan seluruh log audit
+    total_aktivitas = db.query(AuditLog).count()
+    total_penambahan = db.query(AuditLog).filter(func.upper(AuditLog.action) == "PENAMBAHAN").count()
+    total_perubahan = db.query(AuditLog).filter(func.upper(AuditLog.action) == "PERUBAHAN").count()
+    total_penghapusan = db.query(AuditLog).filter(func.upper(AuditLog.action) == "PENGHAPUSAN").count()
+    total_verifikasi = db.query(AuditLog).filter(func.upper(AuditLog.action) == "VERIFIKASI").count()
+
+    total_filtered = query.count()
+    total_pages = (total_filtered + limit - 1) // limit if total_filtered > 0 else 1
+
+    logs = (
+        query.order_by(AuditLog.timestamp.desc())
+        .offset((page - 1) * limit)
+        .limit(limit)
+        .all()
+    )
+
+    formatted_logs = []
+    for log in logs:
+        dt = log.details or {}
+        deskripsi = dt.get("deskripsi") or f"Aktivitas {log.action}"
+        modul_name = dt.get("modul") or "Umum"
+        formatted_logs.append({
+            "id": log.id,
+            "action": log.action,
+            "jenis": log.action,
+            "status": log.status,
+            "role": log.role,
+            "email": log.email,
+            "user_name": dt.get("nama_user") or log.email.split("@")[0].capitalize(),
+            "modul": modul_name,
+            "perubahan": deskripsi,
+            "timestamp": log.timestamp.isoformat() if log.timestamp else None,
+            "details": dt,
+            "ip_address": dt.get("ip_address"),
+            "target_id": dt.get("target_id"),
+            "target_nama": dt.get("target_nama")
+        })
+
+    return {
+        "total": total_filtered,
+        "page": page,
+        "limit": limit,
+        "total_pages": total_pages,
+        "summary": {
+            "total_aktivitas": total_aktivitas,
+            "total_penambahan": total_penambahan,
+            "total_perubahan": total_perubahan,
+            "total_penghapusan": total_penghapusan,
+            "total_verifikasi": total_verifikasi
+        },
+        "logs": formatted_logs
+    }
+
+
+@router.get("/riwayat/export")
+async def export_riwayat_csv(
+    q: Optional[str] = None,
+    action: Optional[str] = None,
+    modul: Optional[str] = None,
+    role: Optional[str] = None,
+    status: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(owner_only)
+):
+    """
+    Owner Exclusive: Export Riwayat Aktivitas ke file CSV
+    """
+    query = db.query(AuditLog)
+    if action and action.upper() != "SEMUA":
+        query = query.filter(func.upper(AuditLog.action) == action.upper())
+    if role and role.lower() != "semua":
+        query = query.filter(func.lower(AuditLog.role) == role.lower())
+    if status and status.upper() != "SEMUA":
+        query = query.filter(func.upper(AuditLog.status) == status.upper())
+    if start_date:
+        try:
+            s_dt = datetime.strptime(start_date, "%Y-%m-%d")
+            query = query.filter(AuditLog.timestamp >= s_dt)
+        except Exception:
+            pass
+    if end_date:
+        try:
+            e_dt = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1)
+            query = query.filter(AuditLog.timestamp < e_dt)
+        except Exception:
+            pass
+    if modul and modul.lower() != "semua":
+        query = query.filter(func.cast(AuditLog.details, String).ilike(f"%{modul}%"))
+    if q and q.strip():
+        search_kw = f"%{q.strip()}%"
+        query = query.filter(
+            or_(
+                AuditLog.email.ilike(search_kw),
+                AuditLog.action.ilike(search_kw),
+                func.cast(AuditLog.details, String).ilike(search_kw)
+            )
+        )
+
+    logs = query.order_by(AuditLog.timestamp.desc()).limit(2000).all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["No", "ID", "Jenis Aksi", "Status", "Role User", "Email User", "Modul", "Detail Perubahan", "Waktu / Tanggal"])
+
+    for idx, log in enumerate(logs, 1):
+        dt = log.details or {}
+        deskripsi = dt.get("deskripsi") or f"Aktivitas {log.action}"
+        modul_name = dt.get("modul") or "Umum"
+        waktu_str = log.timestamp.strftime("%Y-%m-%d %H:%M:%S") if log.timestamp else "-"
+        writer.writerow([idx, log.id, log.action, log.status, log.role, log.email, modul_name, deskripsi, waktu_str])
+
+    csv_data = output.getvalue()
+    filename = f"riwayat_aktivitas_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.csv"
+    return Response(
+        content=csv_data,
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
 

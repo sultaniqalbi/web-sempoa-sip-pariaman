@@ -12,6 +12,7 @@ import {
   SearchIcon,
   BookIcon,
   EvaluasiIcon,
+  RiwayatIcon,
 } from '../components/SvgIcons';
 import { useAuthenticatedFontAwesome } from '../hooks/useAuthenticatedFontAwesome';
 
@@ -46,6 +47,7 @@ export const PortalLayout: React.FC<PortalLayoutProps> = ({ role }) => {
           { to: `${basePath}/pembayaran`, label: 'Reminder SPP', icon: <PembayaranIcon size={20} /> },
           { to: `${basePath}/keuangan`, label: 'Keuangan', icon: <PembayaranIcon size={20} /> },
           { to: `/owner/pertumbuhan`, label: 'Pertumbuhan', icon: <DashboardIcon size={20} /> },
+          { to: `/owner/riwayat`, label: 'Riwayat', icon: <RiwayatIcon size={20} /> },
           { to: `${basePath}/galeri`, label: 'Galeri Kegiatan', icon: <GaleriIcon size={20} /> },
         ]
       : [

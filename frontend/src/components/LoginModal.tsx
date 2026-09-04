@@ -1,6 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuth from '../features/auth/useAuth';
+import {
+  CheckCircleIcon,
+  MailIcon,
+  LockIcon,
+  AlertCircleIcon,
+  HelpCircleIcon,
+  InfoIcon,
+  CloseIcon,
+} from './icons';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -183,7 +192,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             onClick={onClose}
             aria-label="Tutup modal"
           >
-            &times;
+            <CloseIcon size={18} />
           </button>
 
           <div id="login-form-container" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -195,7 +204,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
 
             {globalSuccess && (
               <div className="login-alert login-alert-success" style={{ margin: '1.5rem 2.5rem 0' }}>
-                <i className="fas fa-check-circle"></i>
+                <CheckCircleIcon size={16} />
                 <span>{globalSuccess}</span>
               </div>
             )}
@@ -218,7 +227,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                     ref={emailInputRef}
                     required
                   />
-                  <span className="login-input-icon"><i className="fas fa-envelope"></i></span>
+                  <span className="login-input-icon"><MailIcon size={16} /></span>
                 </div>
               </div>
 
@@ -238,7 +247,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                     onChange={handlePasswordChange}
                     required
                   />
-                  <span className="login-input-icon"><i className="fas fa-lock"></i></span>
+                  <span className="login-input-icon"><LockIcon size={16} /></span>
                   
                   <button
                     type="button"
@@ -280,7 +289,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
 
               {globalError && (
                 <div className="login-form-error" style={{ display: 'flex', marginBottom: '1.2rem' }}>
-                  <i className="fas fa-exclamation-circle"></i>
+                  <AlertCircleIcon size={16} />
                   <span>{globalError}</span>
                 </div>
               )}
@@ -293,7 +302,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                   className="login-forgot-link" 
                   style={{ background: 'none', border: 'none', fontFamily: 'inherit' }}
                 >
-                  <i className="fas fa-question-circle"></i>
+                  <HelpCircleIcon size={14} />
                   Lupa Kata Sandi?
                 </a>
               </div>
@@ -332,7 +341,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
 
             <div className="login-modal-footer">
               <p className="login-info-text">
-                <i className="fas fa-info-circle"></i>
+                <InfoIcon size={14} />
                 Belum punya akun? Hubungi <strong>Admin</strong> via WhatsApp <a href="https://wa.me/6282385813163?text=Halo%20Admin%20Sempoa%20SIP%20TC%20Pariaman%2C%20saya%20tertarik%20untuk%20berkonsultasi%20mengenai%20program%20bimbingan%20belajar%20anak." target="_blank" rel="noreferrer" className="login-info-link">di sini</a>
               </p>
             </div>

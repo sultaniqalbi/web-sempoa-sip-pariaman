@@ -12,7 +12,8 @@ import {
   JadwalIcon,
   GaleriIcon,
   SearchIcon,
-} from './SvgIcons';
+  CloseIcon,
+} from './icons';
 import { requestAndSubscribePush, getNotificationPermissionStatus } from '../utils/pushManager';
 
 // ==========================================
@@ -368,10 +369,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
             <button
               onClick={() => setIsMobileMenuOpen(false)}
-              className="lg:hidden text-[#757575] hover:text-[#424242] p-1 rounded"
+              className="lg:hidden text-[#757575] hover:text-[#424242] p-1 rounded cursor-pointer"
               aria-label="Tutup Menu"
             >
-              <i className="fas fa-times"></i>
+              <CloseIcon size={20} />
             </button>
           </div>
 

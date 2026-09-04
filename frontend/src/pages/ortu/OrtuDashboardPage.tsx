@@ -4,7 +4,7 @@ import useAuth from '../../features/auth/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
 import { Siswa, AbsensiLog, PembayaranPeriode } from '../../types';
-import { AlertTriangleIcon } from '../../components/SvgIcons';
+import { AlertTriangleIcon, BellIcon, LockIcon, UploadIcon } from '../../components/icons';
 import { requestAndSubscribePush, isNotificationSupported, getNotificationPermissionStatus } from '../../utils/pushManager';
 import { parseProgramDetails, getProgramBadgeStyle, parseProgramQuotas } from '../portal/SiswaPage';
 
@@ -325,7 +325,7 @@ export const OrtuDashboardPage: React.FC = () => {
               <div className="bg-gradient-to-r from-[#FFF8E1] via-[#FFF3E0] to-[#FFE082] p-5 border-b border-[#FFE082]">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-2xl bg-[#FF9800] text-white flex items-center justify-center flex-shrink-0 shadow-md font-bold text-xl">
-                    <i className="fas fa-bell"></i>
+                    <BellIcon size={20} className="text-white" />
                   </div>
                   <div>
                     <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-[#FFF3E0] text-[#E65100] border border-[#FFCC80]">
@@ -387,7 +387,7 @@ export const OrtuDashboardPage: React.FC = () => {
 
                   {/* Cara bayar ditutup sesuai instruksi */}
                   <div className="p-3.5 bg-[#FFFDE7] border border-[#FFF59D] rounded-2xl text-[#78350F] flex items-start gap-2.5">
-                    <span className="text-base"><i className="fas fa-lock"></i></span>
+                    <LockIcon size={16} className="text-[#B45309] shrink-0 mt-0.5" />
                     <p className="text-[11px] leading-relaxed font-medium">
                       <strong>Metode & Cara Pembayaran Belum Dibuka:</strong> Tata cara dan nomor rekening resmi pembayaran akan ditampilkan otomatis saat kuota berada di bawah 20% atau siklus 30 hari jatuh tempo.
                     </p>
@@ -468,7 +468,7 @@ export const OrtuDashboardPage: React.FC = () => {
                       }}
                       className="w-full flex items-center justify-center gap-2 py-3 bg-[#FF9800] hover:bg-[#F57C00] text-white font-extrabold text-[12px] rounded-xl shadow-md transition-all active:scale-[0.99] cursor-pointer mb-2"
                     >
-                      <i className="fas fa-upload"></i>
+                      <UploadIcon size={16} />
                       Kirim Bukti Pembayaran
                     </button>
                   </div>

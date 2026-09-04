@@ -1,5 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { SearchIcon } from './SvgIcons';
+import {
+  SearchIcon,
+  SortAscIcon,
+  SortDescIcon,
+  SortDefaultIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from './icons';
 
 interface Column<T> {
   header: string | React.ReactNode;
@@ -122,8 +129,12 @@ export function DataTable<T>({
                     <div className={`flex items-center gap-1.5 ${col.className?.includes('text-right') ? 'justify-end' : ''}`}>
                       {col.header}
                       {col.sortKey && (
-                        <span className="text-[10px]" aria-hidden="true">
-                          {sortKey === col.sortKey ? (sortOrder === 'asc' ? '▲' : '▼') : '⇅'}
+                        <span className="text-[#94A3B8] inline-flex items-center" aria-hidden="true">
+                          {sortKey === col.sortKey ? (
+                            sortOrder === 'asc' ? <SortAscIcon size={12} className="text-[#FF7043]" /> : <SortDescIcon size={12} className="text-[#FF7043]" />
+                          ) : (
+                            <SortDefaultIcon size={12} />
+                          )}
                         </span>
                       )}
                     </div>
@@ -178,16 +189,16 @@ export function DataTable<T>({
             <button
               onClick={() => setCurrentPage(currentPage - 1)}
               disabled={currentPage === 1}
-              className="px-3 py-1.5 bg-white border border-[#E2E8F0] hover:bg-[#F1F5F9] disabled:opacity-40 text-[#475569] rounded-lg font-bold flex items-center justify-center"
+              className="px-3 py-1.5 bg-white border border-[#E2E8F0] hover:bg-[#F1F5F9] disabled:opacity-40 text-[#475569] rounded-lg font-bold flex items-center justify-center cursor-pointer"
               aria-label="Halaman sebelumnya"
             >
-              &larr;
+              <ChevronLeftIcon size={14} />
             </button>
             {pageNumbers.map((num) => (
               <button
                 key={num}
                 onClick={() => setCurrentPage(num)}
-                className={`w-8 h-8 rounded-lg border font-bold flex items-center justify-center ${
+                className={`w-8 h-8 rounded-lg border font-bold flex items-center justify-center cursor-pointer ${
                   currentPage === num
                     ? 'bg-[#FF7043] border-[#FF7043] text-white font-extrabold shadow'
                     : 'bg-white border-[#E2E8F0] text-[#475569] hover:bg-[#F1F5F9]'
@@ -201,10 +212,10 @@ export function DataTable<T>({
             <button
               onClick={() => setCurrentPage(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="px-3 py-1.5 bg-white border border-[#E2E8F0] hover:bg-[#F1F5F9] disabled:opacity-40 text-[#475569] rounded-lg font-bold flex items-center justify-center"
+              className="px-3 py-1.5 bg-white border border-[#E2E8F0] hover:bg-[#F1F5F9] disabled:opacity-40 text-[#475569] rounded-lg font-bold flex items-center justify-center cursor-pointer"
               aria-label="Halaman berikutnya"
             >
-              &rarr;
+              <ChevronRightIcon size={14} />
             </button>
           </div>
         </nav>

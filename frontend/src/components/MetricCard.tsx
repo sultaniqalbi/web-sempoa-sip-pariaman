@@ -1,4 +1,5 @@
 import React from 'react';
+import { ArrowUpIcon, ArrowDownIcon } from './icons';
 
 interface MetricCardProps {
   title: string;
@@ -32,7 +33,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
             ? 'bg-[#E8F5E9] text-[#388E3C] border-[#A5D6A7]' 
             : 'bg-[#FFF1F2] text-[#D32F2F] border-[#FECDD3]'
         }`}>
-          <span>{isPositive ? '↑' : '↓'}</span>
+          {isPositive ? <ArrowUpIcon size={12} /> : <ArrowDownIcon size={12} />}
           <span>{Math.abs(growth)}%</span>
         </div>
       </div>

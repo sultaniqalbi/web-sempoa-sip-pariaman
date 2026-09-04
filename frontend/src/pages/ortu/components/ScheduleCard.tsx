@@ -134,6 +134,11 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({ schedule }) => {
                   ? (teachers[0].nama_panggilan || teachers[0].nama.split(' ')[0] || teachers[0].nama)
                   : schedule.kode_guru}
               </p>
+              {teachers && teachers.length === 1 && teachers[0].program && (
+                <span className="inline-block mt-0.5 px-2 py-0.5 bg-[#FFF3E0] text-[#E65100] border border-[#FFCC80] rounded text-[10px] font-bold">
+                  {teachers[0].program}
+                </span>
+              )}
               {((teachers && teachers[0]?.no_wa_guru) || schedule.no_wa_guru) && (
                 <p className="text-[10px] text-[#64748B] font-mono mt-0.5">
                   WA: {(teachers && teachers[0]?.no_wa_guru) || schedule.no_wa_guru}

@@ -1,6 +1,23 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import useAuth from '../features/auth/useAuth';
+import {
+  DashboardIcon,
+  DataSiswaIcon,
+  PengajarIcon,
+  JadwalIcon,
+  PembayaranIcon,
+  AbsensiIcon,
+  GraduationCapIcon,
+  EditIcon,
+  BookIcon,
+  StarIcon,
+  KalenderIcon,
+  RiwayatIcon,
+  UserIcon,
+  CalculatorIcon,
+  LogoutIcon,
+} from './icons';
 
 export const Sidebar: React.FC = () => {
   const { user, logout } = useAuth();
@@ -18,28 +35,28 @@ export const Sidebar: React.FC = () => {
       case 'admin':
       case 'owner':
         return [
-          { to: '/admin', label: <><i className="fas fa-chart-bar w-5"></i> Dashboard</>, end: true },
-          { to: '/admin/siswa', label: <><i className="fas fa-user-graduate w-5"></i> Data Siswa</> },
-          { to: '/admin/guru', label: <><i className="fas fa-chalkboard-teacher w-5"></i> Data Guru</> },
-          { to: '/admin/jadwal', label: <><i className="fas fa-calendar-alt w-5"></i> Jadwal Kelas</> },
-          { to: '/admin/pembayaran', label: <><i className="fas fa-money-bill-wave w-5"></i> SPP & Tagihan</> },
-          { to: '/admin/absensi', label: <><i className="fas fa-list-alt w-5"></i> Log Kehadiran</> },
+          { to: '/admin', label: <><DashboardIcon size={16} className="shrink-0" /> Dashboard</>, end: true },
+          { to: '/admin/siswa', label: <><DataSiswaIcon size={16} className="shrink-0" /> Data Siswa</> },
+          { to: '/admin/guru', label: <><PengajarIcon size={16} className="shrink-0" /> Data Guru</> },
+          { to: '/admin/jadwal', label: <><JadwalIcon size={16} className="shrink-0" /> Jadwal Kelas</> },
+          { to: '/admin/pembayaran', label: <><PembayaranIcon size={16} className="shrink-0" /> SPP & Tagihan</> },
+          { to: '/admin/absensi', label: <><AbsensiIcon size={16} className="shrink-0" /> Log Kehadiran</> },
         ];
       case 'guru':
         return [
-          { to: '/guru', label: <><i className="fas fa-chart-bar w-5"></i> Dashboard Guru</>, end: true },
-          { to: '/guru/kelas', label: <><i className="fas fa-user-graduate w-5"></i> Kelas Saya</> },
-          { to: '/guru/absensi-input', label: <><i className="fas fa-edit w-5"></i> Input Absensi</> },
+          { to: '/guru', label: <><DashboardIcon size={16} className="shrink-0" /> Dashboard Guru</>, end: true },
+          { to: '/guru/kelas', label: <><GraduationCapIcon size={16} className="shrink-0" /> Kelas Saya</> },
+          { to: '/guru/absensi-input', label: <><EditIcon size={16} className="shrink-0" /> Input Absensi</> },
         ];
       case 'ortu':
         return [
-          { to: '/ortu', label: <><i className="fas fa-chart-bar w-5"></i> Dashboard Ortu</>, end: true },
-          { to: '/ortu/kelas', label: <><i className="fas fa-book w-5"></i> Kelas & Buku</> },
-          { to: '/ortu/evaluasi', label: <><i className="fas fa-star w-5"></i> Evaluasi & Rapor</> },
-          { to: '/ortu/absensi', label: <><i className="fas fa-calendar-check w-5"></i> Absensi Siswa</> },
-          { to: '/ortu/riwayat', label: <><i className="fas fa-history w-5"></i> Riwayat Pertemuan</> },
-          { to: '/ortu/pembayaran', label: <><i className="fas fa-credit-card w-5"></i> Bayar SPP</> },
-          { to: '/ortu/profil', label: <><i className="fas fa-user w-5"></i> Profil & Data Anak</> },
+          { to: '/ortu', label: <><DashboardIcon size={16} className="shrink-0" /> Dashboard Ortu</>, end: true },
+          { to: '/ortu/kelas', label: <><BookIcon size={16} className="shrink-0" /> Kelas & Buku</> },
+          { to: '/ortu/evaluasi', label: <><StarIcon size={16} className="shrink-0" /> Evaluasi & Rapor</> },
+          { to: '/ortu/absensi', label: <><KalenderIcon size={16} className="shrink-0" /> Absensi Siswa</> },
+          { to: '/ortu/riwayat', label: <><RiwayatIcon size={16} className="shrink-0" /> Riwayat Pertemuan</> },
+          { to: '/ortu/pembayaran', label: <><PembayaranIcon size={16} className="shrink-0" /> Bayar SPP</> },
+          { to: '/ortu/profil', label: <><UserIcon size={16} className="shrink-0" /> Profil & Data Anak</> },
         ];
       default:
         return [];
@@ -53,7 +70,7 @@ export const Sidebar: React.FC = () => {
       <div className="p-6">
         <div className="flex items-center gap-3 mb-8">
           <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center text-xl font-bold shadow-md shadow-amber-500/10 text-slate-900">
-            <i className="fas fa-calculator"></i>
+            <CalculatorIcon size={22} className="text-slate-900" />
           </div>
           <div>
             <h1 className="font-extrabold text-sm text-white tracking-tight leading-tight">SEMPOA SIP</h1>
@@ -97,7 +114,7 @@ export const Sidebar: React.FC = () => {
           onClick={handleLogout}
           className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-bold rounded-xl border border-rose-500/20 transition-colors"
         >
-          <i className="fas fa-sign-out-alt"></i> Keluar Aplikasi
+          <LogoutIcon size={16} /> Keluar Aplikasi
         </button>
       </div>
     </aside>

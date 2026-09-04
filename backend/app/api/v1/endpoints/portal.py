@@ -149,6 +149,7 @@ async def get_catatan_siswa(
             "id": n.id,
             "tanggal": n.tanggal.strftime("%d %B %Y") if n.tanggal else "",
             "catatan": n.catatan,
+            "kategori_program": n.kategori_program or siswa.kategori_program or "Sempoa SIP",
             "nama_guru": guru.nama if guru else "Guru Pengajar",
             "waktu": n.created_at.strftime("%H:%M WIB") if n.created_at else ""
         })

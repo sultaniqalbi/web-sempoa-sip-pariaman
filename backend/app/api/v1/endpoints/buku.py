@@ -9,6 +9,7 @@ from app.models.users import User, UserRole
 from app.models.buku_siswa import BukuSiswa, StatusBuku
 from app.models.siswa import Siswa
 from app.schemas.buku import BukuSiswaCreate, BukuSiswaUpdate, BukuSiswaResponse
+from app.services.audit_service import log_activity
 
 router = APIRouter()
 
@@ -164,6 +165,20 @@ def create_buku_siswa(
         catatan_progres=buku_in.catatan_progres
     )
     db.add(new_buku)
+
+    log_activity(
+        db=db,
+        action="PENAMBAHAN",
+        role=current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
+        email=current_user.email,
+        modul="Data Buku",
+        deskripsi=f"Menambahkan progres buku {new_buku.level_anak} ({new_buku.kategori_program}) untuk siswa: {siswa.nama}",
+        status="SUCCESS",
+        target_id=new_buku.id,
+        target_nama=siswa.nama,
+        after={"level": new_buku.level_anak, "program": new_buku.kategori_program, "status": str(new_buku.status_buku)}
+    )
+
     db.commit()
     db.refresh(new_buku)
 
@@ -194,10 +209,24 @@ def update_buku_siswa(
     if buku.status_buku == StatusBuku.SELESAI and not buku.tanggal_selesai:
         buku.tanggal_selesai = date.today()
 
+    siswa = db.query(Siswa).filter(Siswa.id == buku.id_siswa).first()
+
+    log_activity(
+        db=db,
+        action="PERUBAHAN",
+        role=current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
+        email=current_user.email,
+        modul="Data Buku",
+        deskripsi=f"Memperbarui data buku {buku.level_anak} siswa {siswa.nama if siswa else '-'}",
+        status="SUCCESS",
+        target_id=buku.id,
+        target_nama=siswa.nama if siswa else None,
+        after={k: str(v) for k, v in update_data.items()}
+    )
+
     db.commit()
     db.refresh(buku)
 
-    siswa = db.query(Siswa).filter(Siswa.id == buku.id_siswa).first()
     res = BukuSiswaResponse.model_validate(buku)
     if siswa:
         res.nama_siswa = siswa.nama
@@ -216,9 +245,19 @@ def delete_buku_siswa(
     if current_user.role not in [UserRole.admin, UserRole.owner]:
         raise HTTPException(status_code=403, detail="Hanya admin/owner yang dapat menghapus data buku")
 
-    buku = db.query(BukuSiswa).filter(BukuSiswa.id == id).first()
-    if not buku:
-        raise HTTPException(status_code=404, detail="Data buku tidak ditemukan")
+    siswa = db.query(Siswa).filter(Siswa.id == buku.id_siswa).first()
+
+    log_activity(
+        db=db,
+        action="PENGHAPUSAN",
+        role=current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
+        email=current_user.email,
+        modul="Data Buku",
+        deskripsi=f"Menghapus data buku {buku.level_anak} siswa {siswa.nama if siswa else '-'}",
+        status="SUCCESS",
+        target_id=buku.id,
+        target_nama=siswa.nama if siswa else None
+    )
 
     db.delete(buku)
     db.commit()

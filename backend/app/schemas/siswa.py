@@ -19,6 +19,7 @@ class SiswaBase(BaseModel):
     target_pertemuan: int = 8
     sisa_pertemuan: int = 8
     kuota_program: Optional[str] = None
+    guru_per_program: Optional[str] = None
     status_spp: StatusSPP = StatusSPP.AKTIF
     nama_orang_tua: Optional[str] = None
     whatsapp_orang_tua: Optional[str] = None
@@ -70,6 +71,7 @@ class SiswaUpdate(BaseModel):
     target_pertemuan: Optional[int] = None
     sisa_pertemuan: Optional[int] = None
     kuota_program: Optional[str] = None
+    guru_per_program: Optional[str] = None
     status_spp: Optional[StatusSPP] = None
     nama_orang_tua: Optional[str] = None
     whatsapp_orang_tua: Optional[str] = None

@@ -53,9 +53,16 @@ export const OrtuHeader: React.FC<OrtuHeaderProps> = ({
               <h1 className="text-base sm:text-lg font-black text-white truncate leading-tight">
                 {childName}
               </h1>
-              <p className="text-white/90 text-xs font-medium truncate mt-0.5">
-                {program} {noWaOrtu ? `• ${noWaOrtu}` : ''}
-              </p>
+              <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                {program.split(',').map((p) => p.trim()).filter(Boolean).map((p, idx) => (
+                  <span key={idx} className="bg-white/25 text-white text-[10px] font-bold px-2 py-0.5 rounded-md backdrop-blur-xs border border-white/30 shadow-2xs">
+                    {p}
+                  </span>
+                ))}
+                {noWaOrtu && noWaOrtu !== '-' && (
+                  <span className="text-white/85 text-[11px] font-medium ml-0.5">• {noWaOrtu}</span>
+                )}
+              </div>
             </div>
           </div>
 

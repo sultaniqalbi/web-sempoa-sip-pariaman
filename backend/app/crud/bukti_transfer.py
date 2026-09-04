@@ -31,12 +31,13 @@ def create_bukti_transfer(db: Session, id_pembayaran: int, file_path: str) -> Bu
     db.refresh(db_proof)
     return db_proof
 
-def approve_bukti_transfer(db: Session, db_proof: BuktiTransfer) -> BuktiTransfer:
+def approve_bukti_transfer(db: Session, db_proof: BuktiTransfer, current_user: Optional[Any] = None) -> BuktiTransfer:
     db_proof.status = StatusBuktiTransfer.approved
     db.add(db_proof)
 
     # Update payment to LUNAS and update 30-day due_date
     pembayaran = db.query(PembayaranPeriode).filter(PembayaranPeriode.id == db_proof.id_pembayaran).first()
+    siswa = None
     if pembayaran:
         pembayaran.status = StatusPembayaran.LUNAS
         pembayaran.due_date = (datetime.utcnow() + timedelta(days=30)).date()
@@ -78,11 +79,41 @@ def approve_bukti_transfer(db: Session, db_proof: BuktiTransfer) -> BuktiTransfe
             siswa.kuota_program = json.dumps(kuota_dict)
             db.add(siswa)
 
+    # Record audit log
+    try:
+        from app.services.audit_service import log_activity
+        role_str = "admin"
+        email_str = "admin@sempoasippariaman.com"
+        if current_user:
+            role_str = current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role)
+            email_str = getattr(current_user, 'email', email_str)
+
+        log_activity(
+            db=db,
+            action="VERIFIKASI",
+            role=role_str,
+            email=email_str,
+            modul="Keuangan & SPP",
+            deskripsi=f"ACC Bukti Pembayaran SPP siswa {siswa.nama if siswa else 'Siswa'} periode {pembayaran.periode_bulan if pembayaran else '-'} (Rp {float(pembayaran.jumlah):,.0f})",
+            status="SUCCESS",
+            target_id=db_proof.id,
+            target_nama=siswa.nama if siswa else None,
+            after={
+                "id_bukti": db_proof.id,
+                "status_bukti": "approved",
+                "status_spp": "LUNAS",
+                "nominal": float(pembayaran.jumlah) if pembayaran else 0,
+                "periode": pembayaran.periode_bulan if pembayaran else None
+            }
+        )
+    except Exception:
+        pass
+
     db.commit()
     db.refresh(db_proof)
     return db_proof
 
-def reject_bukti_transfer(db: Session, db_proof: BuktiTransfer, admin_note: Optional[str] = None) -> BuktiTransfer:
+def reject_bukti_transfer(db: Session, db_proof: BuktiTransfer, admin_note: Optional[str] = None, current_user: Optional[Any] = None) -> BuktiTransfer:
     db_proof.status = StatusBuktiTransfer.rejected
     if admin_note:
         db_proof.admin_note = admin_note
@@ -90,9 +121,39 @@ def reject_bukti_transfer(db: Session, db_proof: BuktiTransfer, admin_note: Opti
 
     # Set payment back to MENUNGGAK
     pembayaran = db.query(PembayaranPeriode).filter(PembayaranPeriode.id == db_proof.id_pembayaran).first()
+    siswa = None
     if pembayaran:
         pembayaran.status = StatusPembayaran.MENUNGGAK
         db.add(pembayaran)
+        siswa = db.query(Siswa).filter(Siswa.id == pembayaran.id_siswa).first()
+
+    # Record audit log
+    try:
+        from app.services.audit_service import log_activity
+        role_str = "admin"
+        email_str = "admin@sempoasippariaman.com"
+        if current_user:
+            role_str = current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role)
+            email_str = getattr(current_user, 'email', email_str)
+
+        log_activity(
+            db=db,
+            action="VERIFIKASI",
+            role=role_str,
+            email=email_str,
+            modul="Keuangan & SPP",
+            deskripsi=f"Menolak bukti pembayaran SPP siswa {siswa.nama if siswa else 'Siswa'} (Alasan: {admin_note or 'Tidak sesuai'})",
+            status="FAILED",
+            target_id=db_proof.id,
+            target_nama=siswa.nama if siswa else None,
+            after={
+                "id_bukti": db_proof.id,
+                "status_bukti": "rejected",
+                "alasan": admin_note
+            }
+        )
+    except Exception:
+        pass
 
     db.commit()
     db.refresh(db_proof)

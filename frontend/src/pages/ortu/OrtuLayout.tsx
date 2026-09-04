@@ -161,8 +161,33 @@ export const OrtuLayout: React.FC = () => {
         const relevantTeachers: TeacherContact[] = [];
         const seenGuruIds = new Set<number>();
 
-        // 1. If child has specific assigned id_guru
-        if (child.id_guru) {
+        // 1. Priority: Use guru_per_program JSON mapping if available
+        let hasGuruPerProgram = false;
+        if ((child as any).guru_per_program) {
+          try {
+            const gpp = JSON.parse((child as any).guru_per_program);
+            if (gpp && typeof gpp === 'object' && Object.keys(gpp).length > 0) {
+              hasGuruPerProgram = true;
+              Object.entries(gpp).forEach(([prog, guruId]) => {
+                if (guruId === null || guruId === undefined) return;
+                const guru = allGurus.find((g) => g.id === Number(guruId));
+                if (guru) {
+                  seenGuruIds.add(guru.id);
+                  relevantTeachers.push({
+                    id: guru.id,
+                    nama: guru.nama,
+                    nama_panggilan: guru.nama_panggilan || guru.nama.split(' ')[0] || guru.nama,
+                    program: prog.toLowerCase().startsWith('guru') ? prog : `Guru ${prog}`,
+                    no_wa_guru: guru.whatsapp_guru || undefined,
+                  });
+                }
+              });
+            }
+          } catch (e) {}
+        }
+
+        // 2. Fallback: If no guru_per_program, use single id_guru
+        if (!hasGuruPerProgram && child.id_guru) {
           const directGuru = allGurus.find((g) => g.id === child.id_guru);
           if (directGuru) {
             seenGuruIds.add(directGuru.id);
@@ -176,9 +201,8 @@ export const OrtuLayout: React.FC = () => {
           }
         }
 
-        // 2. ONLY if child has NO specific assigned guru, match teachers by program
-        //    If child already has id_guru, we already added the correct teacher above
-        if (!child.id_guru) {
+        // 3. ONLY if no specific guru assigned at all, match teachers by program
+        if (!hasGuruPerProgram && !child.id_guru) {
           childProgs.forEach((cp) => {
             const cpLower = cp.toLowerCase();
             const matchingGurus = allGurus.filter((g) => {
@@ -214,7 +238,7 @@ export const OrtuLayout: React.FC = () => {
         );
 
         // Also check if schedule has embedded teachers (only add if not already covered)
-        if (matchingSchedule?.teachers && matchingSchedule.teachers.length > 0 && !child.id_guru) {
+        if (matchingSchedule?.teachers && matchingSchedule.teachers.length > 0 && !hasGuruPerProgram && !child.id_guru) {
           matchingSchedule.teachers.forEach((t) => {
             if (!seenGuruIds.has(t.id)) {
               seenGuruIds.add(t.id);

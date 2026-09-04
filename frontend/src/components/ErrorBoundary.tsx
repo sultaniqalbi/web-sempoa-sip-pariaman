@@ -1,5 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertTriangleIcon } from './SvgIcons';
+import { AlertTriangleIcon, RefreshIcon } from './icons';
 
 interface Props {
   children?: ReactNode;
@@ -88,7 +88,7 @@ export class ErrorBoundary extends Component<Props, State> {
               onClick={this.handleHardRefresh}
               className="w-full py-2.5 bg-amber-500 text-slate-900 font-bold rounded-xl hover:bg-amber-400 transition-colors shadow-md cursor-pointer flex items-center justify-center gap-2"
             >
-              <i className="fas fa-sync-alt"></i> Muat Ulang Versi Terbaru
+              <RefreshIcon size={16} /> Muat Ulang Versi Terbaru
             </button>
           </div>
         </div>

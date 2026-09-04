@@ -6,7 +6,14 @@ import Modal from '../../components/Modal';
 import ConfirmModal from '../../components/ConfirmModal';
 import PageHeader from '../../components/PageHeader';
 import EmptyState from '../../components/EmptyState';
-import { GaleriIcon, TrashIcon } from '../../components/SvgIcons';
+import {
+  GaleriIcon,
+  TrashIcon,
+  RotateLeftIcon,
+  RotateRightIcon,
+  FlipHorizontalIcon,
+  FlipVerticalIcon,
+} from '../../components/icons';
 
 interface GaleriItem {
   id: number;
@@ -758,18 +765,20 @@ export const GaleriPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setRotation((prev) => (prev - 90 + 360) % 360)}
-                        className="px-2.5 py-1.5 bg-white hover:bg-[#E2E8F0] border border-[#CBD5E1] rounded-lg text-xs font-bold text-[#1E293B] shadow-2xs cursor-pointer flex items-center gap-1"
+                        className="px-2.5 py-1.5 bg-white hover:bg-[#E2E8F0] border border-[#CBD5E1] rounded-lg text-xs font-bold text-[#1E293B] shadow-2xs cursor-pointer flex items-center gap-1.5"
                         title="Putar Kiri 90°"
                       >
-                        <span>↺ Kiri</span>
+                        <RotateLeftIcon size={14} />
+                        <span>Kiri</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => setRotation((prev) => (prev + 90) % 360)}
-                        className="px-2.5 py-1.5 bg-white hover:bg-[#E2E8F0] border border-[#CBD5E1] rounded-lg text-xs font-bold text-[#1E293B] shadow-2xs cursor-pointer flex items-center gap-1"
+                        className="px-2.5 py-1.5 bg-white hover:bg-[#E2E8F0] border border-[#CBD5E1] rounded-lg text-xs font-bold text-[#1E293B] shadow-2xs cursor-pointer flex items-center gap-1.5"
                         title="Putar Kanan 90°"
                       >
-                        <span>↻ Kanan</span>
+                        <RotateRightIcon size={14} />
+                        <span>Kanan</span>
                       </button>
                       <span className="text-[10px] font-mono text-[#64748B] font-bold px-1">{rotation}°</span>
                     </div>
@@ -779,26 +788,28 @@ export const GaleriPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setFlipH((prev) => !prev)}
-                        className={`px-2.5 py-1.5 rounded-lg text-xs font-bold border shadow-2xs transition-colors cursor-pointer ${
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-bold border shadow-2xs transition-colors cursor-pointer flex items-center gap-1.5 ${
                           flipH
                             ? 'bg-[#FF7043] text-white border-[#FF7043]'
                             : 'bg-white text-[#1E293B] border-[#CBD5E1] hover:bg-[#E2E8F0]'
                         }`}
                         title="Cermin Horizontal"
                       >
-                        <span>↔ Horisontal</span>
+                        <FlipHorizontalIcon size={14} />
+                        <span>Horisontal</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => setFlipV((prev) => !prev)}
-                        className={`px-2.5 py-1.5 rounded-lg text-xs font-bold border shadow-2xs transition-colors cursor-pointer ${
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-bold border shadow-2xs transition-colors cursor-pointer flex items-center gap-1.5 ${
                           flipV
                             ? 'bg-[#FF7043] text-white border-[#FF7043]'
                             : 'bg-white text-[#1E293B] border-[#CBD5E1] hover:bg-[#E2E8F0]'
                         }`}
                         title="Cermin Vertikal"
                       >
-                        <span>↕ Vertikal</span>
+                        <FlipVerticalIcon size={14} />
+                        <span>Vertikal</span>
                       </button>
                     </div>
                   </div>

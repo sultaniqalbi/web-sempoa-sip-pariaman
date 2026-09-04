@@ -10,6 +10,7 @@ from app.models.evaluasi_siswa import EvaluasiSiswa
 from app.models.siswa import Siswa
 from app.models.guru import Guru
 from app.schemas.evaluasi import EvaluasiCreate, EvaluasiUpdate, EvaluasiResponse
+from app.services.audit_service import log_activity
 
 router = APIRouter()
 
@@ -175,6 +176,20 @@ def create_evaluasi(
         saran_untuk_ortu=eval_in.saran_untuk_ortu
     )
     db.add(new_eval)
+
+    log_activity(
+        db=db,
+        action="PENAMBAHAN",
+        role=current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
+        email=current_user.email,
+        modul="Evaluasi Siswa",
+        deskripsi=f"Membuat lembar evaluasi untuk siswa {siswa.nama} ({new_eval.kategori_program}) - Predikat: {new_eval.predikat_keseluruhan}",
+        status="SUCCESS",
+        target_id=new_eval.id,
+        target_nama=siswa.nama,
+        after={"predikat": new_eval.predikat_keseluruhan, "periode": new_eval.periode_evaluasi}
+    )
+
     db.commit()
     db.refresh(new_eval)
 
@@ -208,6 +223,21 @@ def update_evaluasi(
     for field, val in update_data.items():
         setattr(eval_obj, field, val)
 
+    siswa = db.query(Siswa).filter(Siswa.id == eval_obj.id_siswa).first()
+
+    log_activity(
+        db=db,
+        action="PERUBAHAN",
+        role=current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
+        email=current_user.email,
+        modul="Evaluasi Siswa",
+        deskripsi=f"Memperbarui lembar evaluasi siswa {siswa.nama if siswa else '-'}",
+        status="SUCCESS",
+        target_id=eval_obj.id,
+        target_nama=siswa.nama if siswa else None,
+        after={k: str(v) for k, v in update_data.items()}
+    )
+
     db.commit()
     db.refresh(eval_obj)
 
@@ -233,6 +263,20 @@ def delete_evaluasi(
     eval_obj = db.query(EvaluasiSiswa).filter(EvaluasiSiswa.id == id).first()
     if not eval_obj:
         raise HTTPException(status_code=404, detail="Data evaluasi tidak ditemukan")
+
+    siswa = db.query(Siswa).filter(Siswa.id == eval_obj.id_siswa).first()
+
+    log_activity(
+        db=db,
+        action="PENGHAPUSAN",
+        role=current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
+        email=current_user.email,
+        modul="Evaluasi Siswa",
+        deskripsi=f"Menghapus lembar evaluasi siswa {siswa.nama if siswa else '-'}",
+        status="SUCCESS",
+        target_id=eval_obj.id,
+        target_nama=siswa.nama if siswa else None
+    )
 
     db.delete(eval_obj)
     db.commit()

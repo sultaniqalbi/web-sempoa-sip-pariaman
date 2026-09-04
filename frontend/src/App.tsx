@@ -32,6 +32,7 @@ const SharedGaleriPage = React.lazy(() => import('./pages/portal/GaleriPage'));
 // Owner Exclusive Pages
 const PertumbuhanPage = React.lazy(() => import('./pages/owner-only/PertumbuhanPage'));
 const KeuanganPage = React.lazy(() => import('./pages/owner-only/KeuanganPage'));
+const RiwayatPage = React.lazy(() => import('./pages/owner-only/RiwayatPage'));
 
 // Teacher Pages
 const GuruLayout = React.lazy(() => import('./pages/guru/GuruLayout'));
@@ -139,6 +140,7 @@ export function App() {
                     {/* Owner Exclusive Routes */}
                     <Route path="pertumbuhan" element={<PertumbuhanPage />} />
                     <Route path="keuangan" element={<KeuanganPage />} />
+                    <Route path="riwayat" element={<RiwayatPage />} />
                   </Route>
 
                   {/* Direktur Portal Routes (Alias) */}
@@ -162,6 +164,7 @@ export function App() {
                     <Route path="galeri" element={<SharedGaleriPage />} />
                     <Route path="pertumbuhan" element={<PertumbuhanPage />} />
                     <Route path="keuangan" element={<KeuanganPage />} />
+                    <Route path="riwayat" element={<RiwayatPage />} />
                   </Route>
 
                   {/* Teacher Portal Routes */}

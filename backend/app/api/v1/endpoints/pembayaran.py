@@ -419,6 +419,35 @@ async def update_siswa_due_date(
         else:
             siswa.sisa_pertemuan = siswa.target_pertemuan or 8
 
+        # Ensure verified proof & Keuangan ledger exist for approved income calculation
+        from app.models.bukti_transfer import StatusBuktiTransfer
+        existing_proof = db.query(BuktiTransfer).filter(BuktiTransfer.id_pembayaran == bill.id).first()
+        if not existing_proof:
+            manual_proof = BuktiTransfer(
+                id_pembayaran=bill.id,
+                file_path="OFFICE_MANUAL_PAYMENT",
+                status=StatusBuktiTransfer.approved,
+                admin_note=f"Dikonfirmasi Lunas Manual oleh {current_user.nama or current_user.email}"
+            )
+            db.add(manual_proof)
+        elif existing_proof.status != StatusBuktiTransfer.approved:
+            existing_proof.status = StatusBuktiTransfer.approved
+            existing_proof.admin_note = f"Dikonfirmasi Lunas Manual oleh {current_user.nama or current_user.email}"
+            db.add(existing_proof)
+
+        try:
+            from app.models.keuangan import Keuangan, JenisKeuangan
+            keuangan_entry = Keuangan(
+                id_siswa=siswa.id,
+                jenis=JenisKeuangan.PEMBAYARAN_SPP,
+                jumlah=bill.jumlah,
+                tanggal=datetime.now().date(),
+                keterangan=f"Pembayaran SPP periode {bill.periode_bulan} (Dikonfirmasi Manual)"
+            )
+            db.add(keuangan_entry)
+        except Exception:
+            pass
+
         # Reset per-program quota
         progs = [p.strip() for p in (siswa.kategori_program or "Sempoa SIP").split(",") if p.strip()]
         kuota_dict = {}
@@ -439,6 +468,28 @@ async def update_siswa_due_date(
         if siswa.sisa_pertemuan == 0:
             siswa.status_spp = StatusSPP.EXPIRED
         db.add(siswa)
+
+    try:
+        from app.services.audit_service import log_activity
+        log_activity(
+            db=db,
+            action="PERUBAHAN",
+            role=current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
+            email=current_user.email,
+            modul="Keuangan & SPP",
+            deskripsi=f"Memperbarui status tagihan SPP {siswa.nama} periode {bill.periode_bulan} menjadi {bill.status.value if hasattr(bill.status, 'value') else str(bill.status)} (Rp {float(bill.jumlah):,.0f})",
+            status="SUCCESS",
+            target_id=bill.id,
+            target_nama=siswa.nama,
+            after={
+                "id_pembayaran": bill.id,
+                "status": str(bill.status),
+                "jumlah": float(bill.jumlah),
+                "due_date": str(bill.due_date) if bill.due_date else None
+            }
+        )
+    except Exception:
+        pass
 
     db.commit()
     db.refresh(bill)

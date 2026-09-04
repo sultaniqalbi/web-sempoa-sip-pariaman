@@ -1,6 +1,17 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import useAuth from '../features/auth/useAuth';
+import {
+  DashboardIcon,
+  DataSiswaIcon,
+  PengajarIcon,
+  JadwalIcon,
+  AbsensiIcon,
+  PembayaranIcon,
+  UangIcon,
+  GaleriIcon,
+  LogoutIcon,
+} from './icons';
 
 interface SidebarProps {
   onClose?: () => void;
@@ -20,22 +31,22 @@ export const AdminSidebar: React.FC<SidebarProps> = ({ onClose, isCollapsed = fa
   const basePath = `/${role}`;
 
   const links = role === 'owner' ? [
-    { to: `${basePath}/dashboard`, label: 'Dashboard', icon: 'fas fa-chart-pie', end: true },
-    { to: `${basePath}/siswa`, label: 'Data Siswa', icon: 'fas fa-users' },
-    { to: `${basePath}/guru`, label: 'Data Guru', icon: 'fas fa-chalkboard-teacher' },
-    { to: `${basePath}/jadwal`, label: 'Jadwal & Kelas', icon: 'fas fa-calendar-alt' },
-    { to: `${basePath}/absensi`, label: 'Absensi', icon: 'fas fa-clipboard-check' },
-    { to: `${basePath}/pembayaran`, label: 'Reminder SPP', icon: 'fas fa-receipt' },
-    { to: `${basePath}/keuangan`, label: 'Keuangan', icon: 'fas fa-coins' },
-    { to: `${basePath}/galeri`, label: 'Galeri Kegiatan', icon: 'fas fa-images' },
+    { to: `${basePath}/dashboard`, label: 'Dashboard', icon: <DashboardIcon size={18} />, end: true },
+    { to: `${basePath}/siswa`, label: 'Data Siswa', icon: <DataSiswaIcon size={18} /> },
+    { to: `${basePath}/guru`, label: 'Data Guru', icon: <PengajarIcon size={18} /> },
+    { to: `${basePath}/jadwal`, label: 'Jadwal & Kelas', icon: <JadwalIcon size={18} /> },
+    { to: `${basePath}/absensi`, label: 'Absensi', icon: <AbsensiIcon size={18} /> },
+    { to: `${basePath}/pembayaran`, label: 'Reminder SPP', icon: <PembayaranIcon size={18} /> },
+    { to: `${basePath}/keuangan`, label: 'Keuangan', icon: <UangIcon size={18} /> },
+    { to: `${basePath}/galeri`, label: 'Galeri Kegiatan', icon: <GaleriIcon size={18} /> },
   ] : [
-    { to: `${basePath}/dashboard`, label: 'Dashboard', icon: 'fas fa-chart-pie', end: true },
-    { to: `${basePath}/siswa`, label: 'Data Siswa', icon: 'fas fa-users' },
-    { to: `${basePath}/guru`, label: 'Data Guru', icon: 'fas fa-chalkboard-teacher' },
-    { to: `${basePath}/jadwal`, label: 'Jadwal & Kelas', icon: 'fas fa-calendar-alt' },
-    { to: `${basePath}/absensi`, label: 'Absensi', icon: 'fas fa-clipboard-check' },
-    { to: `${basePath}/pembayaran`, label: 'Reminder SPP', icon: 'fas fa-receipt' },
-    { to: `${basePath}/galeri`, label: 'Galeri Kegiatan', icon: 'fas fa-images' },
+    { to: `${basePath}/dashboard`, label: 'Dashboard', icon: <DashboardIcon size={18} />, end: true },
+    { to: `${basePath}/siswa`, label: 'Data Siswa', icon: <DataSiswaIcon size={18} /> },
+    { to: `${basePath}/guru`, label: 'Data Guru', icon: <PengajarIcon size={18} /> },
+    { to: `${basePath}/jadwal`, label: 'Jadwal & Kelas', icon: <JadwalIcon size={18} /> },
+    { to: `${basePath}/absensi`, label: 'Absensi', icon: <AbsensiIcon size={18} /> },
+    { to: `${basePath}/pembayaran`, label: 'Reminder SPP', icon: <PembayaranIcon size={18} /> },
+    { to: `${basePath}/galeri`, label: 'Galeri Kegiatan', icon: <GaleriIcon size={18} /> },
   ];
 
   return (
@@ -72,7 +83,7 @@ export const AdminSidebar: React.FC<SidebarProps> = ({ onClose, isCollapsed = fa
                 }`
               }
             >
-              <i className={`${link.icon} text-base w-5 text-center`} aria-hidden="true" />
+              <span className="w-5 flex justify-center shrink-0" aria-hidden="true">{link.icon}</span>
               {!isCollapsed && <span>{link.label}</span>}
             </NavLink>
           ))}
@@ -86,7 +97,7 @@ export const AdminSidebar: React.FC<SidebarProps> = ({ onClose, isCollapsed = fa
             isCollapsed ? 'py-3 px-0' : 'py-2.5 gap-2'
           }`}
         >
-          <i className="fas fa-sign-out-alt" />
+          <LogoutIcon size={16} />
           {!isCollapsed && <span>Keluar</span>}
         </button>
       </div>

@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { StatusDotIcon, LightbulbIcon } from '../../../components/icons';
 
 interface PaymentDetailModalProps {
   isOpen: boolean;
@@ -43,9 +44,9 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
   if (!isOpen) return null;
 
   const statusConfig = {
-    Lancar: { color: '#4CAF50', bg: '#E8F5E9', border: '#C8E6C9', emoji: <i className="fas fa-circle text-green-500"></i> },
-    Peringatan: { color: '#FFA726', bg: '#FFF3E0', border: '#FFE0B2', emoji: <i className="fas fa-circle text-yellow-500"></i> },
-    Urgent: { color: '#D32F2F', bg: '#FFEBEE', border: '#FFCDD2', emoji: <i className="fas fa-circle text-red-500"></i> },
+    Lancar: { color: '#4CAF50', bg: '#E8F5E9', border: '#C8E6C9', dotColor: '#4CAF50' },
+    Peringatan: { color: '#FFA726', bg: '#FFF3E0', border: '#FFE0B2', dotColor: '#FFA726' },
+    Urgent: { color: '#D32F2F', bg: '#FFEBEE', border: '#FFCDD2', dotColor: '#D32F2F' },
   };
 
   const sc = statusConfig[status];
@@ -94,10 +95,11 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
             <div className="flex items-center justify-between">
               <span className="text-[12px] font-bold text-[#9E9E9E] uppercase tracking-wider">Status</span>
               <span
-                className="px-3 py-1 rounded-full text-[11px] font-bold border"
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border"
                 style={{ color: sc.color, backgroundColor: sc.bg, borderColor: sc.border }}
               >
-                {sc.emoji} {status}
+                <StatusDotIcon color={sc.dotColor} size={8} />
+                <span>{status}</span>
               </span>
             </div>
           </div>
@@ -126,8 +128,9 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
 
           {/* Instruction */}
           <div className="bg-[#E3F2FD] rounded-xl p-4 border border-[#BBDEFB]">
-            <p className="text-[12px] text-[#1565C0] font-medium leading-relaxed">
-              <i className="fas fa-lightbulb"></i> Silakan transfer ke rekening di atas sesuai nominal SPP. Setelah transfer, klik tombol <strong>"Selesai Pembayaran"</strong> di bawah untuk konfirmasi.
+            <p className="text-[12px] text-[#1565C0] font-medium leading-relaxed flex items-start gap-2">
+              <LightbulbIcon size={16} className="text-[#1565C0] shrink-0 mt-0.5" />
+              <span>Silakan transfer ke rekening di atas sesuai nominal SPP. Setelah transfer, klik tombol <strong>"Selesai Pembayaran"</strong> di bawah untuk konfirmasi.</span>
             </p>
           </div>
         </div>

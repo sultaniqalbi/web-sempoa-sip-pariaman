@@ -70,6 +70,7 @@ def on_startup():
             "ALTER TABLE siswa ALTER COLUMN hari_masuk TYPE VARCHAR(255);",
             "ALTER TABLE siswa ADD COLUMN IF NOT EXISTS id_guru INTEGER;",
             "ALTER TABLE siswa ADD COLUMN IF NOT EXISTS kuota_program TEXT;",
+            "ALTER TABLE siswa ADD COLUMN IF NOT EXISTS guru_per_program TEXT;",
             "ALTER TABLE siswa ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS uid_terhubung VARCHAR(50);",
             "ALTER TABLE jadwal ADD COLUMN IF NOT EXISTS guru_ids VARCHAR(255);",

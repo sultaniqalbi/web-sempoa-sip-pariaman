@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import useAuth from '../../features/auth/useAuth';
 import apiClient from '../../features/api/apiClient';
 import { Siswa } from '../../types';
 import { EditIcon, CalendarIcon, StarIcon, PresensiIcon } from '../../components/SvgIcons';
+import { parseProgramDetails, getProgramBadgeStyle } from '../portal/SiswaPage';
 
 export const OrtuRiwayatPertemuanPage: React.FC = () => {
   const { user } = useAuth();
+  const [selectedFilter, setSelectedFilter] = useState<string>('all');
 
   // Fetch child profile
   const { data: child, isLoading: isChildLoading } = useQuery<Siswa>({
@@ -25,7 +27,7 @@ export const OrtuRiwayatPertemuanPage: React.FC = () => {
 
   // Fetch learning notes from teacher
   const { data: catatanData, isLoading: isCatatanLoading } = useQuery<{
-    catatan: Array<{ id: number; tanggal: string; catatan: string; nama_guru: string; waktu: string }>;
+    catatan: Array<{ id: number; tanggal: string; catatan: string; nama_guru: string; waktu: string; kategori_program?: string }>;
   }>({
     queryKey: ['child-catatan-dashboard', child?.id],
     queryFn: async () => {
@@ -50,7 +52,16 @@ export const OrtuRiwayatPertemuanPage: React.FC = () => {
     );
   }
 
+  const childPrograms = parseProgramDetails(child?.kategori_program, child?.paket_jadwal);
   const catatanList = catatanData?.catatan || [];
+
+  const filteredCatatan = catatanList.filter((c) => {
+    if (selectedFilter === 'all') return true;
+    const prog = selectedFilter.toLowerCase();
+    const cProg = (c.kategori_program || '').toLowerCase();
+    const cText = (c.catatan || '').toLowerCase();
+    return cProg.includes(prog) || cText.includes(prog);
+  });
 
   return (
     <div className="space-y-4 max-w-2xl mx-auto pb-6">
@@ -76,10 +87,46 @@ export const OrtuRiwayatPertemuanPage: React.FC = () => {
             <span className="w-2 h-2 rounded-full bg-[#FF7043]" />
             <span>Catatan Pembelajaran Guru Per Sesi</span>
           </h3>
-          <span className="text-xs text-[#64748B]">Total: <strong>{catatanList.length}</strong> Pertemuan</span>
+          <span className="text-xs text-[#64748B]">Total: <strong>{filteredCatatan.length}</strong> Pertemuan</span>
         </div>
 
-        {catatanList.length === 0 ? (
+        {/* Filter Pills Multi-Program */}
+        {childPrograms.length > 1 && (
+          <div className="flex items-center gap-1.5 flex-wrap pt-1 pb-1">
+            <button
+              onClick={() => setSelectedFilter('all')}
+              className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                selectedFilter === 'all'
+                  ? 'bg-[#FF7043] text-white shadow-2xs'
+                  : 'bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0]'
+              }`}
+            >
+              Semua Program ({catatanList.length})
+            </button>
+            {childPrograms.map((p) => {
+              const count = catatanList.filter((c) =>
+                (c.kategori_program || '').toLowerCase().includes(p.program.toLowerCase()) ||
+                (c.catatan || '').toLowerCase().includes(p.program.toLowerCase())
+              ).length;
+              const isSelected = selectedFilter === p.program;
+              return (
+                <button
+                  key={p.program}
+                  onClick={() => setSelectedFilter(p.program)}
+                  className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-[#FF7043] text-white shadow-2xs'
+                      : 'bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0]'
+                  }`}
+                >
+                  {p.program} ({count})
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {filteredCatatan.length === 0 ? (
           <div className="py-10 text-center text-[#94A3B8] text-xs">
             <EditIcon size={32} className="mx-auto mb-2 text-[#CBD5E1]" />
             <h4 className="font-bold text-[#64748B]">Belum Ada Catatan Pertemuan</h4>
@@ -87,19 +134,24 @@ export const OrtuRiwayatPertemuanPage: React.FC = () => {
           </div>
         ) : (
           <div className="space-y-3">
-            {catatanList.map((c, idx) => (
+            {filteredCatatan.map((c, idx) => (
               <div
                 key={c.id || idx}
                 className="p-4 rounded-xl bg-gradient-to-r from-[#FFF8F3] to-white border border-[#FFE0B2] shadow-2xs space-y-2 text-xs"
               >
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="w-6 h-6 rounded-full bg-[#FF7043] text-white font-bold flex items-center justify-center text-[10px]">
-                      {catatanList.length - idx}
+                      {filteredCatatan.length - idx}
                     </span>
                     <span className="font-black text-[#1E293B]">
                       Pertemuan {c.tanggal ? new Date(c.tanggal).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}
                     </span>
+                    {c.kategori_program && (
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${getProgramBadgeStyle(c.kategori_program)}`}>
+                        {c.kategori_program}
+                      </span>
+                    )}
                   </div>
                   <span className="text-[11px] text-[#E65100] font-bold bg-white px-2.5 py-0.5 rounded-full border border-[#FFCC80]">
                     Guru: {c.nama_guru || 'Pengajar Sempoa'}

@@ -358,9 +358,9 @@ async def verify_proof(
         )
 
     if status_str == StatusBuktiTransfer.approved:
-        crud_bukti_transfer.approve_bukti_transfer(db, db_proof=proof)
+        crud_bukti_transfer.approve_bukti_transfer(db, db_proof=proof, current_user=current_user)
     elif status_str == StatusBuktiTransfer.rejected:
-        crud_bukti_transfer.reject_bukti_transfer(db, db_proof=proof, admin_note=admin_note)
+        crud_bukti_transfer.reject_bukti_transfer(db, db_proof=proof, admin_note=admin_note, current_user=current_user)
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -401,6 +401,9 @@ async def delete_bukti_transfer(
             detail="Bukti transfer tidak ditemukan"
         )
 
+    pay = db.query(PembayaranPeriode).filter(PembayaranPeriode.id == proof.id_pembayaran).first()
+    siswa = db.query(Siswa).filter(Siswa.id == pay.id_siswa).first() if pay else None
+
     # Clean up file if exists
     if proof.file_path and proof.file_path.startswith("/uploads/bukti_transfer/"):
         fname = os.path.basename(proof.file_path)
@@ -410,6 +413,22 @@ async def delete_bukti_transfer(
                 os.remove(fpath)
             except Exception:
                 pass
+
+    try:
+        from app.services.audit_service import log_activity
+        log_activity(
+            db=db,
+            action="PENGHAPUSAN",
+            role=current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
+            email=current_user.email,
+            modul="Keuangan & SPP",
+            deskripsi=f"Menghapus berkas bukti transfer #{proof.id} milik {siswa.nama if siswa else 'Siswa'}",
+            status="SUCCESS",
+            target_id=proof.id,
+            target_nama=siswa.nama if siswa else None
+        )
+    except Exception:
+        pass
 
     db.delete(proof)
     db.commit()

@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import useAuth from '../features/auth/useAuth';
+import { DashboardIcon, GraduationCapIcon, EditIcon, LogoutIcon } from './icons';
 
 interface SidebarProps {
   onClose?: () => void;
@@ -16,10 +17,10 @@ export const GuruSidebar: React.FC<SidebarProps> = ({ onClose, isCollapsed = fal
     navigate('/');
   };
 
-    const links = [
-    { to: '/guru', label: 'Dashboard Guru', icon: <i className="fas fa-chart-bar"></i>, end: true },
-    { to: '/guru/kelas', label: 'Kelas Bimbingan', icon: <i className="fas fa-user-graduate"></i> },
-    { to: '/guru/absensi-input', label: 'Absensi Siswa', icon: <i className="fas fa-edit"></i> },
+  const links = [
+    { to: '/guru', label: 'Dashboard Guru', icon: <DashboardIcon size={18} />, end: true },
+    { to: '/guru/kelas', label: 'Kelas Bimbingan', icon: <GraduationCapIcon size={18} /> },
+    { to: '/guru/absensi-input', label: 'Absensi Siswa', icon: <EditIcon size={18} /> },
   ];
 
   return (
@@ -95,7 +96,7 @@ export const GuruSidebar: React.FC<SidebarProps> = ({ onClose, isCollapsed = fal
           }`}
           aria-label="Keluar dari portal"
         >
-          {isCollapsed ? <i className="fas fa-sign-out-alt"></i> : <><i className="fas fa-sign-out-alt"></i> Keluar</>}
+          {isCollapsed ? <LogoutIcon size={16} /> : <><LogoutIcon size={16} /> Keluar</>}
         </button>
 
       </div>

@@ -1,14 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import useAuth from '../../features/auth/useAuth';
 import apiClient from '../../features/api/apiClient';
 import { Siswa, AbsensiLog } from '../../types';
 import { PresensiIcon, CalendarIcon, UserIcon, CatatanIcon } from '../../components/SvgIcons';
 import { formatIndoDateTime } from '../../utils/dateFormatter';
-import { parseProgramDetails, getProgramBadgeStyle } from '../portal/SiswaPage';
+import { parseProgramDetails, getProgramBadgeStyle, parseProgramQuotas } from '../portal/SiswaPage';
 
 export const OrtuAbsensiPage: React.FC = () => {
   const { user } = useAuth();
+  const [selectedFilter, setSelectedFilter] = useState<string>('all');
 
   // Fetch child profile
   const { data: child, isLoading: isChildLoading } = useQuery<Siswa>({
@@ -55,6 +56,22 @@ export const OrtuAbsensiPage: React.FC = () => {
   const childPrograms = parseProgramDetails(child?.kategori_program, child?.paket_jadwal);
   const latestLog = absensiLogs.length > 0 ? absensiLogs[0] : null;
 
+  const programQuotas = parseProgramQuotas(
+    child?.kategori_program,
+    child?.paket_jadwal,
+    child?.target_pertemuan,
+    child?.sisa_pertemuan,
+    (child as any)?.kuota_program
+  );
+
+  const filteredLogs = absensiLogs.filter((log) => {
+    if (selectedFilter === 'all') return true;
+    const p = selectedFilter.toLowerCase();
+    const lProg = (log.kategori_program || '').toLowerCase();
+    const lCat = (log.catatan || '').toLowerCase();
+    return lProg.includes(p) || lCat.includes(p);
+  });
+
   const formatWaktu = (waktuStr: string) => {
     return formatIndoDateTime(waktuStr);
   };
@@ -98,6 +115,50 @@ export const OrtuAbsensiPage: React.FC = () => {
           <span className="text-lg font-black text-[#D97706]">{izinCount} Kali</span>
         </div>
       </div>
+
+      {/* Rincian Kuota Per Program (Jika Multi-Program) */}
+      {childPrograms.length > 1 && (
+        <div className="bg-white border border-[#E0E0E0] rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
+          <div className="flex items-center justify-between pb-2 border-b border-[#F1F5F9]">
+            <h3 className="text-xs font-black text-[#1E293B] uppercase tracking-wider">
+              Rincian Kuota Bimbingan Per Program
+            </h3>
+            <span className="text-[10px] text-[#64748B] font-bold">
+              {programQuotas.length} Program Aktif
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {programQuotas.map((q) => {
+              const badge = getProgramBadgeStyle(q.program);
+              const percent = q.target > 0 ? Math.round((q.sisa / q.target) * 100) : 0;
+              return (
+                <div key={q.program} className="p-3 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${badge}`}>
+                      {q.program}
+                    </span>
+                    <span className="text-xs font-black text-[#1E293B]">
+                      {q.sisa} / {q.target} Sesi
+                    </span>
+                  </div>
+                  <div className="w-full bg-[#E2E8F0] h-2 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${
+                        percent < 25 ? 'bg-[#EF4444]' : percent < 50 ? 'bg-[#F59E0B]' : 'bg-[#10B981]'
+                      }`}
+                      style={{ width: `${Math.min(100, Math.max(0, percent))}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-[10px] text-[#64748B]">
+                    <span>Tersisa {percent}%</span>
+                    <span>Terpakai {Math.max(0, q.target - q.sisa)} sesi</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Kotak Ringkasan Profil & Status Absensi Ananda */}
       <div className="bg-white border border-[#E0E0E0] rounded-2xl p-4 sm:p-5 shadow-xs space-y-3.5">
@@ -194,17 +255,53 @@ export const OrtuAbsensiPage: React.FC = () => {
             <CalendarIcon size={16} className="text-[#FF7043]" />
             <span>Catatan Riwayat Presensi</span>
           </h3>
-          <span className="text-xs text-[#64748B]">Total: <strong>{absensiLogs.length}</strong> Catatan</span>
+          <span className="text-xs text-[#64748B]">Total: <strong>{filteredLogs.length}</strong> Catatan</span>
         </div>
 
-        {absensiLogs.length === 0 ? (
+        {/* Filter Program Pills jika Siswa Punya Banyak Program */}
+        {childPrograms.length > 1 && (
+          <div className="flex items-center gap-1.5 flex-wrap pt-1 pb-1">
+            <button
+              onClick={() => setSelectedFilter('all')}
+              className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                selectedFilter === 'all'
+                  ? 'bg-[#FF7043] text-white shadow-2xs'
+                  : 'bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0]'
+              }`}
+            >
+              Semua Program ({absensiLogs.length})
+            </button>
+            {childPrograms.map((p) => {
+              const count = absensiLogs.filter((l) =>
+                (l.kategori_program || '').toLowerCase().includes(p.program.toLowerCase()) ||
+                (l.catatan || '').toLowerCase().includes(p.program.toLowerCase())
+              ).length;
+              const isSelected = selectedFilter === p.program;
+              return (
+                <button
+                  key={p.program}
+                  onClick={() => setSelectedFilter(p.program)}
+                  className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-[#FF7043] text-white shadow-2xs'
+                      : 'bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0]'
+                  }`}
+                >
+                  {p.program} ({count})
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {filteredLogs.length === 0 ? (
           <div className="py-8 text-center text-[#94A3B8] text-xs">
             <PresensiIcon size={32} className="mx-auto mb-2 text-[#CBD5E1]" />
-            <p className="font-semibold">Belum ada riwayat presensi yang tercatat.</p>
+            <p className="font-semibold">Belum ada riwayat presensi yang tercatat{selectedFilter !== 'all' ? ` untuk program ${selectedFilter}` : ''}.</p>
           </div>
         ) : (
           <div className="space-y-2.5">
-            {absensiLogs.map((log) => {
+            {filteredLogs.map((log) => {
               const isHadir = log.status === 'HADIR';
               const isIzin = log.status === 'IZIN';
 
@@ -231,9 +328,16 @@ export const OrtuAbsensiPage: React.FC = () => {
                 >
                   <div className="flex items-center justify-between gap-2">
                     <div>
-                      <span className="font-bold text-[#1E293B] block">
-                        {formatWaktu(log.waktu)}
-                      </span>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-bold text-[#1E293B]">
+                          {formatWaktu(log.waktu)}
+                        </span>
+                        {log.kategori_program && (
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${getProgramBadgeStyle(log.kategori_program)}`}>
+                            {log.kategori_program}
+                          </span>
+                        )}
+                      </div>
                       {sesiText && (
                         <span className="text-[11px] font-semibold text-[#FF7043] bg-[#FFF3E0] px-2 py-0.5 rounded-md border border-[#FFCC80] inline-block mt-0.5">
                           {sesiText}

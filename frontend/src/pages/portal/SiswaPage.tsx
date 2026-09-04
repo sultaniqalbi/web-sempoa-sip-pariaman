@@ -25,6 +25,7 @@ interface Siswa {
   paket_jadwal?: string;
   hari_masuk: string;
   id_guru?: number;
+  guru_per_program?: string;
   sisa_pertemuan: number;
   target_pertemuan: number;
   status_spp: string;
@@ -296,6 +297,7 @@ export const SiswaPage: React.FC = () => {
   const [programQuotas, setProgramQuotas] = useState<Record<string, { sisa: number | string; target: number }>>({
     'Sempoa SIP': { sisa: '', target: 8 }
   });
+  const [guruPerProgram, setGuruPerProgram] = useState<Record<string, number | undefined>>({});
 
   // Form State
   const [formData, setFormData] = useState({
@@ -606,6 +608,7 @@ export const SiswaPage: React.FC = () => {
     });
     setSelectedPhoto(null);
     setPhoneError(null);
+    setGuruPerProgram({});
     setIsAddModalOpen(true);
   };
 
@@ -672,6 +675,28 @@ export const SiswaPage: React.FC = () => {
 
     setSelectedPhoto(null);
     setPhoneError(null);
+
+    // Parse guru_per_program for multi-guru support
+    const initialGuruPerProg: Record<string, number | undefined> = {};
+    if ((siswa as any).guru_per_program) {
+      try {
+        const gpp = JSON.parse((siswa as any).guru_per_program);
+        if (gpp && typeof gpp === 'object') {
+          Object.entries(gpp).forEach(([prog, guruId]) => {
+            if (guruId !== null && guruId !== undefined) {
+              initialGuruPerProg[prog] = Number(guruId);
+            }
+          });
+        }
+      } catch (e) {}
+    }
+    // Fallback: if guru_per_program is empty but id_guru exists, assign to first program
+    if (Object.keys(initialGuruPerProg).length === 0 && siswa.id_guru) {
+      const firstProg = progs[0] || 'Sempoa SIP';
+      initialGuruPerProg[firstProg] = siswa.id_guru;
+    }
+    setGuruPerProgram(initialGuruPerProg);
+
     setIsAddModalOpen(true);
   };
 
@@ -741,10 +766,26 @@ export const SiswaPage: React.FC = () => {
       };
     });
 
+    // Build guru_per_program JSON from per-program selections
+    const guruPerProgramClean: Record<string, number> = {};
+    selectedProgs.forEach((p) => {
+      if (guruPerProgram[p]) {
+        guruPerProgramClean[p] = guruPerProgram[p]!;
+      }
+    });
+    const guruPerProgramJson = Object.keys(guruPerProgramClean).length > 0
+      ? JSON.stringify(guruPerProgramClean)
+      : null;
+
+    // Derive id_guru from first guru in mapping (backward-compatible)
+    const firstGuruId = Object.values(guruPerProgramClean)[0] || formData.id_guru || undefined;
+
     const payload = {
       ...formData,
       hari_masuk: combinedHari || 'Senin, Selasa, Rabu, Kamis, Jumat',
       kuota_program: JSON.stringify(kuotaObj),
+      guru_per_program: guruPerProgramJson,
+      id_guru: firstGuruId,
       tanggal_lahir: formData.tanggal_lahir || null,
       umur: ageVal || (formData.umur ? parseInt(formData.umur, 10) : null),
       target_pertemuan: target,
@@ -836,7 +877,19 @@ export const SiswaPage: React.FC = () => {
       header: 'Program & Pengajar',
       accessor: (row: Siswa) => {
         const details = parseProgramDetails(row.kategori_program, row.paket_jadwal);
-        const assignedTeacher = row.id_guru ? (guruList as any[]).find((g: any) => g.id === row.id_guru) : null;
+
+        // Parse guru_per_program for multi-guru display
+        let guruMapping: Record<string, number> = {};
+        if ((row as any).guru_per_program) {
+          try {
+            const gpp = JSON.parse((row as any).guru_per_program);
+            if (gpp && typeof gpp === 'object') guruMapping = gpp;
+          } catch (e) {}
+        }
+
+        // Fallback to single id_guru
+        const fallbackTeacher = row.id_guru ? (guruList as any[]).find((g: any) => g.id === row.id_guru) : null;
+
         return (
           <div className="space-y-1.5 py-1">
             <div className="flex flex-wrap gap-1">
@@ -849,10 +902,23 @@ export const SiswaPage: React.FC = () => {
                 </span>
               ))}
             </div>
-            {assignedTeacher && (
+            {Object.keys(guruMapping).length > 0 ? (
+              <div className="space-y-1">
+                {Object.entries(guruMapping).map(([prog, guruId]) => {
+                  const guru = (guruList as any[]).find((g: any) => g.id === guruId);
+                  if (!guru) return null;
+                  return (
+                    <div key={prog} className="flex items-center gap-1 text-[11px] font-bold text-[#15803D] bg-[#DCFCE7] border border-[#86EFAC] px-2 py-0.5 rounded-lg shadow-2xs w-fit">
+                      <PengajarIcon size={11} className="text-[#16A34A]" />
+                      <span>{prog}: {guru.nama.split(',')[0]}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : fallbackTeacher && (
               <div className="flex items-center gap-1 text-[11px] font-bold text-[#15803D] bg-[#DCFCE7] border border-[#86EFAC] px-2 py-0.5 rounded-lg shadow-2xs w-fit">
                 <PengajarIcon size={11} className="text-[#16A34A]" />
-                <span>Guru: {assignedTeacher.nama.split(',')[0]}</span>
+                <span>Guru: {fallbackTeacher.nama.split(',')[0]}</span>
               </div>
             )}
           </div>
@@ -1599,10 +1665,10 @@ export const SiswaPage: React.FC = () => {
                         </div>
 
                         <select
-                          value={formData.id_guru || ''}
+                          value={guruPerProgram[prog] || ''}
                           onChange={(e) => {
                             const val = e.target.value ? parseInt(e.target.value, 10) : undefined;
-                            setFormData({ ...formData, id_guru: val });
+                            setGuruPerProgram({ ...guruPerProgram, [prog]: val });
                           }}
                           className="w-full bg-[#FFFDE7]/40 hover:bg-[#FFFDE7]/70 border border-[#FFE082] focus:border-[#FF7043] focus:ring-2 focus:ring-[#FF7043]/20 rounded-xl p-2.5 text-[#1E293B] font-bold text-xs focus:outline-none transition-all cursor-pointer shadow-2xs"
                         >

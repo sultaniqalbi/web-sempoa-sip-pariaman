@@ -19,6 +19,7 @@ from app.models.siswa import Siswa
 from app.models.jadwal import Jadwal
 from app.models.catatan_pembelajaran import CatatanPembelajaran
 from app.models.audit_log import AuditLog
+from app.services.audit_service import log_activity
 from app.schemas.guru import GuruCreate, GuruUpdate, GuruResponse, GuruCreateResponse
 from pydantic import BaseModel
 
@@ -167,6 +168,19 @@ async def create_new_guru(
         )
         db.add(user_guru)
 
+        log_activity(
+            db=db,
+            action="PENAMBAHAN",
+            role=current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
+            email=current_user.email,
+            modul="Data Guru",
+            deskripsi=f"Menambahkan data pengajar baru: {new_guru.nama} ({new_guru.kategori_program})",
+            status="SUCCESS",
+            target_id=new_guru.id,
+            target_nama=new_guru.nama,
+            after={"nama": new_guru.nama, "program": new_guru.kategori_program, "wa": normalized_wa}
+        )
+
         db.commit()
         db.refresh(new_guru)
 
@@ -279,6 +293,19 @@ async def update_existing_guru(
         if user_guru:
             user_guru.nama = update_dict["nama"]
 
+    log_activity(
+        db=db,
+        action="PERUBAHAN",
+        role=current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
+        email=current_user.email,
+        modul="Data Guru",
+        deskripsi=f"Memperbarui profil/data pengajar: {db_guru.nama}",
+        status="SUCCESS",
+        target_id=db_guru.id,
+        target_nama=db_guru.nama,
+        after={k: str(v) for k, v in update_dict.items() if k != "foto_profil"}
+    )
+
     db.commit()
     db.refresh(db_guru)
     return db_guru
@@ -321,14 +348,17 @@ async def delete_guru(
         # 5. Delete guru
         db.delete(db_guru)
 
-        audit = AuditLog(
-            action="DELETE_GURU",
+        log_activity(
+            db=db,
+            action="PENGHAPUSAN",
             role=current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
             email=current_user.email,
-            details={"guru_id": id, "guru_nama": db_guru.nama},
-            status="SUCCESS"
+            modul="Data Guru",
+            deskripsi=f"Menghapus data pengajar: {db_guru.nama}",
+            status="SUCCESS",
+            target_id=id,
+            target_nama=db_guru.nama
         )
-        db.add(audit)
     except Exception as e:
         logger.error(f"Error during delete_guru cleanup: {e}", exc_info=True)
 
@@ -375,17 +405,17 @@ async def reset_guru_password(
         if not user_guru.nama:
             user_guru.nama = db_guru.nama
 
-    try:
-        audit = AuditLog(
-            action="RESET_PASSWORD_GURU",
-            role=current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
-            email=current_user.email,
-            details={"guru_id": id, "guru_email": user_guru.email},
-            status="SUCCESS"
-        )
-        db.add(audit)
-    except Exception:
-        pass
+    log_activity(
+        db=db,
+        action="PERUBAHAN",
+        role=current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
+        email=current_user.email,
+        modul="Data Guru",
+        deskripsi=f"Mereset kata sandi pengajar: {db_guru.nama}",
+        status="SUCCESS",
+        target_id=id,
+        target_nama=db_guru.nama
+    )
 
     db.commit()
 
