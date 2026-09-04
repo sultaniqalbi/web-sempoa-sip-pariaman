@@ -41,27 +41,36 @@ PROGRAM_CONFIG = {
 DEFAULT_DENDA_PER_TERLAMBAT = 1000
 MAX_UPLOAD_SIZE_BYTES = 50 * 1024 * 1024  # 50MB
 
-def get_program_spp_nominal(db, program_name: str) -> float:
+def get_program_spp_nominal(db, program_name: str, paket_jadwal: str = None) -> float:
     """
     Get dynamic SPP fee from database ProgramSetting with fallback to constants.
     """
     if not program_name:
         return 200000.0
 
+    p_lower = program_name.strip().lower()
+    search_name = program_name.strip()
+    
+    if "sempoa" in p_lower:
+        if paket_jadwal and "12" in paket_jadwal:
+            search_name = "Sempoa SIP (12 Sesi)"
+        else:
+            search_name = "Sempoa SIP (8 Sesi)"
+
     # Check database ProgramSetting first
     try:
         from app.models.program_setting import ProgramSetting
-        setting = db.query(ProgramSetting).filter(ProgramSetting.nama_program == program_name.strip()).first()
+        setting = db.query(ProgramSetting).filter(ProgramSetting.nama_program == search_name).first()
         if setting and setting.biaya_spp:
             return float(setting.biaya_spp)
     except Exception:
         pass
 
     # Fallback to in-memory config
-    p_lower = program_name.strip().lower()
     if "sempoa" in p_lower:
         return 350000.0
     elif "tk" in p_lower:
         return 400000.0
     return 200000.0
+
 

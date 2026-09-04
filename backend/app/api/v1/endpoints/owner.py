@@ -657,16 +657,38 @@ async def get_spp_programs(
     if not programs:
         from app.core.constants import PROGRAM_CONFIG
         for p_name, p_info in PROGRAM_CONFIG.items():
-            ps = ProgramSetting(
-                nama_program=p_name,
-                biaya_spp=p_info.get("biaya_spp", 200000.0),
-                target_pertemuan=p_info.get("default_target_pertemuan", 12),
-                jam_mulai=p_info.get("jam_default", {}).get("mulai", "08:00"),
-                jam_selesai=p_info.get("jam_default", {}).get("selesai", "12:00"),
-                hari_masuk=p_info.get("hari_masuk", "Senin - Jumat"),
-                keterangan=f"Program Resmi {p_name}"
-            )
-            db.add(ps)
+            if p_name == "Sempoa SIP":
+                ps8 = ProgramSetting(
+                    nama_program="Sempoa SIP (8 Sesi)",
+                    biaya_spp=p_info.get("biaya_spp", 350000.0),
+                    target_pertemuan=8,
+                    jam_mulai=p_info.get("jam_default", {}).get("mulai", "09:00"),
+                    jam_selesai=p_info.get("jam_default", {}).get("selesai", "17:00"),
+                    hari_masuk=p_info.get("hari_masuk", "Senin - Jumat"),
+                    keterangan=f"Program Resmi {p_name} - Paket 8 Sesi"
+                )
+                ps12 = ProgramSetting(
+                    nama_program="Sempoa SIP (12 Sesi)",
+                    biaya_spp=p_info.get("biaya_spp", 350000.0),
+                    target_pertemuan=12,
+                    jam_mulai=p_info.get("jam_default", {}).get("mulai", "09:00"),
+                    jam_selesai=p_info.get("jam_default", {}).get("selesai", "17:00"),
+                    hari_masuk=p_info.get("hari_masuk", "Senin - Jumat"),
+                    keterangan=f"Program Resmi {p_name} - Paket 12 Sesi"
+                )
+                db.add(ps8)
+                db.add(ps12)
+            else:
+                ps = ProgramSetting(
+                    nama_program=p_name,
+                    biaya_spp=p_info.get("biaya_spp", 200000.0),
+                    target_pertemuan=p_info.get("default_target_pertemuan", 12),
+                    jam_mulai=p_info.get("jam_default", {}).get("mulai", "08:00"),
+                    jam_selesai=p_info.get("jam_default", {}).get("selesai", "12:00"),
+                    hari_masuk=p_info.get("hari_masuk", "Senin - Jumat"),
+                    keterangan=f"Program Resmi {p_name}"
+                )
+                db.add(ps)
         db.commit()
         programs = db.query(ProgramSetting).order_by(ProgramSetting.id.asc()).all()
 

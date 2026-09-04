@@ -435,7 +435,7 @@ async def bulk_absensi_siswa(
                     billing = PembayaranPeriode(
                         id_siswa=siswa.id,
                         periode_bulan=current_month,
-                        jumlah=get_program_spp_nominal(db, siswa.kategori_program),
+                        jumlah=get_program_spp_nominal(db, siswa.kategori_program, getattr(siswa, "paket_jadwal", None)),
                         status=StatusPembayaran.MENUNGGAK,
                         due_date=due_date
                     )

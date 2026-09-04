@@ -14,7 +14,6 @@ from app.core.hardware import (
     verify_api_key,
     write_last_tap,
     get_latest_tap_data,
-    save_unregistered_card,
     get_reset_command,
     acknowledge_reset_command
 )
@@ -77,7 +76,6 @@ async def post_absensi(request: Request, db: Session = Depends(get_db)):
 
         # 2. Jika Kartu Belum Terdaftar sebagai Guru -> KARTU BARU (untuk Pendaftaran Guru)
         if not guru:
-            save_unregistered_card(db, uid_clean, waktu_str)
             write_last_tap(uid_clean, waktu_str, "UNREGISTERED")
 
             manager.broadcast_sync("CARD_TAP", {

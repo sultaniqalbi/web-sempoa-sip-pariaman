@@ -30,7 +30,6 @@ export const AbsensiInputPage: React.FC = () => {
 
   // Rekap date filter state (defaults to today)
   const [rekapDate, setRekapDate] = useState<string>(todayStr);
-  const [selectedRekapProgram, setSelectedRekapProgram] = useState<string>('');
 
   // Fetch Students for Attendance
   const { data: siswaData, isLoading: isLoadingSiswa } = useQuery({
@@ -52,14 +51,6 @@ export const AbsensiInputPage: React.FC = () => {
     }
   }, [siswaData?.available_programs, selectedProgram]);
 
-  React.useEffect(() => {
-    if (siswaData?.available_programs && siswaData.available_programs.length > 0) {
-      if (!selectedRekapProgram || !siswaData.available_programs.includes(selectedRekapProgram)) {
-        setSelectedRekapProgram(siswaData.available_programs[0]);
-      }
-    }
-  }, [siswaData?.available_programs, selectedRekapProgram]);
-
   // Fetch Teacher's Attendance Logs
   const { data: logData, isLoading: isLoadingLog } = useQuery({
     queryKey: ['guru-absensi-list'],
@@ -72,10 +63,10 @@ export const AbsensiInputPage: React.FC = () => {
 
   // Fetch Attendance Recap for Selected Date & Program
   const { data: rekapData, isLoading: isLoadingRekap } = useQuery({
-    queryKey: ['guru-rekap-absensi', rekapDate, selectedRekapProgram],
+    queryKey: ['guru-rekap-absensi', rekapDate, selectedProgram],
     queryFn: async () => {
       const res = await apiClient.get('/portal-guru/rekap-absensi', {
-        params: { tanggal: rekapDate, program: selectedRekapProgram },
+        params: { tanggal: rekapDate, program: selectedProgram },
       });
       return res.data;
     },
@@ -344,9 +335,9 @@ export const AbsensiInputPage: React.FC = () => {
                 <button
                   key={prog}
                   type="button"
-                  onClick={() => setSelectedRekapProgram(prog)}
-                  className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all whitespace-nowrap cursor-pointer shrink-0 ${
-                    selectedRekapProgram === prog
+                  onClick={() => setSelectedProgram(prog)}
+                  className={`px-4 py-1.5 rounded-full text-[11px] font-bold transition-all ${
+                    selectedProgram === prog
                       ? 'bg-[#FF7043] text-white shadow-xs'
                       : 'bg-[#F8FAFC] text-[#64748B] border border-[#E2E8F0] hover:bg-[#F1F5F9]'
                   }`}

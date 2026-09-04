@@ -61,32 +61,6 @@ def get_latest_tap_data() -> Dict[str, Any]:
             print(f"Error reading last_tap.json: {e}")
 
     return {"uid": None, "is_new": False}
-
-def save_unregistered_card(db: Session, uid: str, waktu_str: str) -> None:
-    catatan_prefix = f"Unregistered card tapped: {uid.upper().strip()}"
-    existing = db.query(PendaftaranBaru).filter(
-        PendaftaranBaru.catatan.like(f"%{catatan_prefix}%")
-    ).first()
-    
-    if not existing:
-        try:
-            waktu_dt = datetime.strptime(waktu_str.strip(), "%Y-%m-%d %H:%M:%S")
-        except ValueError:
-            waktu_dt = datetime.now()
-
-        pendaftaran = PendaftaranBaru(
-            nama_ortu="RFID_HARDWARE",
-            nama_anak=f"UNREGISTERED_{uid.upper().strip()}",
-            umur_anak="0",
-            nomor_wa="0",
-            program_studi="UNKNOWN",
-            catatan=f"Unregistered card tapped: {uid.upper().strip()} at {waktu_str}",
-            waktu_daftar=waktu_dt,
-            status=StatusPendaftaran.BARU
-        )
-        db.add(pendaftaran)
-        db.commit()
-
 def get_reset_command() -> str:
     if os.path.exists(RESET_FLAG_FILE):
         try:
