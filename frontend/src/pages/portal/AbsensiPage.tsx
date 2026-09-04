@@ -2,6 +2,9 @@ import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
 import PageHeader from '../../components/PageHeader';
+import { useToast } from '../../components/Toast';
+import { PROGRAM_CONFIG } from '../../utils/constants';
+import { parseProgramQuotas } from './SiswaPage';
 import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
 import ConfirmModal from '../../components/ConfirmModal';
@@ -78,16 +81,17 @@ export const SharedAbsensiPage: React.FC = () => {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [exportResult, setExportResult] = useState<any>(null);
 
-  // Edit Pertemuan Modal State
+
+// Edit Pertemuan Modal State
   const [editingSiswa, setEditingSiswa] = useState<SiswaItem | null>(null);
   const [editForm, setEditForm] = useState({
     sisa_pertemuan: 8,
     target_pertemuan: 8,
     status_spp: 'AKTIF',
-    catatan: ''
+    catatan: '',
+    kuota_program: ''
   });
-
-  // Edit Log Absensi State
+  const [programQuotas, setProgramQuotas] = useState<Record<string, { sisa: number | string; target: number }>>({});
   const [editingLog, setEditingLog] = useState<AbsensiGuruLog | null>(null);
   const [editLogForm, setEditLogForm] = useState({
     uid: '',
@@ -373,11 +377,25 @@ export const SharedAbsensiPage: React.FC = () => {
 
   const openEditModal = (siswa: SiswaItem) => {
     setEditingSiswa(siswa);
+    
+    // Parse current quotas
+    const quotas = parseProgramQuotas(
+      siswa.kategori_program,
+      siswa.paket_jadwal,
+      (siswa as any).kuota_program
+    );
+    const initialProgQuotas: Record<string, { sisa: number | string; target: number }> = {};
+    quotas.forEach(q => {
+      initialProgQuotas[q.program] = { sisa: q.sisa, target: q.target };
+    });
+    setProgramQuotas(initialProgQuotas);
+
     setEditForm({
       sisa_pertemuan: siswa.sisa_pertemuan ?? 8,
       target_pertemuan: siswa.target_pertemuan || 8,
       status_spp: siswa.status_spp || 'AKTIF',
-      catatan: ''
+      catatan: '',
+      kuota_program: (siswa as any).kuota_program || ''
     });
   };
 
@@ -411,9 +429,24 @@ export const SharedAbsensiPage: React.FC = () => {
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingSiswa) return;
+    
+    // Convert programQuotas state into a JSON object
+    const kuotaObj: Record<string, { sisa: number; target: number }> = {};
+    Object.keys(programQuotas).forEach(p => {
+      kuotaObj[p] = {
+        sisa: Number(programQuotas[p].sisa) || 0,
+        target: Number(programQuotas[p].target) || 8
+      };
+    });
+    
+    const submitData = {
+      ...editForm,
+      kuota_program: JSON.stringify(kuotaObj)
+    };
+    
     editPertemuanMutation.mutate({
       id: editingSiswa.id,
-      data: editForm
+      data: submitData
     });
   };
 
@@ -1108,43 +1141,133 @@ export const SharedAbsensiPage: React.FC = () => {
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[#1E293B] font-bold mb-1">
-                  Sisa Kuota Pertemuan Baru*
-                </label>
-                <input
-                  type="number"
-                  min={0}
-                  max={30}
-                  required
-                  value={editForm.sisa_pertemuan}
-                  onChange={(e) => setEditForm({ ...editForm, sisa_pertemuan: parseInt(e.target.value) || 0 })}
-                  className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold text-sm focus:border-[#FF7043] focus:outline-none"
-                  placeholder="Misal: 3"
-                />
-                <span className="text-[10px] text-[#64748B] block mt-1">
-                  Sisa sesi yang masih dapat dihadiri siswa
-                </span>
+            <div className="bg-gradient-to-r from-[#F8FAFC] to-white border border-[#E2E8F0] rounded-xl p-3 sm:p-4 mt-2">
+              <p className="text-xs font-bold text-[#475569] mb-3 flex items-center gap-1.5">
+                <span className="w-1.5 h-4 bg-[#FF7043] rounded-full inline-block"></span>
+                Rincian Kuota per Program
+              </p>
+              
+              <div className="space-y-4">
+                {(() => {
+                  const selectedList = editingSiswa.kategori_program ? editingSiswa.kategori_program.split(',').map((p) => p.trim()).filter(Boolean) : ['Sempoa SIP'];
+                  const isSempoaOnly = selectedList.length === 1 && selectedList[0].toLowerCase().includes('sempoa');
+                  const sempoaPackageIndex = (editingSiswa.paket_jadwal || '').includes('12') ? 1 : 0;
+                  
+                  return selectedList.map((prog, idx) => {
+                    const defaultTarget = prog === 'Sempoa SIP' 
+                      ? (PROGRAM_CONFIG['Sempoa SIP'].packages[sempoaPackageIndex]?.target ?? 8)
+                      : ((PROGRAM_CONFIG as any)[prog]?.packages[0]?.target ?? 8);
+                    
+                    const currentQuota = programQuotas[prog] || { sisa: '', target: defaultTarget };
+                    
+                    return (
+                      <div key={idx} className="bg-white p-3 rounded-xl border border-[#FFE082] shadow-2xs relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-1 h-full bg-[#FFB74D]"></div>
+                        <h4 className="font-bold text-[#D84315] text-xs mb-2 border-b border-[#FFE082]/50 pb-1.5">
+                          {prog}
+                        </h4>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-[#BF360C] font-bold text-xs mb-1">
+                              Sisa Kuota {prog}*
+                            </label>
+                            <input
+                              type="number"
+                              min={0}
+                              max={60}
+                              required
+                              value={currentQuota.sisa === '' ? '' : currentQuota.sisa}
+                              onChange={(e) => {
+                                const raw = e.target.value.replace(/^0+(?=\d)/, '');
+                                const val = raw === '' ? '' : parseInt(raw) || 0;
+                                const updated = {
+                                  ...programQuotas,
+                                  [prog]: {
+                                    ...currentQuota,
+                                    sisa: val
+                                  }
+                                };
+                                setProgramQuotas(updated);
+
+                                // Recompute total sum
+                                let sumSisa = 0;
+                                let sumTarget = 0;
+                                selectedList.forEach((p) => {
+                                  const pq = updated[p] || { sisa: '', target: p === 'Sempoa SIP' ? (PROGRAM_CONFIG['Sempoa SIP'].packages[sempoaPackageIndex]?.target ?? 8) : ((PROGRAM_CONFIG as any)[p]?.packages[0]?.target ?? 8) };
+                                  sumSisa += Number(pq.sisa) || 0;
+                                  sumTarget += Number(pq.target) || 0;
+                                });
+                                setEditForm({
+                                  ...editForm,
+                                  sisa_pertemuan: sumSisa,
+                                  target_pertemuan: sumTarget > 0 ? sumTarget : defaultTarget
+                                });
+                              }}
+                              className="w-full bg-white border border-[#FFCC80] rounded-lg p-2 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none text-xs"
+                              placeholder=""
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[#E65100] font-bold text-xs mb-1">
+                              Total Target {prog}*
+                            </label>
+                            <input
+                              type="number"
+                              min={0}
+                              max={60}
+                              value={currentQuota.target === 0 ? '' : currentQuota.target}
+                              onChange={(e) => {
+                                const raw = e.target.value.replace(/^0+(?=\d)/, '');
+                                const val = raw === '' ? 0 : parseInt(raw) || 0;
+                                const updated = {
+                                  ...programQuotas,
+                                  [prog]: {
+                                    ...currentQuota,
+                                    target: val
+                                  }
+                                };
+                                setProgramQuotas(updated);
+
+                                // Recompute total sum
+                                let sumSisa = 0;
+                                let sumTarget = 0;
+                                selectedList.forEach((p) => {
+                                  const pq = updated[p] || { sisa: '', target: p === 'Sempoa SIP' ? (PROGRAM_CONFIG['Sempoa SIP'].packages[sempoaPackageIndex]?.target ?? 8) : ((PROGRAM_CONFIG as any)[p]?.packages[0]?.target ?? 8) };
+                                  sumSisa += Number(pq.sisa) || 0;
+                                  sumTarget += Number(pq.target) || 0;
+                                });
+                                setEditForm({
+                                  ...editForm,
+                                  sisa_pertemuan: sumSisa,
+                                  target_pertemuan: sumTarget > 0 ? sumTarget : defaultTarget
+                                });
+                              }}
+                              className="w-full bg-white border border-[#FFCC80] rounded-lg p-2 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none text-xs"
+                              placeholder={String(defaultTarget)}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
 
-              <div>
-                <label className="block text-[#1E293B] font-bold mb-1">
-                  Total Target Pertemuan*
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  max={30}
-                  required
-                  value={editForm.target_pertemuan}
-                  onChange={(e) => setEditForm({ ...editForm, target_pertemuan: parseInt(e.target.value) || 8 })}
-                  className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold text-sm focus:border-[#FF7043] focus:outline-none"
-                  placeholder="8 atau 12"
-                />
-                <span className="text-[10px] text-[#64748B] block mt-1">
-                  Kapasitas total per 1 siklus SPP
+              {/* Total Accumulation Summary */}
+              <div className="mt-3 p-2.5 bg-white rounded-lg border border-[#FFE082] flex items-center justify-between">
+                <span className="text-[11px] font-bold text-[#1E293B]">
+                  Total Akumulasi Seluruh Program:
                 </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-extrabold text-[#2E7D32] bg-[#E8F5E9] px-2 py-0.5 rounded border border-[#A5D6A7]">
+                    Sisa: {editForm.sisa_pertemuan} Sesi
+                  </span>
+                  <span className="text-[10px] font-extrabold text-[#E65100] bg-[#FFF3E0] px-2 py-0.5 rounded border border-[#FFCC80]">
+                    Target: {editForm.target_pertemuan} Sesi
+                  </span>
+                </div>
               </div>
             </div>
 

@@ -661,6 +661,9 @@ async def update_siswa_pertemuan(
         siswa.status_spp = StatusSPP.AKTIF
     elif siswa.sisa_pertemuan == 0 and siswa.status_spp != StatusSPP.EXPIRED:
         siswa.status_spp = StatusSPP.EXPIRED
+
+    if pertemuan_in.kuota_program is not None:
+        siswa.kuota_program = pertemuan_in.kuota_program
     
     db.add(siswa)
     db.commit()

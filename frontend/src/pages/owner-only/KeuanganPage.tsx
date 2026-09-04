@@ -98,12 +98,40 @@ export const KeuanganPage: React.FC = () => {
     });
   };
 
-  const selectedBulan = new Date().toISOString().substring(0, 7);
+  const getDateRange = () => {
+    if (selectedRange === 'Pilih Tanggal Custom') {
+      return { start: customStartDate, end: customEndDate };
+    }
+    
+    const end = new Date();
+    const start = new Date();
+    
+    if (selectedRange === 'Hari Ini') {
+      // already same day
+    } else if (selectedRange === '7 Hari Terakhir') {
+      start.setDate(start.getDate() - 7);
+    } else if (selectedRange === '30 Hari Terakhir') {
+      start.setDate(start.getDate() - 30);
+    } else if (selectedRange === '3 Bulan Terakhir') {
+      start.setMonth(start.getMonth() - 3);
+    }
+    
+    return {
+      start: start.toISOString().split('T')[0],
+      end: end.toISOString().split('T')[0]
+    };
+  };
+
+  const { start, end } = getDateRange();
 
   const { data, isLoading, error } = useQuery<KeuanganData>({
-    queryKey: ['ownerKeuangan', selectedRange, customStartDate, customEndDate, selectedBulan],
+    queryKey: ['ownerKeuangan', selectedRange, customStartDate, customEndDate],
     queryFn: async () => {
-      const res = await apiClient.get(`/owner/keuangan?bulan=${selectedBulan}`);
+      let url = '/owner/keuangan';
+      if (start && end) {
+        url += `?start_date=${start}&end_date=${end}`;
+      }
+      const res = await apiClient.get(url);
       return res.data;
     }
   });

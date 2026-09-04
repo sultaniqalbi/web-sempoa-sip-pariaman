@@ -123,4 +123,5 @@ class SiswaPertemuanUpdate(BaseModel):
     target_pertemuan: Optional[int] = None
     status_spp: Optional[StatusSPP] = None
     catatan: Optional[str] = None
+    kuota_program: Optional[str] = None
 

@@ -87,7 +87,7 @@ async def get_pertumbuhan_siswa(
     total_guru = db.query(Guru).count()
 
     # 4. Total Keuangan SPP Lunas (All time or current year)
-    total_keuangan = db.query(func.sum(PembayaranPeriode.jumlah)).filter(PembayaranPeriode.status == StatusPembayaran.LUNAS).scalar() or 0.0
+    total_keuangan = db.query(func.sum(Keuangan.jumlah)).filter(Keuangan.jenis == JenisKeuangan.PEMBAYARAN_SPP).scalar() or 0.0
 
     return {
         "range": range,
@@ -103,41 +103,42 @@ async def get_pertumbuhan_siswa(
 
 @router.get("/keuangan")
 async def get_laporan_keuangan(
-    bulan: Optional[str] = Query(None, regex="^\\d{4}-\\d{2}$"),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(owner_only)
 ):
     """
     Owner Exclusive: Data Keuangan Lengkap
-    Hanya menghitung pembayaran yang bukti pembayarannya telah disetujui (di-ACC).
-    Pendapatan per program dipisahkan secara murni per program resmi.
+    Menghitung berdasarkan rentang tanggal dari tabel Keuangan.
     """
-    if not bulan:
-        bulan = datetime.utcnow().strftime("%Y-%m")
+    from datetime import timedelta
+    
+    if not start_date or not end_date:
+        # Default 30 hari terakhir jika tidak ada tanggal
+        ed = datetime.utcnow()
+        sd = ed - timedelta(days=90) # default 3 bulan
+        start_date = sd.strftime("%Y-%m-%d")
+        end_date = ed.strftime("%Y-%m-%d")
 
-    # 1. Subquery pembayaran yang telah diverifikasi (memiliki BuktiTransfer approved)
-    verified_pay_subq = (
-        db.query(BuktiTransfer.id_pembayaran)
-        .filter(BuktiTransfer.status == StatusBuktiTransfer.approved)
-        .subquery()
-    )
-
-    # 2. Total revenue for specified month (Hanya pembayaran LUNAS yang bukti transfernya telah disetujui)
+    # 1. Total revenue for specified date range dari Ledger Keuangan (Hanya yang berjenis PEMBAYARAN_SPP)
     revenue_q = (
-        db.query(func.sum(PembayaranPeriode.jumlah))
+        db.query(func.sum(Keuangan.jumlah))
         .filter(
-            PembayaranPeriode.periode_bulan == bulan,
-            PembayaranPeriode.status == StatusPembayaran.LUNAS,
-            PembayaranPeriode.id.in_(verified_pay_subq)
+            Keuangan.jenis == JenisKeuangan.PEMBAYARAN_SPP,
+            Keuangan.tanggal >= start_date,
+            Keuangan.tanggal <= end_date
         )
         .scalar()
     )
     total_pendapatan = float(revenue_q or 0.0)
 
-    # 3. Breakdown per status tagihan siswa pada bulan yang dipilih
+    # 3. Breakdown per status tagihan siswa (saat ini aktif)
+    # Ini melihat status SPP siswa (PembayaranPeriode bulan ini)
+    current_month = datetime.utcnow().strftime("%Y-%m")
     status_q = (
         db.query(PembayaranPeriode.status, func.count(PembayaranPeriode.id))
-        .filter(PembayaranPeriode.periode_bulan == bulan)
+        .filter(PembayaranPeriode.periode_bulan == current_month)
         .group_by(PembayaranPeriode.status)
         .all()
     )
@@ -706,11 +707,11 @@ async def update_spp_program(
     setting.biaya_spp = payload.biaya_spp
     if payload.target_pertemuan is not None and payload.target_pertemuan > 0:
         setting.target_pertemuan = payload.target_pertemuan
-    if payload.jam_mulai:
+    if payload.jam_mulai is not None:
         setting.jam_mulai = payload.jam_mulai.strip()
-    if payload.jam_selesai:
+    if payload.jam_selesai is not None:
         setting.jam_selesai = payload.jam_selesai.strip()
-    if payload.hari_masuk:
+    if payload.hari_masuk is not None:
         setting.hari_masuk = payload.hari_masuk.strip()
     if payload.keterangan is not None:
         setting.keterangan = payload.keterangan.strip()
