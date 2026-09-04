@@ -17,7 +17,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 128M
     networks:
       - sempoa-network
 
@@ -26,7 +26,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: sempoa_backend_prod
-    command: ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4", "--proxy-headers", "--forwarded-allow-ips", "*"]
+    command: ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2", "--proxy-headers", "--forwarded-allow-ips", "*"]
     environment:
       - POSTGRES_USER=${POSTGRES_USER:-sempoa_prod}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -55,7 +55,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1G
+          memory: 512M
     networks:
       - sempoa-network
 
@@ -74,13 +74,14 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 128M
     networks:
       - sempoa-network
 
   db:
     image: postgres:15-alpine
     container_name: sempoa_db_prod
+    command: ["postgres", "-c", "shared_buffers=128MB", "-c", "max_connections=50", "-c", "work_mem=4MB"]
     environment:
       - POSTGRES_USER=${POSTGRES_USER:-sempoa_prod}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -96,7 +97,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1G
+          memory: 512M
     networks:
       - sempoa-network
 
@@ -122,7 +123,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 128M
     networks:
       - sempoa-network
 
