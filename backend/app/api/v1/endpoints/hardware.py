@@ -147,12 +147,14 @@ async def post_absensi(request: Request, db: Session = Depends(get_db)):
                 
             return PlainTextResponse(f"OK|{nama_guru}", status_code=200)
 
-        # Cek Keterlambatan
+        # Cek Keterlambatan - HANYA Direktur yang bebas keterlambatan
         is_late = False
         nama_lower = nama_guru.lower()
+        kat_lower = (getattr(guru, "kategori_program", "") or "").lower()
+        is_direktur = ("direktur" in nama_lower) or ("direktur" in kat_lower) or ("zulhemawati" in nama_lower)
         waktu_wib = waktu_dt.astimezone(WIB)
         
-        if "direktur" in nama_lower:
+        if is_direktur:
             is_late = False
         else:
             if "dinda" in nama_lower:
@@ -295,6 +297,11 @@ async def get_guru_cache(request: Request, db: Session = Depends(get_db)):
             if g.uid and g.uid.strip():
                 clean_uid = g.uid.strip().replace(" ", "").upper()
                 nama = g.nama.strip()
+                kat_lower = (g.kategori_program or "").lower()
+                paket_lower = (g.paket_pengajaran or "").lower()
+                is_direktur = ("direktur" in nama.lower()) or ("direktur" in kat_lower) or ("zulhemawati" in nama.lower())
+                if is_direktur and "direktur" not in nama.lower():
+                    nama = f"{nama} (Direktur)"
                 records.append(f"{clean_uid}:{nama}")
         return PlainTextResponse("|".join(records), status_code=200)
     except Exception:

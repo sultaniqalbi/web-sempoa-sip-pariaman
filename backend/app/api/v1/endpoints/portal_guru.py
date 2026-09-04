@@ -979,9 +979,12 @@ async def input_kehadiran_manual_guru(
         mode_enum = ModeAbsensi.OFFLINE
 
     # Evaluasi status keterlambatan guru
-    nama_lower = guru.nama.lower()
+    nama_lower = (guru.nama or "").lower()
+    kat_lower = (getattr(guru, "kategori_program", "") or "").lower()
+    is_direktur = ("direktur" in nama_lower) or ("direktur" in kat_lower) or ("zulhemawati" in nama_lower)
+
     is_late = False
-    if "direktur" in nama_lower:
+    if is_direktur:
         is_late = False
     elif "dinda" in nama_lower:
         if tgl_obj.weekday() == 4:

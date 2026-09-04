@@ -142,7 +142,8 @@ bool cekKartuRFID();
 bool cekGuruTerlambat(const String& nama, const RtcDateTime& now) {
   String nmLower = nama;
   nmLower.toLowerCase();
-  if (nmLower.indexOf("direktur") != -1) {
+  // HANYA Direktur yang bebas absensi / keterlambatan
+  if (nmLower.indexOf("direktur") != -1 || nmLower.indexOf("zulhemawati") != -1) {
     return false;
   } else if (nmLower.indexOf("dinda") != -1) {
     if (now.DayOfWeek() == 5) return (now.Hour() >= 13);

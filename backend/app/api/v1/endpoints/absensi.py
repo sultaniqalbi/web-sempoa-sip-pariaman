@@ -87,8 +87,10 @@ async def read_absensi_list(
             u_clean = ul_log.uid.strip().upper().replace(" ", "") if ul_log.uid else ""
             matched_g = guru_map.get(u_clean)
             if matched_g:
-                nama_lower = matched_g.nama.lower()
-                if "direktur" in nama_lower:
+                nama_lower = (matched_g.nama or "").lower()
+                kat_lower = (getattr(matched_g, "kategori_program", "") or "").lower()
+                is_direktur = ("direktur" in nama_lower) or ("direktur" in kat_lower) or ("zulhemawati" in nama_lower)
+                if is_direktur:
                     continue
                 w_time = ul_log.waktu.astimezone(WIB) if ul_log.waktu.tzinfo else ul_log.waktu.replace(tzinfo=WIB)
                 is_u_late = False
@@ -122,6 +124,20 @@ async def read_absensi_list(
                 if is_u_late:
                     ul_log.status = StatusAbsensi.TERLAMBAT
                     needs_commit = True
+
+        # Auto-reconcile koreksi: jika ada log Direktur / Fleksibel yang terlanjur TERLAMBAT, kembalikan ke HADIR!
+        late_logs = [l for l in logs if l.status == StatusAbsensi.TERLAMBAT]
+        for ll_log in late_logs:
+            u_clean = ll_log.uid.strip().upper().replace(" ", "") if ll_log.uid else ""
+            matched_g = guru_map.get(u_clean)
+            if matched_g:
+                nama_lower = (matched_g.nama or "").lower()
+                kat_lower = (getattr(matched_g, "kategori_program", "") or "").lower()
+                is_direktur = ("direktur" in nama_lower) or ("direktur" in kat_lower) or ("zulhemawati" in nama_lower)
+                if is_direktur:
+                    ll_log.status = StatusAbsensi.HADIR
+                    needs_commit = True
+
         if needs_commit:
             db.commit()
     except Exception:
@@ -163,7 +179,14 @@ async def read_absensi_list(
             resp.guru_nama = g.nama
             resp.kategori_program = g.kategori_program
             resp.role = "guru"
-            resp.denda_terakumulasi = denda_map.get(norm_g_uid) or denda_map.get(nospace_uid) or denda_map.get(clean_uid) or 0
+
+            # HANYA Direktur yang BEBAS DENDA (denda selalu 0)
+            kat_lower = (g.kategori_program or "").lower()
+            is_direktur = ("direktur" in (g.nama or "").lower()) or ("direktur" in kat_lower) or ("zulhemawati" in (g.nama or "").lower())
+            if is_direktur:
+                resp.denda_terakumulasi = 0
+            else:
+                resp.denda_terakumulasi = denda_map.get(norm_g_uid) or denda_map.get(nospace_uid) or denda_map.get(clean_uid) or 0
         elif s:
             resp.guru_nama = s.nama
             resp.kategori_program = s.kategori_program
@@ -615,9 +638,12 @@ async def create_guru_manual_absensi(
     # Cek Keterlambatan Otomatis pada Input Manual
     final_status = req.status
     if req.status in [StatusAbsensi.HADIR, StatusAbsensi.TERLAMBAT]:
-        nama_lower = guru.nama.lower()
+        nama_lower = (guru.nama or "").lower()
+        kat_lower = (getattr(guru, "kategori_program", "") or "").lower()
+        is_direktur = ("direktur" in nama_lower) or ("direktur" in kat_lower) or ("zulhemawati" in nama_lower)
+
         is_late = False
-        if "direktur" in nama_lower:
+        if is_direktur:
             is_late = False
         elif "dinda" in nama_lower:
             if t_date.weekday() == 4:

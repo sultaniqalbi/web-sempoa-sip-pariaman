@@ -39,8 +39,8 @@
 
 // ============ PENGATURAN KONEKSI WIFI / HOTSPOT ============
 // Kredensial Hotspot HP Anda (OPPO Find X8):
-const char* DEFAULT_WIFI_SSID     = "OPPO Find X8";
-const char* DEFAULT_WIFI_PASS     = "szgm7477";
+const char* DEFAULT_WIFI_SSID     = "SEMPOA";
+const char* DEFAULT_WIFI_PASS     = "anakdua1";
 const char* DEFAULT_ESP32_API_KEY = "SempoaPariaman_ESP32_SecureKey_2026!";
 
 Preferences preferences;
@@ -142,7 +142,8 @@ bool cekKartuRFID();
 bool cekGuruTerlambat(const String& nama, const RtcDateTime& now) {
   String nmLower = nama;
   nmLower.toLowerCase();
-  if (nmLower.indexOf("direktur") != -1) {
+  // HANYA Direktur yang bebas absensi / keterlambatan
+  if (nmLower.indexOf("direktur") != -1 || nmLower.indexOf("zulhemawati") != -1) {
     return false;
   } else if (nmLower.indexOf("dinda") != -1) {
     if (now.DayOfWeek() == 5) return (now.Hour() >= 13);

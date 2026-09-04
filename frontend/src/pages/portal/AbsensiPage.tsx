@@ -603,10 +603,13 @@ export const SharedAbsensiPage: React.FC = () => {
     {
       header: 'Status Kehadiran',
       accessor: (row: AbsensiGuruLog) => {
+        const isDirektur = (row.kategori_program || '').toLowerCase().includes('direktur') ||
+                           (row.guru_nama || '').toLowerCase().includes('direktur') ||
+                           (row.guru_nama || '').toLowerCase().includes('zulhemawati');
         let statusText = row.status;
         let style = 'bg-[#FEE2E2] text-[#DC2626] border-[#FCA5A5]';
         
-        if (row.status === 'HADIR') {
+        if (row.status === 'HADIR' || (isDirektur && row.status === 'TERLAMBAT')) {
           statusText = 'Hadir, Tepat Waktu';
           style = 'bg-[#DCFCE7] text-[#16A34A] border-[#86EFAC]';
         } else if (row.status === 'TERLAMBAT') {
@@ -627,6 +630,12 @@ export const SharedAbsensiPage: React.FC = () => {
     {
       header: 'Denda',
       accessor: (row: AbsensiGuruLog) => {
+        const isDirektur = (row.kategori_program || '').toLowerCase().includes('direktur') ||
+                           (row.guru_nama || '').toLowerCase().includes('direktur') ||
+                           (row.guru_nama || '').toLowerCase().includes('zulhemawati');
+        if (isDirektur) {
+          return <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">Bebas Denda</span>;
+        }
         const denda = row.denda_terakumulasi || 0;
         if (denda > 0) {
           return (
@@ -1210,7 +1219,18 @@ export const SharedAbsensiPage: React.FC = () => {
             <select
               required
               value={manualForm.id_guru}
-              onChange={(e) => setManualForm({ ...manualForm, id_guru: e.target.value })}
+              onChange={(e) => {
+                const newId = e.target.value;
+                const selectedG = guruList.find((g: any) => String(g.id) === String(newId));
+                const gKat = (selectedG?.kategori_program || '').toLowerCase();
+                const gNama = (selectedG?.nama || '').toLowerCase();
+                const isDirektur = gKat.includes('direktur') || gNama.includes('direktur') || gNama.includes('zulhemawati');
+                setManualForm({
+                  ...manualForm,
+                  id_guru: newId,
+                  status: isDirektur ? 'HADIR' : manualForm.status
+                });
+              }}
               className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold text-sm focus:border-[#FF7043] focus:outline-none"
             >
               <option value="">-- Pilih Guru --</option>
@@ -1244,7 +1264,11 @@ export const SharedAbsensiPage: React.FC = () => {
                 value={manualForm.jam}
                 onChange={(e) => {
                   const val = e.target.value;
-                  const autoLate = val >= '08:00';
+                  const selectedG = guruList.find((g: any) => String(g.id) === String(manualForm.id_guru));
+                  const gKat = (selectedG?.kategori_program || '').toLowerCase();
+                  const gNama = (selectedG?.nama || '').toLowerCase();
+                  const isDirektur = gKat.includes('direktur') || gNama.includes('direktur') || gNama.includes('zulhemawati');
+                  const autoLate = !isDirektur && val >= '08:00';
                   setManualForm({
                     ...manualForm,
                     jam: val,

@@ -227,6 +227,29 @@ def on_startup():
         except Exception as cl_e:
             logger.debug(f"Orphan payment cleanup notice: {cl_e}")
 
+        # Pastikan tidak ada log kehadiran Direktur / Fleksibel yang berstatus TERLAMBAT
+        try:
+            with engine.connect() as conn:
+                conn.execute(text("""
+                    UPDATE absensi_log
+                    SET status = 'HADIR'
+                    WHERE status = 'TERLAMBAT'
+                      AND (
+                        REPLACE(UPPER(uid), ' ', '') IN (
+                            SELECT REPLACE(UPPER(uid), ' ', '') FROM guru
+                            WHERE is_deleted = FALSE AND (
+                                LOWER(kategori_program) LIKE '%direktur%'
+                                OR LOWER(nama) LIKE '%direktur%'
+                                OR LOWER(nama) LIKE '%zulhemawati%'
+                            )
+                        )
+                      );
+                """))
+                conn.commit()
+                logger.info("Auto-migration: Reconciled Direktur attendance logs to HADIR")
+        except Exception as dir_err:
+            logger.debug(f"Direktur attendance reconciliation notice: {dir_err}")
+
         run_seed()
 
         # Seed default program settings and sync TK parity
