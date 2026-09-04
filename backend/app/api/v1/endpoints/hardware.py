@@ -296,7 +296,18 @@ async def get_guru_cache(request: Request, db: Session = Depends(get_db)):
         for g in gurus:
             if g.uid and g.uid.strip():
                 clean_uid = g.uid.strip().replace(" ", "").upper()
-                nama = g.nama.strip()
+                
+                raw_nama = g.nama.strip()
+                if "," in raw_nama:
+                    raw_nama = raw_nama.split(",")[0]
+                
+                clean_words = []
+                for w in raw_nama.split():
+                    if "." not in w and w.lower() not in ["spd", "skom", "se", "mpd", "st"]:
+                        clean_words.append(w)
+                
+                nama = " ".join(clean_words).title()
+                
                 kat_lower = (g.kategori_program or "").lower()
                 paket_lower = (g.paket_pengajaran or "").lower()
                 records.append(f"{clean_uid}:{nama}")
