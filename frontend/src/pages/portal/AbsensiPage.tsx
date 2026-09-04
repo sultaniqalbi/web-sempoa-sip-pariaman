@@ -610,7 +610,7 @@ export const SharedAbsensiPage: React.FC = () => {
         let style = 'bg-[#FEE2E2] text-[#DC2626] border-[#FCA5A5]';
         
         if (row.status === 'HADIR' || (isDirektur && row.status === 'TERLAMBAT')) {
-          statusText = 'Hadir, Tepat Waktu';
+          statusText = isDirektur ? 'HADIR' : 'Hadir, Tepat Waktu';
           style = 'bg-[#DCFCE7] text-[#16A34A] border-[#86EFAC]';
         } else if (row.status === 'TERLAMBAT') {
           statusText = 'Hadir, Terlambat';
