@@ -161,8 +161,6 @@ export const PembayaranOrtuPage: React.FC = () => {
   const cycleDueDate = new Date(regDate.getTime() + 30 * 24 * 60 * 60 * 1000);
   const isExpired30Hari = new Date() > cycleDueDate;
   const isHangus = isExpired30Hari && sisaPertemuan > 0;
-
-  const childPrograms = (child?.kategori_program || 'Sempoa SIP').split(',').map((p) => p.trim()).filter(Boolean);
   const isTk = childPrograms.some(p => p.toLowerCase().includes('tk'));
 
   type SppStatus = 'Lancar' | 'Peringatan' | 'Urgent';
@@ -176,7 +174,7 @@ export const PembayaranOrtuPage: React.FC = () => {
     const currentMonth = today.toISOString().slice(0, 7); // YYYY-MM
     
     // Cek apakah sudah lunas bulan ini
-    const tkLunasCurrent = payments.some(p => p.periode_bulan === currentMonth && p.status === 'Lunas');
+    const tkLunasCurrent = payments.some(p => p.periode_bulan === currentMonth && p.status === 'LUNAS');
     
     if (tkLunasCurrent) {
         if (day >= 21) {
