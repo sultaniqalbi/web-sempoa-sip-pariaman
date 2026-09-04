@@ -42,21 +42,35 @@ async def read_pembayaran_list(
         detail="Role tidak diizinkan untuk melihat tagihan pembayaran"
     )
 
-def get_spp_nominal(program: Optional[str]) -> float:
+def get_spp_nominal(db: Session, program: Optional[str]) -> float:
     if not program:
         return 200000.00
     programs = [p.strip().lower() for p in program.split(",") if p.strip()]
     if not programs:
         return 200000.00
+    
+    from app.models.program_setting import ProgramSetting
+    all_settings = db.query(ProgramSetting).all()
+    
     total = 0.0
     for p in programs:
-        if "sempoa" in p:
-            total += 350000.00
-        elif "tk" in p:
-            total += 400000.00
+        match = next((s for s in all_settings if s.nama_program.lower() == p), None)
+        if match:
+            total += float(match.biaya_spp)
         else:
-            total += 200000.00
+            if "sempoa" in p:
+                total += 350000.00
+            elif "tk" in p:
+                total += 400000.00
+            else:
+                total += 200000.00
     return total
+
+@router.get("/spp-programs")
+async def get_spp_programs(db: Session = Depends(get_db)):
+    from app.models.program_setting import ProgramSetting
+    all_settings = db.query(ProgramSetting).all()
+    return [{"name": s.nama_program, "price": float(s.biaya_spp)} for s in all_settings]
 
 @router.get("/reminder")
 @router.get("/reminder-spp")
@@ -95,7 +109,7 @@ async def get_pembayaran_reminders(
         wa_num = s.whatsapp_orang_tua or ""
         ortu_name = s.nama_orang_tua or "Orang Tua"
         
-        default_spp = get_spp_nominal(s.kategori_program)
+        default_spp = get_spp_nominal(db, s.kategori_program)
         jumlah_tagihan = float(bill.jumlah) if bill else default_spp
 
         # Hitung siklus 30 hari
@@ -394,7 +408,7 @@ async def update_siswa_due_date(
 
     if not bill:
         periode_now = datetime.utcnow().strftime("%Y-%m")
-        spp_amount = get_spp_nominal(siswa.kategori_program)
+        spp_amount = get_spp_nominal(db, siswa.kategori_program)
         bill = PembayaranPeriode(
             id_siswa=siswa.id,
             periode_bulan=periode_now,

@@ -131,45 +131,92 @@ export const PembayaranOrtuPage: React.FC = () => {
   const selesaiPertemuan = totalPertemuan - sisaPertemuan;
   const progressPercent = Math.round((selesaiPertemuan / totalPertemuan) * 100);
 
+  // Fetch SPP Programs Pricing
+  const { data: sppPrograms = [] } = useQuery<{name: string, price: number}[]>({
+    queryKey: ['spp-programs'],
+    queryFn: async () => {
+      const res = await apiClient.get('/pembayaran/spp-programs');
+      return res.data;
+    }
+  });
+
   const childPrograms = (child?.kategori_program || 'Sempoa SIP').split(',').map((p) => p.trim()).filter(Boolean);
   
   const calculateProgramSPP = (progName: string) => {
     const p = progName.toLowerCase();
-    if (p.includes('sempoa')) {
-      return (child?.paket_jadwal || '').includes('12') ? 200000 : 150000;
-    }
-    return 150000;
+    const matchedProgram = sppPrograms.find(sp => sp.name.toLowerCase() === p);
+    if (matchedProgram) return matchedProgram.price;
+    
+    // Fallback if not found in db
+    if (p.includes('sempoa')) return 350000;
+    if (p.includes('tk')) return 400000;
+    return 200000;
   };
 
   const sppAmount = childPrograms.reduce((sum, prog) => sum + calculateProgramSPP(prog), 0) || 150000;
   const sisaRatio = totalPertemuan > 0 ? sisaPertemuan / totalPertemuan : 1;
 
-  // Cek siklus 30 hari
+  // Cek siklus 30 hari untuk program reguler
   const regDate = child?.created_at ? new Date(child.created_at) : new Date();
   const cycleDueDate = new Date(regDate.getTime() + 30 * 24 * 60 * 60 * 1000);
   const isExpired30Hari = new Date() > cycleDueDate;
   const isHangus = isExpired30Hari && sisaPertemuan > 0;
 
+  const childPrograms = (child?.kategori_program || 'Sempoa SIP').split(',').map((p) => p.trim()).filter(Boolean);
+  const isTk = childPrograms.some(p => p.toLowerCase().includes('tk'));
+
   type SppStatus = 'Lancar' | 'Peringatan' | 'Urgent';
-  const sppStatus: SppStatus = (isExpired30Hari || sisaRatio < 0.20)
-    ? 'Urgent'
-    : sisaRatio <= 0.40
-    ? 'Peringatan'
-    : 'Lancar';
+  let sppStatus: SppStatus = 'Lancar';
+  let desc = 'Status SPP aktif & lancar.';
+  
+  if (isTk) {
+    // Logika Khusus TK: Berbasis tanggal kalender
+    const today = new Date();
+    const day = today.getDate();
+    const currentMonth = today.toISOString().slice(0, 7); // YYYY-MM
+    
+    // Cek apakah sudah lunas bulan ini
+    const tkLunasCurrent = payments.some(p => p.periode_bulan === currentMonth && p.status === 'Lunas');
+    
+    if (tkLunasCurrent) {
+        if (day >= 21) {
+            sppStatus = 'Peringatan';
+            desc = 'Bulan ini lunas. Bersiap untuk tagihan SPP bulan depan (Kuning).';
+        } else {
+            sppStatus = 'Lancar';
+            desc = 'Status SPP bulan ini lunas & aktif.';
+        }
+    } else {
+        sppStatus = 'Urgent';
+        if (day <= 10) {
+            desc = '10 Hari Awal Bulan: Segera lunasi tagihan SPP bulan ini (Merah).';
+        } else {
+            desc = 'Tagihan SPP Menunggak! Segera lakukan pembayaran (Merah).';
+        }
+    }
+  } else {
+    // Logika Reguler (Sempoa, English, dll) berbasis rasio pertemuan
+    sppStatus = (isExpired30Hari || sisaRatio < 0.20)
+      ? 'Urgent'
+      : sisaRatio <= 0.40
+      ? 'Peringatan'
+      : 'Lancar';
+      
+    desc = sppStatus === 'Urgent'
+      ? (isHangus 
+          ? 'Masa bimbingan 30 hari telah berakhir. Sisa pertemuan hangus. Segera lunasi SPP.' 
+          : isExpired30Hari 
+          ? 'Masa bimbingan 30 hari telah berakhir. Segera lunasi SPP.' 
+          : 'Sisa pertemuan hampir habis (< 20%)! Segera lunasi SPP.')
+      : sppStatus === 'Peringatan'
+      ? 'Sisa pertemuan tinggal sedikit (<= 40%). Mohon bersiap melakukan pembayaran.'
+      : 'Status SPP aktif & lancar.';
+  }
 
   const statusConfig = {
-    Lancar: { color: '#2E7D32', bg: '#E8F5E9', border: '#A5D6A7', desc: 'Status SPP aktif & lancar.' },
-    Peringatan: { color: '#E65100', bg: '#FFF3E0', border: '#FFCC80', desc: 'Sisa pertemuan tinggal sedikit (<= 40%). Mohon bersiap melakukan pembayaran.' },
-    Urgent: { 
-      color: '#C62828', 
-      bg: '#FFEBEE', 
-      border: '#FFCDD2', 
-      desc: isHangus 
-        ? 'Masa bimbingan 30 hari telah berakhir. Sisa pertemuan hangus. Segera lunasi SPP.' 
-        : isExpired30Hari 
-        ? 'Masa bimbingan 30 hari telah berakhir. Segera lunasi SPP.' 
-        : 'Sisa pertemuan hampir habis (< 20%)! Segera lunasi SPP.' 
-    },
+    Lancar: { color: '#2E7D32', bg: '#E8F5E9', border: '#A5D6A7', desc },
+    Peringatan: { color: '#E65100', bg: '#FFF3E0', border: '#FFCC80', desc },
+    Urgent: { color: '#C62828', bg: '#FFEBEE', border: '#FFCDD2', desc },
   };
 
   const sc = statusConfig[sppStatus];

@@ -229,7 +229,9 @@ async def get_kwitansi(
         "whatsapp_orang_tua": siswa.whatsapp_orang_tua if siswa else "-",
         "uid_siswa": siswa.uid if siswa else "-",
         "periode_bulan": pay.periode_bulan if pay else "-",
-        "jumlah": float(pay.jumlah) if pay and pay.jumlah else 0.0,
+        "jumlah": float(pay.jumlah) if pay and pay.jumlah and float(pay.jumlah) > 0 else (
+            __import__('app.api.v1.endpoints.pembayaran', fromlist=['get_spp_nominal']).get_spp_nominal(db, siswa.kategori_program if siswa else None)
+        ),
         "status_pembayaran": pay.status.value if pay and hasattr(pay.status, 'value') else "-",
         "tanggal_bayar": proof.created_at.strftime("%d %B %Y, %H:%M WIB") if proof.created_at else "-",
         "tanggal_verifikasi": datetime.now(WIB).strftime("%d %B %Y, %H:%M WIB"),
@@ -267,8 +269,8 @@ async def upload_proof(
         ).order_by(PembayaranPeriode.created_at.desc()).first()
 
         if not pembayaran:
-            is_sempoa = "sempoa" in (siswa.kategori_program or "").lower()
-            nominal = 350000.0 if is_sempoa else 200000.0
+            from app.api.v1.endpoints.pembayaran import get_spp_nominal
+            nominal = get_spp_nominal(db, siswa.kategori_program)
             bulan_str = datetime.now().strftime("%Y-%m")
 
             pembayaran = PembayaranPeriode(
