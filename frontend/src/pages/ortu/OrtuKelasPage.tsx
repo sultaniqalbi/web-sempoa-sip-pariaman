@@ -35,6 +35,57 @@ export const OrtuKelasPage: React.FC = () => {
     enabled: !!child?.id,
   });
 
+  // Fetch all teachers for genuine teacher matching
+  const { data: allGurus = [] } = useQuery<any[]>({
+    queryKey: ['guru', 'list'],
+    queryFn: async () => {
+      try {
+        const res = await apiClient.get('/guru/');
+        return res.data || [];
+      } catch (e) {
+        return [];
+      }
+    },
+  });
+
+  const getAssignedGuruForProgram = (progName: string) => {
+    if (!child) return null;
+    const pLower = progName.toLowerCase().trim();
+    let assignedTeacherId: number | null = null;
+    let hasGpp = false;
+    if ((child as any).guru_per_program) {
+      try {
+        const gpp = JSON.parse((child as any).guru_per_program);
+        if (gpp && typeof gpp === 'object' && Object.keys(gpp).length > 0) {
+          hasGpp = true;
+          for (const [k, v] of Object.entries(gpp)) {
+            const kLower = k.toLowerCase().trim();
+            if (kLower.includes(pLower) || pLower.includes(kLower)) {
+              if (v !== null && v !== undefined && !isNaN(Number(v))) {
+                assignedTeacherId = Number(v);
+              }
+              break;
+            }
+          }
+        }
+      } catch (e) {}
+    }
+    if (hasGpp) {
+      if (!assignedTeacherId) return null;
+      return allGurus.find((g: any) => g.id === assignedTeacherId) || null;
+    }
+    if (child.id_guru) {
+      const g = allGurus.find((x: any) => x.id === child.id_guru);
+      if (g && g.kategori_program) {
+        const tProgs = g.kategori_program.toLowerCase().split(',').map((x: string) => x.trim());
+        if (tProgs.some((tp: string) => tp.includes(pLower) || pLower.includes(tp))) {
+          return g;
+        }
+      }
+    }
+    return null;
+  };
+
   if (isChildLoading || isBukuLoading) {
     return (
       <div className="py-16 text-center">
@@ -64,14 +115,24 @@ export const OrtuKelasPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-3 pt-3 border-t border-[#FFE082]/60 flex flex-wrap items-center gap-2">
-          <span className="text-xs font-bold text-[#64748B]">Program Terdaftar:</span>
+        <div className="mt-3 pt-3 border-t border-[#FFE082]/60 flex flex-wrap items-center gap-2.5">
+          <span className="text-xs font-bold text-[#64748B]">Program & Guru Pembimbing:</span>
           {childPrograms.map((p, idx) => {
             const badge = getProgramBadgeStyle(p.program);
+            const guru = getAssignedGuruForProgram(p.program);
             return (
-              <span key={idx} className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${badge}`}>
-                {p.program}
-              </span>
+              <div key={idx} className="flex items-center gap-2 bg-white/90 px-3 py-1 rounded-xl border border-[#FFE082] shadow-2xs">
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${badge}`}>
+                  {p.program}
+                </span>
+                <span className="text-xs font-bold text-[#1E293B]">
+                  {guru ? (
+                    <span className="text-[#E65100]">Guru {guru.nama_panggilan || guru.nama.split(' ')[0] || guru.nama}</span>
+                  ) : (
+                    <span className="text-[#94A3B8] font-normal italic">Belum Ada Guru</span>
+                  )}
+                </span>
+              </div>
             );
           })}
         </div>
@@ -105,11 +166,25 @@ export const OrtuKelasPage: React.FC = () => {
               );
               return (
                 <div key={p.program} className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${badge}`}>
-                      {p.program}
-                    </span>
-                    <span className="text-[10px] text-[#9E9E9E] font-semibold">{progBuku.length} modul aktif</span>
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${badge}`}>
+                        {p.program}
+                      </span>
+                      <span className="text-[10px] text-[#9E9E9E] font-semibold">({progBuku.length} modul aktif)</span>
+                    </div>
+                    {(() => {
+                      const guru = getAssignedGuruForProgram(p.program);
+                      return guru ? (
+                        <span className="text-[11px] font-extrabold text-[#FF7043] bg-[#FFF3E0] px-2.5 py-0.5 rounded-lg border border-[#FFCC80]">
+                          Pengajar: {guru.nama_panggilan || guru.nama.split(' ')[0] || guru.nama}
+                        </span>
+                      ) : (
+                        <span className="text-[11px] font-medium text-[#94A3B8] bg-[#F1F5F9] px-2.5 py-0.5 rounded-lg italic">
+                          Pengajar: Belum Ditugaskan
+                        </span>
+                      );
+                    })()}
                   </div>
                   {progBuku.length === 0 ? (
                     <div className="py-4 text-center text-[#94A3B8] text-[11px] bg-[#F8FAFC] rounded-xl border border-[#E2E8F0]">
@@ -163,9 +238,19 @@ export const OrtuKelasPage: React.FC = () => {
               >
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <span className="px-2.5 py-0.5 rounded-md text-[10px] font-extrabold bg-[#FF7043] text-white shadow-2xs">
-                    {b.kategori_program}
-                  </span>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="px-2.5 py-0.5 rounded-md text-[10px] font-extrabold bg-[#FF7043] text-white shadow-2xs">
+                      {b.kategori_program}
+                    </span>
+                    {(() => {
+                      const guru = getAssignedGuruForProgram(b.kategori_program || child?.kategori_program || '');
+                      return guru ? (
+                        <span className="text-[11px] font-bold text-[#E65100]">
+                          • Guru {guru.nama_panggilan || guru.nama.split(' ')[0] || guru.nama}
+                        </span>
+                      ) : null;
+                    })()}
+                  </div>
                   <h4 className="text-sm font-black text-[#1E293B] mt-1.5">{b.level_anak}</h4>
                   <p className="text-[11px] text-[#64748B]">
                     Nomor / Kode Buku: <strong className="text-[#E65100]">{b.nomor_buku || 'Materi Utama'}</strong>

@@ -19,6 +19,7 @@ export interface ScheduleData {
   no_wa_guru?: string;
   mode_kelas?: string;
   teachers?: TeacherContact[];
+  has_teacher?: boolean;
 }
 
 interface ScheduleCardProps {
@@ -62,8 +63,9 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({ schedule }) => {
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-[#FF7043]" />
           <h3 className="text-[13px] font-bold text-[#424242] tracking-tight">
-            {schedule.kode_program}
-            <span className="text-[#757575] font-semibold"> — {schedule.nama_program}</span>
+            {schedule.kode_program === schedule.nama_program
+              ? `Kelas ${schedule.nama_program}`
+              : `${schedule.kode_program} — ${schedule.nama_program}`}
           </h3>
         </div>
         {isOnline ? (
@@ -129,23 +131,31 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({ schedule }) => {
           <div className="col-span-2 pt-2 border-t border-[#F5F5F5] flex items-center justify-between">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-[#9E9E9E]">Guru Pembimbing</p>
-              <p className="text-[13px] font-extrabold text-[#FF7043] mt-0.5">
-                {teachers && teachers.length === 1
-                  ? (teachers[0].nama_panggilan || teachers[0].nama.split(' ')[0] || teachers[0].nama)
-                  : schedule.kode_guru}
-              </p>
-              {teachers && teachers.length === 1 && teachers[0].program && (
-                <span className="inline-block mt-0.5 px-2 py-0.5 bg-[#FFF3E0] text-[#E65100] border border-[#FFCC80] rounded text-[10px] font-bold">
-                  {teachers[0].program}
-                </span>
-              )}
-              {((teachers && teachers[0]?.no_wa_guru) || schedule.no_wa_guru) && (
-                <p className="text-[10px] text-[#64748B] font-mono mt-0.5">
-                  WA: {(teachers && teachers[0]?.no_wa_guru) || schedule.no_wa_guru}
+              {schedule.has_teacher !== false && schedule.kode_guru && schedule.kode_guru !== 'Belum Ada Guru Pengajar' ? (
+                <>
+                  <p className="text-[13px] font-extrabold text-[#FF7043] mt-0.5">
+                    {teachers && teachers.length === 1
+                      ? (teachers[0].nama_panggilan || teachers[0].nama.split(' ')[0] || teachers[0].nama)
+                      : schedule.kode_guru}
+                  </p>
+                  {teachers && teachers.length === 1 && teachers[0].program && (
+                    <span className="inline-block mt-0.5 px-2 py-0.5 bg-[#FFF3E0] text-[#E65100] border border-[#FFCC80] rounded text-[10px] font-bold">
+                      {teachers[0].program}
+                    </span>
+                  )}
+                  {((teachers && teachers[0]?.no_wa_guru) || schedule.no_wa_guru) && (
+                    <p className="text-[10px] text-[#64748B] font-mono mt-0.5">
+                      WA: {(teachers && teachers[0]?.no_wa_guru) || schedule.no_wa_guru}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <p className="text-[12px] font-medium text-[#94A3B8] italic mt-0.5">
+                  Belum Ditugaskan / Belum Ada Guru
                 </p>
               )}
             </div>
-            {((teachers && teachers[0]?.no_wa_guru) || schedule.no_wa_guru) && (
+            {schedule.has_teacher !== false && ((teachers && teachers[0]?.no_wa_guru) || schedule.no_wa_guru) && (
               <a
                 href={`https://wa.me/${(((teachers && teachers[0]?.no_wa_guru) || schedule.no_wa_guru) as string).replace(/[^0-9]/g, '')}`}
                 target="_blank"

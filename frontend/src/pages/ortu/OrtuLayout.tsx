@@ -140,11 +140,11 @@ export const OrtuLayout: React.FC = () => {
     },
   });
 
-  // Fetch schedule for today (or student's program schedule)
-  const { data: scheduleToday } = useQuery<ScheduleData | null>({
-    queryKey: ['schedule-today', child?.id, child?.kategori_program, allGurus.length],
+  // Fetch schedules for child's programs and genuine assigned teachers
+  const { data: childSchedules = [] } = useQuery<ScheduleData[]>({
+    queryKey: ['child-schedules-for-ortu', child?.id, child?.kategori_program, (child as any)?.guru_per_program, child?.id_guru, allGurus.length],
     queryFn: async () => {
-      if (!child?.id) return null;
+      if (!child?.id) return [];
       try {
         const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
         const todayName = dayNames[new Date().getDay()];
@@ -157,170 +157,140 @@ export const OrtuLayout: React.FC = () => {
           .map((p) => p.trim())
           .filter(Boolean);
 
-        // Find teachers who teach child's programs or are assigned to child
-        const relevantTeachers: TeacherContact[] = [];
-        const seenGuruIds = new Set<number>();
+        const DEFAULT_CONFIG: Record<string, { waktu: string; jam_mulai: string; jam_selesai: string; ruangan: string }> = {
+          'Sempoa SIP': { waktu: '09:00 - 17:00', jam_mulai: '09:00', jam_selesai: '17:00', ruangan: 'TC Pariaman - Ruang Sempoa' },
+          'Fonem': { waktu: '09:00 - 17:00', jam_mulai: '09:00', jam_selesai: '17:00', ruangan: 'TC Pariaman - Ruang Fonem' },
+          'Tahfidz': { waktu: '12:00 - 17:00', jam_mulai: '12:00', jam_selesai: '17:00', ruangan: 'TC Pariaman - Ruang Tahfidz' },
+          'Bahasa Inggris': { waktu: '12:00 - 17:00', jam_mulai: '12:00', jam_selesai: '17:00', ruangan: 'TC Pariaman - Ruang English' },
+          'TK': { waktu: '07:30 - 13:30', jam_mulai: '07:30', jam_selesai: '13:30', ruangan: 'TC Pariaman - Ruang TK' },
+        };
 
-        // 1. Priority: Use guru_per_program JSON mapping if available
-        let hasGuruPerProgram = false;
+        // Parse guru_per_program JSON
+        let gppMapping: Record<string, number> = {};
+        let hasGpp = false;
         if ((child as any).guru_per_program) {
           try {
-            const gpp = JSON.parse((child as any).guru_per_program);
-            if (gpp && typeof gpp === 'object' && Object.keys(gpp).length > 0) {
-              hasGuruPerProgram = true;
-              Object.entries(gpp).forEach(([prog, guruId]) => {
-                if (guruId === null || guruId === undefined) return;
-                const guru = allGurus.find((g) => g.id === Number(guruId));
-                if (guru) {
-                  seenGuruIds.add(guru.id);
-                  relevantTeachers.push({
-                    id: guru.id,
-                    nama: guru.nama,
-                    nama_panggilan: guru.nama_panggilan || guru.nama.split(' ')[0] || guru.nama,
-                    program: prog.toLowerCase().startsWith('guru') ? prog : `Guru ${prog}`,
-                    no_wa_guru: guru.whatsapp_guru || undefined,
-                  });
-                }
-              });
+            const parsed = JSON.parse((child as any).guru_per_program);
+            if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) {
+              gppMapping = parsed;
+              hasGpp = true;
             }
           } catch (e) {}
         }
 
-        // 2. Fallback: If no guru_per_program, use single id_guru
-        if (!hasGuruPerProgram && child.id_guru) {
-          const directGuru = allGurus.find((g) => g.id === child.id_guru);
-          if (directGuru) {
-            seenGuruIds.add(directGuru.id);
-            relevantTeachers.push({
-              id: directGuru.id,
-              nama: directGuru.nama,
-              nama_panggilan: directGuru.nama_panggilan || directGuru.nama.split(' ')[0] || directGuru.nama,
-              program: directGuru.kategori_program || child.kategori_program || 'Program Belajar',
-              no_wa_guru: directGuru.whatsapp_guru || undefined,
+        const scheduleCards: ScheduleData[] = [];
+
+        childProgs.forEach((prog) => {
+          const progLower = prog.toLowerCase();
+          const cfg = DEFAULT_CONFIG[prog] || {
+            waktu: '09:00 - 17:00',
+            jam_mulai: '09:00',
+            jam_selesai: '17:00',
+            ruangan: `TC Pariaman - Ruang ${prog}`
+          };
+
+          // 1. Tentukan guru yang SAH membimbing murid ini pada program ini
+          let assignedTeacherId: number | null = null;
+          if (hasGpp) {
+            for (const [k, v] of Object.entries(gppMapping)) {
+              const kLower = k.toLowerCase().trim();
+              if (kLower.includes(progLower) || progLower.includes(kLower)) {
+                if (v !== null && v !== undefined && !isNaN(Number(v))) {
+                  assignedTeacherId = Number(v);
+                }
+                break;
+              }
+            }
+          } else if (child.id_guru) {
+            // Fallback ke id_guru HANYA jika guru_per_program belum pernah disetting
+            const directG = allGurus.find((g) => g.id === child.id_guru);
+            if (directG && directG.kategori_program) {
+              const gProgs = directG.kategori_program.toLowerCase().split(',').map((x) => x.trim());
+              if (gProgs.some((gp) => gp.includes(progLower) || progLower.includes(gp))) {
+                assignedTeacherId = child.id_guru;
+              }
+            }
+          }
+
+          const assignedGuru = assignedTeacherId ? allGurus.find((g) => g.id === assignedTeacherId) : null;
+
+          // 2. Cari jadwal kelas yang benar-benar diampu oleh guru yang bersangkutan
+          let matchedSched: Jadwal | undefined;
+          if (assignedGuru) {
+            // Cari jadwal dengan program yang sama DAN diajar oleh guru ini
+            const teacherScheds = schedules.filter((s) => {
+              const sProg = (s.kategori_program || '').toLowerCase();
+              const progMatches = sProg.includes(progLower) || progLower.includes(sProg);
+              if (!progMatches) return false;
+              const gIds = s.guru_ids ? s.guru_ids.split(',').map((x) => parseInt(x.trim(), 10)).filter((n) => !isNaN(n)) : [];
+              return s.id_guru === assignedGuru.id || gIds.includes(assignedGuru.id);
+            });
+
+            // Prioritaskan jadwal hari ini, lalu jadwal sesuai hari_masuk ananda, lalu jadwal pertama
+            const childDays = (child.hari_masuk || '').toLowerCase();
+            matchedSched =
+              teacherScheds.find((s) => (s.hari || '').toLowerCase().includes(todayName.toLowerCase())) ||
+              teacherScheds.find((s) => childDays && childDays.includes((s.hari || '').toLowerCase())) ||
+              teacherScheds[0];
+          } else {
+            // Jika belum ada guru yang disetting, cari jadwal umum program tsb
+            const progScheds = schedules.filter((s) => {
+              const sProg = (s.kategori_program || '').toLowerCase();
+              return sProg.includes(progLower) || progLower.includes(sProg);
+            });
+            const childDays = (child.hari_masuk || '').toLowerCase();
+            matchedSched =
+              progScheds.find((s) => (s.hari || '').toLowerCase().includes(todayName.toLowerCase())) ||
+              progScheds.find((s) => childDays && childDays.includes((s.hari || '').toLowerCase())) ||
+              progScheds[0];
+          }
+
+          const jamMulai = matchedSched?.jam_mulai || cfg.jam_mulai;
+          const jamSelesai = matchedSched?.jam_selesai || cfg.jam_selesai;
+          const ruangan = matchedSched?.lokasi || cfg.ruangan;
+          const modeKelas = matchedSched?.mode_kelas || 'Tatap Muka';
+
+          if (assignedGuru) {
+            scheduleCards.push({
+              kode_program: prog,
+              nama_program: prog,
+              jam_mulai: jamMulai,
+              jam_selesai: jamSelesai,
+              ruangan: ruangan,
+              mode_kelas: modeKelas,
+              kode_guru: assignedGuru.nama_panggilan || assignedGuru.nama.split(' ')[0] || assignedGuru.nama,
+              no_wa_guru: assignedGuru.whatsapp_guru || undefined,
+              has_teacher: true,
+              teachers: [
+                {
+                  id: assignedGuru.id,
+                  nama: assignedGuru.nama,
+                  nama_panggilan: assignedGuru.nama_panggilan || assignedGuru.nama.split(' ')[0] || assignedGuru.nama,
+                  program: `Pengajar ${prog}`,
+                  no_wa_guru: assignedGuru.whatsapp_guru || undefined,
+                },
+              ],
+            });
+          } else {
+            // Murid belum disetting gurunya pada program ini: JANGAN tampilkan guru lain!
+            scheduleCards.push({
+              kode_program: prog,
+              nama_program: prog,
+              jam_mulai: jamMulai,
+              jam_selesai: jamSelesai,
+              ruangan: ruangan,
+              mode_kelas: modeKelas,
+              kode_guru: 'Belum Ada Guru Pengajar',
+              no_wa_guru: undefined,
+              has_teacher: false,
+              teachers: [],
             });
           }
-        }
+        });
 
-        // 3. ONLY if no specific guru assigned at all, match teachers by program
-        if (!hasGuruPerProgram && !child.id_guru) {
-          childProgs.forEach((cp) => {
-            const cpLower = cp.toLowerCase();
-            const matchingGurus = allGurus.filter((g) => {
-              const gProgs = (g.kategori_program || '').toLowerCase();
-              return gProgs.includes(cpLower) || cpLower.includes(gProgs);
-            });
-
-            matchingGurus.forEach((g) => {
-              if (!seenGuruIds.has(g.id)) {
-                seenGuruIds.add(g.id);
-                relevantTeachers.push({
-                  id: g.id,
-                  nama: g.nama,
-                  nama_panggilan: g.nama_panggilan || g.nama.split(' ')[0] || g.nama,
-                  program: cp,
-                  no_wa_guru: g.whatsapp_guru || undefined,
-                });
-              } else {
-                const existing = relevantTeachers.find((t) => t.id === g.id);
-                if (existing && !existing.program.includes(cp)) {
-                  existing.program += `, ${cp}`;
-                }
-              }
-            });
-          });
-        }
-
-        // Try exact match for child's program + today
-        const matchingSchedule = schedules.find(
-          (s) =>
-            childProgs.some((cp) => (s.kategori_program || '').toLowerCase().includes(cp.toLowerCase()) || cp.toLowerCase().includes((s.kategori_program || '').toLowerCase())) &&
-            s.hari?.toLowerCase() === todayName.toLowerCase()
-        );
-
-        // Also check if schedule has embedded teachers (only add if not already covered)
-        if (matchingSchedule?.teachers && matchingSchedule.teachers.length > 0 && !hasGuruPerProgram && !child.id_guru) {
-          matchingSchedule.teachers.forEach((t) => {
-            if (!seenGuruIds.has(t.id)) {
-              seenGuruIds.add(t.id);
-              relevantTeachers.push({
-                id: t.id,
-                nama: t.nama,
-                nama_panggilan: t.nama_panggilan || t.nama.split(' ')[0] || t.nama,
-                program: t.kategori_program || matchingSchedule.kategori_program || 'Program Belajar',
-                no_wa_guru: t.whatsapp_guru || undefined,
-              });
-            }
-          });
-        }
-
-        const fallbackTeacher = relevantTeachers.length > 0
-          ? relevantTeachers[0]
-          : {
-              nama: 'Guru TC Pariaman',
-              nama_panggilan: 'Guru TC Pariaman',
-              program: child.kategori_program || 'Sempoa SIP',
-              no_wa_guru: '628126784986',
-            };
-
-        const teacherNicknames = relevantTeachers.length > 0
-          ? relevantTeachers.map((t) => t.nama_panggilan || t.nama).join(' | ')
-          : 'Guru TC Pariaman';
-
-        if (matchingSchedule) {
-          return {
-            kode_program: matchingSchedule.kategori_program || child.kategori_program || 'Sempoa SIP',
-            nama_program: child.kategori_program || 'Sempoa SIP',
-            jam_mulai: matchingSchedule.jam_mulai,
-            jam_selesai: matchingSchedule.jam_selesai,
-            ruangan: matchingSchedule.lokasi || 'TC Pariaman',
-            mode_kelas: matchingSchedule.mode_kelas || 'Tatap Muka',
-            kode_guru: teacherNicknames,
-            no_wa_guru: fallbackTeacher.no_wa_guru || '628126784986',
-            teachers: relevantTeachers.length > 0 ? relevantTeachers : undefined,
-          };
-        }
-
-        // Fallback to any schedule for child's program
-        const progSchedule = schedules.find(
-          (s) => childProgs.some((cp) => (s.kategori_program || '').toLowerCase().includes(cp.toLowerCase()) || cp.toLowerCase().includes((s.kategori_program || '').toLowerCase()))
-        );
-
-        if (progSchedule) {
-          return {
-            kode_program: progSchedule.kategori_program || child.kategori_program || 'Sempoa SIP',
-            nama_program: child.kategori_program || 'Sempoa SIP',
-            jam_mulai: progSchedule.jam_mulai,
-            jam_selesai: progSchedule.jam_selesai,
-            ruangan: progSchedule.lokasi || 'TC Pariaman',
-            mode_kelas: progSchedule.mode_kelas || 'Tatap Muka',
-            kode_guru: teacherNicknames,
-            no_wa_guru: fallbackTeacher.no_wa_guru || '628126784986',
-            teachers: relevantTeachers.length > 0 ? relevantTeachers : undefined,
-          };
-        }
-
-        return {
-          kode_program: child.kategori_program || 'Sempoa SIP',
-          nama_program: child.kategori_program || 'Sempoa SIP',
-          jam_mulai: '09:00',
-          jam_selesai: '17:00',
-          ruangan: 'TC Pariaman - Ruang Kelas',
-          mode_kelas: 'Tatap Muka',
-          kode_guru: teacherNicknames,
-          no_wa_guru: fallbackTeacher.no_wa_guru || '628126784986',
-          teachers: relevantTeachers.length > 0 ? relevantTeachers : undefined,
-        };
+        return scheduleCards;
       } catch (e) {
-        return {
-          kode_program: child.kategori_program || 'Sempoa SIP',
-          nama_program: child.kategori_program || 'Sempoa SIP',
-          jam_mulai: '09:00',
-          jam_selesai: '17:00',
-          ruangan: 'TC Pariaman - Ruang Kelas',
-          mode_kelas: 'Tatap Muka',
-          kode_guru: 'Guru TC Pariaman',
-          no_wa_guru: '628126784986',
-        };
+        return [];
       }
     },
     enabled: !!child?.id,
@@ -351,7 +321,13 @@ export const OrtuLayout: React.FC = () => {
         {/* Schedule + Tiles only on home page */}
         {isHomePage && (
           <div className="px-4 pt-4 space-y-4 max-w-2xl mx-auto w-full">
-            <ScheduleCard schedule={scheduleToday || null} />
+            {childSchedules.length === 0 ? (
+              <ScheduleCard schedule={null} />
+            ) : (
+              childSchedules.map((sch, idx) => (
+                <ScheduleCard key={`${sch.kode_program}-${idx}`} schedule={sch} />
+              ))
+            )}
             <FeatureTiles />
           </div>
         )}
