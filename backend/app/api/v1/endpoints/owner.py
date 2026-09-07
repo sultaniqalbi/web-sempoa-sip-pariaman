@@ -1,6 +1,8 @@
 import os
 import json
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
+
+WIB = timezone(timedelta(hours=7))
 from app.core.security import get_password_hash
 from app.models.siswa import StatusSPP
 from pathlib import Path
