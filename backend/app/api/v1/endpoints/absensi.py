@@ -18,6 +18,7 @@ from app.models.pembayaran_periode import PembayaranPeriode, StatusPembayaran
 from app.core.constants import get_program_spp_nominal
 from app.schemas.absensi import AbsensiCreate, AbsensiResponse
 from app.crud import absensi as crud_absensi
+from app.services.attendance_rules import check_is_guru_late, is_owner_or_direktur
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -79,64 +80,23 @@ async def read_absensi_list(
 
     result = []
     
-    # Auto-reconcile: sinkronkan status log guru yang telat tapi tercatat HADIR menjadi TERLAMBAT untuk halaman aktif
+    # Auto-reconcile: sinkronkan status log kehadiran guru sesuai aturan resmi keterlambatan:
+    # 1. Guru datang <= 08:00 WIB (atau sesuai toleransi jadwal khusus) -> HADIR
+    # 2. Guru datang lewat toleransi keterlambatan -> TERLAMBAT
+    # 3. Direktur / Owner -> selalu HADIR (bebas keterlambatan & denda)
     try:
-        unmarked_late_logs = [l for l in logs if l.status == StatusAbsensi.HADIR]
         needs_commit = False
-        for ul_log in unmarked_late_logs:
-            u_clean = ul_log.uid.strip().upper().replace(" ", "") if ul_log.uid else ""
-            matched_g = guru_map.get(u_clean)
-            if matched_g:
-                nama_lower = (matched_g.nama or "").lower()
-                kat_lower = (getattr(matched_g, "kategori_program", "") or "").lower()
-                is_direktur = ("direktur" in nama_lower) or ("direktur" in kat_lower) or ("zulhemawati" in nama_lower)
-                if is_direktur:
-                    continue
-                w_time = ul_log.waktu.astimezone(WIB) if ul_log.waktu.tzinfo else ul_log.waktu.replace(tzinfo=WIB)
-                is_u_late = False
-                if "dinda" in nama_lower:
-                    if w_time.weekday() == 4:
-                        is_u_late = (w_time.hour >= 13)
-                    elif w_time.weekday() == 5:
-                        is_u_late = (w_time.hour >= 10)
-                    else:
-                        is_u_late = (w_time.hour >= 8)
-                elif "husna" in nama_lower:
-                    is_u_late = (w_time.hour >= 8)
-                else:
-                    jam_ajar_str = getattr(matched_g, "paket_pengajaran", "") or ""
-                    jam_masuk_str = getattr(matched_g, "jam_masuk", "07:00") or "07:00"
-                    th, tm = 8, 0
-                    if jam_ajar_str and ":" in jam_ajar_str:
-                        try:
-                            th = int(jam_ajar_str.split(":")[0])
-                            tm = int(jam_ajar_str.split(":")[1][:2])
-                        except Exception:
-                            th = 8
-                    elif jam_masuk_str and ":" in jam_masuk_str:
-                        try:
-                            th = int(jam_masuk_str.split(":")[0]) + 1
-                        except Exception:
-                            th = 8
-                    if w_time.hour > th or (w_time.hour == th and w_time.minute > tm):
-                        is_u_late = True
-
-                if is_u_late:
-                    ul_log.status = StatusAbsensi.TERLAMBAT
-                    needs_commit = True
-
-        # Auto-reconcile koreksi: jika ada log Direktur / Fleksibel yang terlanjur TERLAMBAT, kembalikan ke HADIR!
-        late_logs = [l for l in logs if l.status == StatusAbsensi.TERLAMBAT]
-        for ll_log in late_logs:
-            u_clean = ll_log.uid.strip().upper().replace(" ", "") if ll_log.uid else ""
-            matched_g = guru_map.get(u_clean)
-            if matched_g:
-                nama_lower = (matched_g.nama or "").lower()
-                kat_lower = (getattr(matched_g, "kategori_program", "") or "").lower()
-                is_direktur = ("direktur" in nama_lower) or ("direktur" in kat_lower) or ("zulhemawati" in nama_lower)
-                if is_direktur:
-                    ll_log.status = StatusAbsensi.HADIR
-                    needs_commit = True
+        for log_entry in logs:
+            if log_entry.status in [StatusAbsensi.HADIR, StatusAbsensi.TERLAMBAT]:
+                u_clean = log_entry.uid.strip().upper().replace(" ", "") if log_entry.uid else ""
+                matched_g = guru_map.get(u_clean)
+                if matched_g:
+                    w_time = log_entry.waktu.astimezone(WIB) if log_entry.waktu.tzinfo else log_entry.waktu.replace(tzinfo=WIB)
+                    should_be_late = check_is_guru_late(matched_g, w_time)
+                    expected_status = StatusAbsensi.TERLAMBAT if should_be_late else StatusAbsensi.HADIR
+                    if log_entry.status != expected_status:
+                        log_entry.status = expected_status
+                        needs_commit = True
 
         if needs_commit:
             db.commit()
@@ -180,10 +140,8 @@ async def read_absensi_list(
             resp.kategori_program = g.kategori_program
             resp.role = "guru"
 
-            # HANYA Direktur yang BEBAS DENDA (denda selalu 0)
-            kat_lower = (g.kategori_program or "").lower()
-            is_direktur = ("direktur" in (g.nama or "").lower()) or ("direktur" in kat_lower) or ("zulhemawati" in (g.nama or "").lower())
-            if is_direktur:
+            # HANYA Direktur / Owner yang BEBAS DENDA (denda selalu 0)
+            if is_owner_or_direktur(g):
                 resp.denda_terakumulasi = 0
             else:
                 resp.denda_terakumulasi = denda_map.get(norm_g_uid) or denda_map.get(nospace_uid) or denda_map.get(clean_uid) or 0
@@ -638,44 +596,9 @@ async def create_guru_manual_absensi(
     # Cek Keterlambatan Otomatis pada Input Manual
     final_status = req.status
     if req.status in [StatusAbsensi.HADIR, StatusAbsensi.TERLAMBAT]:
-        nama_lower = (guru.nama or "").lower()
-        kat_lower = (getattr(guru, "kategori_program", "") or "").lower()
-        is_direktur = ("direktur" in nama_lower) or ("direktur" in kat_lower) or ("zulhemawati" in nama_lower)
-
-        is_late = False
-        if is_direktur:
-            is_late = False
-        elif "dinda" in nama_lower:
-            if t_date.weekday() == 4:
-                is_late = (t_time.hour >= 13)
-            elif t_date.weekday() == 5:
-                is_late = (t_time.hour >= 10)
-            else:
-                is_late = (t_time.hour >= 8)
-        elif "husna" in nama_lower:
-            is_late = (t_time.hour >= 8)
-        else:
-            jam_ajar_str = getattr(guru, "paket_pengajaran", "") or ""
-            jam_masuk_str = getattr(guru, "jam_masuk", "07:00") or "07:00"
-            th, tm = 8, 0
-            if jam_ajar_str and ":" in jam_ajar_str:
-                try:
-                    parts = jam_ajar_str.split(":")
-                    th = int(parts[0])
-                    tm = int(parts[1][:2])
-                except Exception:
-                    th = 8
-            elif jam_masuk_str and ":" in jam_masuk_str:
-                try:
-                    th = int(jam_masuk_str.split(":")[0]) + 1
-                except Exception:
-                    th = 8
-
-            if t_time.hour > th or (t_time.hour == th and t_time.minute > tm):
-                is_late = True
-            elif req.status == StatusAbsensi.TERLAMBAT:
-                is_late = True
-
+        is_late = check_is_guru_late(guru, waktu_target)
+        if req.status == StatusAbsensi.TERLAMBAT:
+            is_late = True
         final_status = StatusAbsensi.TERLAMBAT if is_late else StatusAbsensi.HADIR
 
     existing_log = db.query(AbsensiLog).filter(

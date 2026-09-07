@@ -252,6 +252,36 @@ def on_startup():
         except Exception as dir_err:
             logger.debug(f"Direktur attendance reconciliation notice: {dir_err}")
 
+        # Rekonsiliasi Otomatis Status Keterlambatan Guru di Database sesuai aturan resmi:
+        # - Guru yang masuk <= 08:00 WIB (atau memenuhi batas toleransi jadwal khusus) dikembalikan ke HADIR
+        try:
+            from app.models.guru import Guru
+            from app.models.absensi_log import AbsensiLog, StatusAbsensi
+            from app.services.attendance_rules import check_is_guru_late, WIB
+            
+            with SessionLocal() as db_session:
+                all_gurus = db_session.query(Guru).filter(Guru.is_deleted == False).all()
+                guru_dict = {}
+                for g in all_gurus:
+                    if g.uid:
+                        guru_dict[g.uid.strip().upper().replace(" ", "")] = g
+                
+                late_logs = db_session.query(AbsensiLog).filter(AbsensiLog.status == StatusAbsensi.TERLAMBAT).all()
+                reconciled_count = 0
+                for l_log in late_logs:
+                    clean_u = l_log.uid.strip().upper().replace(" ", "") if l_log.uid else ""
+                    matched_g = guru_dict.get(clean_u)
+                    if matched_g:
+                        w_wib = l_log.waktu.astimezone(WIB) if l_log.waktu.tzinfo else l_log.waktu.replace(tzinfo=WIB)
+                        if not check_is_guru_late(matched_g, w_wib):
+                            l_log.status = StatusAbsensi.HADIR
+                            reconciled_count += 1
+                if reconciled_count > 0:
+                    db_session.commit()
+                    logger.info(f"Auto-migration: Reconciled {reconciled_count} false-late teacher attendance records to HADIR")
+        except Exception as late_rec_err:
+            logger.debug(f"Teacher attendance reconciliation notice: {late_rec_err}")
+
         run_seed()
 
         # Seed default program settings and sync TK parity

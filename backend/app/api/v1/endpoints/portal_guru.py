@@ -20,6 +20,7 @@ from app.models.jadwal import Jadwal
 from app.models.catatan_pembelajaran import CatatanPembelajaran
 from app.models.pembayaran_periode import PembayaranPeriode, StatusPembayaran
 from app.core.constants import get_program_spp_nominal
+from app.services.attendance_rules import check_is_guru_late
 
 router = APIRouter()
 teacher_only = RoleChecker([UserRole.guru])
@@ -978,43 +979,8 @@ async def input_kehadiran_manual_guru(
     except ValueError:
         mode_enum = ModeAbsensi.OFFLINE
 
-    # Evaluasi status keterlambatan guru
-    nama_lower = (guru.nama or "").lower()
-    kat_lower = (getattr(guru, "kategori_program", "") or "").lower()
-    is_direktur = ("direktur" in nama_lower) or ("direktur" in kat_lower) or ("zulhemawati" in nama_lower)
-
-    is_late = False
-    if is_direktur:
-        is_late = False
-    elif "dinda" in nama_lower:
-        if tgl_obj.weekday() == 4:
-            is_late = (hour >= 13)
-        elif tgl_obj.weekday() == 5:
-            is_late = (hour >= 10)
-        else:
-            is_late = (hour >= 8)
-    elif "husna" in nama_lower:
-        is_late = (hour >= 8)
-    else:
-        jam_ajar_str = getattr(guru, "paket_pengajaran", "") or ""
-        jam_masuk_str = getattr(guru, "jam_masuk", "07:00") or "07:00"
-        th, tm = 8, 0
-        if jam_ajar_str and ":" in jam_ajar_str:
-            try:
-                parts = jam_ajar_str.split(":")
-                th = int(parts[0])
-                tm = int(parts[1][:2])
-            except Exception:
-                th = 8
-        elif jam_masuk_str and ":" in jam_masuk_str:
-            try:
-                th = int(jam_masuk_str.split(":")[0]) + 1
-            except Exception:
-                th = 8
-
-        if hour > th or (hour == th and minute > tm):
-            is_late = True
-
+    # Evaluasi status keterlambatan guru sesuai aturan resmi
+    is_late = check_is_guru_late(guru, target_datetime)
     final_status = StatusAbsensi.TERLAMBAT if is_late else StatusAbsensi.HADIR
 
     # Cek apakah sudah ada log kehadiran guru pada tanggal tersebut

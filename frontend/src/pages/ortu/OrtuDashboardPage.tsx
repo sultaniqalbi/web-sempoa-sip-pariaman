@@ -92,6 +92,15 @@ export const OrtuDashboardPage: React.FC = () => {
     enabled: !!child?.id,
   });
 
+  // Fetch SPP Programs Pricing
+  const { data: sppPrograms = [] } = useQuery<{name: string, price: number}[]>({
+    queryKey: ['spp-programs'],
+    queryFn: async () => {
+      const res = await apiClient.get('/pembayaran/spp-programs');
+      return res.data;
+    }
+  });
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -125,15 +134,6 @@ export const OrtuDashboardPage: React.FC = () => {
   const hadirCount = absensiLogs?.filter((l) => l.status === 'HADIR').length || 0;
   const totalAbsensi = absensiLogs?.length || 0;
   const attendanceRate = totalAbsensi > 0 ? Math.round((hadirCount / totalAbsensi) * 100) : 0;
-
-  // Fetch SPP Programs Pricing
-  const { data: sppPrograms = [] } = useQuery<{name: string, price: number}[]>({
-    queryKey: ['spp-programs'],
-    queryFn: async () => {
-      const res = await apiClient.get('/pembayaran/spp-programs');
-      return res.data;
-    }
-  });
 
   const childPrograms = (child.kategori_program || 'Sempoa SIP').split(',').map((p) => p.trim()).filter(Boolean);
   const isTk = childPrograms.some(p => p.toLowerCase().includes('tk'));

@@ -20,6 +20,7 @@ from app.core.hardware import (
 from app.core.rate_limit import hardware_limiter
 from app.models.guru import Guru
 from app.models.absensi_log import AbsensiLog, StatusAbsensi, ModeAbsensi
+from app.services.attendance_rules import check_is_guru_late
 
 router = APIRouter()
 
@@ -145,35 +146,9 @@ async def post_absensi(request: Request, db: Session = Depends(get_db)):
                 
             return PlainTextResponse(f"OK|{nama_guru}", status_code=200)
 
-        # Cek Keterlambatan - HANYA Direktur yang bebas keterlambatan
-        is_late = False
-        nama_lower = nama_guru.lower()
-        kat_lower = (getattr(guru, "kategori_program", "") or "").lower()
-        is_direktur = ("direktur" in nama_lower) or ("direktur" in kat_lower) or ("zulhemawati" in nama_lower)
+        # Cek Keterlambatan sesuai aturan resmi
         waktu_wib = waktu_dt.astimezone(WIB)
-        
-        if is_direktur:
-            is_late = False
-        else:
-            if "dinda" in nama_lower:
-                if waktu_wib.weekday() == 4: # Jumat (masuk 12:00)
-                    batas_telat = 13
-                elif waktu_wib.weekday() == 5: # Sabtu (masuk 09:00)
-                    batas_telat = 10
-                else:
-                    batas_telat = 8
-            elif "husna" in nama_lower:
-                batas_telat = 8
-            else:
-                jam_masuk_str = getattr(guru, "jam_masuk", "07:00")
-                try:
-                    batas_telat = int(jam_masuk_str.split(":")[0]) + 1
-                except:
-                    batas_telat = 8
-                    
-            if waktu_wib.hour >= batas_telat:
-                is_late = True
-
+        is_late = check_is_guru_late(guru, waktu_wib)
         status_absen = StatusAbsensi.TERLAMBAT if is_late else StatusAbsensi.HADIR
 
         # Catat Log Absensi Kehadiran Guru (Tap Masuk)
