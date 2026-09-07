@@ -777,8 +777,8 @@ export const SiswaPage: React.FC = () => {
       ? JSON.stringify(guruPerProgramClean)
       : null;
 
-    // Derive id_guru from first guru in mapping (backward-compatible)
-    const firstGuruId = Object.values(guruPerProgramClean)[0] || formData.id_guru || undefined;
+    // Derive id_guru from first guru in mapping (or null if unassigned)
+    const firstGuruId = Object.values(guruPerProgramClean)[0] || null;
 
     const payload = {
       ...formData,
@@ -1672,7 +1672,7 @@ export const SiswaPage: React.FC = () => {
                           }}
                           className="w-full bg-[#FFFDE7]/40 hover:bg-[#FFFDE7]/70 border border-[#FFE082] focus:border-[#FF7043] focus:ring-2 focus:ring-[#FF7043]/20 rounded-xl p-2.5 text-[#1E293B] font-bold text-xs focus:outline-none transition-all cursor-pointer shadow-2xs"
                         >
-                          <option value="">-- Tanpa Guru Spesifik / Semua Pengajar {prog} --</option>
+                          <option value="">-- Belum Disetting Guru / Kosong --</option>
                           {filteredTeachers.map((g: any) => (
                             <option key={g.id} value={g.id}>
                               {g.nama} ({g.kategori_program || 'Umum'}) {g.hari_wajib ? `• Jadwal: ${g.hari_wajib}` : ''}

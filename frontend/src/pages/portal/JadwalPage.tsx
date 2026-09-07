@@ -178,11 +178,13 @@ export const JadwalPage: React.FC = () => {
     const matchesProg = sProgs.some((sp: string) => sp.includes(pLower) || pLower.includes(sp));
     if (!matchesProg) return false;
 
+    let hasGpp = false;
     let assignedTeacherId: number | null = null;
     if (student.guru_per_program) {
       try {
         const gpp = typeof student.guru_per_program === 'string' ? JSON.parse(student.guru_per_program) : student.guru_per_program;
-        if (gpp && typeof gpp === 'object') {
+        if (gpp && typeof gpp === 'object' && Object.keys(gpp).length > 0) {
+          hasGpp = true;
           for (const [k, v] of Object.entries(gpp)) {
             const kLower = k.toLowerCase().trim();
             if (kLower.includes(pLower) || pLower.includes(kLower)) {
@@ -196,21 +198,37 @@ export const JadwalPage: React.FC = () => {
       } catch (e) {}
     }
 
-    if (assignedTeacherId === null && student.id_guru) {
-      assignedTeacherId = student.id_guru;
+    if (hasGpp) {
+      // guru_per_program is the authoritative mapping for each program
+      return assignedTeacherId === teacherId;
     }
 
-    return assignedTeacherId === teacherId;
+    // Fallback to single id_guru only if guru_per_program was never configured
+    if (student.id_guru) {
+      if (student.id_guru !== teacherId) return false;
+      const tObj = guruList.find((g) => g.id === teacherId);
+      if (tObj && tObj.kategori_program) {
+        const tProgs = tObj.kategori_program.toLowerCase().split(',').map((x) => x.trim());
+        if (!tProgs.some((tp) => tp.includes(pLower) || pLower.includes(tp))) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    return false;
   };
 
   const getStudentAssignedTeacher = (student: any, progName?: string): Guru | null => {
     if (!student || !progName || !guruList) return null;
     const pLower = progName.toLowerCase().trim();
+    let hasGpp = false;
     let assignedTeacherId: number | null = null;
     if (student.guru_per_program) {
       try {
         const gpp = typeof student.guru_per_program === 'string' ? JSON.parse(student.guru_per_program) : student.guru_per_program;
-        if (gpp && typeof gpp === 'object') {
+        if (gpp && typeof gpp === 'object' && Object.keys(gpp).length > 0) {
+          hasGpp = true;
           for (const [k, v] of Object.entries(gpp)) {
             const kLower = k.toLowerCase().trim();
             if (kLower.includes(pLower) || pLower.includes(kLower)) {
@@ -223,11 +241,23 @@ export const JadwalPage: React.FC = () => {
         }
       } catch (e) {}
     }
-    if (assignedTeacherId === null && student.id_guru) {
-      assignedTeacherId = student.id_guru;
+
+    if (hasGpp) {
+      if (!assignedTeacherId) return null;
+      return guruList.find((g) => g.id === assignedTeacherId) || null;
     }
-    if (!assignedTeacherId) return null;
-    return guruList.find((g) => g.id === assignedTeacherId) || null;
+
+    if (student.id_guru) {
+      const g = guruList.find((x) => x.id === student.id_guru);
+      if (g && g.kategori_program) {
+        const tProgs = g.kategori_program.toLowerCase().split(',').map((x) => x.trim());
+        if (tProgs.some((tp) => tp.includes(pLower) || pLower.includes(tp))) {
+          return g;
+        }
+      }
+    }
+
+    return null;
   };
 
   const programStudents = useMemo(() => {

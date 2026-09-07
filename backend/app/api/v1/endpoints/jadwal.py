@@ -41,15 +41,21 @@ admin_or_owner = RoleChecker([UserRole.admin, UserRole.owner])
 owner_only = RoleChecker([UserRole.owner])
 
 import json
+from typing import Optional
 
-def is_student_assigned_to_teacher(student: Siswa, teacher_id: int, program_name: str) -> bool:
+def is_student_assigned_to_teacher(student: Siswa, teacher_id: int, program_name: str, db: Optional[Session] = None) -> bool:
     """
     Check if a student is genuinely assigned to teacher_id for program_name.
-    Rules:
-    1. Student must not be deleted.
+    Strict Rules:
+    1. Student must exist and not be deleted.
     2. Student must be enrolled in program_name.
-    3. If guru_per_program is set, match the teacher ID for this program.
-    4. Otherwise, fallback to student.id_guru.
+    3. If guru_per_program is configured (non-empty):
+       - It is the authoritative mapping for each program.
+       - Match teacher_id ONLY for this specific program.
+       - If this program is not in guru_per_program, the student has NO teacher for this program (returns False).
+    4. If guru_per_program is not configured (None or empty dict):
+       - Fallback to student.id_guru only if it strictly equals teacher_id.
+       - If db is passed, verify that the teacher actually teaches program_name.
     5. If no teacher is assigned at all, return False.
     """
     if not student or student.is_deleted or not teacher_id or not program_name:
@@ -62,11 +68,13 @@ def is_student_assigned_to_teacher(student: Siswa, teacher_id: int, program_name
     if not matches_prog:
         return False
 
+    has_gpp = False
     assigned_teacher_id = None
     if student.guru_per_program:
         try:
             mapping = json.loads(student.guru_per_program)
-            if isinstance(mapping, dict):
+            if isinstance(mapping, dict) and len(mapping) > 0:
+                has_gpp = True
                 for k, v in mapping.items():
                     k_lower = k.strip().lower()
                     if prog_lower in k_lower or k_lower in prog_lower:
@@ -76,13 +84,20 @@ def is_student_assigned_to_teacher(student: Siswa, teacher_id: int, program_name
         except Exception:
             pass
 
-    if assigned_teacher_id is None and student.id_guru is not None:
-        assigned_teacher_id = student.id_guru
+    if has_gpp:
+        return assigned_teacher_id == teacher_id
 
-    if assigned_teacher_id is None:
-        return False
+    # Fallback to single id_guru only if guru_per_program was never configured
+    if student.id_guru is not None and student.id_guru == teacher_id:
+        if db:
+            g = db.query(Guru).filter(Guru.id == teacher_id).first()
+            if g and g.kategori_program:
+                g_progs = [gp.strip().lower() for gp in g.kategori_program.split(",") if gp.strip()]
+                if not any(prog_lower in gp or gp in prog_lower for gp in g_progs):
+                    return False
+        return True
 
-    return assigned_teacher_id == teacher_id
+    return False
 
 def get_real_assigned_students(db: Session, teacher_ids: List[int], program_name: str) -> List[Siswa]:
     if not teacher_ids or not program_name:
@@ -90,7 +105,7 @@ def get_real_assigned_students(db: Session, teacher_ids: List[int], program_name
     all_active = db.query(Siswa).filter(Siswa.is_deleted == False).all()
     return [
         s for s in all_active
-        if any(is_student_assigned_to_teacher(s, gid, program_name) for gid in teacher_ids)
+        if any(is_student_assigned_to_teacher(s, gid, program_name, db=db) for gid in teacher_ids)
     ]
 
 def _enrich_jadwal(db: Session, j: Jadwal) -> JadwalResponse:
@@ -223,6 +238,9 @@ async def create_new_jadwal(
             j_copy.guru_ids = str(gid)
             if g_obj and g_obj.hari_wajib:
                 j_copy.hari = g_obj.hari_wajib
+            real_s = get_real_assigned_students(db, [gid], j_copy.kategori_program)
+            j_copy.id_siswa = real_s[0].id if real_s else None
+            j_copy.siswa_ids = ", ".join(str(s.id) for s in real_s) if real_s else None
             res_j = crud_jadwal.create_jadwal(db, jadwal=j_copy)
             if not first_created:
                 first_created = res_j

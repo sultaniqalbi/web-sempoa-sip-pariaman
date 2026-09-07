@@ -326,7 +326,7 @@ def on_startup():
 
                         real_s1 = [
                             s for s in all_active_siswas
-                            if is_student_assigned_to_teacher(s, raw_ids[0], sched.kategori_program or "")
+                            if is_student_assigned_to_teacher(s, raw_ids[0], sched.kategori_program or "", db=db_session)
                         ]
                         sched.id_siswa = real_s1[0].id if real_s1 else None
                         sched.siswa_ids = ", ".join(str(s.id) for s in real_s1) if real_s1 else None
@@ -341,7 +341,7 @@ def on_startup():
                             if not existing:
                                 real_other_s = [
                                     s for s in all_active_siswas
-                                    if is_student_assigned_to_teacher(s, other_id, sched.kategori_program or "")
+                                    if is_student_assigned_to_teacher(s, other_id, sched.kategori_program or "", db=db_session)
                                 ]
                                 new_sched = Jadwal(
                                     id_guru=other_id,
@@ -377,7 +377,7 @@ def on_startup():
                     if teacher_id and s_row.kategori_program:
                         real_s = [
                             s for s in all_active_siswas
-                            if is_student_assigned_to_teacher(s, teacher_id, s_row.kategori_program)
+                            if is_student_assigned_to_teacher(s, teacher_id, s_row.kategori_program, db=db_session)
                         ]
 
                     new_sids_str = ", ".join(str(s.id) for s in real_s) if real_s else None

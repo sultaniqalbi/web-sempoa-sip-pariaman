@@ -138,7 +138,7 @@ def _get_guru_students(db: Session, guru: Guru, matching_guru_ids: List[int], fi
     assigned_students = []
     for s in all_students:
         for gid in matching_guru_ids:
-            if any(is_student_assigned_to_teacher(s, gid, p) for p in target_progs):
+            if any(is_student_assigned_to_teacher(s, gid, p, db=db) for p in target_progs):
                 assigned_students.append(s)
                 break
 
@@ -353,12 +353,17 @@ async def get_kelas_bimbingan(
             hari = _format_days_range_py(guru.hari_wajib)
             mode_kelas = guru.mode_kelas or "OFFLINE"
 
-        # Count active students for this specific program
-        prog_siswa_count = db.query(Siswa).filter(
-            func.lower(Siswa.kategori_program).like(f"%{prog.lower()}%"),
-            Siswa.status_spp == StatusSPP.AKTIF,
-            Siswa.is_deleted == False
-        ).count()
+        # Count active students genuinely assigned to this teacher for this specific program
+        is_supervisor = any(k in (guru.kategori_program or "").lower() for k in ["kepala sekolah", "kepsek", "direktur", "admin", "owner"])
+        if is_supervisor:
+            prog_siswa_count = db.query(Siswa).filter(
+                func.lower(Siswa.kategori_program).like(f"%{prog.lower()}%"),
+                Siswa.status_spp == StatusSPP.AKTIF,
+                Siswa.is_deleted == False
+            ).count()
+        else:
+            prog_students = _get_guru_students(db, guru, matching_ids, filter_program=prog)
+            prog_siswa_count = len([s for s in prog_students if s.status_spp == StatusSPP.AKTIF])
 
         kelas_list.append({
             "kode_program": prog.upper().replace(" ", "_"),
