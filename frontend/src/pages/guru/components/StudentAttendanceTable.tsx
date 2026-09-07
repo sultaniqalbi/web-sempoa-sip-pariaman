@@ -172,70 +172,44 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
 
   return (
     <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-[#E0E0E0] flex flex-col overflow-hidden">
-      {/* Header & Date/Time/Search Bar */}
+      {/* Header */}
       <div className="p-4 sm:p-5 border-b border-[#F5F5F5] space-y-3.5">
-        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
-          <div className="space-y-1">
-            <h2 className="text-base sm:text-lg font-black text-[#1E293B]">
+        {/* Baris 1: Judul & Input Tanggal/Jam */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div>
+            <h2 className="text-base sm:text-lg font-black text-[#1E293B] tracking-tight">
               Input Absensi Siswa
             </h2>
-            <p className="text-[11px] sm:text-xs text-[#64748B]">
+            <p className="text-[11px] sm:text-xs text-[#64748B] mt-0.5">
               Pilih tanggal di atas. Jika hari ini selesai, Anda bisa mengubah ke tanggal lain untuk hari berikutnya.
             </p>
           </div>
 
-          {/* Controls: Date, Time & Search strictly aligned in 1 horizontal row */}
-          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0">
-            {/* Date & Time strictly side-by-side in 1 row (no vertical wrapping between date and time) */}
-            <div className="flex items-center gap-2 shrink-0">
-              <div className="w-[145px] sm:w-[155px]">
-                <DateInput
-                  value={tanggalTerpilih}
-                  onChange={(e) => onTanggalChange(e.target.value)}
-                  className="w-full px-2.5 py-1.5 bg-[#FFF3E0] text-[#E65100] border border-[#FFE082] rounded-xl text-xs font-black uppercase focus:outline-none focus:border-[#FF7043] shadow-2xs cursor-pointer"
-                />
-              </div>
-              <div className="flex items-center">
-                <input
-                  type="time"
-                  value={jamTerpilih}
-                  onChange={(e) => onJamChange(e.target.value)}
-                  className="px-2.5 py-1.5 bg-[#FFF3E0] text-[#E65100] border border-[#FFE082] rounded-xl text-xs font-black uppercase focus:outline-none focus:border-[#FF7043] shadow-2xs cursor-pointer w-[92px]"
-                />
-              </div>
+          {/* Tanggal & Jam strictly in 1 horizontal row */}
+          <div className="flex items-center gap-2 self-start md:self-auto shrink-0">
+            <div className="w-[145px] sm:w-[155px]">
+              <DateInput
+                value={tanggalTerpilih}
+                onChange={(e) => onTanggalChange(e.target.value)}
+                className="w-full px-2.5 py-1.5 bg-[#FFF3E0] text-[#E65100] border border-[#FFE082] rounded-xl text-xs font-black uppercase focus:outline-none focus:border-[#FF7043] shadow-2xs cursor-pointer"
+              />
             </div>
-
-            {/* Search */}
-            <div className="relative w-full sm:w-52 md:w-60 shrink-0">
-              <div className="flex items-center gap-2 border border-[#E2E8F0] rounded-xl px-3 bg-[#F8FAFC] focus-within:border-[#FF7043] focus-within:bg-white transition-all shadow-2xs">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Cari siswa..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="flex-1 bg-transparent py-1.5 text-xs outline-none text-[#1E293B]"
-                />
-                {search && (
-                  <button onClick={() => setSearch('')} className="text-[#94A3B8] hover:text-[#FF7043] font-bold text-xs p-1 cursor-pointer" title="Hapus pencarian">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
-                  </button>
-                )}
-              </div>
+            <div>
+              <input
+                type="time"
+                value={jamTerpilih}
+                onChange={(e) => onJamChange(e.target.value)}
+                className="px-2.5 py-1.5 bg-[#FFF3E0] text-[#E65100] border border-[#FFE082] rounded-xl text-xs font-black uppercase focus:outline-none focus:border-[#FF7043] shadow-2xs cursor-pointer w-[92px]"
+              />
             </div>
           </div>
         </div>
 
-        {/* Tab Menu di Bawah Kalender & Jam: "Semua", "Sempoa SIP", etc. */}
-        {onTabChange && (
-          <div className="pt-2.5 border-t border-[#F1F5F9] flex flex-wrap items-center justify-between gap-2.5">
-            <div className="flex items-center gap-2 overflow-x-auto pb-0.5 scrollbar-thin">
+        {/* Baris 2: Tab Menu & Kolom Pencarian */}
+        <div className="pt-3 border-t border-[#F1F5F9] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          {/* Menu Tab: "Semua", "Sempoa SIP", etc. */}
+          {onTabChange && (
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-thin">
               {/* Tab "Semua" */}
               <button
                 type="button"
@@ -247,11 +221,13 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
                 }`}
               >
                 <span>Semua</span>
-                {activeTab === 'semua' && (
-                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-white/25 text-white">
-                    {filteredStudents.length}
-                  </span>
-                )}
+                <span
+                  className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                    activeTab === 'semua' ? 'bg-white/25 text-white' : 'bg-[#E2E8F0] text-[#475569]'
+                  }`}
+                >
+                  {activeTab === 'semua' ? filteredStudents.length : students.length}
+                </span>
               </button>
 
               {/* Tab program yang diampu guru */}
@@ -278,19 +254,33 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
                 );
               })}
             </div>
+          )}
 
-            <div className="text-[11px] font-bold text-[#64748B] bg-[#FFF8F3] px-3 py-1.5 rounded-xl border border-[#FFE082] flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#FF7043]" />
-              <span>
-                {activeTab === 'semua' ? (
-                  <>Menampilkan <strong>Semua Siswa Program</strong> (Dapat Absen Lintas Guru)</>
-                ) : (
-                  <>Khusus <strong>Siswa Bimbingan Sendiri</strong> ({activeTab})</>
-                )}
-              </span>
+          {/* Search Bar */}
+          <div className="relative w-full sm:w-60 md:w-64 shrink-0">
+            <div className="flex items-center gap-2 border border-[#E2E8F0] rounded-xl px-3 bg-[#F8FAFC] focus-within:border-[#FF7043] focus-within:bg-white transition-all shadow-2xs">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Cari siswa..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="flex-1 bg-transparent py-1.5 text-xs outline-none text-[#1E293B]"
+              />
+              {search && (
+                <button onClick={() => setSearch('')} className="text-[#94A3B8] hover:text-[#FF7043] font-bold text-xs p-1 cursor-pointer" title="Hapus pencarian">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              )}
             </div>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Table */}
