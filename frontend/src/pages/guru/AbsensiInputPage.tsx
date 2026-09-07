@@ -366,15 +366,15 @@ export const AbsensiInputPage: React.FC = () => {
               )}
 
               {/* Table of Attendance Records */}
-              <div className="overflow-x-auto border border-[#E2E8F0] rounded-xl">
+              <div className="overflow-x-auto border border-[#E2E8F0] rounded-xl w-full">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
                     <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
-                      <th className="p-3 font-bold text-[#64748B] w-12 text-center">No</th>
-                      <th className="p-3 font-bold text-[#64748B] min-w-[180px]">Nama Siswa</th>
-                      <th className="p-3 font-bold text-[#64748B] min-w-[140px]">Program</th>
-                      <th className="p-3 font-bold text-[#64748B] w-28 text-center">Jam Tap</th>
-                      <th className="p-3 font-bold text-[#64748B] w-32 text-center">Status</th>
+                      <th className="p-2 sm:p-3 font-bold text-[#64748B] w-8 sm:w-12 text-center">No</th>
+                      <th className="p-2 sm:p-3 font-bold text-[#64748B]">Nama Siswa</th>
+                      <th className="hidden sm:table-cell p-2 sm:p-3 font-bold text-[#64748B]">Program</th>
+                      <th className="hidden sm:table-cell p-2 sm:p-3 font-bold text-[#64748B] text-center w-24">Jam Tap</th>
+                      <th className="p-2 sm:p-3 font-bold text-[#64748B] w-24 sm:w-28 text-center">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#F1F5F9]">
@@ -398,14 +398,33 @@ export const AbsensiInputPage: React.FC = () => {
 
                         return (
                           <tr key={item.id || idx} className="hover:bg-[#F8FAFC]">
-                            <td className="p-3 text-center text-[#64748B] font-bold">{item.no}</td>
-                            <td className="p-3">
-                              <p className="font-bold text-[#1E293B]">{item.nama_lengkap}</p>
+                            <td className="p-2 sm:p-3 text-center text-[#64748B] font-bold">{item.no}</td>
+                            <td className="p-2 sm:p-3">
+                              <p className="font-bold text-[#1E293B] text-xs sm:text-[13px]">{item.nama_lengkap}</p>
                               <p className="text-[10px] text-[#94A3B8]">
                                 {item.asal_sekolah || `UID: ${item.uid}`}
                               </p>
+                              {/* On mobile show program badge and waktu_tap */}
+                              <div className="sm:hidden mt-1 flex items-center gap-1 flex-wrap">
+                                {(item.program || '').split(',').map((p: string, pIdx: number) => {
+                                  const progClean = p.trim();
+                                  return (
+                                    <span
+                                      key={pIdx}
+                                      className={`px-1.5 py-0.2 rounded text-[9px] font-bold border ${getProgramBadgeStyle(progClean)}`}
+                                    >
+                                      {progClean}
+                                    </span>
+                                  );
+                                })}
+                                {item.waktu_tap && (
+                                  <span className="text-[9.5px] font-mono font-bold text-[#64748B]">
+                                    • {item.waktu_tap}
+                                  </span>
+                                )}
+                              </div>
                             </td>
-                            <td className="p-3 font-medium">
+                            <td className="hidden sm:table-cell p-3 font-medium">
                               <div className="flex flex-wrap gap-1">
                                 {(item.program || '').split(',').map((p: string, pIdx: number) => {
                                   const progClean = p.trim();
@@ -420,9 +439,9 @@ export const AbsensiInputPage: React.FC = () => {
                                 })}
                               </div>
                             </td>
-                            <td className="p-3 font-mono text-center font-bold text-[#475569]">{item.waktu_tap}</td>
-                            <td className="p-3 text-center">
-                              <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] uppercase border ${badgeClass}`}>
+                            <td className="hidden sm:table-cell p-3 font-mono text-center font-bold text-[#475569]">{item.waktu_tap}</td>
+                            <td className="p-2 sm:p-3 text-center">
+                              <span className={`inline-block px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9.5px] sm:text-[10px] uppercase border ${badgeClass}`}>
                                 {item.status}
                               </span>
                             </td>
@@ -510,110 +529,204 @@ export const AbsensiInputPage: React.FC = () => {
               <p className="text-xs text-[#64748B]">Memuat log absensi...</p>
             </div>
           ) : (
-            <div className="overflow-x-auto border border-[#E2E8F0] rounded-xl">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
-                    <th className="p-3 font-bold text-[#64748B]">UID Kartu</th>
-                    <th className="p-3 font-bold text-[#64748B]">Waktu Presensi</th>
-                    <th className="p-3 font-bold text-[#64748B] text-center">Metode / Sumber</th>
-                    <th className="p-3 font-bold text-[#64748B] text-center">Status</th>
-                    <th className="p-3 font-bold text-[#64748B]">Keterangan</th>
-                    <th className="p-3 font-bold text-[#64748B] text-right">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#F1F5F9]">
-                  {!logData?.logs || logData.logs.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="p-8 text-center text-[#94A3B8]">
-                        Belum ada riwayat presensi pengajar.
-                      </td>
-                    </tr>
-                  ) : (
-                    logData.logs.map((log: any, idx: number) => {
-                      const sumber = (log.sumber || 'RFID').toUpperCase();
-                      let sumberBadge = 'bg-blue-50 text-blue-700 border-blue-200';
-                      let sumberText = 'RFID Tap';
-                      let renderIcon = (
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <rect x="2" y="5" width="20" height="14" rx="2" />
-                          <line x1="2" y1="10" x2="22" y2="10" />
+            <div className="space-y-3">
+              {/* Mobile View: Cards (No horizontal scroll) */}
+              <div className="sm:hidden space-y-2.5">
+                {!logData?.logs || logData.logs.length === 0 ? (
+                  <div className="p-6 text-center text-[#94A3B8] bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] text-xs">
+                    Belum ada riwayat presensi pengajar.
+                  </div>
+                ) : (
+                  logData.logs.map((log: any, idx: number) => {
+                    const sumber = (log.sumber || 'RFID').toUpperCase();
+                    let sumberBadge = 'bg-blue-50 text-blue-700 border-blue-200';
+                    let sumberText = 'RFID Tap';
+                    let renderIcon = (
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="5" width="20" height="14" rx="2" />
+                        <line x1="2" y1="10" x2="22" y2="10" />
+                      </svg>
+                    );
+
+                    if (sumber.includes('MANUAL')) {
+                      sumberBadge = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                      sumberText = 'Manual Web';
+                      renderIcon = (
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                         </svg>
                       );
-
-                      if (sumber.includes('MANUAL')) {
-                        sumberBadge = 'bg-emerald-50 text-emerald-700 border-emerald-200';
-                        sumberText = 'Manual Web';
-                        renderIcon = (
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                          </svg>
-                        );
-                      } else if (sumber.includes('IZIN')) {
-                        sumberBadge = 'bg-amber-50 text-amber-700 border-amber-200';
-                        sumberText = sumber.includes('JADWAL') ? 'Izin (Jadwal)' : 'Izin (Harian)';
-                        renderIcon = (
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                            <polyline points="14 2 14 8 20 8" />
-                          </svg>
-                        );
-                      }
-
-                      const isIzin = (log.status || '').toLowerCase().includes('izin');
-
-                      return (
-                        <tr key={idx} className="hover:bg-[#F8FAFC]">
-                          <td className="p-3 font-mono text-[#64748B] font-bold">{log.uid_rfid}</td>
-                          <td className="p-3 font-bold text-[#1E293B]">{log.waktu_tap}</td>
-                          <td className="p-3 text-center">
-                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${sumberBadge}`}>
-                              {renderIcon}
-                              <span>{sumberText}</span>
-                            </span>
-                          </td>
-                          <td className="p-3 text-center">
-                            <span
-                              className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-black uppercase border ${
-                                isIzin
-                                  ? 'bg-[#FFF3E0] text-[#E65100] border-[#FFE082]'
-                                  : 'bg-[#E8F5E9] text-[#2E7D32] border-[#A5D6A7]'
-                              }`}
-                            >
-                              {log.status}
-                            </span>
-                          </td>
-                          <td className="p-3 text-[#64748B] max-w-[250px] truncate">
-                            {log.catatan || '-'}
-                          </td>
-                          <td className="p-3 text-right">
-                            {isIzin ? (
-                              <button
-                                onClick={() => {
-                                  setEditingIzinData({
-                                    id: log.id,
-                                    waktu: log.waktu || log.waktu_tap,
-                                    catatan: log.catatan,
-                                    sumber: log.sumber
-                                  });
-                                  setIsIzinModalOpen(true);
-                                }}
-                                className="p-1.5 bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#E65100] rounded-lg border border-[#FFCC80] transition-colors inline-flex items-center justify-center cursor-pointer shadow-2xs active:scale-95"
-                                title="Edit Izin"
-                              >
-                                <EditIcon size={13} />
-                              </button>
-                            ) : (
-                              <span className="text-[#CBD5E1] text-[10px]">-</span>
-                            )}
-                          </td>
-                        </tr>
+                    } else if (sumber.includes('IZIN')) {
+                      sumberBadge = 'bg-amber-50 text-amber-700 border-amber-200';
+                      sumberText = sumber.includes('JADWAL') ? 'Izin (Jadwal)' : 'Izin (Harian)';
+                      renderIcon = (
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                          <polyline points="14 2 14 8 20 8" />
+                        </svg>
                       );
-                    })
-                  )}
-                </tbody>
-              </table>
+                    }
+
+                    const isIzin = (log.status || '').toLowerCase().includes('izin');
+
+                    return (
+                      <div key={idx} className="p-3 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] space-y-2 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-[#1E293B]">{log.waktu_tap}</span>
+                          <span
+                            className={`inline-block px-2 py-0.5 rounded-full text-[9.5px] font-black uppercase border ${
+                              isIzin
+                                ? 'bg-[#FFF3E0] text-[#E65100] border-[#FFE082]'
+                                : 'bg-[#E8F5E9] text-[#2E7D32] border-[#A5D6A7]'
+                            }`}
+                          >
+                            {log.status}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-[11px] text-[#64748B]">
+                          <span>UID: <strong className="font-mono text-[#1E293B]">{log.uid_rfid}</strong></span>
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold border ${sumberBadge}`}>
+                            {renderIcon}
+                            <span>{sumberText}</span>
+                          </span>
+                        </div>
+                        {log.catatan && (
+                          <p className="text-[11px] text-[#475569] bg-white p-2 rounded-lg border border-[#E2E8F0]">
+                            {log.catatan}
+                          </p>
+                        )}
+                        {isIzin && (
+                          <div className="flex justify-end pt-1">
+                            <button
+                              onClick={() => {
+                                setEditingIzinData({
+                                  id: log.id,
+                                  waktu: log.waktu || log.waktu_tap,
+                                  catatan: log.catatan,
+                                  sumber: log.sumber
+                                });
+                                setIsIzinModalOpen(true);
+                              }}
+                              className="px-2.5 py-1 bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#E65100] rounded-lg border border-[#FFCC80] text-xs font-bold transition-colors inline-flex items-center gap-1 shadow-2xs active:scale-95 cursor-pointer"
+                            >
+                              <EditIcon size={12} />
+                              <span>Edit Izin</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Desktop View: Table */}
+              <div className="hidden sm:block overflow-x-auto border border-[#E2E8F0] rounded-xl w-full">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
+                      <th className="p-3 font-bold text-[#64748B]">UID Kartu</th>
+                      <th className="p-3 font-bold text-[#64748B]">Waktu Presensi</th>
+                      <th className="p-3 font-bold text-[#64748B] text-center">Metode / Sumber</th>
+                      <th className="p-3 font-bold text-[#64748B] text-center">Status</th>
+                      <th className="p-3 font-bold text-[#64748B]">Keterangan</th>
+                      <th className="p-3 font-bold text-[#64748B] text-right">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#F1F5F9]">
+                    {!logData?.logs || logData.logs.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="p-8 text-center text-[#94A3B8]">
+                          Belum ada riwayat presensi pengajar.
+                        </td>
+                      </tr>
+                    ) : (
+                      logData.logs.map((log: any, idx: number) => {
+                        const sumber = (log.sumber || 'RFID').toUpperCase();
+                        let sumberBadge = 'bg-blue-50 text-blue-700 border-blue-200';
+                        let sumberText = 'RFID Tap';
+                        let renderIcon = (
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="2" y="5" width="20" height="14" rx="2" />
+                            <line x1="2" y1="10" x2="22" y2="10" />
+                          </svg>
+                        );
+
+                        if (sumber.includes('MANUAL')) {
+                          sumberBadge = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                          sumberText = 'Manual Web';
+                          renderIcon = (
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
+                          );
+                        } else if (sumber.includes('IZIN')) {
+                          sumberBadge = 'bg-amber-50 text-amber-700 border-amber-200';
+                          sumberText = sumber.includes('JADWAL') ? 'Izin (Jadwal)' : 'Izin (Harian)';
+                          renderIcon = (
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M14 2H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                              <polyline points="14 2 14 8 20 8" />
+                            </svg>
+                          );
+                        }
+
+                        const isIzin = (log.status || '').toLowerCase().includes('izin');
+
+                        return (
+                          <tr key={idx} className="hover:bg-[#F8FAFC]">
+                            <td className="p-3 font-mono text-[#64748B] font-bold">{log.uid_rfid}</td>
+                            <td className="p-3 font-bold text-[#1E293B]">{log.waktu_tap}</td>
+                            <td className="p-3 text-center">
+                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${sumberBadge}`}>
+                                {renderIcon}
+                                <span>{sumberText}</span>
+                              </span>
+                            </td>
+                            <td className="p-3 text-center">
+                              <span
+                                className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-black uppercase border ${
+                                  isIzin
+                                    ? 'bg-[#FFF3E0] text-[#E65100] border-[#FFE082]'
+                                    : 'bg-[#E8F5E9] text-[#2E7D32] border-[#A5D6A7]'
+                                }`}
+                              >
+                                {log.status}
+                              </span>
+                            </td>
+                            <td className="p-3 text-[#64748B] max-w-[250px] truncate">
+                              {log.catatan || '-'}
+                            </td>
+                            <td className="p-3 text-right">
+                              {isIzin ? (
+                                <button
+                                  onClick={() => {
+                                    setEditingIzinData({
+                                      id: log.id,
+                                      waktu: log.waktu || log.waktu_tap,
+                                      catatan: log.catatan,
+                                      sumber: log.sumber
+                                    });
+                                    setIsIzinModalOpen(true);
+                                  }}
+                                  className="p-1.5 bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#E65100] rounded-lg border border-[#FFCC80] transition-colors inline-flex items-center justify-center cursor-pointer shadow-2xs active:scale-95"
+                                  title="Edit Izin"
+                                >
+                                  <EditIcon size={13} />
+                                </button>
+                              ) : (
+                                <span className="text-[#CBD5E1] text-[10px]">-</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
           </div>

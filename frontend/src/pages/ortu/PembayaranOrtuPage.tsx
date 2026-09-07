@@ -571,103 +571,192 @@ export const PembayaranOrtuPage: React.FC = () => {
             Memuat riwayat unggahan...
           </div>
         ) : proofHistory.length > 0 ? (
-          <div className="overflow-x-auto -mx-5 px-5">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b-2 border-[#E2E8F0]">
-                  <th className="text-left py-2.5 px-2 font-extrabold text-[#64748B] uppercase tracking-wider text-[10px] w-10">No</th>
-                  <th className="text-left py-2.5 px-2 font-extrabold text-[#64748B] uppercase tracking-wider text-[10px]">Tanggal & Jam</th>
-                  <th className="text-left py-2.5 px-2 font-extrabold text-[#64748B] uppercase tracking-wider text-[10px]">Bukti Foto</th>
-                  <th className="text-left py-2.5 px-2 font-extrabold text-[#64748B] uppercase tracking-wider text-[10px]">Periode</th>
-                  <th className="text-left py-2.5 px-2 font-extrabold text-[#64748B] uppercase tracking-wider text-[10px]">Nominal</th>
-                  <th className="text-center py-2.5 px-2 font-extrabold text-[#64748B] uppercase tracking-wider text-[10px]">Status</th>
-                  <th className="text-center py-2.5 px-2 font-extrabold text-[#64748B] uppercase tracking-wider text-[10px]">Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {proofHistory.map((pr, idx) => {
-                  const fullUrl = pr.file_path.startsWith('http')
-                    ? pr.file_path
-                    : `/${pr.file_path.replace(/^\//, '')}`;
-                  const statusLower = (pr.status || 'pending').toLowerCase();
+          <div className="space-y-3">
+            {/* Mobile View: Cards (No horizontal scroll) */}
+            <div className="sm:hidden space-y-3">
+              {proofHistory.map((pr, idx) => {
+                const fullUrl = pr.file_path.startsWith('http')
+                  ? pr.file_path
+                  : `/${pr.file_path.replace(/^\//, '')}`;
+                const statusLower = (pr.status || 'pending').toLowerCase();
 
-                  return (
-                    <tr key={pr.id} className="border-b border-[#F1F5F9] hover:bg-[#FAFAFA] transition-colors">
-                      <td className="py-3 px-2 font-bold text-[#94A3B8]">{idx + 1}</td>
-                      <td className="py-3 px-2">
-                        <p className="font-bold text-[#1E293B]">
+                return (
+                  <div key={pr.id} className="p-3.5 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] space-y-2.5 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-[#1E293B]">
+                        #{idx + 1} • {pr.periode_bulan || '-'}
+                      </span>
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                          statusLower === 'approved'
+                            ? 'bg-[#DCFCE7] text-[#16A34A] border border-[#86EFAC]'
+                            : statusLower === 'rejected'
+                            ? 'bg-[#FEE2E2] text-[#DC2626] border border-[#FCA5A5]'
+                            : 'bg-[#FEF3C7] text-[#D97706] border border-[#FCD34D]'
+                        }`}
+                      >
+                        {statusLower === 'approved' ? 'Disetujui' : statusLower === 'rejected' ? 'Ditolak' : 'Menunggu'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div onClick={() => setPreviewImage(fullUrl)} className="cursor-pointer group shrink-0">
+                        <img
+                          src={fullUrl}
+                          alt="Struk"
+                          className="w-12 h-12 object-cover rounded-lg border border-[#CBD5E1] group-hover:opacity-80 transition-opacity shadow-2xs"
+                          onError={(e) => {
+                            const img = e.target as HTMLImageElement;
+                            img.style.display = 'none';
+                            const fallback = img.parentElement?.querySelector('.img-fallback') as HTMLElement;
+                            if (fallback) fallback.style.display = 'flex';
+                          }}
+                        />
+                        <div className="img-fallback w-12 h-12 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] items-center justify-center hidden group-hover:bg-[#E2E8F0] transition-colors">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2.5">
+                            <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
+                          </svg>
+                        </div>
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <p className="font-black text-[#16A34A] text-sm">
+                          Rp {(pr.jumlah || sppAmount).toLocaleString('id-ID')}
+                        </p>
+                        <p className="text-[10.5px] text-[#64748B] mt-0.5">
                           {(() => {
                             const dtStr = pr.created_at || '';
                             const isUtc = dtStr.endsWith('Z') || dtStr.includes('+');
                             const finalDtStr = dtStr ? (isUtc ? dtStr : dtStr + 'Z') : '';
-                            return finalDtStr ? new Date(finalDtStr).toLocaleString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '-';
+                            return finalDtStr ? new Date(finalDtStr).toLocaleString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
                           })()}
                         </p>
-                      </td>
-                      <td className="py-3 px-2">
-                        <div onClick={() => setPreviewImage(fullUrl)} className="cursor-pointer group inline-block">
-                          <img
-                            src={fullUrl}
-                            alt="Struk"
-                            className="w-11 h-11 object-cover rounded-lg border border-[#CBD5E1] group-hover:opacity-80 transition-opacity shadow-2xs"
-                            onError={(e) => {
-                              const img = e.target as HTMLImageElement;
-                              img.style.display = 'none';
-                              const fallback = img.parentElement?.querySelector('.img-fallback') as HTMLElement;
-                              if (fallback) fallback.style.display = 'flex';
-                            }}
-                          />
-                          <div className="img-fallback w-11 h-11 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] items-center justify-center hidden group-hover:bg-[#E2E8F0] transition-colors">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2.5">
-                              <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
-                            </svg>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-3 px-2 font-bold text-[#475569]">{pr.periode_bulan || '-'}</td>
-                      <td className="py-3 px-2 font-extrabold text-[#16A34A]">
-                        Rp {(pr.jumlah || sppAmount).toLocaleString('id-ID')}
-                      </td>
-                      <td className="py-3 px-2 text-center">
-                        <span
-                          className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider inline-block ${
-                            statusLower === 'approved'
-                              ? 'bg-[#DCFCE7] text-[#16A34A] border border-[#86EFAC]'
-                              : statusLower === 'rejected'
-                              ? 'bg-[#FEE2E2] text-[#DC2626] border border-[#FCA5A5]'
-                              : 'bg-[#FEF3C7] text-[#D97706] border border-[#FCD34D]'
-                          }`}
+                      </div>
+                    </div>
+
+                    {pr.admin_note && (
+                      <p className="text-[10px] text-[#DC2626] bg-[#FEE2E2]/60 p-2 rounded-lg border border-[#FECDD3] italic">
+                        Catatan Admin: {pr.admin_note}
+                      </p>
+                    )}
+
+                    {statusLower === 'approved' && (
+                      <div className="pt-1 flex justify-end">
+                        <button
+                          onClick={() => handleOpenKwitansi(pr.id)}
+                          className="px-3 py-1.5 bg-[#FF7043] hover:bg-[#F4511E] text-white text-[11px] font-extrabold rounded-lg transition-all active:scale-95 cursor-pointer shadow-xs flex items-center gap-1.5"
                         >
-                          {statusLower === 'approved' ? 'Disetujui' : statusLower === 'rejected' ? 'Ditolak' : 'Menunggu'}
-                        </span>
-                        {pr.admin_note && (
-                          <p className="text-[9px] text-[#DC2626] italic mt-1 max-w-[120px] mx-auto">{pr.admin_note}</p>
-                        )}
-                      </td>
-                      <td className="py-3 px-2 text-center">
-                        {statusLower === 'approved' ? (
-                          <button
-                            onClick={() => handleOpenKwitansi(pr.id)}
-                            className="px-3 py-1.5 bg-[#FF7043] hover:bg-[#F4511E] text-white text-[10px] font-extrabold rounded-lg transition-all active:scale-95 cursor-pointer shadow-xs flex items-center gap-1.5 mx-auto"
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="6 9 6 2 18 2 18 9" />
+                            <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" />
+                            <rect x="6" y="14" width="12" height="8" />
+                          </svg>
+                          <span>Kwitansi</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop View: Table */}
+            <div className="hidden sm:block overflow-x-auto w-full">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b-2 border-[#E2E8F0]">
+                    <th className="text-left py-2.5 px-2 font-extrabold text-[#64748B] uppercase tracking-wider text-[10px] w-10">No</th>
+                    <th className="text-left py-2.5 px-2 font-extrabold text-[#64748B] uppercase tracking-wider text-[10px]">Tanggal & Jam</th>
+                    <th className="text-left py-2.5 px-2 font-extrabold text-[#64748B] uppercase tracking-wider text-[10px]">Bukti Foto</th>
+                    <th className="text-left py-2.5 px-2 font-extrabold text-[#64748B] uppercase tracking-wider text-[10px]">Periode</th>
+                    <th className="text-left py-2.5 px-2 font-extrabold text-[#64748B] uppercase tracking-wider text-[10px]">Nominal</th>
+                    <th className="text-center py-2.5 px-2 font-extrabold text-[#64748B] uppercase tracking-wider text-[10px]">Status</th>
+                    <th className="text-center py-2.5 px-2 font-extrabold text-[#64748B] uppercase tracking-wider text-[10px]">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {proofHistory.map((pr, idx) => {
+                    const fullUrl = pr.file_path.startsWith('http')
+                      ? pr.file_path
+                      : `/${pr.file_path.replace(/^\//, '')}`;
+                    const statusLower = (pr.status || 'pending').toLowerCase();
+
+                    return (
+                      <tr key={pr.id} className="border-b border-[#F1F5F9] hover:bg-[#FAFAFA] transition-colors">
+                        <td className="py-3 px-2 font-bold text-[#94A3B8]">{idx + 1}</td>
+                        <td className="py-3 px-2">
+                          <p className="font-bold text-[#1E293B]">
+                            {(() => {
+                              const dtStr = pr.created_at || '';
+                              const isUtc = dtStr.endsWith('Z') || dtStr.includes('+');
+                              const finalDtStr = dtStr ? (isUtc ? dtStr : dtStr + 'Z') : '';
+                              return finalDtStr ? new Date(finalDtStr).toLocaleString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '-';
+                            })()}
+                          </p>
+                        </td>
+                        <td className="py-3 px-2">
+                          <div onClick={() => setPreviewImage(fullUrl)} className="cursor-pointer group inline-block">
+                            <img
+                              src={fullUrl}
+                              alt="Struk"
+                              className="w-11 h-11 object-cover rounded-lg border border-[#CBD5E1] group-hover:opacity-80 transition-opacity shadow-2xs"
+                              onError={(e) => {
+                                const img = e.target as HTMLImageElement;
+                                img.style.display = 'none';
+                                const fallback = img.parentElement?.querySelector('.img-fallback') as HTMLElement;
+                                if (fallback) fallback.style.display = 'flex';
+                              }}
+                            />
+                            <div className="img-fallback w-11 h-11 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] items-center justify-center hidden group-hover:bg-[#E2E8F0] transition-colors">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2.5">
+                                <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
+                              </svg>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3 px-2 font-bold text-[#475569]">{pr.periode_bulan || '-'}</td>
+                        <td className="py-3 px-2 font-extrabold text-[#16A34A]">
+                          Rp {(pr.jumlah || sppAmount).toLocaleString('id-ID')}
+                        </td>
+                        <td className="py-3 px-2 text-center">
+                          <span
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider inline-block ${
+                              statusLower === 'approved'
+                                ? 'bg-[#DCFCE7] text-[#16A34A] border border-[#86EFAC]'
+                                : statusLower === 'rejected'
+                                ? 'bg-[#FEE2E2] text-[#DC2626] border border-[#FCA5A5]'
+                                : 'bg-[#FEF3C7] text-[#D97706] border border-[#FCD34D]'
+                            }`}
                           >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                              <polyline points="6 9 6 2 18 2 18 9" />
-                              <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" />
-                              <rect x="6" y="14" width="12" height="8" />
-                            </svg>
-                            Cetak Kwitansi
-                          </button>
-                        ) : statusLower === 'rejected' ? (
-                          <span className="text-[10px] text-[#DC2626] font-bold">Ditolak</span>
-                        ) : (
-                          <span className="text-[10px] text-[#94A3B8] font-semibold">Menunggu Verifikasi</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                            {statusLower === 'approved' ? 'Disetujui' : statusLower === 'rejected' ? 'Ditolak' : 'Menunggu'}
+                          </span>
+                          {pr.admin_note && (
+                            <p className="text-[9px] text-[#DC2626] italic mt-1 max-w-[120px] mx-auto">{pr.admin_note}</p>
+                          )}
+                        </td>
+                        <td className="py-3 px-2 text-center">
+                          {statusLower === 'approved' ? (
+                            <button
+                              onClick={() => handleOpenKwitansi(pr.id)}
+                              className="px-3 py-1.5 bg-[#FF7043] hover:bg-[#F4511E] text-white text-[10px] font-extrabold rounded-lg transition-all active:scale-95 cursor-pointer shadow-xs flex items-center gap-1.5 mx-auto"
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="6 9 6 2 18 2 18 9" />
+                                <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" />
+                                <rect x="6" y="14" width="12" height="8" />
+                              </svg>
+                              <span>Kwitansi</span>
+                            </button>
+                          ) : (
+                            <span className="text-[#CBD5E1] text-[10px]">-</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         ) : (
           <p className="text-xs text-[#94A3B8] text-center py-4">Belum ada riwayat unggahan bukti transfer.</p>
