@@ -651,6 +651,13 @@ async def get_spp_programs(
     Daftar program dan tarif SPP resmi lembaga untuk Admin dan Owner.
     """
     from app.models.program_setting import ProgramSetting
+    
+    # CLEANUP: Hapus "Sempoa SIP" versi lama sampai ke akar-akarnya agar hanya tersisa (8 Sesi) & (12 Sesi)
+    old_sempoa = db.query(ProgramSetting).filter(ProgramSetting.nama_program == "Sempoa SIP").first()
+    if old_sempoa:
+        db.delete(old_sempoa)
+        db.commit()
+
     programs = db.query(ProgramSetting).order_by(ProgramSetting.id.asc()).all()
     if not programs:
         from app.core.constants import PROGRAM_CONFIG
