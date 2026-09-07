@@ -34,3 +34,11 @@ class BukuSiswaResponse(BukuSiswaBase):
     uid_siswa: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+class NaikLevelRequest(BaseModel):
+    id_buku_lama: int
+    level_baru: str
+    nomor_buku_baru: Optional[str] = None
+    jenis_buku_baru: Optional[str] = "Buku Paket"
+    tanggal_naik_level: Optional[date] = None
+    catatan_naik_level: Optional[str] = None

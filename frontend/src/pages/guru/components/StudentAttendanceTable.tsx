@@ -166,32 +166,38 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
   return (
     <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-[#E0E0E0] flex flex-col overflow-hidden">
       {/* Header & Date Picker */}
-      <div className="p-4 sm:p-5 border-b border-[#F5F5F5] flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-sm sm:text-base font-black text-[#1E293B]">Input Absensi Siswa</h2>
-            <div className="w-36">
-              <DateInput
-                value={tanggalTerpilih}
-                onChange={(e) => onTanggalChange(e.target.value)}
-                className="px-2.5 py-1 bg-[#FFF3E0] text-[#E65100] border border-[#FFE082] rounded-lg text-xs font-black uppercase focus:outline-none focus:border-[#FF7043]"
-              />
+      <div className="p-4 sm:p-5 border-b border-[#F5F5F5] flex flex-col lg:flex-row gap-4 lg:items-center justify-between">
+        <div className="space-y-2">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-4">
+            <h2 className="text-base sm:text-lg font-black text-[#1E293B] shrink-0">
+              Input Absensi Siswa
+            </h2>
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="w-36 sm:w-40">
+                <DateInput
+                  value={tanggalTerpilih}
+                  onChange={(e) => onTanggalChange(e.target.value)}
+                  className="w-full px-2.5 py-1.5 bg-[#FFF3E0] text-[#E65100] border border-[#FFE082] rounded-xl text-xs font-black uppercase focus:outline-none focus:border-[#FF7043] shadow-2xs cursor-pointer"
+                />
+              </div>
+              <div className="flex items-center">
+                <input
+                  type="time"
+                  value={jamTerpilih}
+                  onChange={(e) => onJamChange(e.target.value)}
+                  className="px-2.5 py-1.5 bg-[#FFF3E0] text-[#E65100] border border-[#FFE082] rounded-xl text-xs font-black uppercase focus:outline-none focus:border-[#FF7043] shadow-2xs cursor-pointer min-w-[95px]"
+                />
+              </div>
             </div>
-            <input
-              type="time"
-              value={jamTerpilih}
-              onChange={(e) => onJamChange(e.target.value)}
-              className="px-2.5 py-1 bg-[#FFF3E0] text-[#E65100] border border-[#FFE082] rounded-lg text-xs font-black uppercase focus:outline-none focus:border-[#FF7043]"
-            />
           </div>
-          <p className="text-[11px] text-[#64748B] mt-1">
+          <p className="text-[11px] sm:text-xs text-[#64748B]">
             Pilih tanggal di atas. Jika hari ini selesai, Anda bisa mengubah ke tanggal lain untuk hari berikutnya.
           </p>
         </div>
 
         {/* Search */}
-        <div className="relative w-full sm:w-64">
-          <div className="flex items-center gap-2 border border-[#E2E8F0] rounded-xl px-3 bg-[#F8FAFC] focus-within:border-[#FF7043] focus-within:bg-white transition-all">
+        <div className="relative w-full lg:w-64 shrink-0">
+          <div className="flex items-center gap-2 border border-[#E2E8F0] rounded-xl px-3 bg-[#F8FAFC] focus-within:border-[#FF7043] focus-within:bg-white transition-all shadow-2xs">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />

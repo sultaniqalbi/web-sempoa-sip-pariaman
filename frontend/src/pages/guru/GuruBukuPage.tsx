@@ -11,6 +11,7 @@ import { getProgramBadgeStyle } from '../portal/SiswaPage';
 import { PROGRAM_LEVEL_PRESETS, BukuItem } from '../portal/BukuPage';
 import DateInput from '../../components/DateInput';
 import { formatIndoDate } from '../../utils/dateFormatter';
+import NaikLevelModal from '../../components/NaikLevelModal';
 
 export const GuruBukuPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -19,6 +20,7 @@ export const GuruBukuPage: React.FC = () => {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBuku, setEditingBuku] = useState<BukuItem | null>(null);
+  const [naikLevelTarget, setNaikLevelTarget] = useState<BukuItem | null>(null);
 
   const [formData, setFormData] = useState<{
     id_siswa: string;
@@ -199,21 +201,33 @@ export const GuruBukuPage: React.FC = () => {
       className: 'md:w-[140px]'
     },
     {
-      header: 'Tanggal Selesai',
-      accessor: (row: BukuItem) => (
-        <div>
-          {row.tanggal_selesai ? (
-            <span className="text-[11px] font-bold text-[#16A34A] bg-[#DCFCE7] border border-[#86EFAC] px-2.5 py-0.5 rounded-lg inline-flex items-center gap-1 shadow-2xs">
-              <CheckIcon size={11} className="text-[#16A34A]" />
-              <span>{formatIndoDate(row.tanggal_selesai)}</span>
-            </span>
-          ) : (
-            <span className="text-[11px] font-bold text-[#D97706] bg-[#FEF3C7] border border-[#FDE68A] px-2.5 py-0.5 rounded-lg inline-block shadow-2xs">
-              Sedang Dipelajari
-            </span>
-          )}
-        </div>
-      ),
+      header: 'Status & Selesai',
+      accessor: (row: BukuItem) => {
+        const isSelesai = row.status_buku === 'SELESAI';
+        const isLanjut = row.status_buku === 'LANJUT_LEVEL';
+        if (isSelesai || isLanjut) {
+          return (
+            <div>
+              <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md inline-flex items-center gap-1 border shadow-2xs ${
+                isSelesai ? 'bg-[#DCFCE7] text-[#16A34A] border-[#86EFAC]' : 'bg-[#E0E7FF] text-[#4338CA] border-[#C7D2FE]'
+              }`}>
+                <CheckIcon size={10} />
+                <span>{isSelesai ? 'Selesai' : 'Lanjut Level'}</span>
+              </span>
+              {row.tanggal_selesai && (
+                <p className="text-[10px] text-[#64748B] mt-0.5">
+                  {formatIndoDate(row.tanggal_selesai)}
+                </p>
+              )}
+            </div>
+          );
+        }
+        return (
+          <span className="text-[10px] font-extrabold text-[#D97706] bg-[#FEF3C7] border border-[#FDE68A] px-2 py-0.5 rounded-md inline-block shadow-2xs">
+            Sedang Dipelajari
+          </span>
+        );
+      },
       className: 'md:w-[150px]'
     },
     {
@@ -228,6 +242,16 @@ export const GuruBukuPage: React.FC = () => {
       header: 'Aksi',
       accessor: (row: BukuItem) => (
         <div className="flex items-center gap-1.5 justify-end">
+          {row.status_buku === 'SEDANG_DIPELAJARI' && (
+            <button
+              onClick={() => setNaikLevelTarget(row)}
+              className="px-2.5 py-1 bg-[#EEF2FF] hover:bg-[#E0E7FF] text-[#4338CA] text-[11px] font-black rounded-lg border border-[#C7D2FE] transition-all flex items-center gap-1 cursor-pointer active:scale-95 shadow-2xs"
+              title="Promosikan Siswa Naik Level"
+            >
+              <TrophyIcon size={12} className="text-[#4F46E5]" />
+              <span className="hidden sm:inline">Naik Level</span>
+            </button>
+          )}
           <button
             onClick={() => openEditModal(row)}
             className="p-1.5 bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#FF7043] rounded-lg border border-[#FFCC80] transition-colors flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
@@ -404,6 +428,31 @@ export const GuruBukuPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Status Progres Modul */}
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">
+                Status Progres Modul*
+              </label>
+              <select
+                value={formData.status_buku}
+                onChange={(e) => {
+                  const newStatus = e.target.value as 'SEDANG_DIPELAJARI' | 'SELESAI' | 'LANJUT_LEVEL';
+                  setFormData({
+                    ...formData,
+                    status_buku: newStatus,
+                    tanggal_selesai: (newStatus === 'SELESAI' || newStatus === 'LANJUT_LEVEL') && !formData.tanggal_selesai
+                      ? new Date().toISOString().split('T')[0]
+                      : formData.tanggal_selesai
+                  });
+                }}
+                className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold text-xs focus:border-[#FF7043] focus:outline-none"
+              >
+                <option value="SEDANG_DIPELAJARI">Sedang Dipelajari (Modul Aktif)</option>
+                <option value="SELESAI">Selesai (Pindah ke Riwayat Selesai)</option>
+                <option value="LANJUT_LEVEL">Lanjut Level (Pindah ke Riwayat Level)</option>
+              </select>
+            </div>
+
             {/* Catatan Progres */}
             <div>
               <label className="block text-[#1E293B] font-bold mb-1">
@@ -436,6 +485,16 @@ export const GuruBukuPage: React.FC = () => {
             </div>
           </form>
         </Modal>
+      )}
+
+      {/* Modal Khusus Naik Level Siswa */}
+      {naikLevelTarget && (
+        <NaikLevelModal
+          isOpen={!!naikLevelTarget}
+          onClose={() => setNaikLevelTarget(null)}
+          targetBuku={naikLevelTarget}
+          onSuccess={(msg) => showToast(msg)}
+        />
       )}
     </div>
   );

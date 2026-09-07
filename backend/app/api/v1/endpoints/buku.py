@@ -8,7 +8,7 @@ from app.core.dependencies import get_current_user
 from app.models.users import User, UserRole
 from app.models.buku_siswa import BukuSiswa, StatusBuku
 from app.models.siswa import Siswa
-from app.schemas.buku import BukuSiswaCreate, BukuSiswaUpdate, BukuSiswaResponse
+from app.schemas.buku import BukuSiswaCreate, BukuSiswaUpdate, BukuSiswaResponse, NaikLevelRequest
 from app.services.audit_service import log_activity
 
 router = APIRouter()
@@ -119,7 +119,12 @@ def get_buku_by_siswa(
     """
     # If ortu, ensure accessing own child
     if current_user.role == UserRole.ortu:
-        if str(id_siswa) != str(current_user.uid_terhubung):
+        siswa_obj = db.query(Siswa).filter(Siswa.id == id_siswa, Siswa.is_deleted == False).first()
+        allowed = (
+            str(id_siswa) == str(current_user.uid_terhubung) or
+            (siswa_obj and siswa_obj.uid == str(current_user.uid_terhubung))
+        )
+        if not allowed:
             raise HTTPException(status_code=403, detail="Akses ditolak ke data anak lain")
 
     query = db.query(
@@ -153,15 +158,35 @@ def create_buku_siswa(
     if not siswa:
         raise HTTPException(status_code=404, detail="Data siswa tidak ditemukan")
 
+    st = buku_in.status_buku or StatusBuku.SEDANG_DIPELAJARI
+    tgl_sel = buku_in.tanggal_selesai
+    if tgl_sel and st == StatusBuku.SEDANG_DIPELAJARI:
+        st = StatusBuku.SELESAI
+    elif st in [StatusBuku.SELESAI, StatusBuku.LANJUT_LEVEL] and not tgl_sel:
+        tgl_sel = date.today()
+
+    # Jika buku baru didaftarkan sebagai SEDANG_DIPELAJARI, otomatis ubah buku aktif sebelumnya
+    # untuk siswa dan program yang sama menjadi LANJUT_LEVEL (agar otomatis masuk ke riwayat modul)
+    if st == StatusBuku.SEDANG_DIPELAJARI:
+        prev_active_books = db.query(BukuSiswa).filter(
+            BukuSiswa.id_siswa == buku_in.id_siswa,
+            BukuSiswa.kategori_program == buku_in.kategori_program,
+            BukuSiswa.status_buku == StatusBuku.SEDANG_DIPELAJARI
+        ).all()
+        for old_b in prev_active_books:
+            old_b.status_buku = StatusBuku.LANJUT_LEVEL
+            if not old_b.tanggal_selesai:
+                old_b.tanggal_selesai = buku_in.tanggal_mulai or date.today()
+
     new_buku = BukuSiswa(
         id_siswa=buku_in.id_siswa,
         kategori_program=buku_in.kategori_program,
         level_anak=buku_in.level_anak,
         nomor_buku=buku_in.nomor_buku,
         jenis_buku=buku_in.jenis_buku,
-        status_buku=buku_in.status_buku,
+        status_buku=st,
         tanggal_mulai=buku_in.tanggal_mulai or date.today(),
-        tanggal_selesai=buku_in.tanggal_selesai,
+        tanggal_selesai=tgl_sel,
         catatan_progres=buku_in.catatan_progres
     )
     db.add(new_buku)
@@ -187,6 +212,72 @@ def create_buku_siswa(
     res.uid_siswa = siswa.uid
     return res
 
+@router.post("/naik-level", response_model=BukuSiswaResponse, status_code=status.HTTP_201_CREATED)
+def naik_level_siswa(
+    req: NaikLevelRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Menu Khusus Naik Level Siswa (Guru, Admin, Owner):
+    1. Mengubah status buku lama menjadi LANJUT_LEVEL dengan tanggal_selesai
+    2. Membuat buku baru berstatus SEDANG_DIPELAJARI dengan level_anak baru
+    3. Mencatat aktivitas ke audit log
+    """
+    buku_lama = db.query(BukuSiswa).filter(BukuSiswa.id == req.id_buku_lama).first()
+    if not buku_lama:
+        raise HTTPException(status_code=404, detail="Data buku sebelumnya tidak ditemukan")
+
+    siswa = db.query(Siswa).filter(Siswa.id == buku_lama.id_siswa, Siswa.is_deleted == False).first()
+    if not siswa:
+        raise HTTPException(status_code=404, detail="Data siswa tidak ditemukan")
+
+    tgl_transisi = req.tanggal_naik_level or date.today()
+
+    # 1. Update buku lama menjadi LANJUT_LEVEL
+    buku_lama.status_buku = StatusBuku.LANJUT_LEVEL
+    buku_lama.tanggal_selesai = tgl_transisi
+
+    # 2. Buat buku baru untuk level berikutnya
+    buku_baru = BukuSiswa(
+        id_siswa=buku_lama.id_siswa,
+        kategori_program=buku_lama.kategori_program,
+        level_anak=req.level_baru,
+        nomor_buku=req.nomor_buku_baru or "",
+        jenis_buku=req.jenis_buku_baru or buku_lama.jenis_buku or "Buku Paket",
+        status_buku=StatusBuku.SEDANG_DIPELAJARI,
+        tanggal_mulai=tgl_transisi,
+        tanggal_selesai=None,
+        catatan_progres=req.catatan_naik_level or f"Naik level dari {buku_lama.level_anak}"
+    )
+    db.add(buku_baru)
+
+    log_activity(
+        db=db,
+        action="PROMOSI_LEVEL",
+        role=current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
+        email=current_user.email,
+        modul="Data Buku",
+        deskripsi=f"Siswa {siswa.nama} berhasil NAIK LEVEL dari {buku_lama.level_anak} ke {buku_baru.level_anak} ({buku_baru.kategori_program})",
+        status="SUCCESS",
+        target_id=buku_baru.id,
+        target_nama=siswa.nama,
+        after={
+            "level_lama": buku_lama.level_anak,
+            "level_baru": buku_baru.level_anak,
+            "program": buku_baru.kategori_program,
+            "tanggal": str(tgl_transisi)
+        }
+    )
+
+    db.commit()
+    db.refresh(buku_baru)
+
+    res = BukuSiswaResponse.model_validate(buku_baru)
+    res.nama_siswa = siswa.nama
+    res.uid_siswa = siswa.uid
+    return res
+
 @router.put("/{id}", response_model=BukuSiswaResponse)
 def update_buku_siswa(
     id: int,
@@ -205,8 +296,10 @@ def update_buku_siswa(
     for field, val in update_data.items():
         setattr(buku, field, val)
 
-    # If status is set to SELESAI and tanggal_selesai is empty, auto set today
-    if buku.status_buku == StatusBuku.SELESAI and not buku.tanggal_selesai:
+    # Sinkronisasi status_buku dan tanggal_selesai
+    if buku.tanggal_selesai and buku.status_buku == StatusBuku.SEDANG_DIPELAJARI:
+        buku.status_buku = StatusBuku.SELESAI
+    elif buku.status_buku in [StatusBuku.SELESAI, StatusBuku.LANJUT_LEVEL] and not buku.tanggal_selesai:
         buku.tanggal_selesai = date.today()
 
     siswa = db.query(Siswa).filter(Siswa.id == buku.id_siswa).first()
@@ -244,6 +337,10 @@ def delete_buku_siswa(
     """
     if current_user.role not in [UserRole.admin, UserRole.owner]:
         raise HTTPException(status_code=403, detail="Hanya admin/owner yang dapat menghapus data buku")
+
+    buku = db.query(BukuSiswa).filter(BukuSiswa.id == id).first()
+    if not buku:
+        raise HTTPException(status_code=404, detail="Data buku tidak ditemukan")
 
     siswa = db.query(Siswa).filter(Siswa.id == buku.id_siswa).first()
 

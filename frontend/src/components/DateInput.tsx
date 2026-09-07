@@ -82,12 +82,7 @@ export const DateInput: React.FC<DateInputProps> = ({
         placeholder={placeholder}
         onChange={handleTextChange}
         onBlur={handleBlur}
-        onClick={(e) => {
-          // Jika diklik di icon kalender atau kosong, buka picker
-          if (!displayText) {
-            openPicker();
-          }
-        }}
+        onClick={openPicker}
         className={`${className} pr-10`}
       />
       <button
