@@ -28,6 +28,9 @@ export interface SiswaAbsensi {
   status_hari_ini?: string;
   jam_tap_hari_ini?: string;
   jumlah_sesi_hari_ini?: number;
+  nama_guru_pembimbing?: string;
+  id_guru_pembimbing?: number;
+  is_my_student?: boolean;
 }
 
 interface StudentAttendanceTableProps {
@@ -40,6 +43,8 @@ interface StudentAttendanceTableProps {
   isSaving: boolean;
   activeProgram?: string;
   teacherPrograms?: string[];
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
 }
 
 const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
@@ -52,6 +57,8 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
   isSaving,
   activeProgram = 'all',
   teacherPrograms = [],
+  activeTab = 'semua',
+  onTabChange,
 }) => {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
@@ -165,15 +172,23 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
 
   return (
     <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-[#E0E0E0] flex flex-col overflow-hidden">
-      {/* Header & Date Picker */}
-      <div className="p-4 sm:p-5 border-b border-[#F5F5F5] flex flex-col lg:flex-row gap-4 lg:items-center justify-between">
-        <div className="space-y-2">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-4">
-            <h2 className="text-base sm:text-lg font-black text-[#1E293B] shrink-0">
+      {/* Header & Date/Time/Search Bar */}
+      <div className="p-4 sm:p-5 border-b border-[#F5F5F5] space-y-3.5">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+          <div className="space-y-1">
+            <h2 className="text-base sm:text-lg font-black text-[#1E293B]">
               Input Absensi Siswa
             </h2>
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="w-36 sm:w-40">
+            <p className="text-[11px] sm:text-xs text-[#64748B]">
+              Pilih tanggal di atas. Jika hari ini selesai, Anda bisa mengubah ke tanggal lain untuk hari berikutnya.
+            </p>
+          </div>
+
+          {/* Controls: Date, Time & Search strictly aligned in 1 horizontal row */}
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0">
+            {/* Date & Time strictly side-by-side in 1 row (no vertical wrapping between date and time) */}
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="w-[145px] sm:w-[155px]">
                 <DateInput
                   value={tanggalTerpilih}
                   onChange={(e) => onTanggalChange(e.target.value)}
@@ -185,40 +200,97 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
                   type="time"
                   value={jamTerpilih}
                   onChange={(e) => onJamChange(e.target.value)}
-                  className="px-2.5 py-1.5 bg-[#FFF3E0] text-[#E65100] border border-[#FFE082] rounded-xl text-xs font-black uppercase focus:outline-none focus:border-[#FF7043] shadow-2xs cursor-pointer min-w-[95px]"
+                  className="px-2.5 py-1.5 bg-[#FFF3E0] text-[#E65100] border border-[#FFE082] rounded-xl text-xs font-black uppercase focus:outline-none focus:border-[#FF7043] shadow-2xs cursor-pointer w-[92px]"
                 />
               </div>
             </div>
+
+            {/* Search */}
+            <div className="relative w-full sm:w-52 md:w-60 shrink-0">
+              <div className="flex items-center gap-2 border border-[#E2E8F0] rounded-xl px-3 bg-[#F8FAFC] focus-within:border-[#FF7043] focus-within:bg-white transition-all shadow-2xs">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Cari siswa..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="flex-1 bg-transparent py-1.5 text-xs outline-none text-[#1E293B]"
+                />
+                {search && (
+                  <button onClick={() => setSearch('')} className="text-[#94A3B8] hover:text-[#FF7043] font-bold text-xs p-1 cursor-pointer" title="Hapus pencarian">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
-          <p className="text-[11px] sm:text-xs text-[#64748B]">
-            Pilih tanggal di atas. Jika hari ini selesai, Anda bisa mengubah ke tanggal lain untuk hari berikutnya.
-          </p>
         </div>
 
-        {/* Search */}
-        <div className="relative w-full lg:w-64 shrink-0">
-          <div className="flex items-center gap-2 border border-[#E2E8F0] rounded-xl px-3 bg-[#F8FAFC] focus-within:border-[#FF7043] focus-within:bg-white transition-all shadow-2xs">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-            <input
-              type="text"
-              placeholder="Cari siswa..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 bg-transparent py-2 text-xs outline-none text-[#1E293B]"
-            />
-            {search && (
-              <button onClick={() => setSearch('')} className="text-[#94A3B8] hover:text-[#FF7043] font-bold text-xs p-1 cursor-pointer" title="Hapus pencarian">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
+        {/* Tab Menu di Bawah Kalender & Jam: "Semua", "Sempoa SIP", etc. */}
+        {onTabChange && (
+          <div className="pt-2.5 border-t border-[#F1F5F9] flex flex-wrap items-center justify-between gap-2.5">
+            <div className="flex items-center gap-2 overflow-x-auto pb-0.5 scrollbar-thin">
+              {/* Tab "Semua" */}
+              <button
+                type="button"
+                onClick={() => onTabChange('semua')}
+                className={`px-4 py-2 rounded-xl text-xs font-black transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                  activeTab === 'semua'
+                    ? 'bg-[#FF7043] text-white shadow-sm ring-2 ring-[#FF7043]/30'
+                    : 'bg-[#F8FAFC] text-[#64748B] border border-[#E2E8F0] hover:bg-[#F1F5F9]'
+                }`}
+              >
+                <span>Semua</span>
+                {activeTab === 'semua' && (
+                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-white/25 text-white">
+                    {filteredStudents.length}
+                  </span>
+                )}
               </button>
-            )}
+
+              {/* Tab program yang diampu guru */}
+              {(teacherPrograms || []).map((prog: string) => {
+                const isActive = activeTab === prog;
+                return (
+                  <button
+                    key={prog}
+                    type="button"
+                    onClick={() => onTabChange(prog)}
+                    className={`px-4 py-2 rounded-xl text-xs font-black transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                      isActive
+                        ? 'bg-[#FF7043] text-white shadow-sm ring-2 ring-[#FF7043]/30'
+                        : 'bg-[#F8FAFC] text-[#64748B] border border-[#E2E8F0] hover:bg-[#F1F5F9]'
+                    }`}
+                  >
+                    <span>{prog}</span>
+                    {isActive && (
+                      <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-white/25 text-white">
+                        {filteredStudents.length}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="text-[11px] font-bold text-[#64748B] bg-[#FFF8F3] px-3 py-1.5 rounded-xl border border-[#FFE082] flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#FF7043]" />
+              <span>
+                {activeTab === 'semua' ? (
+                  <>Menampilkan <strong>Semua Siswa Program</strong> (Dapat Absen Lintas Guru)</>
+                ) : (
+                  <>Khusus <strong>Siswa Bimbingan Sendiri</strong> ({activeTab})</>
+                )}
+              </span>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Table */}
@@ -288,6 +360,23 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
                               ? `${siswa.asal_sekolah}${siswa.kelas_sekolah ? ` • ${siswa.kelas_sekolah}` : ''}`
                               : `UID: ${siswa.uid}`}
                           </p>
+                          {activeTab === 'semua' && (
+                            <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                              <span
+                                className={`px-2 py-0.5 rounded-md text-[10px] font-bold border shadow-2xs ${
+                                  siswa.is_my_student
+                                    ? 'bg-[#E8F5E9] text-[#2E7D32] border-[#A5D6A7]'
+                                    : siswa.nama_guru_pembimbing && siswa.nama_guru_pembimbing !== 'Belum Ditugaskan'
+                                    ? 'bg-[#FFF3E0] text-[#E65100] border-[#FFCC80]'
+                                    : 'bg-[#F1F5F9] text-[#64748B] border-[#CBD5E1] italic'
+                                }`}
+                              >
+                                {siswa.is_my_student
+                                  ? `Guru: Saya (${siswa.nama_guru_pembimbing || 'Pengajar'})`
+                                  : `Guru: ${siswa.nama_guru_pembimbing || 'Belum Ditugaskan'}`}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </td>

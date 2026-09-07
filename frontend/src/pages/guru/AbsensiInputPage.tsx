@@ -27,29 +27,41 @@ export const AbsensiInputPage: React.FC = () => {
   const [inputDate, setInputDate] = useState<string>(todayStr);
   const [inputTime, setInputTime] = useState<string>(`${nowHour}:${nowMinute}`);
   const [selectedProgram, setSelectedProgram] = useState<string>('');
+  const [activeTabProgram, setActiveTabProgram] = useState<string>('');
 
   // Rekap date filter state (defaults to today)
   const [rekapDate, setRekapDate] = useState<string>(todayStr);
 
+  const isAllScope = activeTabProgram === 'semua';
+  const queryProgram = isAllScope ? 'all' : (activeTabProgram || undefined);
+  const queryScope = isAllScope ? 'all' : 'my';
+
   // Fetch Students for Attendance
   const { data: siswaData, isLoading: isLoadingSiswa } = useQuery({
-    queryKey: ['guru-siswa-absensi', inputDate, selectedProgram],
+    queryKey: ['guru-siswa-absensi', inputDate, activeTabProgram],
     queryFn: async () => {
       const res = await apiClient.get('/portal-guru/siswa-absensi', {
-        params: { tanggal: inputDate, program: selectedProgram || undefined },
+        params: {
+          tanggal: inputDate,
+          program: queryProgram,
+          scope: queryScope,
+        },
       });
       return res.data;
     },
   });
 
-  // Sync initial program once loaded
+  // Sync initial program once loaded (defaults to the first program taught by this teacher)
   React.useEffect(() => {
     if (siswaData?.available_programs && siswaData.available_programs.length > 0) {
-      if (!selectedProgram || !siswaData.available_programs.includes(selectedProgram)) {
+      if (!activeTabProgram) {
+        setActiveTabProgram(siswaData.available_programs[0]);
+      }
+      if (!selectedProgram) {
         setSelectedProgram(siswaData.available_programs[0]);
       }
     }
-  }, [siswaData?.available_programs, selectedProgram]);
+  }, [siswaData?.available_programs, activeTabProgram, selectedProgram]);
 
   // Fetch Teacher's Attendance Logs
   const { data: logData, isLoading: isLoadingLog } = useQuery({
@@ -113,7 +125,7 @@ export const AbsensiInputPage: React.FC = () => {
         catatan_pembelajaran: catatan || null,
         tanggal: tanggal,
         jam: jam,
-        program: selectedProgram !== 'all' ? selectedProgram : null,
+        program: activeTabProgram !== 'all' && activeTabProgram !== 'semua' ? activeTabProgram : null,
       };
       const res = await apiClient.post('/portal-guru/absensi/simpan', payload);
       return res.data;
@@ -244,50 +256,6 @@ export const AbsensiInputPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Active Program Banner & Multi-Program Slide Bar */}
-              {siswaData?.available_programs && siswaData.available_programs.length > 0 && (
-                <div className="bg-white p-3.5 rounded-2xl border border-[#E0E0E0] shadow-sm space-y-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Sedang Mengabsen:</span>
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-[#FFF3E0] text-[#E65100] border border-[#FFE082]">
-                          {selectedProgram === 'all' ? 'Semua Program' : (selectedProgram || siswaData.available_programs[0])}
-                        </span>
-                      </div>
-                      {siswaData.available_programs.length > 1 && (
-                        <p className="text-xs text-[#1E293B] font-bold mt-1">
-                          Pilih program di slide bar untuk memfilter daftar absensi siswa:
-                        </p>
-                      )}
-                    </div>
-                    <span className="text-xs font-bold text-[#64748B] bg-[#F8FAFC] px-3 py-1 rounded-xl border border-[#E2E8F0] self-start sm:self-auto">
-                      {siswaData?.siswa?.length || 0} Siswa Terdaftar
-                    </span>
-                  </div>
-
-                  {/* Horizontal Slide Bar / Tabs (Hanya jika mengajar > 1 program) */}
-                  {siswaData.available_programs.length > 1 && (
-                    <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
-                      {siswaData.available_programs.map((prog: string) => (
-                        <button
-                          key={prog}
-                          type="button"
-                          onClick={() => setSelectedProgram(prog)}
-                          className={`px-4 py-2 rounded-xl text-xs font-black transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0 ${
-                            selectedProgram === prog
-                              ? 'bg-[#FF7043] text-white shadow-sm ring-2 ring-[#FF7043]/30'
-                              : 'bg-[#F8FAFC] text-[#64748B] border border-[#E2E8F0] hover:bg-[#F1F5F9]'
-                          }`}
-                        >
-                          {prog}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
               <StudentAttendanceTable
                 students={siswaData?.siswa || []}
                 tanggalTerpilih={inputDate}
@@ -296,8 +264,15 @@ export const AbsensiInputPage: React.FC = () => {
                 onJamChange={setInputTime}
                 onSave={handleSaveAttendance}
                 isSaving={saveMutation.isPending}
-                activeProgram={selectedProgram}
+                activeProgram={activeTabProgram}
                 teacherPrograms={siswaData?.available_programs || []}
+                activeTab={activeTabProgram}
+                onTabChange={(tab) => {
+                  setActiveTabProgram(tab);
+                  if (tab !== 'semua') {
+                    setSelectedProgram(tab);
+                  }
+                }}
               />
             </div>
           )}

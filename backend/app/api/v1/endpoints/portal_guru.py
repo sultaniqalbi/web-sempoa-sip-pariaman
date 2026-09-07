@@ -145,6 +145,46 @@ def _get_guru_students(db: Session, guru: Guru, matching_guru_ids: List[int], fi
     assigned_students.sort(key=lambda s: (s.nama or "").lower())
     return assigned_students
 
+def _resolve_student_guru(s: Siswa, prog_name: Optional[str], guru_map: Dict[int, Guru]) -> Optional[Guru]:
+    """
+    Cari Guru yang SAH membimbing siswa s untuk program prog_name.
+    1. Cek guru_per_program
+    2. Cek id_guru (jika cocok dengan program)
+    """
+    if not prog_name or prog_name.lower() in ['all', 'semua']:
+        s_progs = [p.strip() for p in (s.kategori_program or "").split(",") if p.strip()]
+        prog_name = s_progs[0] if s_progs else "Sempoa SIP"
+    
+    prog_lower = prog_name.strip().lower()
+    
+    # 1. Cek guru_per_program
+    if s.guru_per_program:
+        try:
+            mapping = json.loads(s.guru_per_program)
+            if isinstance(mapping, dict):
+                for k, v in mapping.items():
+                    k_lower = k.strip().lower()
+                    if prog_lower in k_lower or k_lower in prog_lower:
+                        if v is not None and str(v).isdigit():
+                            gid = int(v)
+                            if gid in guru_map:
+                                return guru_map[gid]
+                        break
+        except Exception:
+            pass
+            
+    # 2. Cek id_guru langsung jika relevan dengan program
+    if s.id_guru and s.id_guru in guru_map:
+        g = guru_map[s.id_guru]
+        if g.kategori_program:
+            g_progs = [gp.strip().lower() for gp in g.kategori_program.split(",") if gp.strip()]
+            if any(prog_lower in gp or gp in prog_lower for gp in g_progs):
+                return g
+        else:
+            return g
+            
+    return None
+
 @router.get("/dashboard", response_model=Dict[str, Any])
 async def get_guru_dashboard(
     db: Session = Depends(get_db),
@@ -407,16 +447,45 @@ async def get_absensi_list(
 @router.get("/siswa-absensi")
 async def get_siswa_absensi(
     tanggal: Optional[str] = Query(None, description="Format YYYY-MM-DD"),
-    program: Optional[str] = Query(None, description="Filter program spesifik (Sempoa SIP, Fonem, dll)"),
+    program: Optional[str] = Query(None, description="Filter program spesifik (Sempoa SIP, Fonem, dll) atau 'all'"),
+    scope: Optional[str] = Query('my', description="'my' untuk murid bimbingan sendiri, 'all' untuk semua murid di program ini"),
     db: Session = Depends(get_db),
     current_user: User = Depends(teacher_only)
 ):
+    from app.api.v1.endpoints.jadwal import is_student_assigned_to_teacher
+
     guru = _get_current_guru(db, current_user)
     available_programs = [p.strip() for p in (guru.kategori_program or "Sempoa SIP").split(",") if p.strip()]
-    current_active_prog = program if (program and program.lower() != 'all') else (available_programs[0] if available_programs else None)
-
+    
+    # Matching guru IDs for this teacher
     matching_ids = _get_matching_guru_ids(db, guru)
-    students = _get_guru_students(db, guru, matching_ids, filter_program=program)
+
+    # Fetch all gurus for resolving assigned teacher name
+    all_gurus = db.query(Guru).all()
+    guru_map = {g.id: g for g in all_gurus}
+
+    # Resolve target program
+    if program and program.lower() not in ['all', 'semua']:
+        target_progs = [program.strip().lower()]
+        current_active_prog = program.strip()
+    else:
+        target_progs = [p.strip().lower() for p in available_programs]
+        current_active_prog = 'all'
+
+    is_all_scope = (scope and scope.lower() in ['all', 'semua']) or (program and program.lower() in ['all', 'semua'])
+
+    if is_all_scope:
+        # Tampilkan SEMUA siswa yang terdaftar di program-program yang diajar guru ini
+        all_active = db.query(Siswa).filter(Siswa.is_deleted == False).all()
+        students = []
+        for s in all_active:
+            s_progs = [p.strip().lower() for p in (s.kategori_program or "").split(",") if p.strip()]
+            if any(any(tp in sp or sp in tp for tp in target_progs) for sp in s_progs):
+                students.append(s)
+        students.sort(key=lambda s: (s.nama or "").lower())
+    else:
+        # Default: HANYA murid yang sah dibimbing oleh guru ini
+        students = _get_guru_students(db, guru, matching_ids, filter_program=current_active_prog if current_active_prog != 'all' else None)
 
     if tanggal:
         try:
@@ -436,7 +505,7 @@ async def get_siswa_absensi(
             AbsensiLog.uid.in_(uids),
             func.date(AbsensiLog.waktu) == target_date
         )
-        if current_active_prog:
+        if current_active_prog and current_active_prog != 'all':
             log_query = log_query.filter(
                 or_(
                     func.lower(AbsensiLog.kategori_program) == current_active_prog.lower(),
@@ -499,6 +568,18 @@ async def get_siswa_absensi(
         elif s.sisa_pertemuan <= 0:
             status_keterangan = "Kuota Pertemuan Habis"
 
+        # Resolve assigned guru for student
+        assigned_g = _resolve_student_guru(s, current_active_prog if current_active_prog != 'all' else None, guru_map)
+        nama_guru_pembimbing = (
+            assigned_g.nama_panggilan or (assigned_g.nama.split()[0] if assigned_g.nama else assigned_g.nama)
+        ) if assigned_g else "Belum Ditugaskan"
+
+        check_progs = target_progs if target_progs else [p.strip().lower() for p in available_programs]
+        is_my_student = any(
+            any(is_student_assigned_to_teacher(s, gid, cp, db=db) for cp in check_progs)
+            for gid in matching_ids
+        )
+
         result.append({
             "no": i,
             "id": s.id,
@@ -521,14 +602,18 @@ async def get_siswa_absensi(
             "tanggal_lengkap": now_str,
             "status_hari_ini": today_log["status"] if today_log else None,
             "jam_tap_hari_ini": today_log["jam"] if today_log else None,
-            "jumlah_sesi_hari_ini": today_log["jumlah_sesi"] if today_log else 1
+            "jumlah_sesi_hari_ini": today_log["jumlah_sesi"] if today_log else 1,
+            "nama_guru_pembimbing": nama_guru_pembimbing,
+            "id_guru_pembimbing": assigned_g.id if assigned_g else None,
+            "is_my_student": is_my_student,
         })
         
     return {
         "tanggal_hari_ini": target_date.strftime("%A, %d %B %Y"),
         "siswa": result,
         "available_programs": available_programs,
-        "selected_program": current_active_prog
+        "selected_program": current_active_prog,
+        "scope": "all" if is_all_scope else "my"
     }
 
 class SiswaAbsensiItem(BaseModel):
@@ -625,16 +710,29 @@ async def save_siswa_absensi(
     prog_conditions = [func.lower(Siswa.kategori_program).like(f"%{p}%") for p in programs]
 
     # Effective program being marked
+    is_general_save = not data.program or data.program.lower() in ['all', 'semua']
     active_program = data.program or (programs[0] if len(programs) == 1 else "Sempoa SIP")
 
     for item in data.siswa_absensi:
-        siswa = db.query(Siswa).filter(
+        q_siswa = db.query(Siswa).filter(
             Siswa.id == item.siswa_id,
-            func.lower(Siswa.kategori_program).like(f"%{active_program.lower()}%"),
             Siswa.is_deleted == False
-        ).first()
+        )
+        if not is_general_save:
+            q_siswa = q_siswa.filter(func.lower(Siswa.kategori_program).like(f"%{active_program.lower()}%"))
+        siswa = q_siswa.first()
         if not siswa:
             continue
+
+        effective_prog = active_program
+        if is_general_save:
+            s_progs = [p.strip() for p in (siswa.kategori_program or "").split(",") if p.strip()]
+            for p in programs:
+                if any(p.lower() in sp.lower() or sp.lower() in p.lower() for sp in s_progs):
+                    effective_prog = p
+                    break
+            if not effective_prog and s_progs:
+                effective_prog = s_progs[0]
 
         status_enum = status_map.get(item.status.lower(), StatusAbsensi.HADIR)
 
@@ -645,13 +743,13 @@ async def save_siswa_absensi(
         except ValueError:
             mode_enum = ModeAbsensi.OFFLINE
 
-        # Check if already marked on this date strictly for this active_program
+        # Check if already marked on this date strictly for this effective_prog
         existing_log = db.query(AbsensiLog).filter(
             AbsensiLog.uid == siswa.uid,
             func.date(AbsensiLog.waktu) == now.date(),
             or_(
-                func.lower(AbsensiLog.kategori_program) == active_program.lower(),
-                func.lower(AbsensiLog.kategori_program).like(f"%{active_program.lower()}%"),
+                func.lower(AbsensiLog.kategori_program) == effective_prog.lower(),
+                func.lower(AbsensiLog.kategori_program).like(f"%{effective_prog.lower()}%"),
                 AbsensiLog.kategori_program == None
             )
         ).first()
@@ -682,29 +780,29 @@ async def save_siswa_absensi(
             existing_log.status = status_enum
             existing_log.waktu = now
             existing_log.mode = mode_enum
-            existing_log.kategori_program = active_program
+            existing_log.kategori_program = effective_prog
             existing_log.catatan = catatan_text
 
             # If changed from IZIN to HADIR or ALFA: deduct remaining sessions by sesi_count
             if prev_status == StatusAbsensi.IZIN and status_enum in [StatusAbsensi.HADIR, StatusAbsensi.ALFA]:
-                _update_student_program_quota(siswa, active_program, -sesi_count)
+                _update_student_program_quota(siswa, effective_prog, -sesi_count)
             # If changed from HADIR or ALFA to IZIN: restore prev_sesi sessions
             elif prev_status in [StatusAbsensi.HADIR, StatusAbsensi.ALFA] and status_enum == StatusAbsensi.IZIN:
-                _update_student_program_quota(siswa, active_program, +prev_sesi)
+                _update_student_program_quota(siswa, effective_prog, +prev_sesi)
             # If still in HADIR or ALFA, but session count changed
             elif prev_status in [StatusAbsensi.HADIR, StatusAbsensi.ALFA] and status_enum in [StatusAbsensi.HADIR, StatusAbsensi.ALFA]:
                 sesi_diff = sesi_count - prev_sesi
                 if sesi_diff != 0:
-                    _update_student_program_quota(siswa, active_program, -sesi_diff)
+                    _update_student_program_quota(siswa, effective_prog, -sesi_diff)
         else:
             # Student has no sessions left and no log exists today: skip unless marked IZIN or is TK
-            is_tk = "tk" in (active_program or "").lower()
+            is_tk = "tk" in (effective_prog or "").lower()
             if siswa.sisa_pertemuan <= 0 and not is_tk and status_enum in [StatusAbsensi.HADIR, StatusAbsensi.ALFA]:
                 continue
 
             log = AbsensiLog(
                 uid=siswa.uid,
-                kategori_program=active_program,
+                kategori_program=effective_prog,
                 waktu=now,
                 mode=mode_enum,
                 status=status_enum,
@@ -713,10 +811,10 @@ async def save_siswa_absensi(
             )
             db.add(log)
             if status_enum in [StatusAbsensi.HADIR, StatusAbsensi.ALFA]:
-                _update_student_program_quota(siswa, active_program, -sesi_count)
+                _update_student_program_quota(siswa, effective_prog, -sesi_count)
 
         # Update SPP status based on remaining meetings (khusus non-TK karena TK berbasis kalender bulanan)
-        is_tk = "tk" in (active_program or "").lower()
+        is_tk = "tk" in (effective_prog or "").lower()
         if not is_tk:
             if siswa.sisa_pertemuan == 0 and siswa.status_spp != StatusSPP.EXPIRED:
                 siswa.status_spp = StatusSPP.EXPIRED
