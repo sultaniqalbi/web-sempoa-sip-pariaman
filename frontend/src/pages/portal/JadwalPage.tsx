@@ -279,7 +279,7 @@ export const JadwalPage: React.FC = () => {
 
       if (teachers.length <= 1) {
         const teacher = teachers[0];
-        let rowStudents = j.students || [];
+        let rowStudents: any[] = [];
         if (teacher && siswaList && siswaList.length > 0) {
           const matchedSiswas = siswaList.filter((s) =>
             isStudentAssignedToTeacherClient(s, teacher.id, j.kategori_program)
@@ -292,12 +292,16 @@ export const JadwalPage: React.FC = () => {
             kategori_program: s.kategori_program,
             foto_profil: s.foto_profil,
           }));
+        } else if (teacher && Array.isArray(j.students)) {
+          rowStudents = j.students;
         }
+
         result.push({
           ...j,
           individualTeacher: teacher,
           students: rowStudents,
-          siswa_names: rowStudents.map((s: any) => s.nama_panggilan || s.nama).join(', ') || undefined,
+          siswa_ids: rowStudents.map((s: any) => s.id).join(', '),
+          siswa_names: rowStudents.map((s: any) => s.nama_panggilan || s.nama).join(', '),
           rowKey: `jadwal-${j.id}`,
         });
       } else {
@@ -322,7 +326,8 @@ export const JadwalPage: React.FC = () => {
             hari: t.hari_wajib || j.hari,
             individualTeacher: t,
             students: rowStudents,
-            siswa_names: rowStudents.map((s: any) => s.nama_panggilan || s.nama).join(', ') || undefined,
+            siswa_ids: rowStudents.map((s: any) => s.id).join(', '),
+            siswa_names: rowStudents.map((s: any) => s.nama_panggilan || s.nama).join(', '),
             rowKey: `jadwal-${j.id}-teacher-${t.id || idx}`,
           });
         });
@@ -645,12 +650,12 @@ export const JadwalPage: React.FC = () => {
       accessor: (row: any) => {
         let count = 0;
         let names = '';
-        if (row.students && row.students.length > 0) {
+        if (Array.isArray(row.students)) {
           count = row.students.length;
           names = row.students.map((s: any) => s.nama_panggilan || s.nama).join(', ');
         } else if (row.siswa_names) {
           names = row.siswa_names;
-          count = names.split(',').length;
+          count = names.split(',').filter(Boolean).length;
         } else if (row.siswa_ids) {
           count = row.siswa_ids.split(',').filter(Boolean).length;
         }

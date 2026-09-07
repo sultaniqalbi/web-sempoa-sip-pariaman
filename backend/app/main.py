@@ -364,6 +364,7 @@ def on_startup():
 
                 # Sinkronkan seluruh jadwal kelas yang ada di database agar HANYA memuat murid riil
                 all_schedules = db_session.query(Jadwal).all()
+                logger.info(f"Auto-migration: Reconciling {len(all_schedules)} class schedules with genuine student assignments...")
                 reconciled_sched_count = 0
                 for s_row in all_schedules:
                     teacher_id = s_row.id_guru
@@ -389,9 +390,11 @@ def on_startup():
 
                 if reconciled_sched_count > 0:
                     db_session.commit()
-                    logger.info(f"Auto-migration: Reconciled {reconciled_sched_count} schedule rows with genuine assigned student lists")
+                    logger.info(f"Auto-migration: Successfully cleaned and reconciled {reconciled_sched_count} schedule rows with genuine student lists")
+                else:
+                    logger.info("Auto-migration: All class schedules are already in sync with genuine student lists")
         except Exception as split_err:
-            logger.debug(f"Jadwal split & reconciliation notice: {split_err}")
+            logger.warning(f"Jadwal split & reconciliation notice: {split_err}")
 
         run_seed()
 
