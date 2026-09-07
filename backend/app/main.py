@@ -166,6 +166,28 @@ def on_startup():
             except Exception as e_sql:
                 logger.debug(f"Auto-migration statement notice: {e_sql}")
 
+        # Cleanup: Hapus tuntas seluruh log absensi dummy / antah berantah / kartu tidak terdaftar dari database
+        try:
+            with engine.connect() as conn:
+                conn.execute(text("""
+                    DELETE FROM absensi_log 
+                    WHERE uid ILIKE '%dummy%' 
+                       OR uid ILIKE 'sp-0926%'
+                       OR uid = 'sp-0926FN8K'
+                       OR (
+                           REPLACE(UPPER(uid), ' ', '') NOT IN (
+                               SELECT REPLACE(UPPER(uid), ' ', '') FROM guru WHERE is_deleted = FALSE AND uid IS NOT NULL
+                           )
+                           AND REPLACE(UPPER(uid), ' ', '') NOT IN (
+                               SELECT REPLACE(UPPER(uid), ' ', '') FROM siswa WHERE is_deleted = FALSE AND uid IS NOT NULL
+                           )
+                       );
+                """))
+                conn.commit()
+                logger.info("Auto-cleanup: Purged orphaned & dummy absensi logs from database")
+        except Exception as e_clean:
+            logger.debug(f"Auto-cleanup absensi notice: {e_clean}")
+
         logger.info("Auto-migration: Finished executing independent schema sync queries")
 
         # Auto-migration for bukti_transfer (ensure table exists on any DB engine)

@@ -55,31 +55,33 @@ async def read_absensi_list(
     db: Session = Depends(get_db),
     current_user: User = Depends(RoleChecker([UserRole.admin, UserRole.owner, UserRole.guru]))
 ):
-    logs = crud_absensi.get_absensi_list(db, skip=skip, limit=limit)
-    page_uids = set()
-    for l in logs:
-        if l.uid:
-            u_clean = l.uid.strip().upper()
-            page_uids.add(u_clean)
-            page_uids.add(u_clean.replace(" ", ""))
-
+    # Ambil seluruh Guru yang aktif dan terdaftar
+    gurus = db.query(Guru).filter(Guru.is_deleted == False).all()
     guru_map = {}
-    siswa_map = {}
-    if page_uids:
-        gurus = db.query(Guru).filter(Guru.is_deleted == False, Guru.uid.in_(page_uids)).all()
-        for g in gurus:
-            if g.uid:
-                guru_map[g.uid.strip().upper()] = g
-                guru_map[g.uid.strip().upper().replace(" ", "")] = g
+    valid_uids_clean = set()
+    for g in gurus:
+        if g.uid:
+            u_clean = g.uid.strip().upper()
+            u_nospace = u_clean.replace(" ", "")
+            guru_map[u_clean] = g
+            guru_map[u_nospace] = g
+            valid_uids_clean.add(u_clean)
+            valid_uids_clean.add(u_nospace)
 
-        siswas = db.query(Siswa).filter(Siswa.is_deleted == False, Siswa.uid.in_(page_uids)).all()
-        for s in siswas:
-            if s.uid:
-                siswa_map[s.uid.strip().upper()] = s
-                siswa_map[s.uid.strip().upper().replace(" ", "")] = s
+    if not valid_uids_clean:
+        return []
 
-    result = []
-    
+    # Filter query agar HANYA mengambil log dari Guru terdaftar dan aktif (menolak tegas data dummy & unregistered card)
+    norm_uid_col = func.replace(func.upper(AbsensiLog.uid), " ", "")
+    logs = (
+        db.query(AbsensiLog)
+        .filter(norm_uid_col.in_(list(valid_uids_clean)))
+        .order_by(AbsensiLog.waktu.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
     # Auto-reconcile: sinkronkan status log kehadiran guru sesuai aturan resmi keterlambatan:
     # 1. Guru datang <= 08:00 WIB (atau sesuai toleransi jadwal khusus) -> HADIR
     # 2. Guru datang lewat toleransi keterlambatan -> TERLAMBAT
@@ -107,7 +109,8 @@ async def read_absensi_list(
     denda_map = {}
     norm_uid_expr = func.replace(func.upper(AbsensiLog.uid), " ", "")
     late_counts = db.query(norm_uid_expr, func.count(AbsensiLog.id)).filter(
-        AbsensiLog.status == StatusAbsensi.TERLAMBAT
+        AbsensiLog.status == StatusAbsensi.TERLAMBAT,
+        norm_uid_expr.in_(list(valid_uids_clean))
     ).group_by(norm_uid_expr).all()
 
     for row in late_counts:
@@ -115,11 +118,15 @@ async def read_absensi_list(
         if uid_val:
             denda_map[uid_val.strip().upper()] = count * 1000
 
+    result = []
     for log in logs:
         clean_uid = log.uid.strip().upper() if log.uid else ""
         nospace_uid = clean_uid.replace(" ", "")
         g = guru_map.get(clean_uid) or guru_map.get(nospace_uid)
-        s = siswa_map.get(clean_uid) or siswa_map.get(nospace_uid)
+
+        # Proteksi Mutlak: Lewati jika bukan guru yang terdaftar
+        if not g:
+            continue
 
         resp = AbsensiResponse.model_validate(log)
         if log.waktu:
@@ -134,27 +141,17 @@ async def read_absensi_list(
             else:
                 resp.waktu_keluar = log.waktu_keluar.replace(tzinfo=WIB)
 
-        if g:
-            norm_g_uid = g.uid.strip().upper().replace(" ", "") if g.uid else ""
-            resp.guru_nama = g.nama
-            resp.kategori_program = g.kategori_program
-            resp.role = "guru"
+        norm_g_uid = g.uid.strip().upper().replace(" ", "") if g.uid else ""
+        resp.guru_nama = g.nama
+        resp.kategori_program = g.kategori_program
+        resp.role = "guru"
 
-            # HANYA Direktur / Owner yang BEBAS DENDA (denda selalu 0)
-            if is_owner_or_direktur(g):
-                resp.denda_terakumulasi = 0
-            else:
-                resp.denda_terakumulasi = denda_map.get(norm_g_uid) or denda_map.get(nospace_uid) or denda_map.get(clean_uid) or 0
-        elif s:
-            resp.guru_nama = s.nama
-            resp.kategori_program = s.kategori_program
-            resp.role = "siswa"
+        # HANYA Direktur / Owner yang BEBAS DENDA (denda selalu 0)
+        if is_owner_or_direktur(g):
             resp.denda_terakumulasi = 0
         else:
-            resp.guru_nama = "Kartu Belum Terdaftar"
-            resp.kategori_program = "-"
-            resp.role = "unregistered"
-            resp.denda_terakumulasi = 0
+            resp.denda_terakumulasi = denda_map.get(norm_g_uid) or denda_map.get(nospace_uid) or denda_map.get(clean_uid) or 0
+
         result.append(resp)
     return result
 
@@ -755,9 +752,10 @@ async def export_absensi_sheets(
         clean_u = a.uid.strip().upper() if a.uid else ""
         nospace_u = clean_u.replace(" ", "")
         guru = g_map.get(clean_u) or g_map.get(nospace_u)
-        siswa = s_map.get(clean_u) or s_map.get(nospace_u)
-        nama = guru.nama if guru else (siswa.nama if siswa else "Kartu Belum Terdaftar")
-        prog = guru.kategori_program if guru else (siswa.kategori_program if siswa else "-")
+        if not guru:
+            continue
+        nama = guru.nama
+        prog = guru.kategori_program or "-"
         mode_str = a.mode.value if hasattr(a.mode, 'value') else str(a.mode or "ONLINE")
         status_str = a.status.value if hasattr(a.status, 'value') else str(a.status or "HADIR")
         waktu_wib = a.waktu.astimezone(WIB).strftime("%Y-%m-%d %H:%M:%S WIB") if a.waktu else "-"

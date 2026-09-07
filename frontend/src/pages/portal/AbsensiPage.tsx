@@ -233,14 +233,25 @@ export const SharedAbsensiPage: React.FC = () => {
     }
   });
 
+  // Filter khusus log absensi GURU resmi (buang unregistered / kartu dummy / siswa)
+  const validGuruLogs = useMemo(() => {
+    return guruLogs.filter((log) => {
+      if (!log || !log.uid) return false;
+      if (log.role && log.role !== 'guru') return false;
+      if (log.guru_nama === 'Kartu Belum Terdaftar' || log.guru_nama?.toLowerCase().includes('dummy')) return false;
+      if (log.uid.toLowerCase().includes('dummy') || log.uid.toLowerCase().startsWith('sp-0926')) return false;
+      return true;
+    });
+  }, [guruLogs]);
+
   // Filter Log Guru berdasarkan mode per hari (slide) atau semua riwayat
   const filteredGuruLogs = useMemo(() => {
-    if (viewMode === 'all') return guruLogs;
-    return guruLogs.filter((log) => {
+    if (viewMode === 'all') return validGuruLogs;
+    return validGuruLogs.filter((log) => {
       const logDate = extractLogDate(log.waktu);
       return logDate === selectedDate;
     });
-  }, [guruLogs, selectedDate, viewMode]);
+  }, [validGuruLogs, selectedDate, viewMode]);
 
   // 3. Fetch List Guru
   const { data: guruList = [] } = useQuery<any[]>({
@@ -770,7 +781,7 @@ export const SharedAbsensiPage: React.FC = () => {
             }`}
           >
             <PengajarIcon size={16} />
-            <span>Log Presensi Guru RFID ({guruLogs.length})</span>
+            <span>Log Presensi Guru RFID ({validGuruLogs.length})</span>
           </button>
           <button
             onClick={() => setActiveTab('izin')}
@@ -951,7 +962,7 @@ export const SharedAbsensiPage: React.FC = () => {
                       : 'text-[#64748B] hover:text-[#0F172A]'
                   }`}
                 >
-                  Semua Riwayat ({guruLogs.length})
+                  Semua Riwayat ({validGuruLogs.length})
                 </button>
               </div>
             </div>
