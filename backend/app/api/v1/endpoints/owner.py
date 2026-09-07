@@ -276,18 +276,37 @@ async def get_laporan_keuangan(
         return 5
     per_program.sort(key=sort_key)
 
-    # 5. Tren 6 Bulan (Hanya pembayaran terverifikasi di-ACC)
-    all_periodes = (
+    # 5. Tren 6 Bulan Terakhir Berurutan (Lengkap 6 bulan kalender)
+    try:
+        curr_y, curr_m = map(int, current_month.split("-"))
+    except Exception:
+        now_dt = datetime.now(WIB)
+        curr_y, curr_m = now_dt.year, now_dt.month
+
+    target_months = []
+    for i in range(5, -1, -1):
+        m_offset = curr_m - i
+        y_offset = curr_y
+        while m_offset <= 0:
+            m_offset += 12
+            y_offset -= 1
+        target_months.append(f"{y_offset:04d}-{m_offset:02d}")
+
+    lunas_rows = (
         db.query(PembayaranPeriode.periode_bulan, func.sum(PembayaranPeriode.jumlah))
         .filter(
-            PembayaranPeriode.status == StatusPembayaran.LUNAS
+            PembayaranPeriode.status == StatusPembayaran.LUNAS,
+            PembayaranPeriode.periode_bulan.in_(target_months)
         )
         .group_by(PembayaranPeriode.periode_bulan)
-        .order_by(PembayaranPeriode.periode_bulan.desc())
-        .limit(6)
         .all()
     )
-    tren_6_bulan = [{"bulan": p, "pendapatan": float(amt or 0)} for p, amt in reversed(all_periodes)]
+    revenue_by_month = {row[0]: float(row[1] or 0) for row in lunas_rows if row[0]}
+
+    tren_6_bulan = [
+        {"bulan": m, "pendapatan": revenue_by_month.get(m, 0.0)}
+        for m in target_months
+    ]
 
     return {
         "bulan": current_month,

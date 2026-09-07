@@ -1,12 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import apiClient from '../../features/api/apiClient';
 import DateRangePicker, { RangeOption } from '../../components/DateRangePicker';
 import PageHeader from '../../components/PageHeader';
-import { UangIcon, KalenderIcon } from '../../components/SvgIcons';
+import { 
+  UangIcon, KalenderIcon, 
+  TrendUpIcon, ChartAreaIcon, ChartBarIcon 
+} from '../../components/SvgIcons';
 import Modal from '../../components/Modal';
 import ExportStatusModal, { ExportStatusResult } from '../../components/ExportStatusModal';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { 
+  AreaChart, Area, 
+  BarChart, Bar, 
+  LineChart, Line, 
+  XAxis, YAxis, 
+  CartesianGrid, Tooltip, 
+  ResponsiveContainer 
+} from 'recharts';
 
 interface KeuanganData {
   total_pendapatan: number;
@@ -54,6 +64,7 @@ export const KeuanganPage: React.FC = () => {
   const [selectedWADraft, setSelectedWADraft] = useState<{ name: string; draft: string; wa: string; title: string } | null>(null);
   const [isWADraftModalOpen, setIsWADraftModalOpen] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [chartType, setChartType] = useState<'area' | 'bar'>('area');
   const [editingProgram, setEditingProgram] = useState<SppProgramItem | null>(null);
   const [editSppForm, setEditSppForm] = useState({
     biaya_spp: 0,
@@ -298,6 +309,128 @@ Admin: 082385813163 | Direktur: 08126784986`;
   const countUrgent = reminderList.filter((s) => s.status === 'urgent').length;
   const countPeringatan = reminderList.filter((s) => s.status === 'peringatan').length;
   const countLancar = reminderList.filter((s) => s.status === 'lancar').length;
+
+  // Ringkasan KPI Tren 6 Bulan
+  const trenSummary = useMemo(() => {
+    const list = data?.tren_6_bulan || [];
+    if (list.length === 0) return { total: 0, avg: 0, maxVal: 0, maxMonth: '' };
+
+    const total = list.reduce((acc: number, item: any) => acc + (Number(item.pendapatan) || 0), 0);
+    const avg = Math.round(total / list.length);
+
+    let maxVal = 0;
+    let maxMonth = '';
+    list.forEach((item: any) => {
+      const val = Number(item.pendapatan) || 0;
+      if (val >= maxVal) {
+        maxVal = val;
+        maxMonth = item.bulan;
+      }
+    });
+
+    return { total, avg, maxVal, maxMonth };
+  }, [data?.tren_6_bulan]);
+
+  const formatYAxis = (val: number) => {
+    if (val === 0) return 'Rp 0';
+    if (val >= 1000000) {
+      const jt = val / 1000000;
+      return Number.isInteger(jt) ? `Rp ${jt} Jt` : `Rp ${jt.toFixed(1).replace('.', ',')} Jt`;
+    }
+    if (val >= 1000) {
+      return `Rp ${val / 1000} Rb`;
+    }
+    return `Rp ${val}`;
+  };
+
+  const formatXAxis = (val: string) => {
+    if (!val) return '';
+    try {
+      const d = new Date(`${val}-01`);
+      return d.toLocaleDateString('id-ID', { month: 'short' });
+    } catch {
+      return val;
+    }
+  };
+
+  const getProgramTheme = (prog: string) => {
+    const p = (prog || '').toLowerCase();
+    if (p.includes('sempoa')) {
+      return {
+        dot: 'bg-[#FF7043]',
+        badgeBg: 'bg-[#FFF3E0]',
+        badgeText: 'text-[#E65100]',
+        badgeBorder: 'border-[#FFE0B2]',
+        progressBg: 'bg-[#FF7043]',
+      };
+    }
+    if (p.includes('fonem') || p.includes('baca')) {
+      return {
+        dot: 'bg-[#7C3AED]',
+        badgeBg: 'bg-[#F3E8FF]',
+        badgeText: 'text-[#6B21A8]',
+        badgeBorder: 'border-[#E9D5FF]',
+        progressBg: 'bg-[#7C3AED]',
+      };
+    }
+    if (p.includes('tahfidz') || p.includes('quran')) {
+      return {
+        dot: 'bg-[#059669]',
+        badgeBg: 'bg-[#ECFDF5]',
+        badgeText: 'text-[#065F46]',
+        badgeBorder: 'border-[#A7F3D0]',
+        progressBg: 'bg-[#059669]',
+      };
+    }
+    if (p.includes('inggris') || p.includes('english')) {
+      return {
+        dot: 'bg-[#2563EB]',
+        badgeBg: 'bg-[#EFF6FF]',
+        badgeText: 'text-[#1E40AF]',
+        badgeBorder: 'border-[#BFDBFE]',
+        progressBg: 'bg-[#2563EB]',
+      };
+    }
+    return {
+      dot: 'bg-[#D97706]',
+      badgeBg: 'bg-[#FEF3C7]',
+      badgeText: 'text-[#92400E]',
+      badgeBorder: 'border-[#FDE68A]',
+      progressBg: 'bg-[#D97706]',
+    };
+  };
+
+  const CustomChartTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      const val = payload[0].value;
+      let bulanNama = label;
+      try {
+        const d = new Date(`${label}-01`);
+        bulanNama = d.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+      } catch {}
+
+      return (
+        <div className="bg-white/95 backdrop-blur-md px-4 py-3 rounded-2xl shadow-xl border border-[#FFCC80]/60 text-xs space-y-1.5 min-w-[200px]">
+          <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-[#F1F5F9]">
+            <span className="font-extrabold text-[#0F172A] capitalize flex items-center gap-1.5">
+              <KalenderIcon size={13} className="text-[#FF7043]" />
+              {bulanNama}
+            </span>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#E8F5E9] text-[#2E7D32]">
+              Lunas
+            </span>
+          </div>
+          <div>
+            <p className="text-[10px] font-medium text-[#64748B]">Total Pendapatan SPP</p>
+            <p className="text-base font-black text-[#FF7043]">
+              Rp {Number(val || 0).toLocaleString('id-ID')}
+            </p>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
 
   if (isLoading) {
     return <div className="py-20 text-center text-slate-400 text-xs">Memuat laporan keuangan...</div>;
@@ -663,59 +796,199 @@ Admin: 082385813163 | Direktur: 08126784986`;
       {/* Program Breakdown & 6-Month Trend */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Card 3: Pendapatan Per Program */}
-        <div className="bg-white p-6 rounded-2xl border border-[#E0E0E0] shadow-sm space-y-4">
-          <h2 className="text-base font-extrabold text-[#424242]">Pendapatan Per Program</h2>
-          <div className="space-y-3">
-            {data?.per_program.map((p) => (
-              <div key={p.program} className="flex justify-between items-center p-4 bg-[#FAFAFA] rounded-xl border border-[#EEEEEE] text-sm">
-                <span className="font-bold text-[#424242]">{p.program}</span>
-                <span className="font-mono font-extrabold text-[#388E3C]">Rp {p.pendapatan.toLocaleString('id-ID')}</span>
+        <div className="bg-white p-6 rounded-2xl border border-[#E2E8F0] shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between gap-2 pb-3 border-b border-[#F1F5F9]">
+              <div>
+                <h2 className="text-base font-black text-[#0F172A] tracking-tight">Pendapatan Per Program</h2>
+                <p className="text-xs text-[#64748B] mt-0.5">Kontribusi realisasi SPP dari setiap program bimbingan</p>
               </div>
-            ))}
-            {(!data?.per_program || data.per_program.length === 0) && (
-              <div className="p-4 text-center text-xs text-[#9E9E9E]">Belum ada data pendapatan per program.</div>
-            )}
+              <span className="px-2.5 py-1 rounded-xl text-xs font-black bg-[#E8F5E9] text-[#2E7D32] border border-[#A5D6A7]">
+                Total: Rp {(data?.total_pendapatan || 0).toLocaleString('id-ID')}
+              </span>
+            </div>
+
+            <div className="space-y-3 mt-4">
+              {data?.per_program.map((p) => {
+                const theme = getProgramTheme(p.program);
+                const totalRev = data?.total_pendapatan || 1;
+                const percentage = totalRev > 0 ? Math.round(((p.pendapatan || 0) / totalRev) * 100) : 0;
+
+                return (
+                  <div 
+                    key={p.program} 
+                    className="p-3.5 bg-[#F8FAFC] hover:bg-white rounded-xl border border-[#E2E8F0] hover:border-[#FFCC80] transition-all space-y-2 shadow-2xs"
+                  >
+                    <div className="flex justify-between items-center text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${theme.dot}`} />
+                        <span className="font-extrabold text-[#1E293B]">{p.program}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-black text-[#0F172A] text-sm">
+                          Rp {p.pendapatan.toLocaleString('id-ID')}
+                        </span>
+                        <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-md border ${theme.badgeBg} ${theme.badgeText} ${theme.badgeBorder}`}>
+                          {percentage}%
+                        </span>
+                      </div>
+                    </div>
+                    {/* Progress Bar Kontribusi */}
+                    <div className="w-full bg-[#E2E8F0] h-1.5 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full rounded-full transition-all duration-500 ${theme.progressBg}`} 
+                        style={{ width: `${Math.max(percentage, p.pendapatan > 0 ? 3 : 0)}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+              {(!data?.per_program || data.per_program.length === 0) && (
+                <div className="p-6 text-center text-xs text-[#9E9E9E]">Belum ada data pendapatan per program.</div>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Card 4: Tren Pendapatan 6 Bulan Terakhir */}
-        <div className="bg-white p-6 rounded-2xl border border-[#E0E0E0] shadow-sm space-y-4 flex flex-col">
-          <h2 className="text-base font-extrabold text-[#424242]">Tren Pendapatan 6 Bulan Terakhir</h2>
-          <div className="flex-1 w-full h-[250px] min-h-[250px] mt-4">
+        <div className="bg-white p-6 rounded-2xl border border-[#E2E8F0] shadow-sm flex flex-col justify-between space-y-4">
+          <div>
+            {/* Header with Title & Area/Bar Switcher */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#F1F5F9]">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base font-black text-[#0F172A] tracking-tight">Tren Pendapatan 6 Bulan Terakhir</h2>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#FFF3E0] text-[#E65100] border border-[#FFE0B2]">
+                    6 Bulan
+                  </span>
+                </div>
+                <p className="text-xs text-[#64748B] mt-0.5">Analisis tren dan realisasi SPP lunas terverifikasi</p>
+              </div>
+
+              {/* Toggle Mode: Area vs Bar */}
+              <div className="flex items-center bg-[#F1F5F9] p-1 rounded-xl gap-1">
+                <button
+                  type="button"
+                  onClick={() => setChartType('area')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    chartType === 'area'
+                      ? 'bg-white text-[#FF7043] shadow-xs'
+                      : 'text-[#64748B] hover:text-[#0F172A]'
+                  }`}
+                  title="Grafik Area Halus"
+                >
+                  <ChartAreaIcon size={14} />
+                  <span>Area</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setChartType('bar')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    chartType === 'bar'
+                      ? 'bg-white text-[#FF7043] shadow-xs'
+                      : 'text-[#64748B] hover:text-[#0F172A]'
+                  }`}
+                  title="Grafik Batang Kolom"
+                >
+                  <ChartBarIcon size={14} />
+                  <span>Batang</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Mini KPI Chips */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-3 text-xs">
+              <div className="bg-[#F8FAFC] border border-[#E2E8F0] p-2.5 rounded-xl">
+                <span className="text-[10px] font-semibold text-[#64748B] uppercase tracking-wider block">Total 6 Bulan</span>
+                <span className="text-sm font-black text-[#0F172A]">Rp {trenSummary.total.toLocaleString('id-ID')}</span>
+              </div>
+              <div className="bg-[#F8FAFC] border border-[#E2E8F0] p-2.5 rounded-xl">
+                <span className="text-[10px] font-semibold text-[#64748B] uppercase tracking-wider block">Rata-rata / Bulan</span>
+                <span className="text-sm font-black text-[#0F172A]">Rp {trenSummary.avg.toLocaleString('id-ID')}</span>
+              </div>
+              <div className="col-span-2 sm:col-span-1 bg-[#FFF8E1] border border-[#FFE082] p-2.5 rounded-xl">
+                <span className="text-[10px] font-semibold text-[#B78103] uppercase tracking-wider block">Bulan Tertinggi</span>
+                <span className="text-xs font-black text-[#8D6B00] truncate block">
+                  {trenSummary.maxMonth ? `${formatXAxis(trenSummary.maxMonth)}: Rp ${trenSummary.maxVal.toLocaleString('id-ID')}` : 'Rp 0'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Chart Canvas */}
+          <div className="w-full h-[270px] min-h-[270px] mt-2">
             {data?.tren_6_bulan && data.tren_6_bulan.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={data.tren_6_bulan} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E0E0E0" opacity={0.5} />
-                  <XAxis 
-                    dataKey="bulan" 
-                    stroke="#757575" 
-                    fontSize={11} 
-                    tickMargin={10} 
-                    tickFormatter={(val) => {
-                      const d = new Date(`${val}-01`);
-                      return d.toLocaleDateString('id-ID', { month: 'short' });
-                    }}
-                  />
-                  <YAxis 
-                    stroke="#757575" 
-                    fontSize={11}
-                    tickFormatter={(val) => `Rp${val / 1000}k`}
-                  />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#FFFFFF', borderColor: '#E0E0E0', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                    itemStyle={{ color: '#FF7043', fontWeight: 'bold' }}
-                    formatter={(value: number) => [`Rp ${value.toLocaleString('id-ID')}`, 'Pendapatan']}
-                    labelStyle={{ color: '#757575', marginBottom: '4px' }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="pendapatan" 
-                    stroke="#FF7043" 
-                    strokeWidth={3} 
-                    dot={{ r: 4, fill: '#FF7043', strokeWidth: 0 }} 
-                    activeDot={{ r: 6, fill: '#FF7043', stroke: '#FFF', strokeWidth: 2 }}
-                  />
-                </LineChart>
+                {chartType === 'area' ? (
+                  <AreaChart data={data.tren_6_bulan} margin={{ top: 15, right: 15, left: -10, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorPendapatan" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#FF7043" stopOpacity={0.45} />
+                        <stop offset="60%" stopColor="#FF7043" stopOpacity={0.12} />
+                        <stop offset="95%" stopColor="#FF7043" stopOpacity={0.0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+                    <XAxis 
+                      dataKey="bulan" 
+                      stroke="#94A3B8" 
+                      fontSize={11} 
+                      fontWeight={600}
+                      tickMargin={10} 
+                      tickFormatter={formatXAxis}
+                    />
+                    <YAxis 
+                      stroke="#94A3B8" 
+                      fontSize={11}
+                      fontWeight={500}
+                      tickFormatter={formatYAxis}
+                      domain={[0, 'auto']}
+                    />
+                    <Tooltip content={<CustomChartTooltip />} />
+                    <Area 
+                      type="monotone" 
+                      dataKey="pendapatan" 
+                      stroke="#FF7043" 
+                      strokeWidth={3} 
+                      fillOpacity={1} 
+                      fill="url(#colorPendapatan)"
+                      dot={{ r: 4, fill: '#FFFFFF', stroke: '#FF7043', strokeWidth: 2.5 }} 
+                      activeDot={{ r: 7, fill: '#FF7043', stroke: '#FFFFFF', strokeWidth: 3 }}
+                    />
+                  </AreaChart>
+                ) : (
+                  <BarChart data={data.tren_6_bulan} margin={{ top: 15, right: 15, left: -10, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#FF7043" stopOpacity={1} />
+                        <stop offset="100%" stopColor="#FF8A65" stopOpacity={0.8} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+                    <XAxis 
+                      dataKey="bulan" 
+                      stroke="#94A3B8" 
+                      fontSize={11} 
+                      fontWeight={600}
+                      tickMargin={10} 
+                      tickFormatter={formatXAxis}
+                    />
+                    <YAxis 
+                      stroke="#94A3B8" 
+                      fontSize={11}
+                      fontWeight={500}
+                      tickFormatter={formatYAxis}
+                      domain={[0, 'auto']}
+                    />
+                    <Tooltip content={<CustomChartTooltip />} />
+                    <Bar 
+                      dataKey="pendapatan" 
+                      fill="url(#barGradient)" 
+                      radius={[8, 8, 0, 0]} 
+                      barSize={34}
+                    />
+                  </BarChart>
+                )}
               </ResponsiveContainer>
             ) : (
               <div className="h-full flex items-center justify-center text-xs text-[#9E9E9E]">
