@@ -364,7 +364,25 @@ export const JadwalPage: React.FC = () => {
       }
     });
 
-    return result;
+    // Deduplikasi ketat: jika terdapat jadwal ganda untuk guru & program yang sama,
+    // bandingkan kelengkapan data (jumlah murid bimbingan & kelengkapan), pertahankan yang terlengkap
+    const uniqueMap = new Map<string, any>();
+    result.forEach((item) => {
+      const teacherId = item.individualTeacher?.id || item.id_guru || 'no-teacher';
+      const key = `${(item.kategori_program || '').toLowerCase()}-${teacherId}-${(item.hari || '').toLowerCase()}`;
+      const existing = uniqueMap.get(key);
+      if (!existing) {
+        uniqueMap.set(key, item);
+      } else {
+        const existingCount = Array.isArray(existing.students) ? existing.students.length : 0;
+        const currentCount = Array.isArray(item.students) ? item.students.length : 0;
+        if (currentCount > existingCount) {
+          uniqueMap.set(key, item);
+        }
+      }
+    });
+
+    return Array.from(uniqueMap.values());
   }, [jadwalList, guruList, siswaList]);
 
   const filteredJadwalList = useMemo(() => {

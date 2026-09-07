@@ -212,7 +212,37 @@ async def read_jadwal_list(
     current_user: User = Depends(get_current_user)
 ):
     jadwal_list = crud_jadwal.get_jadwal_list(db, skip=skip, limit=limit)
-    return [_enrich_jadwal(db, j) for j in jadwal_list]
+    enriched = [_enrich_jadwal(db, j) for j in jadwal_list]
+
+    # Deduplikasi cerdas: bandingkan kelengkapan data murid dan rincian kelas
+    unique_map = {}
+    duplicates_to_delete = []
+    for resp in enriched:
+        t_id = (resp.teachers[0].id if resp.teachers else resp.id_guru) or "no-teacher"
+        prog_key = (resp.kategori_program or "").strip().lower()
+        hari_key = (resp.hari or "").strip().lower()
+        key = f"{prog_key}-{t_id}-{hari_key}"
+
+        if key not in unique_map:
+            unique_map[key] = resp
+        else:
+            existing = unique_map[key]
+            existing_count = len(existing.students or [])
+            curr_count = len(resp.students or [])
+            if curr_count > existing_count:
+                duplicates_to_delete.append(existing.id)
+                unique_map[key] = resp
+            else:
+                duplicates_to_delete.append(resp.id)
+
+    if duplicates_to_delete:
+        try:
+            db.query(Jadwal).filter(Jadwal.id.in_(duplicates_to_delete)).delete(synchronize_session=False)
+            db.commit()
+        except Exception:
+            db.rollback()
+
+    return list(unique_map.values())
 
 @router.post("/", response_model=JadwalResponse, status_code=status.HTTP_201_CREATED)
 async def create_new_jadwal(
