@@ -308,20 +308,30 @@ def on_startup():
         try:
             from app.models.jadwal import Jadwal
             from app.models.guru import Guru
+            from app.models.siswa import Siswa
+            from app.api.v1.endpoints.jadwal import is_student_assigned_to_teacher
             with SessionLocal() as db_session:
+                all_active_siswas = db_session.query(Siswa).filter(Siswa.is_deleted == False).all()
                 multi_teacher_schedules = db_session.query(Jadwal).filter(Jadwal.guru_ids.like("%,%")).all()
                 split_count = 0
                 for sched in multi_teacher_schedules:
                     raw_ids = [int(x.strip()) for x in sched.guru_ids.split(",") if x.strip().isdigit()]
                     if len(raw_ids) > 1:
-                        # Pengajar 1 tetap memegang jadwal ID lama
+                        # Pengajar 1 tetap memegang jadwal ID lama dengan murid bimbingannya sendiri
                         t1 = db_session.query(Guru).filter(Guru.id == raw_ids[0]).first()
                         sched.id_guru = raw_ids[0]
                         sched.guru_ids = str(raw_ids[0])
                         if t1 and t1.hari_wajib:
                             sched.hari = t1.hari_wajib
 
-                        # Pengajar lainnya mendapatkan baris jadwal mandiri tersendiri
+                        real_s1 = [
+                            s for s in all_active_siswas
+                            if is_student_assigned_to_teacher(s, raw_ids[0], sched.kategori_program or "")
+                        ]
+                        sched.id_siswa = real_s1[0].id if real_s1 else None
+                        sched.siswa_ids = ", ".join(str(s.id) for s in real_s1) if real_s1 else None
+
+                        # Pengajar lainnya mendapatkan baris jadwal mandiri tersendiri dengan murid bimbingan mereka sendiri
                         for other_id in raw_ids[1:]:
                             t_other = db_session.query(Guru).filter(Guru.id == other_id).first()
                             existing = db_session.query(Jadwal).filter(
@@ -329,11 +339,15 @@ def on_startup():
                                 Jadwal.kategori_program == sched.kategori_program
                             ).first()
                             if not existing:
+                                real_other_s = [
+                                    s for s in all_active_siswas
+                                    if is_student_assigned_to_teacher(s, other_id, sched.kategori_program or "")
+                                ]
                                 new_sched = Jadwal(
                                     id_guru=other_id,
                                     guru_ids=str(other_id),
-                                    id_siswa=sched.id_siswa,
-                                    siswa_ids=sched.siswa_ids,
+                                    id_siswa=real_other_s[0].id if real_other_s else None,
+                                    siswa_ids=", ".join(str(s.id) for s in real_other_s) if real_other_s else None,
                                     hari=t_other.hari_wajib if (t_other and t_other.hari_wajib) else sched.hari,
                                     jam_mulai=sched.jam_mulai,
                                     jam_selesai=sched.jam_selesai,
@@ -347,8 +361,37 @@ def on_startup():
                         db_session.commit()
                 if split_count > 0:
                     logger.info(f"Auto-migration: Successfully split multi-teacher schedules into {split_count} independent teacher schedules")
+
+                # Sinkronkan seluruh jadwal kelas yang ada di database agar HANYA memuat murid riil
+                all_schedules = db_session.query(Jadwal).all()
+                reconciled_sched_count = 0
+                for s_row in all_schedules:
+                    teacher_id = s_row.id_guru
+                    if not teacher_id and s_row.guru_ids:
+                        parts = [int(x.strip()) for x in s_row.guru_ids.split(",") if x.strip().isdigit()]
+                        if parts:
+                            teacher_id = parts[0]
+
+                    real_s = []
+                    if teacher_id and s_row.kategori_program:
+                        real_s = [
+                            s for s in all_active_siswas
+                            if is_student_assigned_to_teacher(s, teacher_id, s_row.kategori_program)
+                        ]
+
+                    new_sids_str = ", ".join(str(s.id) for s in real_s) if real_s else None
+                    new_first_id = real_s[0].id if real_s else None
+
+                    if s_row.siswa_ids != new_sids_str or s_row.id_siswa != new_first_id:
+                        s_row.siswa_ids = new_sids_str
+                        s_row.id_siswa = new_first_id
+                        reconciled_sched_count += 1
+
+                if reconciled_sched_count > 0:
+                    db_session.commit()
+                    logger.info(f"Auto-migration: Reconciled {reconciled_sched_count} schedule rows with genuine assigned student lists")
         except Exception as split_err:
-            logger.debug(f"Jadwal split notice: {split_err}")
+            logger.debug(f"Jadwal split & reconciliation notice: {split_err}")
 
         run_seed()
 

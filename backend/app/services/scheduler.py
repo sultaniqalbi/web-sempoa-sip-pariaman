@@ -205,10 +205,12 @@ def check_upcoming_class_reminders():
                     siswa_ids.append(j.id_siswa)
 
                 if not siswa_ids:
-                    target_siswas = db.query(Siswa).filter(
-                        Siswa.is_deleted == False,
-                        func.lower(Siswa.kategori_program).like(f"%{j.kategori_program.lower()}%")
-                    ).all()
+                    if j.id_guru:
+                        from app.api.v1.endpoints.jadwal import is_student_assigned_to_teacher
+                        all_prog_siswas = db.query(Siswa).filter(Siswa.is_deleted == False).all()
+                        target_siswas = [s for s in all_prog_siswas if is_student_assigned_to_teacher(s, j.id_guru, j.kategori_program or "")]
+                    else:
+                        target_siswas = []
                 else:
                     target_siswas = db.query(Siswa).filter(Siswa.id.in_(siswa_ids), Siswa.is_deleted == False).all()
 

@@ -117,40 +117,33 @@ def _get_guru_students(db: Session, guru: Guru, matching_guru_ids: List[int], fi
     Ambil daftar siswa bimbingan guru secara PASTI.
     Logika:
     1. Jika guru adalah supervisor (Kepala Sekolah/Direktur/Admin/Owner), ambil SEMUA siswa.
-    2. Jika ada siswa yang id_guru-nya cocok, ambil siswa-siswa itu + siswa tanpa guru yang programnya cocok.
-    3. Jika tidak ada siswa dengan id_guru cocok, ambil siswa berdasarkan kecocokan program.
+    2. Jika guru pengajar biasa: HANYA ambil siswa yang secara sah ditugaskan ke guru ini
+       (melalui Siswa.id_guru atau Siswa.guru_per_program) pada program yang relevan.
+    3. Siswa yang belum disetel gurunya TIDAK BOLEH tampil di guru pengajar.
+    4. Guru yang belum memiliki murid bimbingan akan mengembalikan list kosong [].
     """
+    from app.api.v1.endpoints.jadwal import is_student_assigned_to_teacher
+
     is_supervisor = any(k in (guru.kategori_program or "").lower() for k in ["kepala sekolah", "kepsek", "direktur", "admin", "owner"])
     programs = [p.strip().lower() for p in (guru.kategori_program or "Sempoa SIP").split(",") if p.strip()]
+    target_progs = [filter_program.strip().lower()] if (filter_program and filter_program.lower() != 'all') else programs
 
     if is_supervisor:
         q = db.query(Siswa).filter(Siswa.is_deleted == False)
-    else:
-        # Cek berapa siswa yang id_guru-nya cocok
-        assigned = db.query(Siswa).filter(
-            Siswa.id_guru.in_(matching_guru_ids),
-            Siswa.is_deleted == False
-        ).count()
+        if filter_program and filter_program.lower() != 'all':
+            q = q.filter(Siswa.kategori_program.ilike(f"%{filter_program}%"))
+        return q.order_by(Siswa.nama).all()
 
-        prog_conds = [Siswa.kategori_program.ilike(f"%{p}%") for p in programs]
+    all_students = db.query(Siswa).filter(Siswa.is_deleted == False).all()
+    assigned_students = []
+    for s in all_students:
+        for gid in matching_guru_ids:
+            if any(is_student_assigned_to_teacher(s, gid, p) for p in target_progs):
+                assigned_students.append(s)
+                break
 
-        if assigned > 0:
-            # Guru memiliki murid bimbingan yang ditugaskan khusus — HANYA ambil murid bimbingannya sendiri!
-            q = db.query(Siswa).filter(
-                Siswa.is_deleted == False,
-                Siswa.id_guru.in_(matching_guru_ids)
-            )
-        else:
-            # Tidak ada siswa yang ditugaskan — fallback ke program siswa yang belum memiliki guru
-            q = db.query(Siswa).filter(
-                Siswa.is_deleted == False,
-                or_(*prog_conds) if prog_conds else Siswa.id_guru.in_(matching_guru_ids)
-            )
-
-    if filter_program and filter_program.lower() != 'all':
-        q = q.filter(Siswa.kategori_program.ilike(f"%{filter_program}%"))
-
-    return q.order_by(Siswa.nama).all()
+    assigned_students.sort(key=lambda s: (s.nama or "").lower())
+    return assigned_students
 
 @router.get("/dashboard", response_model=Dict[str, Any])
 async def get_guru_dashboard(

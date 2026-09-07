@@ -170,6 +170,66 @@ export const JadwalPage: React.FC = () => {
 
   const [selectedProgramFilter, setSelectedProgramFilter] = useState<string>('Semua');
 
+  // Helper cerdas: cek apakah seorang siswa benar-benar dibimbing oleh guru tertentu pada suatu program
+  const isStudentAssignedToTeacherClient = (student: any, teacherId?: number, progName?: string): boolean => {
+    if (!student || !teacherId || !progName) return false;
+    const pLower = progName.toLowerCase().trim();
+    const sProgs = (student.kategori_program || '').toLowerCase().split(',').map((x: string) => x.trim());
+    const matchesProg = sProgs.some((sp: string) => sp.includes(pLower) || pLower.includes(sp));
+    if (!matchesProg) return false;
+
+    let assignedTeacherId: number | null = null;
+    if (student.guru_per_program) {
+      try {
+        const gpp = typeof student.guru_per_program === 'string' ? JSON.parse(student.guru_per_program) : student.guru_per_program;
+        if (gpp && typeof gpp === 'object') {
+          for (const [k, v] of Object.entries(gpp)) {
+            const kLower = k.toLowerCase().trim();
+            if (kLower.includes(pLower) || pLower.includes(kLower)) {
+              if (v !== null && v !== undefined && !isNaN(Number(v))) {
+                assignedTeacherId = Number(v);
+              }
+              break;
+            }
+          }
+        }
+      } catch (e) {}
+    }
+
+    if (assignedTeacherId === null && student.id_guru) {
+      assignedTeacherId = student.id_guru;
+    }
+
+    return assignedTeacherId === teacherId;
+  };
+
+  const getStudentAssignedTeacher = (student: any, progName?: string): Guru | null => {
+    if (!student || !progName || !guruList) return null;
+    const pLower = progName.toLowerCase().trim();
+    let assignedTeacherId: number | null = null;
+    if (student.guru_per_program) {
+      try {
+        const gpp = typeof student.guru_per_program === 'string' ? JSON.parse(student.guru_per_program) : student.guru_per_program;
+        if (gpp && typeof gpp === 'object') {
+          for (const [k, v] of Object.entries(gpp)) {
+            const kLower = k.toLowerCase().trim();
+            if (kLower.includes(pLower) || pLower.includes(kLower)) {
+              if (v !== null && v !== undefined && !isNaN(Number(v))) {
+                assignedTeacherId = Number(v);
+              }
+              break;
+            }
+          }
+        }
+      } catch (e) {}
+    }
+    if (assignedTeacherId === null && student.id_guru) {
+      assignedTeacherId = student.id_guru;
+    }
+    if (!assignedTeacherId) return null;
+    return guruList.find((g) => g.id === assignedTeacherId) || null;
+  };
+
   const programStudents = useMemo(() => {
     if (!siswaList || !Array.isArray(siswaList)) return [];
     return siswaList.filter((s: any) => {
@@ -218,18 +278,51 @@ export const JadwalPage: React.FC = () => {
       }
 
       if (teachers.length <= 1) {
+        const teacher = teachers[0];
+        let rowStudents = j.students || [];
+        if (teacher && siswaList && siswaList.length > 0) {
+          const matchedSiswas = siswaList.filter((s) =>
+            isStudentAssignedToTeacherClient(s, teacher.id, j.kategori_program)
+          );
+          rowStudents = matchedSiswas.map((s) => ({
+            id: s.id,
+            uid: s.uid,
+            nama: s.nama,
+            nama_panggilan: s.nama_panggilan || s.nama.split(' ')[0],
+            kategori_program: s.kategori_program,
+            foto_profil: s.foto_profil,
+          }));
+        }
         result.push({
           ...j,
-          individualTeacher: teachers[0],
+          individualTeacher: teacher,
+          students: rowStudents,
+          siswa_names: rowStudents.map((s: any) => s.nama_panggilan || s.nama).join(', ') || undefined,
           rowKey: `jadwal-${j.id}`,
         });
       } else {
-        // Unroll multi-teacher schedule into distinct rows per teacher
+        // Unroll multi-teacher schedule into distinct rows per teacher with their own assigned students
         teachers.forEach((t, idx) => {
+          let rowStudents: any[] = [];
+          if (siswaList && siswaList.length > 0) {
+            const matchedSiswas = siswaList.filter((s) =>
+              isStudentAssignedToTeacherClient(s, t.id, j.kategori_program)
+            );
+            rowStudents = matchedSiswas.map((s) => ({
+              id: s.id,
+              uid: s.uid,
+              nama: s.nama,
+              nama_panggilan: s.nama_panggilan || s.nama.split(' ')[0],
+              kategori_program: s.kategori_program,
+              foto_profil: s.foto_profil,
+            }));
+          }
           result.push({
             ...j,
             hari: t.hari_wajib || j.hari,
             individualTeacher: t,
+            students: rowStudents,
+            siswa_names: rowStudents.map((s: any) => s.nama_panggilan || s.nama).join(', ') || undefined,
             rowKey: `jadwal-${j.id}-teacher-${t.id || idx}`,
           });
         });
@@ -237,7 +330,7 @@ export const JadwalPage: React.FC = () => {
     });
 
     return result;
-  }, [jadwalList, guruList]);
+  }, [jadwalList, guruList, siswaList]);
 
   const filteredJadwalList = useMemo(() => {
     if (selectedProgramFilter === 'Semua') return flattenedJadwalList;
@@ -354,6 +447,15 @@ export const JadwalPage: React.FC = () => {
             hari: combinedDays,
           }));
         }
+
+        if (!editingJadwal && siswaList.length > 0) {
+          const autoAssigned = siswaList
+            .filter((s: any) => nextIds.some((tid) => isStudentAssignedToTeacherClient(s, tid, formData.kategori_program)))
+            .map((s: any) => s.id);
+          setSelectedStudentIds(autoAssigned);
+        }
+      } else if (nextIds.length === 0 && !editingJadwal) {
+        setSelectedStudentIds([]);
       }
 
       return nextIds;
@@ -407,10 +509,19 @@ export const JadwalPage: React.FC = () => {
     setSelectedTeacherIds(ids);
 
     let sIds: number[] = [];
-    if (jadwal.siswa_ids) {
+    if (jadwal.students && jadwal.students.length > 0) {
+      sIds = jadwal.students.map((s: any) => s.id);
+    } else if (jadwal.siswa_ids) {
       sIds = jadwal.siswa_ids.split(',').map((x: string) => parseInt(x.trim(), 10)).filter((n: number) => !isNaN(n));
     } else if (jadwal.id_siswa) {
       sIds = [jadwal.id_siswa];
+    }
+    // Filter sIds to strictly only those students assigned to this teacher
+    if (ids.length > 0 && siswaList.length > 0) {
+      sIds = sIds.filter((sid) => {
+        const studentObj = siswaList.find((s: any) => s.id === sid);
+        return ids.some((tid) => isStudentAssignedToTeacherClient(studentObj, tid, jadwal.kategori_program));
+      });
     }
     setSelectedStudentIds(sIds);
     setStudentSearch('');
@@ -547,7 +658,7 @@ export const JadwalPage: React.FC = () => {
         if (count === 0) {
           return (
             <span className="text-[11px] text-[#94A3B8] italic">
-              Semua Siswa Program
+              Belum Ada Murid
             </span>
           );
         }
@@ -834,17 +945,30 @@ export const JadwalPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    if (selectedStudentIds.length === programStudents.length && programStudents.length > 0) {
-                      setSelectedStudentIds([]);
+                    if (selectedTeacherIds.length > 0) {
+                      const teacherStudents = programStudents.filter((s: any) =>
+                        selectedTeacherIds.some((tid) => isStudentAssignedToTeacherClient(s, tid, formData.kategori_program))
+                      );
+                      const teacherStudentIds = teacherStudents.map((s: any) => s.id);
+                      const allSelected = teacherStudentIds.length > 0 && teacherStudentIds.every((id: number) => selectedStudentIds.includes(id));
+                      if (allSelected) {
+                        setSelectedStudentIds((prev) => prev.filter((id) => !teacherStudentIds.includes(id)));
+                      } else {
+                        setSelectedStudentIds(Array.from(new Set([...selectedStudentIds, ...teacherStudentIds])));
+                      }
                     } else {
-                      setSelectedStudentIds(programStudents.map((s: any) => s.id));
+                      if (selectedStudentIds.length === programStudents.length && programStudents.length > 0) {
+                        setSelectedStudentIds([]);
+                      } else {
+                        setSelectedStudentIds(programStudents.map((s: any) => s.id));
+                      }
                     }
                   }}
                   className="text-[11px] font-bold text-[#FF7043] hover:underline cursor-pointer"
                 >
-                  {selectedStudentIds.length === programStudents.length && programStudents.length > 0
-                    ? 'Batal Pilih Semua'
-                    : 'Pilih Semua'}
+                  {selectedTeacherIds.length > 0
+                    ? 'Pilih Murid Guru Terpilih'
+                    : (selectedStudentIds.length === programStudents.length && programStudents.length > 0 ? 'Batal Pilih Semua' : 'Pilih Semua')}
                 </button>
               </div>
             </div>
@@ -901,6 +1025,27 @@ export const JadwalPage: React.FC = () => {
                                 {s.hari_masuk}
                               </span>
                             )}
+                            {(() => {
+                              const assignedG = getStudentAssignedTeacher(s, formData.kategori_program);
+                              if (assignedG) {
+                                const isTeacherSelected = selectedTeacherIds.includes(assignedG.id);
+                                return (
+                                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border inline-flex items-center gap-1 ${
+                                    isTeacherSelected
+                                      ? 'bg-[#DCFCE7] text-[#15803D] border-[#86EFAC]'
+                                      : 'bg-[#F1F5F9] text-[#475569] border-[#CBD5E1]'
+                                  }`}>
+                                    <PengajarIcon size={9} className={isTeacherSelected ? "text-[#16A34A]" : "text-[#64748B]"} />
+                                    <span>Guru: {assignedG.nama_panggilan || assignedG.nama.split(',')[0]}</span>
+                                  </span>
+                                );
+                              }
+                              return (
+                                <span className="text-[9px] font-semibold bg-[#F8FAFC] text-[#94A3B8] border border-[#E2E8F0] px-1.5 py-0.5 rounded italic">
+                                  Belum ada guru
+                                </span>
+                              );
+                            })()}
                           </div>
                           <p className="text-[10px] text-[#64748B] mt-0.5">
                             UID: {s.uid} • Paket: {s.paket_jadwal || 'Reguler'}
@@ -918,7 +1063,7 @@ export const JadwalPage: React.FC = () => {
               )}
             </div>
             <p className="text-[10px] text-[#64748B]">
-              Centang murid yang diajar pada sesi kelas ini untuk membagi murid per-guru/jadwal secara terstruktur.
+              Centang murid yang diajar pada sesi kelas ini. Murid yang belum memiliki guru atau memiliki guru lain diberi tanda khusus agar tidak tertukar.
             </p>
           </div>
 

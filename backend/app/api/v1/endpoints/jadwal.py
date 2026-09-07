@@ -40,6 +40,59 @@ router = APIRouter()
 admin_or_owner = RoleChecker([UserRole.admin, UserRole.owner])
 owner_only = RoleChecker([UserRole.owner])
 
+import json
+
+def is_student_assigned_to_teacher(student: Siswa, teacher_id: int, program_name: str) -> bool:
+    """
+    Check if a student is genuinely assigned to teacher_id for program_name.
+    Rules:
+    1. Student must not be deleted.
+    2. Student must be enrolled in program_name.
+    3. If guru_per_program is set, match the teacher ID for this program.
+    4. Otherwise, fallback to student.id_guru.
+    5. If no teacher is assigned at all, return False.
+    """
+    if not student or student.is_deleted or not teacher_id or not program_name:
+        return False
+        
+    student_progs = [p.strip().lower() for p in (student.kategori_program or "").split(",") if p.strip()]
+    prog_lower = program_name.strip().lower()
+    
+    matches_prog = any(prog_lower in sp or sp in prog_lower for sp in student_progs)
+    if not matches_prog:
+        return False
+
+    assigned_teacher_id = None
+    if student.guru_per_program:
+        try:
+            mapping = json.loads(student.guru_per_program)
+            if isinstance(mapping, dict):
+                for k, v in mapping.items():
+                    k_lower = k.strip().lower()
+                    if prog_lower in k_lower or k_lower in prog_lower:
+                        if v is not None and str(v).isdigit():
+                            assigned_teacher_id = int(v)
+                        break
+        except Exception:
+            pass
+
+    if assigned_teacher_id is None and student.id_guru is not None:
+        assigned_teacher_id = student.id_guru
+
+    if assigned_teacher_id is None:
+        return False
+
+    return assigned_teacher_id == teacher_id
+
+def get_real_assigned_students(db: Session, teacher_ids: List[int], program_name: str) -> List[Siswa]:
+    if not teacher_ids or not program_name:
+        return []
+    all_active = db.query(Siswa).filter(Siswa.is_deleted == False).all()
+    return [
+        s for s in all_active
+        if any(is_student_assigned_to_teacher(s, gid, program_name) for gid in teacher_ids)
+    ]
+
 def _enrich_jadwal(db: Session, j: Jadwal) -> JadwalResponse:
     guru_ids_list = []
     if j.guru_ids:
@@ -83,35 +136,51 @@ def _enrich_jadwal(db: Session, j: Jadwal) -> JadwalResponse:
             ]
             guru_names_str = " | ".join(g.nama_panggilan or g.nama for g in gurus)
 
-    # Students Enrichment
-    siswa_ids_list = []
+    # Students Enrichment: strictly resolved from real Siswa-Guru assignment
+    real_students = get_real_assigned_students(db, guru_ids_list, j.kategori_program)
+    real_student_ids = {s.id for s in real_students}
+
+    explicit_ids = []
     if j.siswa_ids:
         for part in j.siswa_ids.split(","):
             part_str = part.strip()
             if part_str.isdigit():
-                siswa_ids_list.append(int(part_str))
+                explicit_ids.append(int(part_str))
     elif j.id_siswa:
-        siswa_ids_list.append(j.id_siswa)
+        explicit_ids.append(j.id_siswa)
 
-    siswa_names_str = None
-    students_list = []
-    if siswa_ids_list:
-        siswas = db.query(Siswa).filter(Siswa.id.in_(siswa_ids_list), Siswa.is_deleted == False).all()
-        siswa_map = {s.id: s for s in siswas}
-        ordered_siswas = [siswa_map[sid] for sid in siswa_ids_list if sid in siswa_map]
-        if ordered_siswas:
-            students_list = [
-                SiswaSimpleInfo(
-                    id=s.id,
-                    uid=s.uid,
-                    nama=s.nama,
-                    nama_panggilan=s.nama_panggilan or (s.nama.split()[0] if s.nama else ""),
-                    kategori_program=s.kategori_program,
-                    foto_profil=s.foto_profil,
-                )
-                for s in ordered_siswas
-            ]
-            siswa_names_str = ", ".join(s.nama_panggilan or s.nama for s in ordered_siswas)
+    # Keep only student IDs that genuinely belong to this teacher in this program
+    valid_explicit_ids = [sid for sid in explicit_ids if sid in real_student_ids]
+
+    if valid_explicit_ids:
+        ordered_siswas = [s for s in real_students if s.id in valid_explicit_ids]
+    else:
+        ordered_siswas = real_students
+
+    students_list = [
+        SiswaSimpleInfo(
+            id=s.id,
+            uid=s.uid,
+            nama=s.nama,
+            nama_panggilan=s.nama_panggilan or (s.nama.split()[0] if s.nama else ""),
+            kategori_program=s.kategori_program,
+            foto_profil=s.foto_profil,
+        )
+        for s in ordered_siswas
+    ]
+    siswa_names_str = ", ".join(s.nama_panggilan or s.nama for s in ordered_siswas) if ordered_siswas else None
+
+    # Auto-synchronize the database row so stale dummy lists are purged from jadwal table
+    expected_siswa_ids = ", ".join(str(s.id) for s in ordered_siswas) if ordered_siswas else None
+    expected_id_siswa = ordered_siswas[0].id if ordered_siswas else None
+    if j.siswa_ids != expected_siswa_ids or j.id_siswa != expected_id_siswa:
+        j.siswa_ids = expected_siswa_ids
+        j.id_siswa = expected_id_siswa
+        try:
+            db.add(j)
+            db.commit()
+        except Exception:
+            db.rollback()
 
     resp = JadwalResponse.model_validate(j)
     resp.guru_names = guru_names_str
