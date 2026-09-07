@@ -34,7 +34,7 @@ export const GuruLayout: React.FC = () => {
 
       {/* Scrollable content area */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden pb-24">
-        <div className="px-3 sm:px-4 pt-4 pb-4 max-w-3xl lg:max-w-4xl mx-auto w-full">
+        <div className="px-3 sm:px-4 pt-4 pb-4 max-w-2xl mx-auto w-full">
           <Outlet />
         </div>
       </div>

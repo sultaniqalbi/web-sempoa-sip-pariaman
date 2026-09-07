@@ -31,7 +31,7 @@ export const OrtuHeader: React.FC<OrtuHeaderProps> = ({
 
   return (
     <header className="bg-gradient-to-r from-[#FF7043] to-[#F4511E] text-white shadow-md">
-      <div className="max-w-3xl lg:max-w-4xl mx-auto px-4 py-4 sm:py-5">
+      <div className="max-w-2xl mx-auto px-4 py-4 sm:py-5">
         <div id="tour-ortu-header" className="flex items-center justify-between gap-3">
           {/* Avatar & Info */}
           <div className="flex items-center gap-3 min-w-0">

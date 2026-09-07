@@ -170,7 +170,7 @@ export const OrtuProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4 max-w-3xl lg:max-w-4xl mx-auto pb-6" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="space-y-4 max-w-2xl mx-auto pb-6" style={{ fontFamily: "'Inter', sans-serif" }}>
       {/* Toast Notification */}
       {saveMessage && (
         <div

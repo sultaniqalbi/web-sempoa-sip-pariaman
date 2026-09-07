@@ -283,22 +283,291 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
         </div>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto w-full">
+      {/* ============================================================ */}
+      {/* MOBILE VIEW (< 640px) — 100% RESPONSIF, TANPA SCROLL SAMPING  */}
+      {/* ============================================================ */}
+      <div className="sm:hidden divide-y divide-[#F1F5F9]">
+        {filteredStudents.length === 0 ? (
+          <div className="p-8 text-center text-[#94A3B8] text-xs font-medium">
+            {students.length === 0
+              ? 'Belum ada siswa yang terdaftar di program ini.'
+              : 'Tidak ada siswa yang cocok dengan pencarian.'}
+          </div>
+        ) : (
+          filteredStudents.map((siswa, idx) => {
+            const currentStatus = attendanceState[siswa.id];
+            const sKey = (currentStatus || '').toLowerCase();
+            const sesi = sessionCounts[siswa.id] || 1;
+
+            const photoSrc = siswa.foto_profil
+              ? siswa.foto_profil.startsWith('http')
+                ? siswa.foto_profil
+                : '/api/v1'.replace('/api/v1', '') + siswa.foto_profil
+              : null;
+
+            const quotas = parseProgramQuotas(
+              siswa.kategori_program,
+              undefined,
+              siswa.total_pertemuan,
+              siswa.sisa_pertemuan,
+              siswa.kuota_program
+            );
+
+            let relevantQuotas = quotas;
+            if (activeProgram && activeProgram !== 'all') {
+              relevantQuotas = quotas.filter((q) => 
+                q.program.toLowerCase().includes(activeProgram.toLowerCase()) || 
+                activeProgram.toLowerCase().includes(q.program.toLowerCase())
+              );
+            } else if (teacherPrograms && teacherPrograms.length > 0) {
+              relevantQuotas = quotas.filter((q) => 
+                teacherPrograms.some((tp) => 
+                  tp.toLowerCase().includes(q.program.toLowerCase()) || 
+                  q.program.toLowerCase().includes(tp.toLowerCase())
+                )
+              );
+            }
+            if (relevantQuotas.length === 0) relevantQuotas = quotas;
+
+            return (
+              <div key={siswa.id} className="p-3.5 bg-white hover:bg-[#FFF8E1] transition-colors space-y-2.5">
+                {/* Baris 1: No + Avatar + Nama Siswa & Info + Kuota */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <span className="text-xs font-bold text-[#64748B] w-4 text-center shrink-0">
+                      {siswa.no || idx + 1}
+                    </span>
+                    {photoSrc ? (
+                      <img
+                        src={photoSrc}
+                        alt={siswa.nama_lengkap}
+                        className="w-9 h-9 rounded-full border border-[#FFCC80] object-cover shrink-0 bg-[#FFF3E0]"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-9 h-9 rounded-full bg-[#FFF3E0] border border-[#FFCC80] flex items-center justify-center shrink-0">
+                        <span className="text-xs font-extrabold text-[#FF7043]">
+                          {siswa.nama_lengkap.substring(0, 2).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[13px] font-bold text-[#1E293B] leading-tight">
+                        {siswa.nama_lengkap}{' '}
+                        {siswa.panggilan ? (
+                          <span className="text-[11px] font-normal text-[#64748B]">({siswa.panggilan})</span>
+                        ) : (
+                          ''
+                        )}
+                      </p>
+                      <p className="text-[10.5px] text-[#94A3B8] mt-0.5 truncate">
+                        {siswa.asal_sekolah
+                          ? `${siswa.asal_sekolah}${siswa.kelas_sekolah ? ` • ${siswa.kelas_sekolah}` : ''}`
+                          : `UID: ${siswa.uid}`}
+                      </p>
+                      {siswa.status_hari_ini && (
+                        <span className="inline-block text-[9px] font-black uppercase text-[#2E7D32] bg-[#E8F5E9] px-1.5 py-0.2 rounded border border-[#A5D6A7] mt-0.5">
+                          Tercatat {siswa.jam_tap_hari_ini && siswa.jam_tap_hari_ini !== '-' ? `• ${siswa.jam_tap_hari_ini}` : ''}
+                        </span>
+                      )}
+                      {activeTab === 'semua' && (
+                        <div className="mt-1">
+                          <span
+                            className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold border ${
+                              siswa.is_my_student
+                                ? 'bg-[#E8F5E9] text-[#2E7D32] border-[#A5D6A7]'
+                                : siswa.nama_guru_pembimbing && siswa.nama_guru_pembimbing !== 'Belum Ditugaskan'
+                                ? 'bg-[#FFF3E0] text-[#E65100] border-[#FFCC80]'
+                                : 'bg-[#F1F5F9] text-[#64748B] border-[#CBD5E1] italic'
+                            }`}
+                          >
+                            {siswa.is_my_student
+                              ? `Guru: Saya (${siswa.nama_guru_pembimbing || 'Pengajar'})`
+                              : `Guru: ${siswa.nama_guru_pembimbing || 'Belum Ditugaskan'}`}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Pertemuan Badge + Tombol Edit */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    <div className="flex flex-col gap-0.5 items-end">
+                      {relevantQuotas.map((q, qIdx) => {
+                        const isTk = q.program.trim().toLowerCase() === 'tk' || q.target === 0;
+                        if (isTk) {
+                          return (
+                            <span key={qIdx} className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]">
+                              TK: Harian
+                            </span>
+                          );
+                        }
+                        return (
+                          <span
+                            key={qIdx}
+                            className={`px-2 py-0.5 rounded-md text-[11px] font-mono font-bold border ${
+                              siswa.is_hangus
+                                ? 'bg-[#FFF1F2] text-[#E11D48] border-[#FECDD3]'
+                                : siswa.is_expired
+                                ? 'bg-[#FFF8E1] text-[#E65100] border-[#FFE082]'
+                                : siswa.is_disabled
+                                ? 'bg-[#FFEBEE] text-[#C62828] border-[#FFCDD2]'
+                                : 'bg-[#E8F5E9] text-[#2E7D32] border-[#C8E6C9]'
+                            }`}
+                          >
+                            {relevantQuotas.length > 1 ? `${q.program}: ` : ''}{q.sisa} / {q.target}
+                          </span>
+                        );
+                      })}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => openEditModal(siswa)}
+                      className="p-1 rounded-md bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#FF7043] border border-[#FFCC80] text-[10px] font-bold transition-all active:scale-95 cursor-pointer"
+                      title="Edit Jumlah Pertemuan Siswa"
+                    >
+                      <EditIcon size={11} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Baris 2: SESI & STATUS PRESENSI (2 Atas, 2 Bawah Memanfaatkan Lebar Layar Penuh HP) */}
+                {isEditMode ? (
+                  <div className="grid grid-cols-2 gap-2 pt-0.5">
+                    {/* Atas Kiri: Pilihan Sesi */}
+                    <div className="relative">
+                      <select
+                        value={
+                          (sessionCounts[siswa.id] || 1) <= 3
+                            ? String(sessionCounts[siswa.id] || 1)
+                            : 'custom'
+                        }
+                        disabled={siswa.is_disabled || !isEditMode}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === 'custom') {
+                            setCustomModal({
+                              siswaId: siswa.id,
+                              nama: siswa.nama_lengkap,
+                              currentVal: sessionCounts[siswa.id] || 1,
+                            });
+                            setCustomInputVal(sessionCounts[siswa.id] || 1);
+                          } else {
+                            setSessionCounts((prev) => ({
+                              ...prev,
+                              [siswa.id]: parseInt(val),
+                            }));
+                          }
+                        }}
+                        className={`w-full h-8 text-xs font-bold rounded-xl border px-2.5 outline-none transition-all cursor-pointer text-center ${
+                          (sessionCounts[siswa.id] || 1) === 1
+                            ? 'bg-[#F8FAFC] border-[#CBD5E1] text-[#334155]'
+                            : (sessionCounts[siswa.id] || 1) === 2
+                            ? 'bg-[#FFF3E0] border-[#FFB74D] text-[#E65100] font-black'
+                            : 'bg-[#F3E8FF] border-[#D8B4FE] text-[#7E22CE] font-black'
+                        }`}
+                      >
+                        <option value="1">1 Sesi (Harian)</option>
+                        <option value="2">2 Sesi (Gabungan)</option>
+                        <option value="3">3 Sesi (Triple)</option>
+                        <option value="custom">
+                          {(sessionCounts[siswa.id] || 1) > 3
+                            ? `${sessionCounts[siswa.id]} Sesi`
+                            : 'Kustom...'}
+                        </option>
+                      </select>
+                    </div>
+
+                    {/* Atas Kanan: Tombol Hadir */}
+                    <StatusButton
+                      label="Hadir"
+                      statusKey="hadir"
+                      currentStatus={currentStatus}
+                      isDisabled={siswa.is_disabled}
+                      activeColor="bg-[#2E7D32] text-white border-[#2E7D32] shadow-xs"
+                      idleColor="bg-white text-[#2E7D32] border-[#A5D6A7] hover:bg-[#E8F5E9]"
+                      className="w-full h-8 rounded-xl text-xs font-black border transition-all flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
+                      onClick={() => handleStatusClick(siswa.id, 'hadir', siswa.is_disabled)}
+                    />
+
+                    {/* Bawah Kiri: Tombol Absen */}
+                    <StatusButton
+                      label="Absen"
+                      statusKey="absen"
+                      currentStatus={currentStatus}
+                      isDisabled={siswa.is_disabled}
+                      activeColor="bg-[#C62828] text-white border-[#C62828] shadow-xs"
+                      idleColor="bg-white text-[#C62828] border-[#FFCDD2] hover:bg-[#FFEBEE]"
+                      className="w-full h-8 rounded-xl text-xs font-black border transition-all flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
+                      onClick={() => handleStatusClick(siswa.id, 'absen', siswa.is_disabled)}
+                    />
+
+                    {/* Bawah Kanan: Tombol Izin */}
+                    <StatusButton
+                      label="Izin"
+                      statusKey="izin"
+                      currentStatus={currentStatus}
+                      isDisabled={siswa.is_disabled}
+                      activeColor="bg-[#E65100] text-white border-[#E65100] shadow-xs"
+                      idleColor="bg-white text-[#E65100] border-[#FFCC80] hover:bg-[#FFF3E0]"
+                      className="w-full h-8 rounded-xl text-xs font-black border transition-all flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
+                      onClick={() => handleStatusClick(siswa.id, 'izin', siswa.is_disabled)}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between pt-0.5">
+                    <span className="text-[11px] text-[#64748B]">Status Kehadiran:</span>
+                    <div className="flex items-center gap-1.5">
+                      {sesi > 1 && (
+                        <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-[#FFF3E0] text-[#E65100] border border-[#FFB74D]">
+                          {sesi}x Sesi
+                        </span>
+                      )}
+                      {sKey === 'hadir' ? (
+                        <span className="px-3 py-1 rounded-xl text-xs font-black bg-[#E8F5E9] text-[#2E7D32] border border-[#A5D6A7]">
+                          Hadir
+                        </span>
+                      ) : sKey === 'absen' || sKey === 'alfa' ? (
+                        <span className="px-3 py-1 rounded-xl text-xs font-black bg-[#FFEBEE] text-[#C62828] border border-[#FFCDD2]">
+                          Absen
+                        </span>
+                      ) : sKey === 'izin' ? (
+                        <span className="px-3 py-1 rounded-xl text-xs font-black bg-[#FFF3E0] text-[#E65100] border border-[#FFE082]">
+                          Izin
+                        </span>
+                      ) : (
+                        <span className="px-3 py-1 rounded-xl text-xs font-semibold bg-[#F1F5F9] text-[#94A3B8] border border-[#E2E8F0]">
+                          Belum Diabsen
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* ============================================================ */}
+      {/* DESKTOP VIEW (>= 640px) — SESUAI TAMPILAN ASLI FOTO 3        */}
+      {/* ============================================================ */}
+      <div className="hidden sm:block overflow-x-auto w-full">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-[#FAFAFA] border-b border-[#E0E0E0]">
-              <th className="p-2 sm:p-3 text-[10px] font-bold text-[#64748B] uppercase tracking-wider w-7 sm:w-10 text-center">No</th>
-              <th className="p-2 sm:p-3 text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Nama Siswa</th>
-              <th className="p-2 sm:p-3 text-[10px] font-bold text-[#64748B] uppercase tracking-wider w-16 sm:w-20 text-center">Pertemuan</th>
-              <th className="hidden lg:table-cell p-2 sm:p-3 text-[10px] font-bold text-[#64748B] uppercase tracking-wider text-center w-28">Tanggal</th>
-              <th className="p-2 sm:p-3 text-[10px] font-bold text-[#64748B] uppercase tracking-wider w-[138px] sm:w-[155px] text-center">Sesi & Status</th>
+              <th className="p-3 text-[10px] font-bold text-[#64748B] uppercase tracking-wider">SISWA</th>
+              <th className="p-3 text-[10px] font-bold text-[#64748B] uppercase tracking-wider text-center w-20">PERTEMUAN</th>
+              <th className="p-3 text-[10px] font-bold text-[#64748B] uppercase tracking-wider text-center w-28">TANGGAL LENGKAP</th>
+              <th className="p-3 text-[10px] font-bold text-[#64748B] uppercase tracking-wider text-center">SESI & STATUS PRESENSI</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#F5F5F5]">
             {filteredStudents.length === 0 ? (
               <tr>
-                <td colSpan={5} className="p-10 text-center text-[#94A3B8] text-xs font-medium">
+                <td colSpan={4} className="p-10 text-center text-[#94A3B8] text-xs font-medium">
                   {students.length === 0
                     ? 'Belum ada siswa yang terdaftar di program ini.'
                     : 'Tidak ada siswa yang cocok dengan pencarian.'}
@@ -307,6 +576,8 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
             ) : (
               filteredStudents.map((siswa, idx) => {
                 const currentStatus = attendanceState[siswa.id];
+                const sKey = (currentStatus || '').toLowerCase();
+                const sesi = sessionCounts[siswa.id] || 1;
                 const bgRow = idx % 2 === 0 ? 'bg-white' : 'bg-[#FAFAFA]';
 
                 const photoSrc = siswa.foto_profil
@@ -315,50 +586,69 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
                     : '/api/v1'.replace('/api/v1', '') + siswa.foto_profil
                   : null;
 
+                const quotas = parseProgramQuotas(
+                  siswa.kategori_program,
+                  undefined,
+                  siswa.total_pertemuan,
+                  siswa.sisa_pertemuan,
+                  siswa.kuota_program
+                );
+
+                let relevantQuotas = quotas;
+                if (activeProgram && activeProgram !== 'all') {
+                  relevantQuotas = quotas.filter((q) => 
+                    q.program.toLowerCase().includes(activeProgram.toLowerCase()) || 
+                    activeProgram.toLowerCase().includes(q.program.toLowerCase())
+                  );
+                } else if (teacherPrograms && teacherPrograms.length > 0) {
+                  relevantQuotas = quotas.filter((q) => 
+                    teacherPrograms.some((tp) => 
+                      tp.toLowerCase().includes(q.program.toLowerCase()) || 
+                      q.program.toLowerCase().includes(tp.toLowerCase())
+                    )
+                  );
+                }
+                if (relevantQuotas.length === 0) relevantQuotas = quotas;
+
                 return (
                   <tr key={siswa.id} className={`${bgRow} hover:bg-[#FFF8E1] transition-colors`}>
-                    <td className="p-2 sm:p-3 text-xs text-[#64748B] text-center font-bold">{siswa.no}</td>
-                    <td className="p-2 sm:p-3">
-                      <div className="flex items-center gap-2 sm:gap-3">
+                    {/* SISWA */}
+                    <td className="p-3">
+                      <div className="flex items-center gap-3">
                         {photoSrc ? (
                           <img
                             src={photoSrc}
                             alt={siswa.nama_lengkap}
-                            className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-[#FFCC80] object-cover shrink-0 bg-[#FFF3E0]"
+                            className="w-10 h-10 rounded-full border border-[#FFCC80] object-cover shrink-0 bg-[#FFF3E0]"
                             onError={(e) => {
                               (e.target as HTMLElement).style.display = 'none';
                             }}
                           />
                         ) : (
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#FFF3E0] border border-[#FFCC80] flex items-center justify-center shrink-0">
-                            <span className="text-[11px] sm:text-[12px] font-extrabold text-[#FF7043]">
+                          <div className="w-10 h-10 rounded-full bg-[#FFF3E0] border border-[#FFCC80] flex items-center justify-center shrink-0">
+                            <span className="text-[12px] font-extrabold text-[#FF7043]">
                               {siswa.nama_lengkap.substring(0, 2).toUpperCase()}
                             </span>
                           </div>
                         )}
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs sm:text-[13px] font-bold text-[#1E293B] leading-tight">
+                        <div className="min-w-0">
+                          <p className="text-[13px] font-bold text-[#1E293B]">
                             {siswa.nama_lengkap}{' '}
                             {siswa.panggilan ? (
-                              <span className="text-[10px] sm:text-[11px] font-normal text-[#64748B]">({siswa.panggilan})</span>
+                              <span className="text-[11px] font-normal text-[#64748B]">({siswa.panggilan})</span>
                             ) : (
                               ''
                             )}
                           </p>
-                          <p className="text-[10px] sm:text-[11px] text-[#94A3B8] mt-0.5 truncate">
+                          <p className="text-[11px] text-[#94A3B8] mt-0.5 truncate">
                             {siswa.asal_sekolah
                               ? `${siswa.asal_sekolah}${siswa.kelas_sekolah ? ` • ${siswa.kelas_sekolah}` : ''}`
                               : `UID: ${siswa.uid}`}
                           </p>
-                          {siswa.status_hari_ini && (
-                            <span className="lg:hidden inline-block text-[9px] font-black uppercase text-[#2E7D32] bg-[#E8F5E9] px-1.5 py-0.2 rounded border border-[#A5D6A7] mt-0.5">
-                              Tercatat {siswa.jam_tap_hari_ini && siswa.jam_tap_hari_ini !== '-' ? `• ${siswa.jam_tap_hari_ini}` : ''}
-                            </span>
-                          )}
                           {activeTab === 'semua' && (
                             <div className="mt-1 flex items-center gap-1.5 flex-wrap">
                               <span
-                                className={`px-1.5 sm:px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-bold border shadow-2xs ${
+                                className={`px-2 py-0.5 rounded-md text-[10px] font-bold border shadow-2xs ${
                                   siswa.is_my_student
                                     ? 'bg-[#E8F5E9] text-[#2E7D32] border-[#A5D6A7]'
                                     : siswa.nama_guru_pembimbing && siswa.nama_guru_pembimbing !== 'Belum Ditugaskan'
@@ -375,68 +665,38 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
                         </div>
                       </div>
                     </td>
-                    <td className="p-1.5 sm:p-3 text-center">
+
+                    {/* PERTEMUAN */}
+                    <td className="p-3 text-center">
                       <div className="flex flex-col items-center justify-center gap-1">
-                        {(() => {
-                          const quotas = parseProgramQuotas(
-                            siswa.kategori_program,
-                            undefined,
-                            siswa.total_pertemuan,
-                            siswa.sisa_pertemuan,
-                            siswa.kuota_program
-                          );
-
-                          // Filter quotas to only show the program being taught/selected
-                          let relevantQuotas = quotas;
-                          if (activeProgram && activeProgram !== 'all') {
-                            relevantQuotas = quotas.filter((q) => 
-                              q.program.toLowerCase().includes(activeProgram.toLowerCase()) || 
-                              activeProgram.toLowerCase().includes(q.program.toLowerCase())
+                        <div className="flex flex-col gap-0.5 items-center">
+                          {relevantQuotas.map((q, qIdx) => {
+                            const isTk = q.program.trim().toLowerCase() === 'tk' || q.target === 0;
+                            if (isTk) {
+                              return (
+                                <span key={qIdx} className="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A] shadow-2xs">
+                                  TK: Harian
+                                </span>
+                              );
+                            }
+                            return (
+                              <span
+                                key={qIdx}
+                                className={`px-2.5 py-0.5 rounded-md text-[11px] font-mono font-bold border shadow-2xs ${
+                                  siswa.is_hangus
+                                    ? 'bg-[#FFF1F2] text-[#E11D48] border-[#FECDD3]'
+                                    : siswa.is_expired
+                                    ? 'bg-[#FFF8E1] text-[#E65100] border-[#FFE082]'
+                                    : siswa.is_disabled
+                                    ? 'bg-[#FFEBEE] text-[#C62828] border-[#FFCDD2]'
+                                    : 'bg-[#E8F5E9] text-[#2E7D32] border-[#C8E6C9]'
+                                }`}
+                              >
+                                {relevantQuotas.length > 1 ? `${q.program}: ` : ''}{q.sisa} / {q.target}
+                              </span>
                             );
-                          } else if (teacherPrograms && teacherPrograms.length > 0) {
-                            relevantQuotas = quotas.filter((q) => 
-                              teacherPrograms.some((tp) => 
-                                tp.toLowerCase().includes(q.program.toLowerCase()) || 
-                                q.program.toLowerCase().includes(tp.toLowerCase())
-                              )
-                            );
-                          }
-
-                          if (relevantQuotas.length === 0) {
-                            relevantQuotas = quotas;
-                          }
-
-                          return (
-                            <div className="flex flex-col gap-0.5 items-center">
-                              {relevantQuotas.map((q, qIdx) => {
-                                const isTk = q.program.trim().toLowerCase() === 'tk' || q.target === 0;
-                                if (isTk) {
-                                  return (
-                                    <span key={qIdx} className="px-1.5 sm:px-2.5 py-0.5 rounded-md text-[9px] sm:text-[10px] font-bold bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A] shadow-2xs">
-                                      TK: Harian
-                                    </span>
-                                  );
-                                }
-                                return (
-                                  <span
-                                    key={qIdx}
-                                    className={`px-1.5 sm:px-2.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-mono font-bold border shadow-2xs ${
-                                      siswa.is_hangus
-                                        ? 'bg-[#FFF1F2] text-[#E11D48] border-[#FECDD3]'
-                                        : siswa.is_expired
-                                        ? 'bg-[#FFF8E1] text-[#E65100] border-[#FFE082]'
-                                        : siswa.is_disabled
-                                        ? 'bg-[#FFEBEE] text-[#C62828] border-[#FFCDD2]'
-                                        : 'bg-[#E8F5E9] text-[#2E7D32] border-[#C8E6C9]'
-                                    }`}
-                                  >
-                                    {relevantQuotas.length > 1 ? `${q.program}: ` : ''}{q.sisa} / {q.target}
-                                  </span>
-                                );
-                              })}
-                            </div>
-                          );
-                        })()}
+                          })}
+                        </div>
                         <button
                           type="button"
                           onClick={() => openEditModal(siswa)}
@@ -446,74 +706,56 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
                           <EditIcon size={11} />
                         </button>
                       </div>
-                      {siswa.is_hangus ? (
-                        <p className="text-[9px] font-extrabold text-[#E11D48] mt-0.5">Lewat 30 Hari (Hangus)</p>
-                      ) : siswa.is_expired ? (
-                        <p className="text-[9px] font-extrabold text-[#E65100] mt-0.5">SPP Expired (30 Hari)</p>
-                      ) : null}
                     </td>
-                    <td className="hidden lg:table-cell p-2 sm:p-3.5 text-center">
+
+                    {/* TANGGAL LENGKAP */}
+                    <td className="p-3 text-center">
                       <p className="text-xs font-mono text-[#334155] font-bold">
-                        {siswa.jam_tap_hari_ini && siswa.jam_tap_hari_ini !== '-' 
-                          ? `${siswa.tanggal_lengkap}, ${siswa.jam_tap_hari_ini}` 
-                          : siswa.tanggal_lengkap || '-'}
+                        {siswa.tanggal_lengkap || '-'}
                       </p>
+                      {siswa.jam_tap_hari_ini && siswa.jam_tap_hari_ini !== '-' && (
+                        <p className="text-[10px] font-mono text-[#64748B]">
+                          {siswa.jam_tap_hari_ini}
+                        </p>
+                      )}
                       {siswa.status_hari_ini && (
                         <span className="inline-block mt-0.5 text-[9px] font-black uppercase text-[#2E7D32] bg-[#E8F5E9] px-1.5 py-0.5 rounded border border-[#A5D6A7]">
                           Tercatat
                         </span>
                       )}
                     </td>
-                    <td className="p-1.5 sm:p-2.5">
-                      {!isEditMode ? (
-                        <div className="flex flex-col items-center justify-center gap-1">
-                          {(() => {
-                            const sKey = (currentStatus || '').toLowerCase();
-                            const sesi = sessionCounts[siswa.id] || 1;
-                            const sesiBadge = sesi > 1 ? (
-                              <span className="px-1.5 py-0.5 rounded-md text-[9px] font-black bg-[#FFF3E0] text-[#E65100] border border-[#FFB74D] shadow-2xs">
-                                {sesi}x Sesi
-                              </span>
-                            ) : null;
 
-                            if (sKey === 'hadir') {
-                              return (
-                                <div className="flex flex-col items-center gap-0.5">
-                                  {sesiBadge}
-                                  <span className="inline-flex items-center justify-center px-2 py-1 rounded-lg text-[10.5px] font-black bg-[#E8F5E9] text-[#2E7D32] border border-[#A5D6A7] shadow-2xs min-w-[66px]">
-                                    Hadir
-                                  </span>
-                                </div>
-                              );
-                            }
-                            if (sKey === 'absen' || sKey === 'alfa') {
-                              return (
-                                <div className="flex flex-col items-center gap-0.5">
-                                  {sesiBadge}
-                                  <span className="inline-flex items-center justify-center px-2 py-1 rounded-lg text-[10.5px] font-black bg-[#FFEBEE] text-[#C62828] border border-[#FFCDD2] shadow-2xs min-w-[66px]">
-                                    Absen
-                                  </span>
-                                </div>
-                              );
-                            }
-                            if (sKey === 'izin') {
-                              return (
-                                <span className="inline-flex items-center justify-center px-2 py-1 rounded-lg text-[10.5px] font-black bg-[#FFF3E0] text-[#E65100] border border-[#FFE082] shadow-2xs min-w-[66px]">
-                                  Izin
-                                </span>
-                              );
-                            }
-                            return (
-                              <span className="inline-flex items-center justify-center px-2 py-1 rounded-lg text-[10px] font-semibold bg-[#F1F5F9] text-[#94A3B8] border border-[#E2E8F0] min-w-[66px] text-center">
-                                Belum Diabsen
-                              </span>
-                            );
-                          })()}
+                    {/* SESI & STATUS PRESENSI (Horizontal persis seperti Foto 3) */}
+                    <td className="p-3 text-center">
+                      {!isEditMode ? (
+                        <div className="flex items-center justify-center gap-1.5">
+                          {sesi > 1 && (
+                            <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-[#FFF3E0] text-[#E65100] border border-[#FFB74D] shadow-2xs">
+                              {sesi}x Sesi
+                            </span>
+                          )}
+                          {sKey === 'hadir' ? (
+                            <span className="inline-flex items-center justify-center px-3 py-1.5 rounded-xl text-xs font-black bg-[#E8F5E9] text-[#2E7D32] border border-[#A5D6A7] shadow-2xs min-w-[70px]">
+                              Hadir
+                            </span>
+                          ) : sKey === 'absen' || sKey === 'alfa' ? (
+                            <span className="inline-flex items-center justify-center px-3 py-1.5 rounded-xl text-xs font-black bg-[#FFEBEE] text-[#C62828] border border-[#FFCDD2] shadow-2xs min-w-[70px]">
+                              Absen
+                            </span>
+                          ) : sKey === 'izin' ? (
+                            <span className="inline-flex items-center justify-center px-3 py-1.5 rounded-xl text-xs font-black bg-[#FFF3E0] text-[#E65100] border border-[#FFE082] shadow-2xs min-w-[70px]">
+                              Izin
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center justify-center px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#F1F5F9] text-[#94A3B8] border border-[#E2E8F0] min-w-[80px]">
+                              Belum Diabsen
+                            </span>
+                          )}
                         </div>
                       ) : (
-                        <div className="grid grid-cols-2 gap-1 w-[128px] sm:w-[140px] mx-auto">
-                          {/* 1. Atas Kiri: Dropdown Sesi */}
-                          <div className="relative">
+                        <div className="flex items-center justify-center gap-1.5">
+                          {/* Dropdown Sesi Presensi */}
+                          <div className="relative shrink-0">
                             <select
                               value={
                                 (sessionCounts[siswa.id] || 1) <= 3
@@ -537,18 +779,18 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
                                   }));
                                 }
                               }}
-                              className={`w-full h-7 text-[10px] font-black rounded-lg border px-1 outline-none transition-all cursor-pointer text-center ${
+                              className={`h-8 text-xs font-bold rounded-xl border px-2 py-1 outline-none transition-all cursor-pointer ${
                                 (sessionCounts[siswa.id] || 1) === 1
                                   ? 'bg-[#F8FAFC] border-[#CBD5E1] text-[#334155] hover:border-[#94A3B8]'
                                   : (sessionCounts[siswa.id] || 1) === 2
-                                  ? 'bg-[#FFF3E0] border-[#FFB74D] text-[#E65100]'
-                                  : 'bg-[#F3E8FF] border-[#D8B4FE] text-[#7E22CE]'
+                                  ? 'bg-[#FFF3E0] border-[#FFB74D] text-[#E65100] font-black shadow-2xs'
+                                  : 'bg-[#F3E8FF] border-[#D8B4FE] text-[#7E22CE] font-black shadow-2xs'
                               }`}
-                              title="Pilih Sesi"
+                              title="Pilih Mode Sesi"
                             >
-                              <option value="1">1 Sesi</option>
-                              <option value="2">2 Sesi</option>
-                              <option value="3">3 Sesi</option>
+                              <option value="1">1 Sesi (Harian)</option>
+                              <option value="2">2 Sesi (Gabungan)</option>
+                              <option value="3">3 Sesi (Triple)</option>
                               <option value="custom">
                                 {(sessionCounts[siswa.id] || 1) > 3
                                   ? `${sessionCounts[siswa.id]} Sesi`
@@ -557,7 +799,7 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
                             </select>
                           </div>
 
-                          {/* 2. Atas Kanan: Tombol Hadir */}
+                          {/* 3 Tombol Presensi Horizontal (Hadir, Absen, Izin) */}
                           <StatusButton
                             label="Hadir"
                             statusKey="hadir"
@@ -565,10 +807,9 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
                             isDisabled={siswa.is_disabled}
                             activeColor="bg-[#2E7D32] text-white border-[#2E7D32] shadow-xs"
                             idleColor="bg-white text-[#2E7D32] border-[#A5D6A7] hover:bg-[#E8F5E9]"
+                            className="px-2.5 py-1 rounded-xl text-xs font-bold border transition-all h-8 flex items-center justify-center min-w-[50px] cursor-pointer shadow-2xs"
                             onClick={() => handleStatusClick(siswa.id, 'hadir', siswa.is_disabled)}
                           />
-
-                          {/* 3. Bawah Kiri: Tombol Absen */}
                           <StatusButton
                             label="Absen"
                             statusKey="absen"
@@ -576,10 +817,9 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
                             isDisabled={siswa.is_disabled}
                             activeColor="bg-[#C62828] text-white border-[#C62828] shadow-xs"
                             idleColor="bg-white text-[#C62828] border-[#FFCDD2] hover:bg-[#FFEBEE]"
+                            className="px-2.5 py-1 rounded-xl text-xs font-bold border transition-all h-8 flex items-center justify-center min-w-[50px] cursor-pointer shadow-2xs"
                             onClick={() => handleStatusClick(siswa.id, 'absen', siswa.is_disabled)}
                           />
-
-                          {/* 4. Bawah Kanan: Tombol Izin */}
                           <StatusButton
                             label="Izin"
                             statusKey="izin"
@@ -587,6 +827,7 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
                             isDisabled={siswa.is_disabled}
                             activeColor="bg-[#E65100] text-white border-[#E65100] shadow-xs"
                             idleColor="bg-white text-[#E65100] border-[#FFCC80] hover:bg-[#FFF3E0]"
+                            className="px-2.5 py-1 rounded-xl text-xs font-bold border transition-all h-8 flex items-center justify-center min-w-[45px] cursor-pointer shadow-2xs"
                             onClick={() => handleStatusClick(siswa.id, 'izin', siswa.is_disabled)}
                           />
                         </div>
@@ -863,6 +1104,7 @@ interface StatusButtonProps {
   activeColor: string;
   idleColor: string;
   onClick: () => void;
+  className?: string;
 }
 
 const StatusButton: React.FC<StatusButtonProps> = ({
@@ -873,19 +1115,28 @@ const StatusButton: React.FC<StatusButtonProps> = ({
   activeColor,
   idleColor,
   onClick,
+  className,
 }) => {
   const isSelected = currentStatus === statusKey;
 
-  let btnClass = `w-full h-7 rounded-lg text-[10.5px] font-black border transition-all flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs `;
+  const baseClass = className
+    ? className
+    : 'w-full h-7 rounded-lg text-[10.5px] font-black border transition-all flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs';
 
+  let colorClass = '';
   if (isDisabled) {
-    btnClass += 'bg-[#F1F5F9] text-[#94A3B8] border-[#E2E8F0] cursor-not-allowed opacity-60';
+    colorClass = 'bg-[#F1F5F9] text-[#94A3B8] border-[#E2E8F0] cursor-not-allowed opacity-60';
   } else {
-    btnClass += isSelected ? activeColor : idleColor;
+    colorClass = isSelected ? activeColor : idleColor;
   }
 
   return (
-    <button type="button" onClick={onClick} disabled={isDisabled} className={btnClass}>
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={isDisabled}
+      className={`${baseClass} ${colorClass}`}
+    >
       {label}
     </button>
   );

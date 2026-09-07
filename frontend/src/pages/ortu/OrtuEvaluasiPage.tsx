@@ -134,7 +134,7 @@ export const OrtuEvaluasiPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4 max-w-3xl lg:max-w-4xl mx-auto pb-6">
+    <div className="space-y-4 max-w-2xl mx-auto pb-6">
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-[#FFF3E0] via-white to-[#FFF8F3] border border-[#FFCC80] rounded-2xl p-4 sm:p-5 shadow-xs">
         <div className="flex items-center gap-3.5">
