@@ -21,7 +21,7 @@ from app.models.bukti_transfer import BuktiTransfer, StatusBuktiTransfer
 from app.models.galeri import Galeri
 from app.models.audit_log import AuditLog
 from app.models.catatan_pembelajaran import CatatanPembelajaran
-from app.models.keuangan import Keuangan
+from app.models.keuangan import Keuangan, JenisKeuangan
 from app.models.pendaftaran_baru import PendaftaranBaru
 from app.services.audit_service import log_activity
 from fastapi.responses import Response
@@ -170,9 +170,8 @@ async def get_laporan_keuangan(
         db.query(PembayaranPeriode, Siswa)
         .join(Siswa, Siswa.id == PembayaranPeriode.id_siswa)
         .filter(
-            PembayaranPeriode.periode_bulan == bulan,
+            PembayaranPeriode.periode_bulan == current_month,
             PembayaranPeriode.status == StatusPembayaran.LUNAS,
-            PembayaranPeriode.id.in_(verified_pay_subq),
             Siswa.is_deleted == False
         )
         .all()
@@ -236,8 +235,7 @@ async def get_laporan_keuangan(
     all_periodes = (
         db.query(PembayaranPeriode.periode_bulan, func.sum(PembayaranPeriode.jumlah))
         .filter(
-            PembayaranPeriode.status == StatusPembayaran.LUNAS,
-            PembayaranPeriode.id.in_(verified_pay_subq)
+            PembayaranPeriode.status == StatusPembayaran.LUNAS
         )
         .group_by(PembayaranPeriode.periode_bulan)
         .order_by(PembayaranPeriode.periode_bulan.desc())
@@ -247,7 +245,7 @@ async def get_laporan_keuangan(
     tren_6_bulan = [{"bulan": p, "pendapatan": float(amt or 0)} for p, amt in reversed(all_periodes)]
 
     return {
-        "bulan": bulan,
+        "bulan": current_month,
         "total_pendapatan": total_pendapatan,
         "per_program": per_program,
         "per_status": per_status,
