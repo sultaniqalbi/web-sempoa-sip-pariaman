@@ -6,7 +6,7 @@ from app.schemas.jadwal import JadwalCreate, JadwalUpdate
 def get_jadwal(db: Session, jadwal_id: int) -> Optional[Jadwal]:
     return db.query(Jadwal).filter(Jadwal.id == jadwal_id).first()
 
-def get_jadwal_list(db: Session, skip: int = 0, limit: int = 10) -> List[Jadwal]:
+def get_jadwal_list(db: Session, skip: int = 0, limit: int = 500) -> List[Jadwal]:
     return db.query(Jadwal).offset(skip).limit(limit).all()
 
 def create_jadwal(db: Session, jadwal: JadwalCreate) -> Jadwal:

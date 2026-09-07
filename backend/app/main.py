@@ -282,6 +282,52 @@ def on_startup():
         except Exception as late_rec_err:
             logger.debug(f"Teacher attendance reconciliation notice: {late_rec_err}")
 
+        # Rekonsiliasi Otomatis: Pemisahan Jadwal Kelas per Pengajar/Guru (1 baris mandiri per guru)
+        try:
+            from app.models.jadwal import Jadwal
+            from app.models.guru import Guru
+            with SessionLocal() as db_session:
+                multi_teacher_schedules = db_session.query(Jadwal).filter(Jadwal.guru_ids.like("%,%")).all()
+                split_count = 0
+                for sched in multi_teacher_schedules:
+                    raw_ids = [int(x.strip()) for x in sched.guru_ids.split(",") if x.strip().isdigit()]
+                    if len(raw_ids) > 1:
+                        # Pengajar 1 tetap memegang jadwal ID lama
+                        t1 = db_session.query(Guru).filter(Guru.id == raw_ids[0]).first()
+                        sched.id_guru = raw_ids[0]
+                        sched.guru_ids = str(raw_ids[0])
+                        if t1 and t1.hari_wajib:
+                            sched.hari = t1.hari_wajib
+
+                        # Pengajar lainnya mendapatkan baris jadwal mandiri tersendiri
+                        for other_id in raw_ids[1:]:
+                            t_other = db_session.query(Guru).filter(Guru.id == other_id).first()
+                            existing = db_session.query(Jadwal).filter(
+                                Jadwal.id_guru == other_id,
+                                Jadwal.kategori_program == sched.kategori_program
+                            ).first()
+                            if not existing:
+                                new_sched = Jadwal(
+                                    id_guru=other_id,
+                                    guru_ids=str(other_id),
+                                    id_siswa=sched.id_siswa,
+                                    siswa_ids=sched.siswa_ids,
+                                    hari=t_other.hari_wajib if (t_other and t_other.hari_wajib) else sched.hari,
+                                    jam_mulai=sched.jam_mulai,
+                                    jam_selesai=sched.jam_selesai,
+                                    lokasi=sched.lokasi,
+                                    is_hari_libur=sched.is_hari_libur,
+                                    kategori_program=sched.kategori_program,
+                                    mode_kelas=sched.mode_kelas
+                                )
+                                db_session.add(new_sched)
+                                split_count += 1
+                        db_session.commit()
+                if split_count > 0:
+                    logger.info(f"Auto-migration: Successfully split multi-teacher schedules into {split_count} independent teacher schedules")
+        except Exception as split_err:
+            logger.debug(f"Jadwal split notice: {split_err}")
+
         run_seed()
 
         # Seed default program settings and sync TK parity

@@ -72,6 +72,31 @@ export const KeuanganPage: React.FC = () => {
     }
   });
 
+  const sortedSppPrograms = React.useMemo(() => {
+    if (!sppPrograms || !Array.isArray(sppPrograms)) return [];
+    const getOrder = (name: string) => {
+      const n = (name || '').toLowerCase();
+      if (n.includes('sempoa') && (n.includes('8') || (!n.includes('12') && !n.includes('16')))) return 1;
+      if (n.includes('sempoa') && n.includes('12')) return 2;
+      if (n.includes('fonem')) return 3;
+      if (n.includes('tahfidz')) return 4;
+      if (n.includes('inggris') || n.includes('english')) return 5;
+      if (n.includes('tk')) return 6;
+      return 99;
+    };
+    return [...sppPrograms].sort((a, b) => getOrder(a.nama_program) - getOrder(b.nama_program));
+  }, [sppPrograms]);
+
+  const getSppBadgeStyle = (progName: string) => {
+    const p = (progName || '').toLowerCase();
+    if (p.includes('sempoa')) return 'bg-[#FFF3E0] text-[#E65100] border-[#FFCC80]';
+    if (p.includes('fonem')) return 'bg-[#F3E8FF] text-[#7E22CE] border-[#D8B4FE]';
+    if (p.includes('tahfidz')) return 'bg-[#ECFDF5] text-[#047857] border-[#A7F3D0]';
+    if (p.includes('inggris') || p.includes('english')) return 'bg-[#E0F2FE] text-[#0369A1] border-[#BAE6FD]';
+    if (p.includes('tk')) return 'bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]';
+    return 'bg-[#F1F5F9] text-[#475569] border-[#CBD5E1]';
+  };
+
   const updateProgramMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: typeof editSppForm }) => {
       const res = await apiClient.put(`/owner/spp-programs/${id}`, data);
@@ -382,41 +407,46 @@ Admin: 082385813163 | Direktur: 08126784986`;
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
-          {sppPrograms.map((prog) => {
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+          {sortedSppPrograms.map((prog) => {
             const isTK = prog.nama_program.toUpperCase() === 'TK';
-            const badgeBg = isTK ? 'bg-[#EDE9FE] text-[#6D28D9] border-[#DDD6FE]' : 'bg-[#EFF6FF] text-[#1D4ED8] border-[#BFDBFE]';
+            const badgeStyle = getSppBadgeStyle(prog.nama_program);
             return (
               <div
                 key={prog.id}
-                className={`p-4 rounded-xl border transition-all flex flex-col justify-between ${
-                  isTK ? 'bg-gradient-to-b from-[#F5F3FF] to-white border-[#C4B5FD] shadow-xs' : 'bg-white border-[#E2E8F0] shadow-2xs hover:border-[#CBD5E1]'
+                className={`p-3.5 rounded-xl border transition-all flex flex-col justify-between ${
+                  isTK
+                    ? 'bg-gradient-to-b from-[#FFFBEB] to-white border-[#FDE68A] shadow-xs'
+                    : 'bg-white border-[#E2E8F0] shadow-2xs hover:border-[#CBD5E1]'
                 }`}
               >
                 <div>
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <span className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-md border ${badgeBg}`}>
+                  <div className="flex items-center justify-between gap-1 mb-2">
+                    <span className={`text-[10.5px] font-extrabold px-2 py-0.5 rounded-md border truncate ${badgeStyle}`} title={prog.nama_program}>
                       {prog.nama_program}
                     </span>
                     {isTK && (
-                      <span className="text-[9px] font-black text-[#6D28D9] bg-[#DDD6FE] px-1.5 py-0.5 rounded">
+                      <span className="text-[9px] font-black text-[#B45309] bg-[#FEF3C7] px-1.5 py-0.5 rounded shrink-0">
                         Full Sesi
                       </span>
                     )}
                   </div>
-                  <p className="text-lg font-black text-[#1E293B] mt-1">
+                  <p className="text-base font-black text-[#1E293B] mt-0.5">
                     Rp {prog.biaya_spp.toLocaleString('id-ID')}
                     <span className="text-[10px] font-medium text-[#64748B]"> /bln</span>
                   </p>
-                  <div className="mt-2.5 space-y-1 text-[11px] text-[#64748B]">
-                    <p className="flex items-center gap-1.5">
-                      <span className="font-semibold text-[#475569]">Waktu:</span> {prog.jam_mulai} - {prog.jam_selesai}
+                  <div className="mt-2 space-y-1 text-[11px] text-[#64748B]">
+                    <p className="flex items-center justify-between gap-1">
+                      <span className="font-semibold text-[#475569]">Waktu:</span>
+                      <span className="font-medium text-slate-700">{prog.jam_mulai} - {prog.jam_selesai}</span>
                     </p>
-                    <p className="flex items-center gap-1.5">
-                      <span className="font-semibold text-[#475569]">Hari:</span> {prog.hari_masuk}
+                    <p className="flex items-center justify-between gap-1">
+                      <span className="font-semibold text-[#475569]">Hari:</span>
+                      <span className="font-medium text-slate-700 truncate max-w-[110px]" title={prog.hari_masuk}>{prog.hari_masuk}</span>
                     </p>
-                    <p className="flex items-center gap-1.5">
-                      <span className="font-semibold text-[#475569]">Target:</span> {prog.target_pertemuan} Sesi/Bln
+                    <p className="flex items-center justify-between gap-1">
+                      <span className="font-semibold text-[#475569]">Target:</span>
+                      <span className="font-bold text-slate-800">{prog.target_pertemuan} Sesi/Bln</span>
                     </p>
                   </div>
                 </div>
@@ -424,9 +454,9 @@ Admin: 082385813163 | Direktur: 08126784986`;
                 <button
                   type="button"
                   onClick={() => openEditProgramModal(prog)}
-                  className="mt-4 w-full py-1.5 px-3 bg-white hover:bg-[#F8FAFC] border border-[#CBD5E1] text-[#334155] hover:text-[#0F172A] font-bold text-xs rounded-lg transition-colors flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer"
+                  className="mt-3 w-full py-1.5 px-2 bg-white hover:bg-[#F8FAFC] border border-[#CBD5E1] text-[#334155] hover:text-[#0F172A] font-bold text-xs rounded-lg transition-colors flex items-center justify-center gap-1 shadow-2xs cursor-pointer"
                 >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                   </svg>

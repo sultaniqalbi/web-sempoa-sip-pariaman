@@ -144,6 +144,21 @@ async def create_new_jadwal(
     jadwal_in.jam_mulai = config[schedule_type]["jam_mulai"]
     jadwal_in.jam_selesai = config[schedule_type]["jam_selesai"]
     
+    raw_g_ids = [int(x.strip()) for x in (jadwal_in.guru_ids or "").split(",") if x.strip().isdigit()]
+    if len(raw_g_ids) > 1:
+        first_created = None
+        for gid in raw_g_ids:
+            g_obj = db.query(Guru).filter(Guru.id == gid).first()
+            j_copy = jadwal_in.model_copy()
+            j_copy.id_guru = gid
+            j_copy.guru_ids = str(gid)
+            if g_obj and g_obj.hari_wajib:
+                j_copy.hari = g_obj.hari_wajib
+            res_j = crud_jadwal.create_jadwal(db, jadwal=j_copy)
+            if not first_created:
+                first_created = res_j
+        return _enrich_jadwal(db, first_created)
+
     created_j = crud_jadwal.create_jadwal(db, jadwal=jadwal_in)
     return _enrich_jadwal(db, created_j)
 

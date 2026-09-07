@@ -126,8 +126,11 @@ export const RiwayatPage: React.FC = () => {
     }
   };
 
+  const [showRawJson, setShowRawJson] = useState<boolean>(false);
+
   const handleOpenDetail = (log: AuditLogItem) => {
     setSelectedLog(log);
+    setShowRawJson(false);
     setIsDetailModalOpen(true);
   };
 
@@ -143,6 +146,27 @@ export const RiwayatPage: React.FC = () => {
         minute: '2-digit',
         hour12: false,
       }).format(d) + ' WIB';
+    } catch {
+      return isoString;
+    }
+  };
+
+  const formatDateTimeIndoFull = (isoString: string | null) => {
+    if (!isoString) return '-';
+    try {
+      const d = new Date(isoString);
+      const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+      const dayName = days[d.getDay()];
+      const formatted = new Intl.DateTimeFormat('id-ID', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      }).format(d);
+      return `${dayName}, ${formatted} WIB`;
     } catch {
       return isoString;
     }
@@ -587,89 +611,262 @@ export const RiwayatPage: React.FC = () => {
         )}
       </div>
 
-      {/* 6. Modal Pop-up Detail Rincian Aktivitas */}
+      {/* 6. Modal Pop-up Super-Detail Rincian Aktivitas */}
       <Modal
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
-        title="Rincian Audit Log Aktivitas"
-        size="md"
+        title="Rincian Lengkap Audit Aktivitas Sistem"
+        size="lg"
       >
-        {selectedLog && (
-          <div className="space-y-4 text-xs">
-            {/* Header info card */}
-            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-mono text-slate-400 font-bold">Log ID #{selectedLog.id}</span>
-                <div className="flex items-center gap-2">
-                  {getStatusBadge(selectedLog.status)}
-                  {getActionBadge(selectedLog.jenis || selectedLog.action)}
+        {selectedLog && (() => {
+          const act = (selectedLog.jenis || selectedLog.action || '').toUpperCase();
+          const isHapus = act.includes('PENGHAPUSAN') || act.includes('HAPUS') || act.includes('DELETE');
+          const isUbah = act.includes('PERUBAHAN') || act.includes('UPDATE') || act.includes('EDIT') || act.includes('RESET');
+          const isTambah = act.includes('PENAMBAHAN') || act.includes('CREATE') || act.includes('ADD');
+          const isVerifikasi = act.includes('VERIFIKASI') || act.includes('APPROVE') || act.includes('REJECT');
+
+          const dt = selectedLog.details || {};
+          const beforeData = dt.before || null;
+          const afterData = dt.after || null;
+
+          return (
+            <div className="space-y-4 text-xs">
+              {/* Header Box: Jenis Aksi, Status, & Tanggal Lengkap */}
+              <div className="p-4 bg-gradient-to-r from-slate-50 to-slate-100/80 rounded-2xl border border-slate-200 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-mono text-slate-500 font-extrabold bg-white px-2 py-0.5 rounded-md border border-slate-200 shadow-2xs">
+                      Log ID #{selectedLog.id}
+                    </span>
+                    {getModulBadge(selectedLog.modul)}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    {getStatusBadge(selectedLog.status)}
+                    {getActionBadge(selectedLog.jenis || selectedLog.action)}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Aktivitas / Tindakan</p>
+                  <p className="text-sm font-black text-slate-900 mt-0.5 leading-snug">{selectedLog.perubahan}</p>
+                </div>
+
+                <div className="pt-2 border-t border-slate-200/60 flex flex-wrap items-center justify-between text-slate-600 gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <KalenderIcon size={14} className="text-[#1976D2]" />
+                    <span className="font-bold text-slate-800">
+                      {formatDateTimeIndoFull(selectedLog.timestamp)}
+                    </span>
+                  </div>
+                  {selectedLog.ip_address && (
+                    <span className="text-[11px] font-mono text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
+                      IP: {selectedLog.ip_address}
+                    </span>
+                  )}
                 </div>
               </div>
 
-              <div>
-                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Perubahan / Aktivitas</p>
-                <p className="text-sm font-extrabold text-slate-800 mt-0.5">{selectedLog.perubahan}</p>
-              </div>
-            </div>
+              {/* Grid 2 Kolom: Pelaksana vs Objek Target */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {/* Kolom Kiri: User Pelaksana */}
+                <div className="p-3.5 bg-white rounded-xl border border-slate-200 space-y-2">
+                  <span className="text-slate-400 font-extrabold block text-[10px] uppercase tracking-wider">
+                    Informasi Pelaksana
+                  </span>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-extrabold text-slate-900 text-sm">{selectedLog.user_name || '-'}</span>
+                      {getRoleBadge(selectedLog.role)}
+                    </div>
+                    <p className="text-slate-500 font-mono text-[11px]">{selectedLog.email}</p>
+                    <p className="text-[10.5px] text-slate-500">
+                      <span className="font-semibold text-slate-600">Perangkat / Klien:</span>{' '}
+                      {selectedLog.ip_address ? `Web Browser (${selectedLog.ip_address})` : 'Web Browser Client'}
+                    </p>
+                  </div>
+                </div>
 
-            {/* Grid detail metadata */}
-            <div className="grid grid-cols-2 gap-3 p-3 bg-white rounded-xl border border-slate-200">
-              <div>
-                <span className="text-slate-400 font-bold block text-[10px] uppercase">User Pelaksana</span>
-                <span className="font-extrabold text-slate-800 block mt-0.5">{selectedLog.user_name || '-'}</span>
-                <span className="text-slate-500 font-mono text-[10.5px]">{selectedLog.email}</span>
-              </div>
-
-              <div>
-                <span className="text-slate-400 font-bold block text-[10px] uppercase">Role & Modul</span>
-                <div className="flex items-center gap-1.5 mt-1">
-                  {getRoleBadge(selectedLog.role)}
-                  {getModulBadge(selectedLog.modul)}
+                {/* Kolom Kanan: Objek & Target Terpengaruh */}
+                <div className="p-3.5 bg-white rounded-xl border border-slate-200 space-y-2">
+                  <span className="text-slate-400 font-extrabold block text-[10px] uppercase tracking-wider">
+                    Objek & Target Data
+                  </span>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-bold text-slate-700">Nama Target:</span>
+                      <span className="font-extrabold text-slate-900 text-xs">
+                        {selectedLog.target_nama || dt.nama_siswa || '-'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-bold text-slate-700">ID Entitas:</span>
+                      <span className="font-mono text-slate-800 bg-slate-100 px-1.5 py-0.2 rounded font-bold">
+                        {selectedLog.target_id ? `#${selectedLog.target_id}` : (dt.target_id ? `#${dt.target_id}` : '-')}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-bold text-slate-700">Modul Terkait:</span>
+                      <span className="text-slate-700 font-medium">{selectedLog.modul}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <span className="text-slate-400 font-bold block text-[10px] uppercase">Waktu & Tanggal</span>
-                <span className="font-bold text-slate-700 block mt-0.5">
-                  {formatDateTimeIndo(selectedLog.timestamp)}
-                </span>
-              </div>
-
-              <div>
-                <span className="text-slate-400 font-bold block text-[10px] uppercase">Target Data</span>
-                <span className="font-bold text-slate-700 block mt-0.5">
-                  {selectedLog.target_nama || (selectedLog.target_id ? `ID #${selectedLog.target_id}` : '-')}
-                </span>
-              </div>
-
-              {selectedLog.ip_address && (
-                <div className="col-span-2">
-                  <span className="text-slate-400 font-bold block text-[10px] uppercase">IP Address / Klien</span>
-                  <span className="font-mono text-slate-600 block mt-0.5">{selectedLog.ip_address}</span>
+              {/* Rincian Visual Konten Berdasarkan Jenis Tindakan */}
+              {isHapus && (
+                <div className="p-4 bg-rose-50/70 rounded-2xl border border-rose-200 space-y-2.5">
+                  <div className="flex items-center gap-2 text-rose-700 font-extrabold text-xs">
+                    <TrashIcon size={16} className="text-rose-600 shrink-0" />
+                    <span>Rincian Data yang Dihapus Secara Permanen</span>
+                  </div>
+                  <p className="text-[11px] text-rose-600 leading-relaxed">
+                    Data berikut telah dihapus dari sistem pada <strong>{formatDateTimeIndoFull(selectedLog.timestamp)}</strong> oleh <strong>{selectedLog.user_name || selectedLog.email}</strong>:
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-white/80 p-3 rounded-xl border border-rose-200/80 text-xs">
+                    <div>
+                      <span className="text-slate-400 text-[10px] block font-bold uppercase">Nama Berkas / Target</span>
+                      <span className="font-bold text-slate-800 block mt-0.5">
+                        {dt.nama_file || beforeData?.nama_file || selectedLog.target_nama || '-'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 text-[10px] block font-bold uppercase">Pemilik / Murid</span>
+                      <span className="font-bold text-slate-800 block mt-0.5">
+                        {dt.nama_siswa || beforeData?.nama_siswa || selectedLog.target_nama || '-'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 text-[10px] block font-bold uppercase">Program / Kategori</span>
+                      <span className="font-medium text-slate-700 block mt-0.5">
+                        {dt.kategori_program || beforeData?.kategori_program || '-'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 text-[10px] block font-bold uppercase">Status Sebelum Dihapus</span>
+                      <span className="font-mono text-slate-700 block mt-0.5">
+                        {beforeData?.status_verifikasi || dt.status_verifikasi || 'Aktif'}
+                      </span>
+                    </div>
+                    {(dt.keterangan || beforeData?.catatan_admin) && (
+                      <div className="sm:col-span-2 pt-1 border-t border-rose-100">
+                        <span className="text-slate-400 text-[10px] block font-bold uppercase">Keterangan / Catatan</span>
+                        <span className="text-slate-700 block mt-0.5">{dt.keterangan || beforeData?.catatan_admin}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
-            </div>
 
-            {/* Payload JSON / Diff Preview */}
-            {selectedLog.details && Object.keys(selectedLog.details).length > 0 && (
+              {isUbah && (
+                <div className="p-4 bg-amber-50/70 rounded-2xl border border-amber-200 space-y-2.5">
+                  <div className="flex items-center gap-2 text-amber-800 font-extrabold text-xs">
+                    <EditIcon size={16} className="text-amber-600 shrink-0" />
+                    <span>Rincian Nilai yang Diubah (Sebelum ➔ Sesudah)</span>
+                  </div>
+                  
+                  {beforeData && afterData ? (
+                    <div className="overflow-x-auto bg-white rounded-xl border border-amber-200">
+                      <table className="w-full text-xs text-left">
+                        <thead>
+                          <tr className="bg-amber-100/50 text-amber-900 border-b border-amber-200">
+                            <th className="p-2.5 font-bold">Kolom / Data</th>
+                            <th className="p-2.5 font-bold text-rose-700">Nilai Sebelum</th>
+                            <th className="p-2.5 font-bold text-emerald-700">Nilai Sesudah</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 font-medium">
+                          {Object.keys(afterData).map((key) => {
+                            const oldVal = String(beforeData[key] ?? '-');
+                            const newVal = String(afterData[key] ?? '-');
+                            if (oldVal === newVal) return null;
+                            return (
+                              <tr key={key} className="hover:bg-slate-50">
+                                <td className="p-2.5 font-bold text-slate-700">{key}</td>
+                                <td className="p-2.5 text-rose-600 line-through font-mono">{oldVal}</td>
+                                <td className="p-2.5 text-emerald-700 font-bold font-mono">{newVal}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="bg-white/80 p-3 rounded-xl border border-amber-200 text-xs space-y-1">
+                      <span className="text-slate-400 text-[10px] block font-bold uppercase">Deskripsi Perubahan</span>
+                      <p className="font-semibold text-slate-800">{selectedLog.perubahan}</p>
+                      {selectedLog.target_nama && (
+                        <p className="text-[11px] text-slate-600">
+                          Target data: <strong>{selectedLog.target_nama}</strong>
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {isTambah && (
+                <div className="p-4 bg-emerald-50/70 rounded-2xl border border-emerald-200 space-y-2.5">
+                  <div className="flex items-center gap-2 text-emerald-800 font-extrabold text-xs">
+                    <PlusIcon size={16} className="text-emerald-600 shrink-0" />
+                    <span>Rincian Data Baru yang Ditambahkan</span>
+                  </div>
+                  <div className="bg-white/80 p-3 rounded-xl border border-emerald-200 text-xs space-y-1.5">
+                    <span className="text-slate-400 text-[10px] block font-bold uppercase">Entitas Baru</span>
+                    <p className="font-black text-slate-900 text-sm">{selectedLog.target_nama || selectedLog.perubahan}</p>
+                    <p className="text-slate-600 text-[11px]">
+                      Ditambahkan pada modul <strong>{selectedLog.modul}</strong> oleh <strong>{selectedLog.user_name || selectedLog.email}</strong>.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {isVerifikasi && (
+                <div className="p-4 bg-sky-50/70 rounded-2xl border border-sky-200 space-y-2.5">
+                  <div className="flex items-center gap-2 text-sky-800 font-extrabold text-xs">
+                    <CheckCircleIcon size={16} className="text-sky-600 shrink-0" />
+                    <span>Rincian Verifikasi & Validasi Keuangan</span>
+                  </div>
+                  <div className="bg-white/80 p-3 rounded-xl border border-sky-200 text-xs space-y-1">
+                    <p className="font-bold text-slate-800">{selectedLog.perubahan}</p>
+                    <p className="text-slate-600 text-[11px]">
+                      Verifikasi berhasil dicatat secara resmi ke dalam ledger keuangan sistem.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Payload JSON / Toggle Teknis */}
               <div>
-                <p className="font-extrabold text-slate-700 mb-1.5">Rincian Nilai Perubahan (JSON Payload):</p>
-                <pre className="p-3 bg-slate-900 text-emerald-400 rounded-xl font-mono text-[11px] overflow-x-auto max-h-48">
-                  {JSON.stringify(selectedLog.details, null, 2)}
-                </pre>
-              </div>
-            )}
+                <button
+                  type="button"
+                  onClick={() => setShowRawJson(!showRawJson)}
+                  className="text-[11px] font-bold text-slate-500 hover:text-slate-800 transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                >
+                  <span>{showRawJson ? '▼ Sembunyikan Payload Teknis JSON' : '▶ Tampilkan Payload Teknis JSON (Khusus Audit)'}</span>
+                </button>
 
-            <div className="pt-2 flex justify-end">
-              <button
-                onClick={() => setIsDetailModalOpen(false)}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all cursor-pointer"
-              >
-                Tutup
-              </button>
+                {showRawJson && (
+                  <pre className="mt-2 p-3 bg-slate-900 text-emerald-400 rounded-xl font-mono text-[10.5px] overflow-x-auto max-h-52 leading-relaxed">
+                    {JSON.stringify(selectedLog.details || {}, null, 2)}
+                  </pre>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="pt-3 border-t border-slate-200 flex items-center justify-between">
+                <span className="text-[11px] text-slate-400">
+                  Status: <strong className="text-emerald-600 font-bold">Terverifikasi di Database</strong>
+                </span>
+                <button
+                  onClick={() => setIsDetailModalOpen(false)}
+                  className="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl transition-all cursor-pointer shadow-2xs"
+                >
+                  Tutup
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </Modal>
     </div>
   );

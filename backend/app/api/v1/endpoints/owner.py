@@ -44,59 +44,104 @@ async def get_pertumbuhan_siswa(
     current_user: User = Depends(owner_only)
 ):
     """
-    Owner Exclusive: Tren Pertumbuhan Murid
+    Owner Exclusive: Tren Pertumbuhan Murid & Analitik Eksekutif
     """
-    # 1. Active students count per program
-    program_counts = (
-        db.query(Siswa.kategori_program, func.count(Siswa.id))
-        .filter(Siswa.is_deleted == False)
-        .group_by(Siswa.kategori_program)
-        .all()
-    )
-    per_program = [{"program": p, "jumlah_aktif": c} for p, c in program_counts]
+    # 1. Active students count
+    all_active_students = db.query(Siswa).filter(Siswa.is_deleted == False).all()
+    total_aktif = len(all_active_students)
 
-    # 2. Monthly new student growth trend
-    # Query grouped by YYYY-MM created_at
-    all_students = db.query(Siswa).filter(Siswa.is_deleted == False).order_by(Siswa.created_at.asc()).all()
-    
+    # 2. Total active teachers
+    all_teachers = db.query(Guru).filter(Guru.is_deleted == False).all()
+    total_guru = len(all_teachers)
+
+    # 3. Monthly student growth & cumulative count
     monthly_map = {}
-    for s in all_students:
-        month_str = s.created_at.strftime("%Y-%m") if s.created_at else "2026-01"
+    for s in all_active_students:
+        month_str = s.created_at.strftime("%Y-%m") if s.created_at else datetime.utcnow().strftime("%Y-%m")
         monthly_map[month_str] = monthly_map.get(month_str, 0) + 1
-        
+
+    # Ensure current month exists in monthly_map
+    curr_m = datetime.utcnow().strftime("%Y-%m")
+    if curr_m not in monthly_map:
+        monthly_map[curr_m] = 0
+
     sorted_months = sorted(monthly_map.keys())
-    
-    # Filter range
     if range == "6bulan" and len(sorted_months) > 6:
         sorted_months = sorted_months[-6:]
     elif range == "1tahun" and len(sorted_months) > 12:
         sorted_months = sorted_months[-12:]
-        
+
+    # Monthly revenue from SPP
+    revenue_monthly = (
+        db.query(
+            func.substr(func.cast(Keuangan.tanggal, String), 1, 7).label("m"),
+            func.sum(Keuangan.jumlah)
+        )
+        .filter(Keuangan.jenis == JenisKeuangan.PEMBAYARAN_SPP)
+        .group_by("m")
+        .all()
+    )
+    rev_map = {m: float(amt or 0) for m, amt in revenue_monthly if m}
+
     per_bulan = []
     cumulative = 0
     for m in sorted_months:
-        new_count = monthly_map[m]
-        cumulative += new_count
+        new_cnt = monthly_map.get(m, 0)
+        cumulative += new_cnt
+        rev = rev_map.get(m, 0.0)
         per_bulan.append({
             "bulan": m,
-            "siswa_baru": new_count,
-            "kumulatif_aktif": cumulative
+            "siswa_baru": new_cnt,
+            "kumulatif_aktif": cumulative if cumulative > 0 else total_aktif,
+            "murid": cumulative if cumulative > 0 else total_aktif,
+            "guru": total_guru,
+            "keuangan": rev,
         })
 
-    # 3. Total Guru
-    total_guru = db.query(Guru).count()
+    # 4. Program distribution & metrics
+    prog_keys = [
+        {"name": "Sempoa SIP", "color": "#EA580C", "tariff": 350000.0},
+        {"name": "Fonem", "color": "#7E22CE", "tariff": 200000.0},
+        {"name": "Tahfidz", "color": "#047857", "tariff": 200000.0},
+        {"name": "Bahasa Inggris", "color": "#0284C7", "tariff": 200000.0},
+        {"name": "TK", "color": "#D97706", "tariff": 400000.0},
+    ]
 
-    # 4. Total Keuangan SPP Lunas (All time or current year)
+    per_program = []
+    for pk in prog_keys:
+        p_name = pk["name"]
+        cnt_murid = sum(1 for s in all_active_students if p_name.lower() in (s.kategori_program or "").lower())
+        cnt_guru = sum(1 for g in all_teachers if p_name.lower() in (g.kategori_program or "").lower())
+        pct = round((cnt_murid / total_aktif * 100), 1) if total_aktif > 0 else 0
+        est_omset = float(cnt_murid * pk["tariff"])
+        per_program.append({
+            "program": p_name,
+            "jumlah_aktif": cnt_murid,
+            "persentase": pct,
+            "jumlah_guru": cnt_guru,
+            "tarif_spp": pk["tariff"],
+            "estimasi_omset": est_omset,
+            "color": pk["color"],
+        })
+
+    per_program.sort(key=lambda x: x["jumlah_aktif"], reverse=True)
+    top_program = per_program[0]["program"] if per_program else "-"
+
+    # 5. Total Keuangan SPP Lunas
     total_keuangan = db.query(func.sum(Keuangan.jumlah)).filter(Keuangan.jenis == JenisKeuangan.PEMBAYARAN_SPP).scalar() or 0.0
+
+    ratio_guru_murid = f"1 : {round(total_aktif / total_guru, 1)}" if total_guru > 0 else "1 : 1"
 
     return {
         "range": range,
-        "total_aktif": sum(c for _, c in program_counts),
+        "total_aktif": total_aktif,
         "total_guru": total_guru,
         "total_keuangan": float(total_keuangan),
         "growth_murid": 0,
         "growth_guru": 0,
         "growth_keuangan": 0,
+        "ratio_guru_murid": ratio_guru_murid,
+        "top_program": top_program,
         "per_bulan": per_bulan,
         "per_program": per_program
     }

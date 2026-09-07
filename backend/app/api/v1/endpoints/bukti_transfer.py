@@ -427,7 +427,22 @@ async def delete_bukti_transfer(
             deskripsi=f"Menghapus berkas bukti transfer #{proof.id} milik {siswa.nama if siswa else 'Siswa'}",
             status="SUCCESS",
             target_id=proof.id,
-            target_nama=siswa.nama if siswa else None
+            target_nama=siswa.nama if siswa else None,
+            before={
+                "id_bukti": proof.id,
+                "nama_file": proof.file_path,
+                "status_verifikasi": proof.status,
+                "nama_siswa": siswa.nama if siswa else "-",
+                "kategori_program": siswa.kategori_program if siswa else "-",
+                "id_pembayaran": proof.id_pembayaran,
+                "catatan_admin": proof.admin_note or "-",
+                "waktu_upload": proof.created_at.strftime("%d %b %Y, %H:%M WIB") if proof.created_at else "-"
+            },
+            extra={
+                "tipe_berkas": "Bukti Pembayaran / Transfer Bank",
+                "lokasi_file": proof.file_path,
+                "keterangan": f"Dihapus secara permanen oleh {current_user.email}"
+            }
         )
     except Exception:
         pass

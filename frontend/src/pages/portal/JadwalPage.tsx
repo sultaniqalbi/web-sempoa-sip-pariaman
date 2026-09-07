@@ -168,6 +168,8 @@ export const JadwalPage: React.FC = () => {
     },
   });
 
+  const [selectedProgramFilter, setSelectedProgramFilter] = useState<string>('Semua');
+
   const programStudents = useMemo(() => {
     if (!siswaList || !Array.isArray(siswaList)) return [];
     return siswaList.filter((s: any) => {
@@ -186,6 +188,63 @@ export const JadwalPage: React.FC = () => {
       (s.uid && s.uid.toLowerCase().includes(q))
     );
   }, [programStudents, studentSearch]);
+
+  // Pisahkan jadwal kelas per guru/pengajar agar tiap guru memiliki baris, waktu, lokasi, murid, dan aksi tersendiri
+  const flattenedJadwalList = useMemo(() => {
+    if (!jadwalList || !Array.isArray(jadwalList)) return [];
+    const result: Array<Jadwal & { individualTeacher?: TeacherInfo; rowKey: string }> = [];
+
+    jadwalList.forEach((j) => {
+      let teachers: TeacherInfo[] = [];
+      if (j.teachers && j.teachers.length > 0) {
+        teachers = j.teachers;
+      } else if (j.guru_ids) {
+        const ids = j.guru_ids.split(',').map((x) => parseInt(x.trim(), 10)).filter((n) => !isNaN(n));
+        teachers = ids
+          .map((id) => guruList.find((g) => g.id === id))
+          .filter(Boolean)
+          .map((g) => ({
+            id: g!.id,
+            nama: g!.nama,
+            nama_panggilan: g!.nama_panggilan,
+            hari_wajib: g!.hari_wajib,
+            kategori_program: g!.kategori_program,
+          }));
+      } else if (j.id_guru) {
+        const g = guruList.find((x) => x.id === j.id_guru);
+        if (g) {
+          teachers = [{ id: g.id, nama: g.nama, nama_panggilan: g.nama_panggilan, hari_wajib: g.hari_wajib, kategori_program: g.kategori_program }];
+        }
+      }
+
+      if (teachers.length <= 1) {
+        result.push({
+          ...j,
+          individualTeacher: teachers[0],
+          rowKey: `jadwal-${j.id}`,
+        });
+      } else {
+        // Unroll multi-teacher schedule into distinct rows per teacher
+        teachers.forEach((t, idx) => {
+          result.push({
+            ...j,
+            hari: t.hari_wajib || j.hari,
+            individualTeacher: t,
+            rowKey: `jadwal-${j.id}-teacher-${t.id || idx}`,
+          });
+        });
+      }
+    });
+
+    return result;
+  }, [jadwalList, guruList]);
+
+  const filteredJadwalList = useMemo(() => {
+    if (selectedProgramFilter === 'Semua') return flattenedJadwalList;
+    return flattenedJadwalList.filter(
+      (item) => (item.kategori_program || '').toLowerCase() === selectedProgramFilter.toLowerCase()
+    );
+  }, [flattenedJadwalList, selectedProgramFilter]);
 
   // Mutations
   const createMutation = useMutation({
@@ -335,11 +394,13 @@ export const JadwalPage: React.FC = () => {
     setIsAddModalOpen(true);
   };
 
-  const openEditModal = (jadwal: Jadwal) => {
+  const openEditModal = (jadwal: any) => {
     setEditingJadwal(jadwal);
     let ids: number[] = [];
-    if (jadwal.guru_ids) {
-      ids = jadwal.guru_ids.split(',').map((x) => parseInt(x.trim(), 10)).filter((n) => !isNaN(n));
+    if (jadwal.individualTeacher) {
+      ids = [jadwal.individualTeacher.id];
+    } else if (jadwal.guru_ids) {
+      ids = jadwal.guru_ids.split(',').map((x: string) => parseInt(x.trim(), 10)).filter((n: number) => !isNaN(n));
     } else if (jadwal.id_guru) {
       ids = [jadwal.id_guru];
     }
@@ -347,7 +408,7 @@ export const JadwalPage: React.FC = () => {
 
     let sIds: number[] = [];
     if (jadwal.siswa_ids) {
-      sIds = jadwal.siswa_ids.split(',').map((x) => parseInt(x.trim(), 10)).filter((n) => !isNaN(n));
+      sIds = jadwal.siswa_ids.split(',').map((x: string) => parseInt(x.trim(), 10)).filter((n: number) => !isNaN(n));
     } else if (jadwal.id_siswa) {
       sIds = [jadwal.id_siswa];
     }
@@ -359,14 +420,37 @@ export const JadwalPage: React.FC = () => {
       jam_mulai: jadwal.jam_mulai,
       jam_selesai: jadwal.jam_selesai,
       lokasi: jadwal.lokasi,
-      id_guru: jadwal.id_guru,
-      guru_ids: jadwal.guru_ids,
+      id_guru: ids[0] || jadwal.id_guru,
+      guru_ids: ids.join(', ') || jadwal.guru_ids,
       id_siswa: jadwal.id_siswa,
       siswa_ids: jadwal.siswa_ids,
       is_hari_libur: jadwal.is_hari_libur,
       kategori_program: jadwal.kategori_program || 'Sempoa SIP',
     });
     setIsAddModalOpen(true);
+  };
+
+  const handleDeleteRow = (row: any) => {
+    const teacherName = row.individualTeacher ? getGuruDisplayName(row.individualTeacher) : 'Guru';
+    const prog = row.kategori_program || 'Program';
+    if (!window.confirm(`Yakin ingin menghapus jadwal ${prog} untuk pengajar ${teacherName}?`)) {
+      return;
+    }
+    if (row.guru_ids && row.guru_ids.includes(',') && row.individualTeacher) {
+      const remainingIds = row.guru_ids
+        .split(',')
+        .map((x: string) => x.trim())
+        .filter((x: string) => x !== String(row.individualTeacher.id));
+      if (remainingIds.length > 0) {
+        updateMutation.mutate({
+          ...row,
+          id_guru: parseInt(remainingIds[0], 10),
+          guru_ids: remainingIds.join(', '),
+        });
+        return;
+      }
+    }
+    deleteMutation.mutate(row.id);
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
@@ -392,7 +476,7 @@ export const JadwalPage: React.FC = () => {
   const jadwalColumns = [
     {
       header: 'Program & Hari',
-      accessor: (row: Jadwal) => (
+      accessor: (row: any) => (
         <div>
           <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border mr-2 shadow-2xs ${getProgramBadgeStyle(row.kategori_program || 'Sempoa SIP')}`}>
             {row.kategori_program || 'Sempoa SIP'}
@@ -405,68 +489,37 @@ export const JadwalPage: React.FC = () => {
     },
     {
       header: 'Pengajar / Guru',
-      accessor: (row: Jadwal) => {
-        let teachers: TeacherInfo[] = [];
-
-        if (row.teachers && row.teachers.length > 0) {
-          teachers = row.teachers;
-        } else if (row.guru_ids) {
-          const ids = row.guru_ids.split(',').map((x) => parseInt(x.trim(), 10)).filter((n) => !isNaN(n));
-          teachers = ids
-            .map((id) => guruList.find((g) => g.id === id))
-            .filter(Boolean)
-            .map((g) => ({
-              id: g!.id,
-              nama: g!.nama,
-              hari_wajib: g!.hari_wajib,
-              kategori_program: g!.kategori_program,
-            }));
-        } else if (row.id_guru) {
-          const g = guruList.find((x) => x.id === row.id_guru);
-          if (g) {
-            teachers = [{ id: g.id, nama: g.nama, hari_wajib: g.hari_wajib, kategori_program: g.kategori_program }];
-          } else if (row.guru_names) {
-            const sep = row.guru_names.includes(' | ') ? ' | ' : ', ';
-            teachers = row.guru_names.split(sep).map((n, i) => ({ id: i, nama: n.trim() }));
-          }
-        } else if (row.guru_names) {
-          const sep = row.guru_names.includes(' | ') ? ' | ' : ', ';
-          teachers = row.guru_names.split(sep).map((n, i) => ({ id: i, nama: n.trim() }));
-        }
-
-        if (teachers.length === 0) {
+      accessor: (row: any) => {
+        const t = row.individualTeacher;
+        if (!t) {
           return <span className="text-[#94A3B8] text-xs italic">Belum ditentukan</span>;
         }
 
         return (
-          <div className="space-y-1.5 py-1">
-            {teachers.map((t, idx) => (
-              <div key={t.id || idx} className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] font-extrabold text-[#15803D] bg-[#DCFCE7] border border-[#86EFAC] px-1.5 py-0.5 rounded shadow-2xs shrink-0 inline-flex items-center gap-1">
-                  <PengajarIcon size={11} className="text-[#16A34A]" />
-                  <span>Pengajar {idx + 1}</span>
-                </span>
-                <span className="text-xs font-bold text-[#1E293B]">{getGuruDisplayName(t)}</span>
-                {t.hari_wajib && (
-                  <span className="text-[10px] font-semibold text-[#0369A1] bg-[#E0F2FE] border border-[#BAE6FD] px-1.5 py-0.5 rounded shrink-0 inline-flex items-center gap-1">
-                    <CalendarIcon size={10} className="text-[#0369A1]" />
-                    <span>{t.hari_wajib}</span>
-                  </span>
-                )}
-              </div>
-            ))}
+          <div className="flex items-center gap-2 flex-wrap py-1">
+            <span className="text-[10px] font-extrabold text-[#15803D] bg-[#DCFCE7] border border-[#86EFAC] px-1.5 py-0.5 rounded shadow-2xs shrink-0 inline-flex items-center gap-1">
+              <PengajarIcon size={11} className="text-[#16A34A]" />
+              <span>Pengajar</span>
+            </span>
+            <span className="text-xs font-bold text-[#1E293B]">{getGuruDisplayName(t)}</span>
+            {t.hari_wajib && (
+              <span className="text-[10px] font-semibold text-[#0369A1] bg-[#E0F2FE] border border-[#BAE6FD] px-1.5 py-0.5 rounded shrink-0 inline-flex items-center gap-1">
+                <CalendarIcon size={10} className="text-[#0369A1]" />
+                <span>{t.hari_wajib}</span>
+              </span>
+            )}
           </div>
         );
       },
     },
     {
       header: 'Waktu & Tipe',
-      accessor: (row: Jadwal) => (
+      accessor: (row: any) => (
         <div>
           <span className="font-mono text-xs font-bold text-[#424242]">
             {row.jam_mulai} - {row.jam_selesai}
           </span>
-          <p className="text-[10px] text-[#757575] mt-1 font-semibold">
+          <p className="text-[10px] text-[#757575] mt-0.5 font-semibold">
             {row.is_hari_libur ? 'Libur Nasional' : 'Hari Biasa'}
           </p>
         </div>
@@ -474,16 +527,16 @@ export const JadwalPage: React.FC = () => {
     },
     {
       header: 'Lokasi Kelas',
-      accessor: (row: Jadwal) => <span className="text-[#757575] text-xs font-medium">{row.lokasi}</span>,
+      accessor: (row: any) => <span className="text-[#757575] text-xs font-medium">{row.lokasi}</span>,
     },
     {
       header: 'Murid / Siswa',
-      accessor: (row: Jadwal) => {
+      accessor: (row: any) => {
         let count = 0;
         let names = '';
         if (row.students && row.students.length > 0) {
           count = row.students.length;
-          names = row.students.map((s) => s.nama_panggilan || s.nama).join(', ');
+          names = row.students.map((s: any) => s.nama_panggilan || s.nama).join(', ');
         } else if (row.siswa_names) {
           names = row.siswa_names;
           count = names.split(',').length;
@@ -516,7 +569,7 @@ export const JadwalPage: React.FC = () => {
     },
     {
       header: 'Aksi',
-      accessor: (row: Jadwal) => (
+      accessor: (row: any) => (
         <div className="flex items-center md:justify-end gap-2">
           <button
             onClick={() => openEditModal(row)}
@@ -526,7 +579,7 @@ export const JadwalPage: React.FC = () => {
             Edit
           </button>
           <button
-            onClick={() => deleteMutation.mutate(row.id)}
+            onClick={() => handleDeleteRow(row)}
             className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center cursor-pointer active:scale-95"
             title="Hapus Jadwal"
           >
@@ -556,7 +609,7 @@ export const JadwalPage: React.FC = () => {
       <PageHeader
         icon={<JadwalIcon size={24} className="text-[#FF7043]" />}
         title="Jadwal & Kelas"
-        subtitle="Manajemen jadwal sesi mengajar, alokasi pengajar, dan ruang kelas bimbingan"
+        subtitle="Manajemen jadwal sesi mengajar, alokasi pengajar, dan ruang kelas bimbingan per guru"
         iconColorBg="bg-[#FFF3E0] text-[#FF7043]"
         onExportSheets={() => exportJadwalSheetsMutation.mutate()}
         isExporting={exportJadwalSheetsMutation.isPending}
@@ -564,10 +617,37 @@ export const JadwalPage: React.FC = () => {
         onAction={openAddModal}
       />
 
+      {/* Program Filter Pills Bar */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+        {['Semua', ...AVAILABLE_PROGRAMS].map((prog) => {
+          const count = prog === 'Semua'
+            ? flattenedJadwalList.length
+            : flattenedJadwalList.filter((x) => (x.kategori_program || '').toLowerCase().includes(prog.toLowerCase())).length;
+          const isActive = selectedProgramFilter === prog;
+          return (
+            <button
+              key={prog}
+              type="button"
+              onClick={() => setSelectedProgramFilter(prog)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                isActive
+                  ? 'bg-[#1E293B] text-white shadow-xs'
+                  : 'bg-white text-[#64748B] hover:bg-[#F1F5F9] border border-[#E2E8F0]'
+              }`}
+            >
+              <span>{prog === 'Semua' ? 'Semua Program' : prog}</span>
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-extrabold ${isActive ? 'bg-white/20 text-white' : 'bg-[#F1F5F9] text-[#475569]'}`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Jadwal Kelas Content */}
       {isLoadingJadwal ? (
         <div className="py-16 text-center text-[#757575] text-xs">Memuat daftar jadwal...</div>
-      ) : jadwalList.length === 0 ? (
+      ) : flattenedJadwalList.length === 0 ? (
         <EmptyState
           icon={<JadwalIcon size={40} className="text-[#757575]" />}
           title="Belum ada jadwal kelas"
@@ -578,15 +658,17 @@ export const JadwalPage: React.FC = () => {
       ) : (
         <DataTable
           columns={jadwalColumns}
-          data={jadwalList}
+          data={filteredJadwalList}
           searchPlaceholder="Cari program, hari, guru, lokasi..."
-          searchFilter={(row, q) => {
+          searchFilter={(row: any, q) => {
             const query = q.toLowerCase();
+            const teacherName = row.individualTeacher ? getGuruDisplayName(row.individualTeacher).toLowerCase() : '';
             return (
               row.hari.toLowerCase().includes(query) ||
               row.lokasi.toLowerCase().includes(query) ||
               (row.kategori_program || '').toLowerCase().includes(query) ||
-              (row.guru_names || '').toLowerCase().includes(query)
+              (row.guru_names || '').toLowerCase().includes(query) ||
+              teacherName.includes(query)
             );
           }}
         />
