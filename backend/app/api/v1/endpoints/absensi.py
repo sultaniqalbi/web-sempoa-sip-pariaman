@@ -7,6 +7,13 @@ from sqlalchemy import func
 
 WIB = timezone(timedelta(hours=7))
 
+def to_wib(dt: Optional[datetime]) -> Optional[datetime]:
+    if dt is None:
+        return None
+    if dt.tzinfo is not None:
+        return dt.astimezone(WIB)
+    return dt.replace(tzinfo=WIB)
+
 from app.core.database import get_db
 from app.core.dependencies import get_current_user, RoleChecker
 from app.core.websocket import manager
@@ -93,7 +100,7 @@ async def read_absensi_list(
                 u_clean = log_entry.uid.strip().upper().replace(" ", "") if log_entry.uid else ""
                 matched_g = guru_map.get(u_clean)
                 if matched_g:
-                    w_time = log_entry.waktu.astimezone(WIB) if log_entry.waktu.tzinfo else log_entry.waktu.replace(tzinfo=WIB)
+                    w_time = to_wib(log_entry.waktu)
                     should_be_late = check_is_guru_late(matched_g, w_time)
                     expected_status = StatusAbsensi.TERLAMBAT if should_be_late else StatusAbsensi.HADIR
                     if log_entry.status != expected_status:
@@ -128,7 +135,7 @@ async def read_absensi_list(
             clean_k = uid_val.strip().upper()
             if clean_k not in guru_unpaid_late_times:
                 guru_unpaid_late_times[clean_k] = []
-            guru_unpaid_late_times[clean_k].append(w_time)
+            guru_unpaid_late_times[clean_k].append(to_wib(w_time))
 
     result = []
     for log in logs:
@@ -142,16 +149,10 @@ async def read_absensi_list(
 
         resp = AbsensiResponse.model_validate(log)
         if log.waktu:
-            if log.waktu.tzinfo is not None:
-                resp.waktu = log.waktu.astimezone(WIB)
-            else:
-                resp.waktu = log.waktu.replace(tzinfo=WIB)
+            resp.waktu = to_wib(log.waktu)
                 
         if log.waktu_keluar:
-            if log.waktu_keluar.tzinfo is not None:
-                resp.waktu_keluar = log.waktu_keluar.astimezone(WIB)
-            else:
-                resp.waktu_keluar = log.waktu_keluar.replace(tzinfo=WIB)
+            resp.waktu_keluar = to_wib(log.waktu_keluar)
 
         norm_g_uid = g.uid.strip().upper().replace(" ", "") if g.uid else ""
         resp.guru_nama = g.nama
@@ -171,7 +172,8 @@ async def read_absensi_list(
         else:
             # Jika terlambat dan belum lunas: hitung total denda keterlambatan belum lunas hingga waktu log ini
             late_times = guru_unpaid_late_times.get(norm_g_uid) or guru_unpaid_late_times.get(nospace_uid) or []
-            accum_count = sum(1 for lt in late_times if lt <= log.waktu)
+            log_wib = to_wib(log.waktu)
+            accum_count = sum(1 for lt in late_times if lt is not None and log_wib is not None and lt <= log_wib)
             if accum_count == 0:
                 accum_count = 1
             resp.denda_terakumulasi = accum_count * 1000
@@ -202,10 +204,12 @@ async def read_izin_guru_list(
 
         resp = AbsensiResponse.model_validate(log)
         if log.waktu:
-            if log.waktu.tzinfo is not None:
-                resp.waktu = log.waktu.astimezone(WIB)
-            else:
-                resp.waktu = log.waktu.replace(tzinfo=WIB)
+            resp.waktu = to_wib(log.waktu)
+        if log.waktu_keluar:
+            resp.waktu_keluar = to_wib(log.waktu_keluar)
+
+        resp.status_denda = getattr(log, "status_denda", None) or "BELUM_LUNAS"
+        resp.denda_terakumulasi = 0
 
         if g:
             resp.guru_nama = g.nama

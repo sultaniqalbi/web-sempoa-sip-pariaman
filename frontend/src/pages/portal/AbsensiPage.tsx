@@ -241,7 +241,7 @@ export const SharedAbsensiPage: React.FC = () => {
       if (!log || !log.uid) return false;
       if (log.role && log.role !== 'guru') return false;
       if (log.guru_nama === 'Kartu Belum Terdaftar' || log.guru_nama?.toLowerCase().includes('dummy')) return false;
-      if (log.uid.toLowerCase().includes('dummy') || log.uid.toLowerCase().startsWith('sp-0926')) return false;
+      if (log.uid.toLowerCase().includes('dummy')) return false;
       return true;
     });
   }, [guruLogs]);

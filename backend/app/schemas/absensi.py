@@ -15,7 +15,7 @@ class AbsensiCreate(AbsensiBase):
 
 class AbsensiResponse(AbsensiBase):
     id: int
-    created_at: datetime
+    created_at: Optional[datetime] = None
     guru_nama: Optional[str] = None
     kategori_program: Optional[str] = None
     role: Optional[str] = None

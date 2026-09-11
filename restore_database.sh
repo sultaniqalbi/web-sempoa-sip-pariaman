@@ -9,6 +9,15 @@ cd /opt/sempoa-sip
 
 BACKUP_DIR="/opt/sempoa-sip/backend/backups"
 
+# Cek opsi list backup
+if [ "$1" = "list" ] || [ "$1" = "--list" ]; then
+  echo "=========================================================="
+  echo "  DAFTAR BACKUP DATABASE YANG TERSEDIA"
+  echo "=========================================================="
+  ls -lht ${BACKUP_DIR}/*.sql.gz 2>/dev/null || echo "Tidak ada file backup di ${BACKUP_DIR}"
+  exit 0
+fi
+
 # Cari file backup otomatis sebelum deploy
 if [ -n "$1" ]; then
   BACKUP_FILE="$1"
