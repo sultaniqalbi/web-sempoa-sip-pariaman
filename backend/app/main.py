@@ -374,112 +374,11 @@ def on_startup():
                     logger.info("Auto-migration: All class schedules are already in sync with genuine student lists")
 
                 # =========================================================================
-                # Pembersihan & Deduplikasi Otomatis Seluruh Database (Jadwal, Guru, Siswa):
-                # Membandingkan kelengkapan data, mempertahankan data paling lengkap, dan
-                # menghapus data duplikat yang kurang lengkap sesuai instruksi pengguna.
+                # BLOK AUTO-DEDUPLIKASI DIHAPUS PERMANEN (11 Sep 2026)
+                # Alasan: Blok ini otomatis menghapus data Jadwal, Guru, dan Siswa
+                # setiap kali backend restart. Ini BERBAHAYA untuk sistem produksi.
+                # Jika perlu deduplikasi, lakukan MANUAL via endpoint admin.
                 # =========================================================================
-                try:
-                    # 1. Deduplikasi Jadwal Kelas
-                    all_scheds = db_session.query(Jadwal).all()
-                    j_map = {}
-                    for js in all_scheds:
-                        tid = js.id_guru
-                        if not tid and js.guru_ids:
-                            parts = [int(x.strip()) for x in js.guru_ids.split(",") if x.strip().isdigit()]
-                            if parts:
-                                tid = parts[0]
-                        k = f"{(js.kategori_program or '').strip().lower()}-{tid}-{(js.hari or '').strip().lower()}"
-                        j_map.setdefault(k, []).append(js)
-
-                    del_j_count = 0
-                    for k, rows in j_map.items():
-                        if len(rows) > 1:
-                            def _sched_quality(item: Jadwal):
-                                s_ids = [x.strip() for x in (item.siswa_ids or "").split(",") if x.strip().isdigit()]
-                                score = len(s_ids) * 20
-                                if item.lokasi and "ruang" in item.lokasi.lower(): score += 5
-                                if item.jam_mulai and item.jam_selesai: score += 5
-                                if item.mode_kelas: score += 2
-                                return score
-
-                            # Urutkan: score tertinggi di depan, jika seri pilih ID terkecil (data lebih dulu)
-                            sorted_rows = sorted(rows, key=lambda r: (_sched_quality(r), -r.id), reverse=True)
-                            keeper = sorted_rows[0]
-                            for redundant in sorted_rows[1:]:
-                                db_session.delete(redundant)
-                                del_j_count += 1
-                    if del_j_count > 0:
-                        db_session.commit()
-                        logger.info(f"Auto-deduplicate: Successfully purged {del_j_count} duplicate Jadwal rows, preserving the most complete data.")
-
-                    # 2. Deduplikasi Guru (Berdasarkan UID atau Nama Normalisasi)
-                    all_gurus = db_session.query(Guru).filter(Guru.is_deleted == False).all()
-                    g_map = {}
-                    for g_obj in all_gurus:
-                        norm_name = "".join(ch for ch in (g_obj.nama or "").lower() if ch.isalnum())
-                        key = g_obj.uid.strip().upper() if g_obj.uid else norm_name
-                        if key:
-                            g_map.setdefault(key, []).append(g_obj)
-
-                    del_g_count = 0
-                    for key, g_rows in g_map.items():
-                        if len(g_rows) > 1:
-                            def _guru_quality(g: Guru):
-                                score = 0
-                                if g.foto_profil: score += 20
-                                if g.whatsapp_guru: score += 10
-                                if g.hari_wajib: score += 8
-                                if g.kategori_program and g.kategori_program != 'Sempoa SIP': score += 5
-                                if g.alamat: score += 5
-                                if g.tanggal_lahir: score += 3
-                                if g.bio: score += 2
-                                return score
-
-                            sorted_g = sorted(g_rows, key=lambda x: (_guru_quality(x), -x.id), reverse=True)
-                            best_guru = sorted_g[0]
-                            for dup_guru in sorted_g[1:]:
-                                # Update relasi siswa & jadwal ke guru terbaik sebelum menghapus
-                                db_session.query(Siswa).filter(Siswa.id_guru == dup_guru.id).update({"id_guru": best_guru.id})
-                                db_session.query(Jadwal).filter(Jadwal.id_guru == dup_guru.id).update({"id_guru": best_guru.id})
-                                dup_guru.is_deleted = True
-                                del_g_count += 1
-                    if del_g_count > 0:
-                        db_session.commit()
-                        logger.info(f"Auto-deduplicate: Successfully merged {del_g_count} duplicate Guru entries into the most complete profiles.")
-
-                    # 3. Deduplikasi Siswa (Berdasarkan UID)
-                    all_siswas = db_session.query(Siswa).filter(Siswa.is_deleted == False).all()
-                    s_map = {}
-                    for s_obj in all_siswas:
-                        clean_uid = (s_obj.uid or "").strip().upper()
-                        if clean_uid:
-                            s_map.setdefault(clean_uid, []).append(s_obj)
-
-                    del_s_count = 0
-                    for clean_uid, s_rows in s_map.items():
-                        if len(s_rows) > 1:
-                            def _siswa_quality(s: Siswa):
-                                score = 0
-                                if s.foto_profil: score += 20
-                                if s.id_guru or s.guru_per_program: score += 15
-                                if s.nama_orang_tua: score += 10
-                                if s.whatsapp_orang_tua: score += 10
-                                if s.alamat: score += 5
-                                if s.tanggal_lahir: score += 5
-                                if s.kelas_sekolah: score += 3
-                                return score
-
-                            sorted_s = sorted(s_rows, key=lambda x: (_siswa_quality(x), -x.id), reverse=True)
-                            best_siswa = sorted_s[0]
-                            for dup_siswa in sorted_s[1:]:
-                                dup_siswa.is_deleted = True
-                                del_s_count += 1
-                    if del_s_count > 0:
-                        db_session.commit()
-                        logger.info(f"Auto-deduplicate: Successfully resolved {del_s_count} duplicate Siswa entries, keeping the most complete records.")
-
-                except Exception as dedup_err:
-                    logger.warning(f"Database auto-deduplication notice: {dedup_err}")
         except Exception as split_err:
             logger.warning(f"Jadwal split & reconciliation notice: {split_err}")
 
