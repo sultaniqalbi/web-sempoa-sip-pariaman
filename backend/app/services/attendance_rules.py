@@ -6,12 +6,12 @@ Aturan Keterlambatan Guru:
    - Bebas Keterlambatan (is_late = False) & Bebas Denda (denda = 0).
 2. Guru Khusus (seperti Husna & Dinda - jadwal Kamis, Jumat, Sabtu):
    - Keterlambatan dihitung 1 jam setelah jadwal kelas dimulai.
-     Contoh: Jadwal kelas 12:00 -> Batas keterlambatan jam 13:00 WIB.
-             Jadwal kelas 09:00 -> Batas keterlambatan jam 10:00 WIB.
+     Contoh: Jadwal kelas 12:00 -> Batas keterlambatan jam 13:00:00 WIB.
+             Jadwal kelas 09:00 -> Batas keterlambatan jam 10:00:00 WIB.
 3. Semua Guru & Staf Lainnya (TK, Sempoa SIP, Fonem, Admin, dll.):
    - Jam datang default jam 07:00 WIB.
-   - Batas keterlambatan adalah jam 08:00 WIB.
-     (Datang <= 08:00 WIB = Tepat Waktu, Datang > 08:00 WIB = Terlambat).
+   - Batas keterlambatan adalah tepat jam 08:00:00 WIB.
+     (Datang <= 08:00:00 WIB = Tepat Waktu, Lewat 1 detik saja misal 08:00:01 WIB ke atas = Terlambat).
 """
 
 import re
@@ -91,24 +91,27 @@ def get_guru_late_threshold(guru: Any, waktu_wib: datetime) -> Tuple[int, int]:
 def check_is_guru_late(guru: Any, waktu_dt: datetime) -> bool:
     """
     Evaluasi apakah presensi guru terlambat.
-    Returns True jika terlambat, False jika tepat waktu.
-    Catatan: Guru yang datang sebelum atau tepat jam 08:00 WIB (08:00:xx) TIDAK PERNAH dianggap terlambat.
+    Aturan Tegas:
+    - Datang <= batas waktu (misal <= 08:00:00 WIB) = Tepat Waktu (HADIR).
+    - Lewat 1 detik dari batas waktu (misal 08:00:01 ke atas) = TERLAMBAT.
+    - Direktur / Owner = Selalu bebas keterlambatan & denda.
     """
     if not guru or is_owner_or_direktur(guru):
         return False
 
     w_wib = waktu_dt.astimezone(WIB) if waktu_dt.tzinfo else waktu_dt.replace(tzinfo=WIB)
 
-    # Proteksi mutlak: jika datang sebelum jam 08:00 WIB atau tepat jam 08:00:xx WIB, PASTI tepat waktu
-    if w_wib.hour < 8 or (w_wib.hour == 8 and w_wib.minute == 0):
-        return False
-
     th, tm = get_guru_late_threshold(guru, w_wib)
-    # Batas toleransi keterlambatan minimal jam 08:00 WIB
     if th < 8:
         th, tm = 8, 0
 
-    # Terlambat HANYA jika jam > th atau (jam == th dan menit > tm)
-    if w_wib.hour > th or (w_wib.hour == th and w_wib.minute > tm):
+    sec = getattr(w_wib, "second", 0)
+    # Lewat 1 detik dari batas waktu yang ditentukan langsung terhitung TERLAMBAT
+    if w_wib.hour > th:
         return True
+    if w_wib.hour == th and w_wib.minute > tm:
+        return True
+    if w_wib.hour == th and w_wib.minute == tm and sec > 0:
+        return True
+
     return False
