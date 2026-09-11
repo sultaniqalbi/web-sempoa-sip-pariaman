@@ -75,14 +75,8 @@ async def read_absensi_list(
             valid_uids_clean.add(u_clean)
             valid_uids_clean.add(u_nospace)
 
-    if not valid_uids_clean:
-        return []
-
-    # Filter query agar HANYA mengambil log dari Guru terdaftar dan aktif (menolak tegas data dummy & unregistered card)
-    norm_uid_col = func.replace(func.upper(AbsensiLog.uid), " ", "")
     logs = (
         db.query(AbsensiLog)
-        .filter(norm_uid_col.in_(list(valid_uids_clean)))
         .order_by(AbsensiLog.waktu.desc())
         .offset(skip)
         .limit(limit)
@@ -143,8 +137,18 @@ async def read_absensi_list(
         nospace_uid = clean_uid.replace(" ", "")
         g = guru_map.get(clean_uid) or guru_map.get(nospace_uid)
 
-        # Proteksi Mutlak: Lewati jika bukan guru yang terdaftar
         if not g:
+            # Jika guru tidak terdaftar, tetap tampilkan sebagai Kartu Belum Terdaftar
+            resp = AbsensiResponse.model_validate(log)
+            if log.waktu:
+                resp.waktu = to_wib(log.waktu)
+            if log.waktu_keluar:
+                resp.waktu_keluar = to_wib(log.waktu_keluar)
+            resp.guru_nama = "Kartu Belum Terdaftar"
+            resp.role = "guru"
+            resp.denda_terakumulasi = 0
+            resp.status_denda = "BELUM_LUNAS"
+            result.append(resp)
             continue
 
         resp = AbsensiResponse.model_validate(log)
