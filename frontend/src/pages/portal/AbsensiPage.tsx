@@ -235,12 +235,12 @@ export const SharedAbsensiPage: React.FC = () => {
     }
   });
 
-  // Filter khusus log absensi GURU resmi (buang unregistered / kartu dummy / siswa)
+  // Filter log absensi (buang hanya UID dummy test, tampilkan semua log RFID aktif termasuk yang belum terpetakan)
   const validGuruLogs = useMemo(() => {
     return guruLogs.filter((log) => {
       if (!log || !log.uid) return false;
       if (log.role && log.role !== 'guru') return false;
-      if (log.guru_nama === 'Kartu Belum Terdaftar' || log.guru_nama?.toLowerCase().includes('dummy')) return false;
+      if (log.guru_nama?.toLowerCase().includes('dummy')) return false;
       if (log.uid.toLowerCase().includes('dummy')) return false;
       return true;
     });
@@ -349,15 +349,15 @@ export const SharedAbsensiPage: React.FC = () => {
 
   // Mutation Edit Log Absensi Guru
   const editLogMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: typeof editLogForm }) => {
-      const payload = {
-        uid: data.uid,
-        waktu: `${data.tanggal} ${data.jam}:00`,
-        status: data.status,
-        mode: data.mode,
-        catatan: data.catatan,
-        pembayaran_denda: data.pembayaran_denda
-      };
+    mutationFn: async ({ id, data }: { id: number; data: Partial<typeof editLogForm> }) => {
+      const payload: any = {};
+      if (data.uid !== undefined) payload.uid = data.uid;
+      if (data.tanggal && data.jam) payload.waktu = `${data.tanggal} ${data.jam}:00`;
+      if (data.status !== undefined) payload.status = data.status;
+      if (data.mode !== undefined) payload.mode = data.mode;
+      if (data.catatan !== undefined) payload.catatan = data.catatan;
+      if (data.pembayaran_denda !== undefined) payload.pembayaran_denda = data.pembayaran_denda;
+
       const res = await apiClient.put(`/absensi/${id}`, payload);
       return res.data;
     },
@@ -699,9 +699,26 @@ export const SharedAbsensiPage: React.FC = () => {
 
         const denda = row.denda_terakumulasi || 1000;
         return (
-          <span className="text-xs font-bold text-red-600">
-            Rp. {denda.toLocaleString('id-ID')}
-          </span>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-xs font-bold text-red-600 whitespace-nowrap">
+              Rp. {denda.toLocaleString('id-ID')}
+            </span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (window.confirm(`Konfirmasi pelunasan denda untuk ${row.guru_nama || 'Guru ini'}? Denda akan direset ke Rp 0.`)) {
+                  editLogMutation.mutate({
+                    id: row.id,
+                    data: { pembayaran_denda: 'LUNAS' }
+                  });
+                }
+              }}
+              title="Lunaskan & Reset Denda ke Rp 0"
+              className="px-2 py-0.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded shadow-2xs transition-colors cursor-pointer whitespace-nowrap"
+            >
+              Bayar / Reset
+            </button>
+          </div>
         );
       }
     },

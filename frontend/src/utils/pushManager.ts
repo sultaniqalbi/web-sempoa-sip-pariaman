@@ -32,15 +32,17 @@ export async function requestAndSubscribePush(): Promise<{ success: boolean; mes
       };
     }
 
-    // 1. Ambil VAPID Public Key dari backend
-    const vapidRes = await apiClient.get('/push/vapid-key');
-    const publicKey = vapidRes.data?.public_key;
-
-    if (!publicKey) {
-      return {
-        success: false,
-        message: 'Kunci VAPID server belum dikonfigurasi.'
-      };
+    // 1. Ambil VAPID Public Key dari backend (dengan fallback resmi)
+    const DEFAULT_VAPID_PUBLIC_KEY = 'BGJUHOUHSyggjLnHydi66CxoEE5jML4tiHpvmK6-crhU-kCN3X_AN8-ej4MBX8ygFEu5TOKebAcf-gbeEi30MTA';
+    let publicKey = DEFAULT_VAPID_PUBLIC_KEY;
+    try {
+      const vapidRes = await apiClient.get('/push/vapid-key');
+      if (vapidRes.data?.public_key) {
+        publicKey = vapidRes.data.public_key;
+      }
+    } catch (keyErr) {
+      console.warn('Gagal mengambil VAPID key dari server, menggunakan fallback default:', keyErr);
+      publicKey = DEFAULT_VAPID_PUBLIC_KEY;
     }
 
     const convertedVapidKey = urlBase64ToUint8Array(publicKey);

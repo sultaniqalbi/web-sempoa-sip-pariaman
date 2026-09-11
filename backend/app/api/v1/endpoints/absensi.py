@@ -3,7 +3,7 @@ from typing import List, Optional
 from datetime import datetime, date, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, or_
 
 WIB = timezone(timedelta(hours=7))
 
@@ -112,16 +112,28 @@ async def read_absensi_list(
     # 2. Jika guru TELAT pada log hari tersebut, denda diakumulasikan dengan denda keterlambatan sebelumnya yang belum lunas.
     # 3. Direktur / Owner selalu BEBAS DENDA (denda = 0).
     norm_uid_expr = func.replace(func.upper(AbsensiLog.uid), " ", "")
+    late_filter = [
+        AbsensiLog.status == StatusAbsensi.TERLAMBAT,
+        or_(AbsensiLog.status_denda != "LUNAS", AbsensiLog.status_denda == None)
+    ]
+    if valid_uids_clean:
+        late_filter.append(norm_uid_expr.in_(list(valid_uids_clean)))
+
     unpaid_late_rows = (
         db.query(norm_uid_expr, AbsensiLog.waktu)
-        .filter(
-            AbsensiLog.status == StatusAbsensi.TERLAMBAT,
-            or_(AbsensiLog.status_denda != "LUNAS", AbsensiLog.status_denda == None),
-            norm_uid_expr.in_(list(valid_uids_clean))
-        )
+        .filter(*late_filter)
         .order_by(AbsensiLog.waktu.asc())
         .all()
     )
+
+    # Ambil seluruh Siswa yang aktif untuk pemetaan tap siswa
+    siswas = db.query(Siswa).filter(Siswa.is_deleted == False).all()
+    siswa_map = {}
+    for s in siswas:
+        if s.uid:
+            s_clean = s.uid.strip().upper()
+            siswa_map[s_clean] = s
+            siswa_map[s_clean.replace(" ", "")] = s
 
     guru_unpaid_late_times = {}
     for uid_val, w_time in unpaid_late_rows:
@@ -138,14 +150,20 @@ async def read_absensi_list(
         g = guru_map.get(clean_uid) or guru_map.get(nospace_uid)
 
         if not g:
-            # Jika guru tidak terdaftar, tetap tampilkan sebagai Kartu Belum Terdaftar
+            # Cek apakah kartu milik siswa
+            s = siswa_map.get(clean_uid) or siswa_map.get(nospace_uid)
             resp = AbsensiResponse.model_validate(log)
             if log.waktu:
                 resp.waktu = to_wib(log.waktu)
             if log.waktu_keluar:
                 resp.waktu_keluar = to_wib(log.waktu_keluar)
-            resp.guru_nama = "Kartu Belum Terdaftar"
-            resp.role = "guru"
+            if s:
+                resp.guru_nama = s.nama
+                resp.kategori_program = s.kategori_program
+                resp.role = "siswa"
+            else:
+                resp.guru_nama = "Kartu Belum Terdaftar"
+                resp.role = "guru"
             resp.denda_terakumulasi = 0
             resp.status_denda = "BELUM_LUNAS"
             result.append(resp)
