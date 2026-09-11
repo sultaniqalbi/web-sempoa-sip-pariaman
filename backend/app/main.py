@@ -155,7 +155,8 @@ def on_startup():
             "UPDATE guru SET paket_pengajaran = '09:00 - 17:00 WIB' WHERE is_deleted = FALSE AND (LOWER(kategori_program) LIKE '%sempoa%' OR LOWER(kategori_program) LIKE '%fonem%') AND (paket_pengajaran IS NULL OR paket_pengajaran = 'Reguler' OR paket_pengajaran = '09:00');",
             "UPDATE guru SET paket_pengajaran = '12:00 - 17:00 WIB' WHERE is_deleted = FALSE AND (LOWER(kategori_program) LIKE '%inggris%' OR LOWER(kategori_program) LIKE '%tahfidz%') AND (paket_pengajaran IS NULL OR paket_pengajaran = 'Reguler' OR paket_pengajaran = '09:00');",
             "UPDATE program_settings SET nama_program = 'Sempoa SIP (8 Sesi)' WHERE nama_program = 'Sempoa SIP';",
-            "INSERT INTO program_settings (nama_program, biaya_spp, target_pertemuan, jam_mulai, jam_selesai, hari_masuk, keterangan) SELECT 'Sempoa SIP (12 Sesi)', biaya_spp, 12, jam_mulai, jam_selesai, hari_masuk, 'Program Resmi Sempoa SIP - Paket 12 Sesi' FROM program_settings WHERE nama_program = 'Sempoa SIP (8 Sesi)' ON CONFLICT (nama_program) DO NOTHING;"
+            "INSERT INTO program_settings (nama_program, biaya_spp, target_pertemuan, jam_mulai, jam_selesai, hari_masuk, keterangan) SELECT 'Sempoa SIP (12 Sesi)', biaya_spp, 12, jam_mulai, jam_selesai, hari_masuk, 'Program Resmi Sempoa SIP - Paket 12 Sesi' FROM program_settings WHERE nama_program = 'Sempoa SIP (8 Sesi)' ON CONFLICT (nama_program) DO NOTHING;",
+            "ALTER TABLE absensi_log ADD COLUMN IF NOT EXISTS status_denda VARCHAR(20) DEFAULT 'BELUM_LUNAS';"
         ]
 
         for sql_stmt in auto_sqls:

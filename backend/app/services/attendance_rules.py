@@ -92,13 +92,23 @@ def check_is_guru_late(guru: Any, waktu_dt: datetime) -> bool:
     """
     Evaluasi apakah presensi guru terlambat.
     Returns True jika terlambat, False jika tepat waktu.
+    Catatan: Guru yang datang sebelum jam 08:00 WIB (w_wib.hour < 8) TIDAK PERNAH dianggap terlambat.
     """
     if not guru or is_owner_or_direktur(guru):
         return False
 
     w_wib = waktu_dt.astimezone(WIB) if waktu_dt.tzinfo else waktu_dt.replace(tzinfo=WIB)
-    th, tm = get_guru_late_threshold(guru, w_wib)
 
-    if w_wib.hour > th or (w_wib.hour == th and w_wib.minute > tm):
+    # Proteksi mutlak: jika datang sebelum jam 08:00 WIB, PASTI tepat waktu
+    if w_wib.hour < 8:
+        return False
+
+    th, tm = get_guru_late_threshold(guru, w_wib)
+    # Batas toleransi keterlambatan minimal jam 08:00 WIB
+    if th < 8:
+        th, tm = 8, 0
+
+    sec = getattr(w_wib, "second", 0)
+    if w_wib.hour > th or (w_wib.hour == th and (w_wib.minute > tm or (w_wib.minute == tm and sec > 0))):
         return True
     return False

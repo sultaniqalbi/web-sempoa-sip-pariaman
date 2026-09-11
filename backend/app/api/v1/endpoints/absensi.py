@@ -105,18 +105,30 @@ async def read_absensi_list(
     except Exception:
         db.rollback()
 
-    # Pre-calculate denda (1000 per TERLAMBAT) for gurus dengan UID ter-normalisasi (tanpa spasi)
-    denda_map = {}
+    # Pre-calculate log keterlambatan yang belum lunas per guru secara kronologis
+    # Aturan resmi:
+    # 1. Jika guru TIDAK telat pada log hari tersebut (misal Hadir Tepat Waktu atau Izin), denda = 0 (tampil Rp. -).
+    # 2. Jika guru TELAT pada log hari tersebut, denda diakumulasikan dengan denda keterlambatan sebelumnya yang belum lunas.
+    # 3. Direktur / Owner selalu BEBAS DENDA (denda = 0).
     norm_uid_expr = func.replace(func.upper(AbsensiLog.uid), " ", "")
-    late_counts = db.query(norm_uid_expr, func.count(AbsensiLog.id)).filter(
-        AbsensiLog.status == StatusAbsensi.TERLAMBAT,
-        norm_uid_expr.in_(list(valid_uids_clean))
-    ).group_by(norm_uid_expr).all()
+    unpaid_late_rows = (
+        db.query(norm_uid_expr, AbsensiLog.waktu)
+        .filter(
+            AbsensiLog.status == StatusAbsensi.TERLAMBAT,
+            or_(AbsensiLog.status_denda != "LUNAS", AbsensiLog.status_denda == None),
+            norm_uid_expr.in_(list(valid_uids_clean))
+        )
+        .order_by(AbsensiLog.waktu.asc())
+        .all()
+    )
 
-    for row in late_counts:
-        uid_val, count = row
+    guru_unpaid_late_times = {}
+    for uid_val, w_time in unpaid_late_rows:
         if uid_val:
-            denda_map[uid_val.strip().upper()] = count * 1000
+            clean_k = uid_val.strip().upper()
+            if clean_k not in guru_unpaid_late_times:
+                guru_unpaid_late_times[clean_k] = []
+            guru_unpaid_late_times[clean_k].append(w_time)
 
     result = []
     for log in logs:
@@ -145,12 +157,24 @@ async def read_absensi_list(
         resp.guru_nama = g.nama
         resp.kategori_program = g.kategori_program
         resp.role = "guru"
+        resp.status_denda = getattr(log, "status_denda", None) or "BELUM_LUNAS"
 
         # HANYA Direktur / Owner yang BEBAS DENDA (denda selalu 0)
         if is_owner_or_direktur(g):
             resp.denda_terakumulasi = 0
+        elif log.status != StatusAbsensi.TERLAMBAT:
+            # Jika tidak terlambat, denda tidak berlaku / Rp. -
+            resp.denda_terakumulasi = 0
+        elif resp.status_denda == "LUNAS":
+            # Jika keterlambatan ini sudah ditandai Lunas
+            resp.denda_terakumulasi = 0
         else:
-            resp.denda_terakumulasi = denda_map.get(norm_g_uid) or denda_map.get(nospace_uid) or denda_map.get(clean_uid) or 0
+            # Jika terlambat dan belum lunas: hitung total denda keterlambatan belum lunas hingga waktu log ini
+            late_times = guru_unpaid_late_times.get(norm_g_uid) or guru_unpaid_late_times.get(nospace_uid) or []
+            accum_count = sum(1 for lt in late_times if lt <= log.waktu)
+            if accum_count == 0:
+                accum_count = 1
+            resp.denda_terakumulasi = accum_count * 1000
 
         result.append(resp)
     return result
@@ -459,6 +483,8 @@ class AbsensiUpdate(BaseModel):
     mode: Optional[ModeAbsensi] = None
     status: Optional[StatusAbsensi] = None
     catatan: Optional[str] = None
+    status_denda: Optional[str] = None
+    pembayaran_denda: Optional[str] = None
 
 
 @router.put("/{id}", response_model=AbsensiResponse)
@@ -473,6 +499,24 @@ async def update_absensi_log(
         raise HTTPException(status_code=404, detail="Log absensi tidak ditemukan")
 
     update_dict = absensi_in.model_dump(exclude_unset=True)
+
+    # Tangani fitur Pembayaran Denda (Lunas / Reset denda keterlambatan guru ke 0)
+    denda_choice = update_dict.pop("pembayaran_denda", None) or update_dict.pop("status_denda", None)
+    if denda_choice:
+        choice_clean = str(denda_choice).strip().upper()
+        if choice_clean == "LUNAS":
+            log.status_denda = "LUNAS"
+            # Reset total denda/keterlambatan guru ini: tandai semua log TERLAMBAT yang belum lunas menjadi LUNAS
+            target_uid = log.uid.strip().upper().replace(" ", "") if log.uid else ""
+            if target_uid:
+                norm_uid_expr = func.replace(func.upper(AbsensiLog.uid), " ", "")
+                db.query(AbsensiLog).filter(
+                    norm_uid_expr == target_uid,
+                    AbsensiLog.status == StatusAbsensi.TERLAMBAT
+                ).update({AbsensiLog.status_denda: "LUNAS"}, synchronize_session=False)
+        elif choice_clean == "BELUM_LUNAS":
+            log.status_denda = "BELUM_LUNAS"
+
     if "waktu" in update_dict and update_dict["waktu"]:
         w_val = update_dict["waktu"]
         if isinstance(w_val, str):
@@ -493,7 +537,8 @@ async def update_absensi_log(
         update_dict["uid"] = update_dict["uid"].strip().upper()
 
     for key, value in update_dict.items():
-        setattr(log, key, value)
+        if hasattr(log, key):
+            setattr(log, key, value)
 
     db.commit()
     db.refresh(log)
@@ -521,6 +566,8 @@ async def update_absensi_log(
             resp.waktu = log.waktu.astimezone(WIB)
         else:
             resp.waktu = log.waktu.replace(tzinfo=WIB)
+
+    resp.status_denda = getattr(log, "status_denda", None) or "BELUM_LUNAS"
 
     if g:
         resp.guru_nama = g.nama

@@ -25,6 +25,7 @@ class AbsensiLog(Base):
     catatan = Column(Text, nullable=True)
     kategori_program = Column(String(100), nullable=True)
     sumber = Column(String(50), nullable=True, default="RFID")
+    status_denda = Column(String(20), nullable=True, default="BELUM_LUNAS")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (

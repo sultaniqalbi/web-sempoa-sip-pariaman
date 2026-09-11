@@ -22,8 +22,8 @@ class Settings(BaseSettings):
     esp32_api_key: str = "SempoaPariaman_ESP32_SecureKey_2026!"
 
     # Web Push Notification (VAPID)
-    vapid_private_key: str = ""
-    vapid_public_key: str = ""
+    vapid_private_key: str = "QC1OR72dfVR2oO6g-7QSbrN6LDhhsUoTI-f9iak5nJ0"
+    vapid_public_key: str = "BGJUHOUHSyggjLnHydi66CxoEE5jML4tiHpvmK6-crhU-kCN3X_AN8-ej4MBX8ygFEu5TOKebAcf-gbeEi30MTA"
     vapid_subject: str = "mailto:admin@sempoasippariaman.com"
 
     # Redis (For token blacklist & persistent rate limiting)
@@ -56,6 +56,20 @@ class Settings(BaseSettings):
     def validate_esp32_api_key(cls, v):
         if not v or not str(v).strip():
             return "SempoaPariaman_ESP32_SecureKey_2026!"
+        return str(v).strip()
+
+    @field_validator("vapid_public_key", mode="before")
+    @classmethod
+    def validate_vapid_public_key(cls, v):
+        if not v or not str(v).strip():
+            return "BGJUHOUHSyggjLnHydi66CxoEE5jML4tiHpvmK6-crhU-kCN3X_AN8-ej4MBX8ygFEu5TOKebAcf-gbeEi30MTA"
+        return str(v).strip()
+
+    @field_validator("vapid_private_key", mode="before")
+    @classmethod
+    def validate_vapid_private_key(cls, v):
+        if not v or not str(v).strip():
+            return "QC1OR72dfVR2oO6g-7QSbrN6LDhhsUoTI-f9iak5nJ0"
         return str(v).strip()
 
     @field_validator("allowed_origins", mode="before")

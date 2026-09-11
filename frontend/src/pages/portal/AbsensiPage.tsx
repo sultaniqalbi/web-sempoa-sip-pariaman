@@ -53,6 +53,7 @@ interface AbsensiGuruLog {
   role?: string;
   waktu_keluar?: string;
   denda_terakumulasi?: number;
+  status_denda?: string;
   catatan?: string;
 }
 
@@ -97,7 +98,8 @@ export const SharedAbsensiPage: React.FC = () => {
     jam: '08:00',
     status: 'HADIR',
     mode: 'ONLINE',
-    catatan: ''
+    catatan: '',
+    pembayaran_denda: 'BELUM_LUNAS'
   });
 
   // Delete Log Confirm State
@@ -353,7 +355,8 @@ export const SharedAbsensiPage: React.FC = () => {
         waktu: `${data.tanggal} ${data.jam}:00`,
         status: data.status,
         mode: data.mode,
-        catatan: data.catatan
+        catatan: data.catatan,
+        pembayaran_denda: data.pembayaran_denda
       };
       const res = await apiClient.put(`/absensi/${id}`, payload);
       return res.data;
@@ -431,7 +434,8 @@ export const SharedAbsensiPage: React.FC = () => {
       jam: jam,
       status: log.status || 'HADIR',
       mode: log.mode || 'ONLINE',
-      catatan: log.catatan || ''
+      catatan: log.catatan || '',
+      pembayaran_denda: log.status_denda || 'BELUM_LUNAS'
     });
   };
 
@@ -678,15 +682,27 @@ export const SharedAbsensiPage: React.FC = () => {
         if (isDirektur) {
           return <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">Bebas Denda</span>;
         }
-        const denda = row.denda_terakumulasi || 0;
-        if (denda > 0) {
+
+        // HANYA tampilkan denda jika status log adalah TERLAMBAT
+        if (row.status !== 'TERLAMBAT') {
+          return <span className="text-xs font-medium text-gray-400">Rp. -</span>;
+        }
+
+        // Jika log keterlambatan sudah dilunaskan
+        if (row.status_denda === 'LUNAS') {
           return (
-            <span className="text-xs font-bold text-red-600">
-              Rp. {denda.toLocaleString('id-ID')}
+            <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+              Lunas
             </span>
           );
         }
-        return <span className="text-xs font-medium text-gray-400">Rp. -</span>;
+
+        const denda = row.denda_terakumulasi || 1000;
+        return (
+          <span className="text-xs font-bold text-red-600">
+            Rp. {denda.toLocaleString('id-ID')}
+          </span>
+        );
       }
     },
     {
@@ -1739,6 +1755,24 @@ export const SharedAbsensiPage: React.FC = () => {
                 placeholder="Contoh: Koreksi waktu tap RFID / Penyesuaian admin"
                 className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] focus:border-[#FF7043] focus:outline-none"
               />
+            </div>
+
+            {/* Pembayaran Denda */}
+            <div>
+              <label className="block text-[#1E293B] font-bold mb-1">
+                Pembayaran Denda
+              </label>
+              <select
+                value={editLogForm.pembayaran_denda}
+                onChange={(e) => setEditLogForm({ ...editLogForm, pembayaran_denda: e.target.value })}
+                className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none"
+              >
+                <option value="BELUM_LUNAS">Belum Lunas</option>
+                <option value="LUNAS">Lunas</option>
+              </select>
+              <p className="text-[10px] text-[#64748B] mt-1 italic">
+                *Memilih &quot;Lunas&quot; akan mereset akumulasi denda keterlambatan guru ini menjadi Rp 0.
+              </p>
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E2E8F0]">

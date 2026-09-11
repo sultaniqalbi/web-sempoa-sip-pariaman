@@ -21,6 +21,7 @@ class AbsensiResponse(AbsensiBase):
     role: Optional[str] = None
     catatan: Optional[str] = None
     sumber: Optional[str] = None
+    status_denda: Optional[str] = "BELUM_LUNAS"
     denda_terakumulasi: Optional[int] = 0
 
     model_config = ConfigDict(from_attributes=True)
