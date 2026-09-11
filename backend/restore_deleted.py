@@ -2,12 +2,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.models.guru import Guru
 from app.models.siswa import Siswa
-from app.core.config import settings
+from app.core.database import SessionLocal
 import sys
 
 try:
-    engine = create_engine(settings.SQLALCHEMY_DATABASE_URI)
-    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     db = SessionLocal()
 
     print("Memulihkan Guru...")
