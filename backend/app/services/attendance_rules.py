@@ -84,7 +84,10 @@ def get_guru_late_threshold(guru: Any, waktu_wib: datetime) -> Tuple[int, int]:
             return (start_hour + 1, start_minute)
 
     # Standar untuk SEMUA guru lainnya (TK, Sempoa SIP, Fonem, Admin, dll.)
-    # Default datang jam 07:00, batas toleransi keterlambatan adalah jam 08:00 pagi WIB
+    # Khusus Hari Sabtu: jam masuk 09:00 WIB -> batas keterlambatan adalah jam 10:00:00 WIB
+    # Hari Senin - Jumat: batas keterlambatan adalah jam 08:00:00 WIB
+    if w_day == 5:  # 5 = Sabtu
+        return (10, 0)
     return (8, 0)
 
 

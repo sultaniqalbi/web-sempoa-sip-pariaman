@@ -749,7 +749,7 @@ export const SiswaPage: React.FC = () => {
       }
 
       let pSisa = pTarget;
-      if (q && q.sisa !== '' && q.sisa !== undefined && q.sisa !== null) {
+      if (isCustomQuota && q && q.sisa !== '' && q.sisa !== undefined && q.sisa !== null) {
         pSisa = Number(q.sisa);
       } else if (editingSiswa && (editingSiswa as any).kuota_program) {
         try {

@@ -212,6 +212,38 @@ async def create_new_siswa(
             except (json.JSONDecodeError, ValueError, TypeError):
                 pass
 
+        # Tentukan target & sisa pertemuan efektif
+        effective_target = siswa_in.target_pertemuan or default_target
+        effective_sisa = siswa_in.sisa_pertemuan if (siswa_in.sisa_pertemuan is not None and siswa_in.sisa_pertemuan > 0) else effective_target
+
+        final_kuota_program = siswa_in.kuota_program
+        if final_kuota_program:
+            try:
+                import json
+                kp = json.loads(final_kuota_program)
+                if isinstance(kp, dict) and kp:
+                    calc_sisa = sum(v.get("sisa", 0) for k, v in kp.items() if "tk" not in k.lower())
+                    calc_target = sum(v.get("target", 0) for k, v in kp.items() if "tk" not in k.lower())
+                    if calc_target > 0:
+                        effective_target = calc_target
+                    if calc_sisa > 0:
+                        effective_sisa = calc_sisa
+            except Exception:
+                pass
+        else:
+            # Otomatis isi kuota_program penuh untuk semua program yang didaftarkan
+            import json
+            progs = [p.strip() for p in (siswa_in.kategori_program or "Sempoa SIP").split(",") if p.strip()]
+            kp = {}
+            for p in progs:
+                p_lower = p.lower()
+                p_target = 20 if "tk" in p_lower else (12 if ("fonem" in p_lower or "tahfidz" in p_lower or "paket 2" in (siswa_in.paket_jadwal or "").lower()) else 8)
+                kp[p] = {"sisa": p_target, "target": p_target}
+            final_kuota_program = json.dumps(kp)
+            if not is_tk:
+                effective_target = sum(v["target"] for k, v in kp.items() if "tk" not in k.lower())
+                effective_sisa = effective_target
+
         new_siswa = Siswa(
             uid=siswa_in.uid,
             nama=siswa_in.nama,
@@ -222,11 +254,11 @@ async def create_new_siswa(
             paket_jadwal=siswa_in.paket_jadwal or default_jadwal,
             hari_masuk=siswa_in.hari_masuk or default_hari,
             id_guru=effective_id_guru,
-            target_pertemuan=siswa_in.target_pertemuan or default_target,
-            sisa_pertemuan=siswa_in.sisa_pertemuan if siswa_in.sisa_pertemuan is not None else 0,
-            kuota_program=siswa_in.kuota_program,
+            target_pertemuan=effective_target,
+            sisa_pertemuan=effective_sisa,
+            kuota_program=final_kuota_program,
             guru_per_program=siswa_in.guru_per_program,
-            status_spp=StatusSPP.AKTIF if (siswa_in.sisa_pertemuan is not None and siswa_in.sisa_pertemuan > 0) else StatusSPP.EXPIRED,
+            status_spp=StatusSPP.AKTIF,
             nama_orang_tua=siswa_in.nama_orang_tua,
             whatsapp_orang_tua=normalized_wa,
             alamat=siswa_in.alamat,
