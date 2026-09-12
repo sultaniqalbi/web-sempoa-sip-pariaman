@@ -24,7 +24,6 @@ def contains_test_kw(text_val: str) -> bool:
         return False
     val_lower = str(text_val).lower()
     for kw in TEST_KEYWORDS:
-        # Check if keyword is in the value (with word boundary or explicit presence)
         if kw in val_lower:
             return True
     return False
@@ -55,7 +54,7 @@ def run_audit():
                 suspicious_users.append((u, ", ".join(reasons)))
 
         if suspicious_users:
-            print(f"⚠️ Ditemukan {len(suspicious_users)} akun berbau TEST / DUMMY:")
+            print(f"⚠️ Ditemukan {len(suspicious_users)} akun terindikasi TEST/DUMMY:")
             for u, r in suspicious_users:
                 print(f"  - ID: {u.id} | Email: {u.email} | Nama: {u.nama} | Role: {u.role.value if hasattr(u.role, 'value') else u.role} | Alasan: {r}")
         else:
@@ -64,7 +63,7 @@ def run_audit():
         print("\n  Daftar Seluruh Akun yang Ada di Database Saat Ini:")
         for u in all_users:
             role_str = u.role.value if hasattr(u.role, 'value') else str(u.role)
-            print(f"    • ID {u.id:2d} | {role_str:6s} | {u.email:30s} | {u.nama or '-':25s} | UID Terhubung: {u.uid_terhubung or '-'}")
+            print(f"    • ID {u.id:2d} | {role_str:6s} | {u.email:32s} | {u.nama or '-':25s} | UID Terhubung: {u.uid_terhubung or '-'}")
         print()
 
         # 2. CATATAN PEMBELAJARAN
@@ -80,15 +79,14 @@ def run_audit():
             print(f"⚠️ Ditemukan {len(suspicious_notes)} Catatan Pembelajaran terindikasi TEST/DUMMY:")
             for n in suspicious_notes:
                 print(f"  - ID: {n.id} | Tgl: {n.tanggal} | Guru ID: {n.id_guru} | Siswa ID: {n.id_siswa} | Program: {n.kategori_program}")
-                print(f"    Isi Catatan: \"{n.catatan}\"\n")
+                print(f"    Isi Catatan: \"{n.catatan}\"")
         else:
             print("✅ Tidak ditemukan catatan pembelajaran berbau test/dummy.")
 
-        # Tampilkan 5 catatan terakhir untuk konteks
         if all_notes:
-            print(f"  Contoh riwayat catatan pembelajaran yang ada ({min(5, len(all_notes))} terakhir):")
+            print(f"\n  Contoh riwayat catatan pembelajaran yang ada ({min(5, len(all_notes))} terakhir):")
             for n in sorted(all_notes, key=lambda x: x.id, reverse=True)[:5]:
-                print(f"    • ID {n.id} ({n.tanggal}) [{n.kategori_program}]: \"{(n.catatan or '')[:80]}\"")
+                print(f"    • ID {n.id} ({n.tanggal}) [Guru #{n.id_guru} - {n.kategori_program}]: \"{(n.catatan or '')[:80]}\"")
         print()
 
         # 3. EVALUASI SISWA
@@ -113,11 +111,6 @@ def run_audit():
                 print()
         else:
             print("✅ Tidak ditemukan evaluasi siswa berbau test/dummy.")
-
-        if all_evals:
-            print(f"  Contoh evaluasi yang ada ({min(5, len(all_evals))} terakhir):")
-            for e in sorted(all_evals, key=lambda x: x.id, reverse=True)[:5]:
-                print(f"    • ID {e.id} (Siswa #{e.id_siswa}, {e.tanggal_evaluasi}): \"{(e.catatan_guru or '')[:80]}\"")
         print()
 
         # 4. SISWA
@@ -130,7 +123,7 @@ def run_audit():
                 contains_test_kw(s.nama_panggilan) or 
                 contains_test_kw(s.uid) or 
                 contains_test_kw(s.nama_orang_tua) or 
-                contains_test_kw(s.catatan)):
+                contains_test_kw(s.bio)):
                 suspicious_siswa.append(s)
 
         if suspicious_siswa:
@@ -139,6 +132,10 @@ def run_audit():
                 print(f"  - ID: {s.id} | UID: {s.uid} | Nama: {s.nama} ({s.nama_panggilan}) | Program: {s.kategori_program} | Ortu: {s.nama_orang_tua} | Deleted: {s.is_deleted}")
         else:
             print("✅ Tidak ditemukan data siswa berbau test/dummy.")
+            
+        print("\n  Daftar Sampel Siswa Terdaftar (10 pertama):")
+        for s in all_siswa[:10]:
+            print(f"    • ID {s.id:2d} | UID: {s.uid:10s} | {s.nama:25s} | Prog: {s.kategori_program:20s} | Guru: {s.id_guru or '-'}")
         print()
 
         # 5. GURU
@@ -158,6 +155,10 @@ def run_audit():
                 print(f"  - ID: {g.id} | UID: {g.uid} | Nama: {g.nama} ({g.nama_panggilan}) | Program: {g.kategori_program} | Deleted: {g.is_deleted}")
         else:
             print("✅ Tidak ditemukan data guru berbau test/dummy.")
+
+        print("\n  Daftar Seluruh Guru di Database:")
+        for g in all_guru:
+            print(f"    • ID {g.id:2d} | UID: {g.uid or '-':10s} | {g.nama:30s} | Program: {g.kategori_program or '-':20s} | WA: {g.whatsapp_guru or '-'}")
         print()
 
         # 6. ABSENSI LOG
@@ -219,11 +220,11 @@ def run_audit():
         print("--- [9] AUDIT TABEL PENDAFTARAN BARU ---")
         all_reg = db.query(PendaftaranBaru).all()
         print(f"Total Pendaftaran: {len(all_reg)}")
-        suspicious_reg = [r for r in all_reg if contains_test_kw(r.nama) or contains_test_kw(r.catatan) or contains_test_kw(r.nama_orang_tua)]
+        suspicious_reg = [r for r in all_reg if contains_test_kw(r.nama_anak) or contains_test_kw(r.nama_ortu) or contains_test_kw(r.catatan)]
         if suspicious_reg:
             print(f"⚠️ Ditemukan {len(suspicious_reg)} Pendaftaran terindikasi TEST/DUMMY:")
             for r in suspicious_reg:
-                print(f"  - ID: {r.id} | Nama: {r.nama} | Ortu: {r.nama_orang_tua} | Catatan: \"{r.catatan}\"")
+                print(f"  - ID: {r.id} | Anak: {r.nama_anak} | Ortu: {r.nama_ortu} | Catatan: \"{r.catatan}\"")
         else:
             print("✅ Tidak ditemukan pendaftaran berbau test/dummy.")
         print()
@@ -232,17 +233,17 @@ def run_audit():
         print("--- [10] AUDIT TABEL PEMBAYARAN PERIODE & KEUANGAN ---")
         all_pem = db.query(PembayaranPeriode).all()
         print(f"Total Pembayaran Periode: {len(all_pem)}")
-        suspicious_pem = [p for p in all_pem if contains_test_kw(p.keterangan)]
+        suspicious_pem = [p for p in all_pem if contains_test_kw(p.periode_bulan)]
         if suspicious_pem:
             print(f"⚠️ Ditemukan {len(suspicious_pem)} Pembayaran terindikasi TEST/DUMMY:")
             for p in suspicious_pem:
-                print(f"  - ID: {p.id} | Siswa ID: {p.id_siswa} | Keterangan: \"{p.keterangan}\"")
+                print(f"  - ID: {p.id} | Siswa ID: {p.id_siswa} | Periode: \"{p.periode_bulan}\"")
         else:
             print("✅ Tidak ditemukan pembayaran berbau test/dummy.")
 
         all_keu = db.query(Keuangan).all()
         print(f"Total Transaksi Keuangan: {len(all_keu)}")
-        suspicious_keu = [k for k in all_keu if contains_test_kw(k.keterangan) or contains_test_kw(k.kategori)]
+        suspicious_keu = [k for k in all_keu if contains_test_kw(k.keterangan)]
         if suspicious_keu:
             print(f"⚠️ Ditemukan {len(suspicious_keu)} Keuangan terindikasi TEST/DUMMY:")
             for k in suspicious_keu:
