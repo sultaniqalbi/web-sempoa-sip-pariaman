@@ -358,6 +358,7 @@ async def get_kelas_bimbingan(
     current_user: User = Depends(teacher_only)
 ):
     guru = _get_current_guru(db, current_user)
+    matching_ids = _get_matching_guru_ids(db, guru)
     raw_programs = [p.strip() for p in (guru.kategori_program or "Sempoa SIP").split(",") if p.strip()]
     
     # Default schedule & room configs
