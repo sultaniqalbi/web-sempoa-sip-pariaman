@@ -1,3 +1,8 @@
+import os
+import io
+import uuid
+import re
+import json
 import logging
 from typing import List, Dict, Any, Optional
 from datetime import datetime, date, timedelta, timezone
@@ -141,6 +146,14 @@ def _get_guru_students(db: Session, guru: Guru, matching_guru_ids: List[int], fi
             if any(is_student_assigned_to_teacher(s, gid, p, db=db) for p in target_progs):
                 assigned_students.append(s)
                 break
+
+    # Fallback ramah: Jika guru belum memiliki murid bimbingan yang di-assign secara spesifik oleh Admin,
+    # tampilkan murid-murid di program yang diampu guru ini agar guru tidak mengalami layar kosong (0 siswa).
+    if not assigned_students:
+        for s in all_students:
+            s_progs = [p.strip().lower() for p in (s.kategori_program or "").split(",") if p.strip()]
+            if any(any(tp in sp or sp in tp for tp in target_progs) for sp in s_progs):
+                assigned_students.append(s)
 
     assigned_students.sort(key=lambda s: (s.nama or "").lower())
     return assigned_students
@@ -537,6 +550,7 @@ async def get_siswa_absensi(
     result = []
     for i, s in enumerate(students, 1):
         panggilan = s.nama_panggilan if s.nama_panggilan else (s.nama.split()[0] if s.nama else "")
+        today_log = logs_map.get(s.uid)
         
         # Cek siklus 30 hari
         last_lunas = db.query(PembayaranPeriode).filter(
@@ -559,8 +573,8 @@ async def get_siswa_absensi(
             start_of_month = target_date.replace(day=1)
             month_logs_count = db.query(AbsensiLog).filter(
                 AbsensiLog.uid == s.uid,
-                func.date(func.timezone('Asia/Jakarta', AbsensiLog.waktu)) >= start_of_month,
-                func.date(func.timezone('Asia/Jakarta', AbsensiLog.waktu)) <= target_date,
+                func.date(AbsensiLog.waktu) >= start_of_month,
+                func.date(AbsensiLog.waktu) <= target_date,
                 AbsensiLog.status.in_([StatusAbsensi.HADIR, StatusAbsensi.IZIN])
             ).count()
 
