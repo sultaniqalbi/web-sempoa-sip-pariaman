@@ -217,12 +217,20 @@ export const GuruEvaluasiPage: React.FC = () => {
     {
       header: 'Nama',
       accessor: (row: any) => {
-        const namaPanggilan = row.siswa.nama_panggilan?.trim() || (row.siswa.nama ? row.siswa.nama.split(' ')[0] : '-');
+        const namaLengkap = row.siswa.nama_lengkap || row.siswa.nama || '';
+        const namaPanggilan = row.siswa.panggilan?.trim() || 
+                              row.siswa.nama_panggilan?.trim() || 
+                              (namaLengkap ? namaLengkap.split(' ')[0] : '-');
         return (
           <div className="py-1">
             <span className="font-extrabold text-[#1E293B] text-xs sm:text-sm capitalize block">
               {namaPanggilan}
             </span>
+            {namaLengkap && namaLengkap.toLowerCase() !== namaPanggilan.toLowerCase() && (
+              <span className="text-[10px] text-[#64748B] font-medium block truncate max-w-[140px]">
+                {namaLengkap}
+              </span>
+            )}
           </div>
         );
       },
@@ -299,7 +307,7 @@ export const GuruEvaluasiPage: React.FC = () => {
 
           {row.evaluasi && (
             <button
-              onClick={() => setDeleteConfirm({ id: row.evaluasi.id, nama: row.siswa.nama })}
+              onClick={() => setDeleteConfirm({ id: row.evaluasi.id, nama: row.siswa.nama_lengkap || row.siswa.nama || row.siswa.panggilan || 'Murid' })}
               className="p-1.5 bg-[#FFF1F2] hover:bg-[#FFE4E6] text-[#e11d48] rounded-lg border border-[#FECDD3] transition-colors flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
               title="Hapus Evaluasi"
             >
@@ -389,7 +397,9 @@ export const GuruEvaluasiPage: React.FC = () => {
             const query = q.toLowerCase();
             return (
               (row.siswa.nama || '').toLowerCase().includes(query) ||
+              (row.siswa.nama_lengkap || '').toLowerCase().includes(query) ||
               (row.siswa.nama_panggilan || '').toLowerCase().includes(query) ||
+              (row.siswa.panggilan || '').toLowerCase().includes(query) ||
               (row.siswa.uid || '').toLowerCase().includes(query) ||
               (row.siswa.kategori_program || '').toLowerCase().includes(query) ||
               (row.buku?.level_anak || '').toLowerCase().includes(query) ||
@@ -427,7 +437,7 @@ export const GuruEvaluasiPage: React.FC = () => {
             <div className="p-3 bg-gradient-to-r from-[#FFF3E0] to-[#FFF8E1] border border-[#FFE082] rounded-xl flex items-center justify-between">
               <div>
                 <p className="text-[11px] text-[#64748B] font-bold">Evaluasi Pembelajaran Untuk:</p>
-                <h4 className="text-sm font-black text-[#E65100]">{targetSiswa.nama}</h4>
+                <h4 className="text-sm font-black text-[#E65100]">{targetSiswa.nama_lengkap || targetSiswa.nama || targetSiswa.panggilan || '-'}</h4>
                 <span className="text-[10px] font-mono text-[#8D6E63] font-bold">{targetSiswa.uid}</span>
               </div>
               <span className={`px-2.5 py-1 rounded-lg text-xs font-black border ${getProgramBadgeStyle(formData.kategori_program)}`}>
