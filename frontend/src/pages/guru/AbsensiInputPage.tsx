@@ -291,13 +291,13 @@ export const AbsensiInputPage: React.FC = () => {
             </div>
 
             {/* Date Filter */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <label className="text-xs font-bold text-[#64748B]">Tanggal:</label>
-              <div className="w-36">
+              <div className="w-[145px] sm:w-[155px]">
                 <DateInput
                   value={rekapDate}
                   onChange={(e) => setRekapDate(e.target.value)}
-                  className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-3 py-1.5 text-xs text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none"
+                  className="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-3 py-1.5 text-xs text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none cursor-pointer"
                 />
               </div>
             </div>

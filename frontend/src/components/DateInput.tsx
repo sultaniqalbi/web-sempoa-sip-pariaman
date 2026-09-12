@@ -83,7 +83,7 @@ export const DateInput: React.FC<DateInputProps> = ({
         onChange={handleTextChange}
         onBlur={handleBlur}
         onClick={openPicker}
-        className={`${className} pr-10`}
+        className={`w-full ${className} pr-10`}
       />
       <button
         type="button"
