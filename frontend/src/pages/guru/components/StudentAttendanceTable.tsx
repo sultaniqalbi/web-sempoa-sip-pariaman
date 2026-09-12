@@ -671,11 +671,11 @@ const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
                       <div className="flex flex-col items-center justify-center gap-1">
                         <div className="flex flex-col gap-0.5 items-center">
                           {relevantQuotas.map((q, qIdx) => {
-                            const isTk = q.program.trim().toLowerCase() === 'tk' || q.target === 0;
+                            const isTk = q.program.trim().toLowerCase().includes('tk');
                             if (isTk) {
                               return (
                                 <span key={qIdx} className="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A] shadow-2xs">
-                                  TK: Harian
+                                  TK: {q.sisa} / {q.target} Hari
                                 </span>
                               );
                             }

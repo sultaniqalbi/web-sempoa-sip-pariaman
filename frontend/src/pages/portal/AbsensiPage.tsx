@@ -23,7 +23,7 @@ import {
 } from '../../components/SvgIcons';
 import DateInput from '../../components/DateInput';
 import { formatIndoDate, formatIndoDateTime } from '../../utils/dateFormatter';
-import { parseProgramDetails, getProgramBadgeStyle, parseProgramQuotas, PROGRAM_CONFIG } from './SiswaPage';
+import { parseProgramDetails, getProgramBadgeStyle, parseProgramQuotas, PROGRAM_CONFIG, getTkMonthWeekdays } from './SiswaPage';
 
 interface SiswaItem {
   id: number;
@@ -525,11 +525,16 @@ export const SharedAbsensiPage: React.FC = () => {
         return (
           <div className="py-1 space-y-1.5 w-44">
             {quotas.map((q, idx) => {
-              const isTk = q.program.trim().toLowerCase() === 'tk' || q.target === 0;
+              const isTk = q.program.trim().toLowerCase().includes('tk');
               if (isTk) {
                 return (
-                  <div key={idx} className="h-[24px] flex items-center">
-                    <span className="text-[11px] text-[#64748B] italic">Harian / Bulanan</span>
+                  <div key={idx} className="h-[24px] flex items-center justify-between">
+                    <span className="text-[11px] text-[#1E293B] font-bold">
+                      {q.sisa} / {q.target} hari (bulan ini)
+                    </span>
+                    <span className="text-[9px] text-[#2E7D32] font-black bg-[#E8F5E9] px-1.5 py-0.5 rounded border border-[#A5D6A7]">
+                      Harian
+                    </span>
                   </div>
                 );
               }
@@ -1196,9 +1201,11 @@ export const SharedAbsensiPage: React.FC = () => {
                   const sempoaPackageIndex = (editingSiswa.paket_jadwal || '').includes('12') ? 1 : 0;
                   
                   return selectedList.map((prog, idx) => {
-                    const defaultTarget = prog === 'Sempoa SIP' 
-                      ? (PROGRAM_CONFIG['Sempoa SIP'].packages[sempoaPackageIndex]?.target ?? 8)
-                      : ((PROGRAM_CONFIG as any)[prog]?.packages[0]?.target ?? 8);
+                    const defaultTarget = prog.toLowerCase().includes('tk')
+                      ? getTkMonthWeekdays()
+                      : (prog === 'Sempoa SIP' 
+                        ? (PROGRAM_CONFIG['Sempoa SIP'].packages[sempoaPackageIndex]?.target ?? 8)
+                        : ((PROGRAM_CONFIG as any)[prog]?.packages[0]?.target ?? 8));
                     
                     const currentQuota = programQuotas[prog] || { sisa: '', target: defaultTarget };
                     
@@ -1236,7 +1243,7 @@ export const SharedAbsensiPage: React.FC = () => {
                                 let sumSisa = 0;
                                 let sumTarget = 0;
                                 selectedList.forEach((p) => {
-                                  const pq = updated[p] || { sisa: '', target: p === 'Sempoa SIP' ? (PROGRAM_CONFIG['Sempoa SIP'].packages[sempoaPackageIndex]?.target ?? 8) : ((PROGRAM_CONFIG as any)[p]?.packages[0]?.target ?? 8) };
+                                  const pq = updated[p] || { sisa: '', target: p.toLowerCase().includes('tk') ? getTkMonthWeekdays() : (p === 'Sempoa SIP' ? (PROGRAM_CONFIG['Sempoa SIP'].packages[sempoaPackageIndex]?.target ?? 8) : ((PROGRAM_CONFIG as any)[p]?.packages[0]?.target ?? 8)) };
                                   sumSisa += Number(pq.sisa) || 0;
                                   sumTarget += Number(pq.target) || 0;
                                 });
@@ -1276,7 +1283,7 @@ export const SharedAbsensiPage: React.FC = () => {
                                 let sumSisa = 0;
                                 let sumTarget = 0;
                                 selectedList.forEach((p) => {
-                                  const pq = updated[p] || { sisa: '', target: p === 'Sempoa SIP' ? (PROGRAM_CONFIG['Sempoa SIP'].packages[sempoaPackageIndex]?.target ?? 8) : ((PROGRAM_CONFIG as any)[p]?.packages[0]?.target ?? 8) };
+                                  const pq = updated[p] || { sisa: '', target: p.toLowerCase().includes('tk') ? getTkMonthWeekdays() : (p === 'Sempoa SIP' ? (PROGRAM_CONFIG['Sempoa SIP'].packages[sempoaPackageIndex]?.target ?? 8) : ((PROGRAM_CONFIG as any)[p]?.packages[0]?.target ?? 8)) };
                                   sumSisa += Number(pq.sisa) || 0;
                                   sumTarget += Number(pq.target) || 0;
                                 });

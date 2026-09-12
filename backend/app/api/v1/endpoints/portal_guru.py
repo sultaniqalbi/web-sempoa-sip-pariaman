@@ -20,7 +20,7 @@ from app.models.jadwal import Jadwal
 from app.models.catatan_pembelajaran import CatatanPembelajaran
 from app.models.pembayaran_periode import PembayaranPeriode, StatusPembayaran
 from app.core.constants import get_program_spp_nominal
-from app.services.attendance_rules import check_is_guru_late
+from app.services.attendance_rules import check_is_guru_late, get_tk_month_weekdays
 
 router = APIRouter()
 teacher_only = RoleChecker([UserRole.guru])
@@ -552,21 +552,38 @@ async def get_siswa_absensi(
         else:
             due_date = target_date + timedelta(days=30)
 
-        is_expired = target_date > due_date
-        is_hangus = is_expired and s.sisa_pertemuan > 0
-        is_disabled = s.sisa_pertemuan <= 0 or is_expired
-        
-        # Jika expired, tampilkan pertemuan selesai penuh
-        pertemuan_selesai = s.target_pertemuan if is_expired else (s.target_pertemuan - s.sisa_pertemuan)
-        today_log = logs_map.get(s.uid)
-        
-        status_keterangan = "Normal"
-        if is_hangus:
-            status_keterangan = "Lewat 30 Hari (Sisa Pertemuan Hangus)"
-        elif is_expired:
-            status_keterangan = "Masa Aktif 30 Hari Habis (SPP Expired)"
-        elif s.sisa_pertemuan <= 0:
-            status_keterangan = "Kuota Pertemuan Habis"
+        is_tk = "tk" in (s.kategori_program or "").lower()
+        if is_tk:
+            tk_target = get_tk_month_weekdays(target_date.year, target_date.month)
+            start_of_month = target_date.replace(day=1)
+            month_logs_count = db.query(AbsensiLog).filter(
+                AbsensiLog.uid == s.uid,
+                func.date(func.timezone('Asia/Jakarta', AbsensiLog.waktu)) >= start_of_month,
+                func.date(func.timezone('Asia/Jakarta', AbsensiLog.waktu)) <= target_date,
+                AbsensiLog.status.in_([StatusAbsensi.HADIR, StatusAbsensi.IZIN])
+            ).count()
+
+            total_pertemuan_val = tk_target
+            pertemuan_selesai = month_logs_count
+            sisa_pertemuan_val = max(0, tk_target - month_logs_count)
+            is_disabled = False
+            is_expired = False
+            is_hangus = False
+            status_keterangan = f"Program Bulanan TK ({month_logs_count}/{tk_target} Hari)"
+        else:
+            total_pertemuan_val = s.target_pertemuan or 8
+            sisa_pertemuan_val = s.sisa_pertemuan if s.sisa_pertemuan is not None else 0
+            is_expired = target_date > due_date
+            is_hangus = is_expired and sisa_pertemuan_val > 0
+            is_disabled = sisa_pertemuan_val <= 0 or is_expired
+            pertemuan_selesai = total_pertemuan_val if is_expired else max(0, total_pertemuan_val - sisa_pertemuan_val)
+            status_keterangan = "Normal"
+            if is_hangus:
+                status_keterangan = "Lewat 30 Hari (Sisa Pertemuan Hangus)"
+            elif is_expired:
+                status_keterangan = "Masa Aktif 30 Hari Habis (SPP Expired)"
+            elif sisa_pertemuan_val <= 0:
+                status_keterangan = "Kuota Pertemuan Habis"
 
         # Resolve assigned guru for student
         assigned_g = _resolve_student_guru(s, current_active_prog if current_active_prog != 'all' else None, guru_map)
@@ -589,8 +606,8 @@ async def get_siswa_absensi(
             "kategori_program": s.kategori_program,
             "kuota_program": s.kuota_program,
             "pertemuan_selesai": pertemuan_selesai,
-            "total_pertemuan": s.target_pertemuan,
-            "sisa_pertemuan": s.sisa_pertemuan,
+            "total_pertemuan": total_pertemuan_val,
+            "sisa_pertemuan": sisa_pertemuan_val,
             "is_disabled": is_disabled,
             "is_expired": is_expired,
             "is_hangus": is_hangus,

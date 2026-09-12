@@ -12,6 +12,7 @@ from app.models.pembayaran_periode import PembayaranPeriode, StatusPembayaran
 from app.models.bukti_transfer import BuktiTransfer
 from app.models.siswa import Siswa, StatusSPP
 from app.schemas.pembayaran import PembayaranCreate, PembayaranResponse, PembayaranDueDateUpdate
+from app.services.attendance_rules import get_tk_month_weekdays
 from app.crud import pembayaran as crud_pembayaran
 
 router = APIRouter()
@@ -103,8 +104,13 @@ async def get_pembayaran_reminders(
             PembayaranPeriode.status == StatusPembayaran.LUNAS
         ).order_by(PembayaranPeriode.created_at.desc()).first()
 
-        sisa = s.sisa_pertemuan if s.sisa_pertemuan is not None else 0
-        target = s.target_pertemuan if s.target_pertemuan and s.target_pertemuan > 0 else 8
+        is_tk = "tk" in (s.kategori_program or "").lower()
+        if is_tk:
+            target = get_tk_month_weekdays(today.year, today.month)
+            sisa = s.sisa_pertemuan if s.sisa_pertemuan is not None else target
+        else:
+            sisa = s.sisa_pertemuan if s.sisa_pertemuan is not None else 0
+            target = s.target_pertemuan if s.target_pertemuan and s.target_pertemuan > 0 else 8
         persen = (sisa / target) * 100 if target > 0 else 0
         wa_num = s.whatsapp_orang_tua or ""
         ortu_name = s.nama_orang_tua or "Orang Tua"
@@ -128,7 +134,6 @@ async def get_pembayaran_reminders(
         due_date_str = str(due_date)
 
         # Thresholds:
-        is_tk = "tk" in (s.kategori_program or "").lower()
 
         if is_tk:
             # Mekanisme Khusus TK (Sekolah Formal):

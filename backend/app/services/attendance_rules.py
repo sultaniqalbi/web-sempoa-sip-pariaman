@@ -15,10 +15,23 @@ Aturan Keterlambatan Guru:
 """
 
 import re
-from datetime import datetime, timezone, timedelta
+import calendar
+from datetime import date, datetime, timezone, timedelta
 from typing import Optional, Tuple, Any
 
 WIB = timezone(timedelta(hours=7))
+
+
+def get_tk_month_weekdays(year: Optional[int] = None, month: Optional[int] = None) -> int:
+    """
+    Menghitung total hari aktif sekolah (Senin s/d Jumat) dalam bulan dan tahun tertentu.
+    Digunakan otomatis sebagai target pertemuan bulanan siswa program TK.
+    """
+    now = datetime.now(WIB)
+    y = year or now.year
+    m = month or now.month
+    num_days = calendar.monthrange(y, m)[1]
+    return sum(1 for d in range(1, num_days + 1) if date(y, m, d).weekday() < 5)
 
 
 def is_owner_or_direktur(guru: Any) -> bool:

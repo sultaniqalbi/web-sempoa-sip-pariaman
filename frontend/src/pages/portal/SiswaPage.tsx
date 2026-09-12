@@ -84,13 +84,30 @@ export const calculateTotalSPP = (programStr: string) => {
   return total;
 };
 
+export const getTkMonthWeekdays = (year?: number, month?: number): number => {
+  const now = new Date();
+  const y = year ?? now.getFullYear();
+  const m = month ?? now.getMonth();
+  const numDays = new Date(y, m + 1, 0).getDate();
+  let count = 0;
+  for (let d = 1; d <= numDays; d++) {
+    const dayOfWeek = new Date(y, m, d).getDay();
+    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+      count++;
+    }
+  }
+  return count;
+};
+
 export const calculateDefaultTarget = (programStr: string, sempoaIndex: number = 0) => {
   if (!programStr) return 8;
   const progs = programStr.split(',').map((p) => p.trim()).filter(Boolean);
   if (progs.length === 0) return 8;
   let total = 0;
   for (const p of progs) {
-    if (p === 'Sempoa SIP') {
+    if (p.toLowerCase().includes('tk')) {
+      total += getTkMonthWeekdays();
+    } else if (p === 'Sempoa SIP') {
       total += (PROGRAM_CONFIG['Sempoa SIP'].packages[sempoaIndex]?.target ?? 8);
     } else {
       total += (PROGRAM_CONFIG as any)[p]?.packages[0]?.target ?? 8;
@@ -133,7 +150,7 @@ export const parseProgramDetails = (kategoriProgram?: string, paketJadwal?: stri
       if (match) {
         meetingInfo = `${match[1]}x Pertemuan`;
       } else if (p.toLowerCase().includes('tk') || pkgStr.toLowerCase().includes('tk')) {
-        meetingInfo = 'Program TK (Harian)';
+        meetingInfo = `${getTkMonthWeekdays()}x Hari Masuk (Bulan Ini)`;
       } else {
         meetingInfo = pkgStr;
       }
@@ -143,10 +160,10 @@ export const parseProgramDetails = (kategoriProgram?: string, paketJadwal?: stri
         if (cfg.packages[0].target > 0) {
           meetingInfo = `${cfg.packages[0].target}x Pertemuan`;
         } else {
-          meetingInfo = 'Program TK (Harian)';
+          meetingInfo = `${getTkMonthWeekdays()}x Hari Masuk (Bulan Ini)`;
         }
       } else if (p.toLowerCase().includes('tk')) {
-        meetingInfo = 'Program TK (Harian)';
+        meetingInfo = `${getTkMonthWeekdays()}x Hari Masuk (Bulan Ini)`;
       } else {
         meetingInfo = '8x Pertemuan';
       }
@@ -176,15 +193,18 @@ export const parseProgramQuotas = (
       const parsed = typeof kuotaProgramJson === 'string' ? JSON.parse(kuotaProgramJson) : kuotaProgramJson;
       if (parsed && typeof parsed === 'object') {
         return progs.map((p) => {
+          const isTk = p.toLowerCase().includes('tk');
+          const tkDays = isTk ? getTkMonthWeekdays() : 0;
           const q = parsed[p];
           if (q && (q.target !== undefined || q.sisa !== undefined)) {
+            const targetVal = isTk ? tkDays : (Number(q.target) || 0);
             return {
               program: p,
-              target: Number(q.target) || 0,
-              sisa: Number(q.sisa) !== undefined ? Number(q.sisa) : (Number(q.target) || 0)
+              target: targetVal,
+              sisa: isTk ? Math.min(targetVal, Number(q.sisa) || targetVal) : (Number(q.sisa) !== undefined ? Number(q.sisa) : (Number(q.target) || 0))
             };
           }
-          const defTarget = p === 'Sempoa SIP' ? (paketJadwal?.includes('12') ? 12 : 8) : ((PROGRAM_CONFIG as any)[p]?.packages[0]?.target ?? 8);
+          const defTarget = isTk ? tkDays : (p === 'Sempoa SIP' ? (paketJadwal?.includes('12') ? 12 : 8) : ((PROGRAM_CONFIG as any)[p]?.packages[0]?.target ?? 8));
           return { program: p, target: defTarget, sisa: defTarget };
         });
       }
@@ -193,15 +213,16 @@ export const parseProgramQuotas = (
 
   // 2. Fallback default target deduction / calculation for each program
   return progs.map((p) => {
-    let progTarget = 8;
+    const isTk = p.toLowerCase().includes('tk');
+    let progTarget = isTk ? getTkMonthWeekdays() : 8;
     if (p === 'Sempoa SIP') {
       progTarget = paketJadwal?.includes('12') ? 12 : 8;
     } else if (p === 'Fonem' || p === 'Tahfidz') {
       progTarget = 12;
     } else if (p === 'Bahasa Inggris') {
       progTarget = 8;
-    } else if (p.toLowerCase().includes('tk')) {
-      progTarget = 0;
+    } else if (isTk) {
+      progTarget = getTkMonthWeekdays();
     } else {
       progTarget = (PROGRAM_CONFIG as any)[p]?.packages[0]?.target ?? 8;
     }
@@ -963,7 +984,7 @@ export const SiswaPage: React.FC = () => {
                           : 'bg-[#E8F5E9] text-[#2E7D32] border-[#A5D6A7]'
                       }`}
                     >
-                      {q.sisa} / {q.target} kali
+                      {q.sisa} / {q.target} {item.program.toLowerCase().includes('tk') ? 'hari (bulan ini)' : 'kali'}
                     </span>
                   )}
                 </div>

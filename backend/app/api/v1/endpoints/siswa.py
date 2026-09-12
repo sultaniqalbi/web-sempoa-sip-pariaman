@@ -19,6 +19,7 @@ from app.models.buku_siswa import BukuSiswa
 from app.models.pembayaran_periode import PembayaranPeriode, StatusPembayaran
 from app.models.audit_log import AuditLog
 from app.services.audit_service import log_activity
+from app.services.attendance_rules import get_tk_month_weekdays
 from app.schemas.siswa import SiswaCreate, SiswaUpdate, SiswaResponse, SiswaCreateResponse, SiswaPertemuanUpdate
 from pydantic import BaseModel
 
@@ -194,7 +195,8 @@ async def create_new_siswa(
 
     # Tentukan Target Pertemuan & Jadwal Default
     is_tk = "tk" in (siswa_in.kategori_program or "").lower()
-    default_target = 20 if is_tk else 8
+    tk_weekdays = get_tk_month_weekdays()
+    default_target = tk_weekdays if is_tk else 8
     default_hari = "Senin, Selasa, Rabu, Kamis, Jumat" if is_tk else "Senin, Rabu"
     default_jadwal = "Senin - Jumat 07:30 - 13:30 WIB" if is_tk else siswa_in.paket_jadwal
 
@@ -237,10 +239,13 @@ async def create_new_siswa(
             kp = {}
             for p in progs:
                 p_lower = p.lower()
-                p_target = 20 if "tk" in p_lower else (12 if ("fonem" in p_lower or "tahfidz" in p_lower or "paket 2" in (siswa_in.paket_jadwal or "").lower()) else 8)
+                p_target = tk_weekdays if "tk" in p_lower else (12 if ("fonem" in p_lower or "tahfidz" in p_lower or "paket 2" in (siswa_in.paket_jadwal or "").lower()) else 8)
                 kp[p] = {"sisa": p_target, "target": p_target}
             final_kuota_program = json.dumps(kp)
-            if not is_tk:
+            if is_tk:
+                effective_target = tk_weekdays
+                effective_sisa = tk_weekdays
+            else:
                 effective_target = sum(v["target"] for k, v in kp.items() if "tk" not in k.lower())
                 effective_sisa = effective_target
 

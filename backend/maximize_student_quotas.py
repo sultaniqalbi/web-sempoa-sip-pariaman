@@ -2,10 +2,12 @@ import json
 from app.models.siswa import Siswa, StatusSPP
 from app.core.database import SessionLocal
 
+from app.services.attendance_rules import get_tk_month_weekdays
+
 def get_program_target(prog_name: str, paket_jadwal: str = "") -> int:
     p_lower = (prog_name or "").lower().strip()
     if "tk" in p_lower:
-        return 20
+        return get_tk_month_weekdays()
     if "fonem" in p_lower:
         return 12
     if "tahfidz" in p_lower:
@@ -64,8 +66,9 @@ def run():
             non_tk_progs = [p for p in progs if "tk" not in p.lower()]
 
             if is_tk_only:
-                final_target = 20
-                final_sisa = 20
+                tk_days = get_tk_month_weekdays()
+                final_target = tk_days
+                final_sisa = tk_days
             else:
                 final_target = sum(kuota_dict[p]["target"] for p in non_tk_progs)
                 final_sisa = sum(kuota_dict[p]["sisa"] for p in non_tk_progs)
