@@ -91,8 +91,9 @@ def resolve_paket_pengajaran(kategori_program: Optional[str], user_paket: Option
     if any(r in kat for r in ["kepala sekolah", "kepsek", "direktur", "admin"]):
         return "Fleksibel"
     
-    if user_paket and user_paket.strip() not in ["", "Reguler", "09:00", "08:00 - 10:00"]:
-        return user_paket.strip()
+    if user_paket and user_paket.strip().lower() not in ["", "reguler"]:
+        val = user_paket.strip()
+        return val if "WIB" in val.upper() else f"{val} WIB"
         
     if "tk" in kat:
         return "07:30 - 13:30 WIB"
@@ -153,7 +154,9 @@ async def create_new_guru(
             riwayat_pendidikan=guru_in.riwayat_pendidikan,
             paket_pengajaran=final_paket,
             bio=guru_in.bio,
-            foto_profil=guru_in.foto_profil
+            foto_profil=guru_in.foto_profil,
+            jam_masuk=guru_in.jam_masuk or "07:00",
+            jam_keluar=guru_in.jam_keluar or "17:00"
         )
         db.add(new_guru)
         db.flush()
@@ -277,10 +280,17 @@ async def update_existing_guru(
 
     if "kategori_program" in update_dict:
         check_exclusive_roles(db, update_dict["kategori_program"], current_guru_id=id)
-        if "paket_pengajaran" not in update_dict or not update_dict["paket_pengajaran"]:
-            update_dict["paket_pengajaran"] = resolve_paket_pengajaran(update_dict["kategori_program"], db_guru.paket_pengajaran)
-    elif "paket_pengajaran" in update_dict:
-        update_dict["paket_pengajaran"] = resolve_paket_pengajaran(db_guru.kategori_program, update_dict["paket_pengajaran"])
+
+    if "paket_pengajaran" in update_dict and update_dict["paket_pengajaran"]:
+        update_dict["paket_pengajaran"] = resolve_paket_pengajaran(
+            update_dict.get("kategori_program", db_guru.kategori_program),
+            update_dict["paket_pengajaran"]
+        )
+    elif "kategori_program" in update_dict:
+        update_dict["paket_pengajaran"] = resolve_paket_pengajaran(
+            update_dict["kategori_program"],
+            db_guru.paket_pengajaran
+        )
 
     for key, value in update_dict.items():
         setattr(db_guru, key, value)
