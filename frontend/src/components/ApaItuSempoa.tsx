@@ -21,17 +21,17 @@ export const ApaItuSempoa: React.FC = () => {
           </h2>
         </div>
 
-        {/* 2-Column Layout (Balanced & Symmetric) */}
+        {/* 2-Column Layout (Strict 50/50 Symmetrical Split) */}
         <div className="apa-itu-grid" style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'minmax(320px, 400px) 1fr', 
+          gridTemplateColumns: '1fr 1fr', 
           alignItems: 'center', 
-          gap: '48px',
-          maxWidth: '1100px',
+          gap: '40px',
+          maxWidth: '1160px',
           margin: '0 auto'
         }}>
           
-          {/* Left Column: Mascot Visual */}
+          {/* Left Column: Mascot Visual (Centered in Left Half) */}
           <div className="desktop-only-mascot" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', minHeight: '380px' }}>
             <img 
               src="/assets/mascot/mascot-female.webp" 
@@ -40,13 +40,13 @@ export const ApaItuSempoa: React.FC = () => {
               height="500"
               loading="lazy"
               style={{ 
-                maxWidth: '330px', 
+                maxWidth: '340px', 
                 width: '100%',
                 height: 'auto', 
                 margin: '0 auto',
                 objectFit: 'contain',
                 animation: 'floatMascotApaItu 3.2s ease-in-out infinite',
-                filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.12))'
+                filter: 'drop-shadow(0 12px 24px rgba(0,0,0,0.12))'
               }} 
             />
           </div>
