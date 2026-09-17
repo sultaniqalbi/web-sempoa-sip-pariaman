@@ -39,7 +39,7 @@ const getJadwalMengajarDisplay = (row: Guru): string => {
     return 'Fleksibel';
   }
   
-  if (row.paket_pengajaran && !['reguler', '09:00', '08:00 - 10:00', ''].includes(row.paket_pengajaran.trim().toLowerCase())) {
+  if (row.paket_pengajaran && !['reguler', ''].includes(row.paket_pengajaran.trim().toLowerCase())) {
     return row.paket_pengajaran.includes('WIB') ? row.paket_pengajaran : `${row.paket_pengajaran} WIB`;
   }
 
@@ -520,8 +520,14 @@ export const GuruPage: React.FC = () => {
     if (!validatePhone(formData.whatsapp_guru)) {
       return;
     }
+    const isStructural = EXCLUSIVE_SINGLE_ROLES.some((r) =>
+      (formData.kategori_program || '').toLowerCase().includes(r.toLowerCase())
+    );
+    const finalPaket = isStructural ? 'Fleksibel' : `${jamMengajarMulai} - ${jamMengajarSelesai} WIB`;
+
     const payload = {
       ...formData,
+      paket_pengajaran: finalPaket,
       umur: formData.umur ? parseInt(formData.umur, 10) : (calculateAge(formData.tanggal_lahir) || null),
     };
     if (editingGuru) {
@@ -531,7 +537,7 @@ export const GuruPage: React.FC = () => {
     }
   };
 
-  const formatJadwalDisplay = (hariWajib: string): string => {
+  const formatJadwalDisplay = (hariWajib: string, jamMasuk?: string, jamKeluar?: string): string => {
     if (!hariWajib) return '-';
     const daysList = hariWajib.split(',').map((d) => d.trim()).filter(Boolean);
     const allDaysOrder = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
@@ -550,7 +556,8 @@ export const GuruPage: React.FC = () => {
       formattedDays = daysList.join(', ');
     }
 
-    return `${formattedDays}, 07:00 - 17:00 WIB`;
+    const jamStr = (jamMasuk && jamKeluar) ? `${jamMasuk} - ${jamKeluar} WIB` : '07:00 - 17:00 WIB';
+    return `${formattedDays}, ${jamStr}`;
   };
 
   const columns = [
@@ -647,9 +654,9 @@ export const GuruPage: React.FC = () => {
         return (
           <div>
             <span className="text-xs text-[#475569] font-medium leading-relaxed block">
-              {formatJadwalDisplay(row.hari_wajib)}
+              {formatJadwalDisplay(row.hari_wajib, row.jam_masuk, row.jam_keluar)}
             </span>
-            <span className={`text-[10px] font-bold block mt-0.5 ${isFleksibel ? 'text-[#059669]' : 'text-[#E65100]'}`}>
+            <span className={`text-[11px] font-bold block mt-0.5 ${isFleksibel ? 'text-[#10B981]' : 'text-[#E65100]'}`}>
               Mengajar: {jadwalMengajar}
             </span>
             {row.mode_kelas && (

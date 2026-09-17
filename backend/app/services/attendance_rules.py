@@ -89,6 +89,16 @@ def get_guru_late_threshold(guru: Any, waktu_wib: datetime) -> Tuple[int, int]:
         elif start_hour is not None and start_hour >= 9:
             return (start_hour + 1, start_minute)
 
+    # Cek apakah guru memiliki jam_masuk khusus yang diset di data profil guru (misal 11:00)
+    jam_masuk_raw = (getattr(guru, "jam_masuk", "") or "").strip()
+    if jam_masuk_raw and ":" in jam_masuk_raw:
+        try:
+            jm_h, jm_m = map(int, jam_masuk_raw.split(":")[:2])
+            if jm_h >= 9:
+                return (jm_h, jm_m)
+        except Exception:
+            pass
+
     # Jika ada guru lain yang memiliki jam kelas khusus (misal jadwal mulai kelas di atas jam 08:00)
     # dan profilnya khusus pengajar kelas tertentu
     hari_wajib = (getattr(guru, "hari_wajib", "") or "").lower()
