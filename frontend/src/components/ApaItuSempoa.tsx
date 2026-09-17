@@ -21,38 +21,38 @@ export const ApaItuSempoa: React.FC = () => {
           </h2>
         </div>
 
-        {/* 2-Column Layout */}
-        <div style={{ 
-          display: 'flex', 
-          flexWrap: 'wrap', 
+        {/* 2-Column Layout (Balanced & Symmetric) */}
+        <div className="apa-itu-grid" style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'minmax(320px, 400px) 1fr', 
           alignItems: 'center', 
-          gap: '40px', 
-          justifyContent: 'center' 
+          gap: '48px',
+          maxWidth: '1100px',
+          margin: '0 auto'
         }}>
           
           {/* Left Column: Mascot Visual */}
-          <div className="desktop-only-mascot" style={{ flex: '1 1 350px', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '380px' }}>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <img 
-                src="/assets/mascot/mascot-female.webp" 
-                alt="Mascot Sempoa" 
-                width="500"
-                height="500"
-                loading="lazy"
-                style={{ 
-                  width: '320px', 
-                  height: 'auto', 
-                  margin: '0 auto',
-                  objectFit: 'contain',
-                  animation: 'float 3s ease-in-out infinite',
-                  filter: 'drop-shadow(0 10px 15px rgba(0,0,0,0.1))'
-                }} 
-              />
-            </div>
+          <div className="desktop-only-mascot" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', minHeight: '380px' }}>
+            <img 
+              src="/assets/mascot/mascot-female.webp" 
+              alt="Mascot Sempoa" 
+              width="500"
+              height="500"
+              loading="lazy"
+              style={{ 
+                maxWidth: '330px', 
+                width: '100%',
+                height: 'auto', 
+                margin: '0 auto',
+                objectFit: 'contain',
+                animation: 'floatMascotApaItu 3.2s ease-in-out infinite',
+                filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.12))'
+              }} 
+            />
           </div>
 
           {/* Right Column: Text + Cards */}
-          <div style={{ flex: '2 1 500px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
             
             {/* Card 1: Definition */}
             <div style={{ 
@@ -109,12 +109,13 @@ export const ApaItuSempoa: React.FC = () => {
 
       {/* Float Animation Keyframes (reused) */}
       <style>{`
-        @keyframes float {
+        @keyframes floatMascotApaItu {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-15px); }
         }
         @media (max-width: 992px) {
           .container { padding: 40px 16px !important; }
+          .apa-itu-grid { grid-template-columns: 1fr !important; gap: 20px !important; }
           .desktop-only-mascot { display: none !important; }
         }
       `}</style>

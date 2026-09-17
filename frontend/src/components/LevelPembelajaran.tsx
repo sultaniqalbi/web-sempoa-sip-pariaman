@@ -229,7 +229,7 @@ export const LevelPembelajaran: React.FC = () => {
                         width: `${level.iconSize}px`,
                         height: 'auto',
                         filter: 'drop-shadow(0 8px 12px rgba(0,0,0,0.15))',
-                        animation: `float 3s ease-in-out infinite`,
+                        animation: `levelMascotFloat 3s ease-in-out infinite`,
                         animationDelay: `${level.delay}s`
                       }} 
                     />
@@ -316,7 +316,7 @@ export const LevelPembelajaran: React.FC = () => {
       </div>
       
       <style>{`
-        @keyframes float {
+        @keyframes levelMascotFloat {
           0%, 100% { transform: translateX(-50%) translateY(0px); }
           50% { transform: translateX(-50%) translateY(-20px); }
         }

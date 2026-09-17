@@ -85,7 +85,8 @@
       .hero-title{font-size:clamp(2.2rem,5vw,3.5rem);font-weight:800;color:var(--color-white);line-height:1.2;margin-bottom:1.5rem}
       .hero-subtitle{font-size:1.15rem;color:rgba(255,255,255,0.9);margin-bottom:2.5rem;line-height:1.7}
       .hero-buttons{display:flex;gap:1rem;flex-wrap:wrap}
-      .hero-mascot-wrap{display:flex;justify-content:center;align-items:center;position:relative;z-index:2}
+      .hero-mascot-wrap{display:flex;justify-content:center;align-items:center;position:relative;z-index:2;animation:float-mascot 4s ease-in-out infinite}
+      @keyframes float-mascot{0%,100%{transform:translateY(0px) rotate(0deg)}50%{transform:translateY(-15px) rotate(1.5deg)}}
       @media(max-width:992px){.hero-grid-wrap{grid-template-columns:1fr;text-align:center}.hero-text-wrap{text-align:center!important}.hero-buttons{justify-content:center}.nav-links{display:none!important}}
     </style>
 
