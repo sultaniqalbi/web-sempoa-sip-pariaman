@@ -575,40 +575,37 @@ img {
 .advantage-card {
     background: var(--color-bg-white);
     border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
     overflow: hidden;
     display: flex;
     flex-direction: column;
     height: 380px;
-    transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.35s ease;
     cursor: pointer;
     position: relative;
     border: 1px solid var(--color-border);
 }
 
 .advantage-card:hover, .advantage-card.active {
-    transform: scale(1.04) translateY(-5px);
-    box-shadow: var(--shadow-lg);
+    transform: translateY(-6px);
+    box-shadow: 0 16px 36px rgba(0,0,0,0.1);
     border-color: var(--color-secondary);
 }
 
 .adv-card-image-wrap {
     width: 100%;
     height: 180px;
+    max-height: 180px;
     overflow: hidden;
-    transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+    transition: max-height 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease, transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
     display: flex;
     align-items: center;
     justify-content: center;
+    transform-origin: center top;
 }
 
-.adv-card-image-wrap i {
-    font-size: 4.5rem;
-    transition: var(--transition);
-}
-
-.advantage-card:hover .adv-card-image-wrap i {
-    transform: scale(1.1) rotate(-5deg);
+.adv-card-image-wrap img {
+    transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .adv-card-body {
@@ -619,7 +616,7 @@ img {
     justify-content: flex-start;
     align-items: center;
     text-align: center;
-    transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+    transition: padding 0.45s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.35s ease;
     background: var(--color-bg-white);
 }
 
@@ -628,17 +625,18 @@ img {
     font-weight: 700;
     color: var(--color-text-dark);
     margin-bottom: 0.5rem;
+    transition: color 0.3s ease;
 }
 
 .adv-card-desc {
     opacity: 0;
-    transform: translateY(15px);
+    transform: translateY(12px);
     max-height: 0;
     overflow: hidden;
-    transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.05s, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.05s, max-height 0.45s cubic-bezier(0.16, 1, 0.3, 1), margin-top 0.4s ease;
     color: var(--color-text-body);
-    font-size: 0.9rem;
-    line-height: 1.6;
+    font-size: 0.92rem;
+    line-height: 1.65;
 }
 
 .adv-card-hint {
@@ -649,24 +647,41 @@ img {
     align-items: center;
     gap: 0.4rem;
     font-weight: 600;
+    transition: opacity 0.3s ease, transform 0.3s ease, max-height 0.35s ease;
+    overflow: hidden;
+    max-height: 30px;
 }
 
-/* Active Flip State */
+/* Active & Hover Open State */
+.advantage-card:hover .adv-card-image-wrap,
 .advantage-card.active .adv-card-image-wrap {
-    height: 0;
+    max-height: 0;
     opacity: 0;
+    transform: scale(0.85);
+    margin: 0;
 }
 
+.advantage-card:hover .adv-card-body,
 .advantage-card.active .adv-card-body {
     justify-content: center;
-    background-color: var(--color-primary-light);
+    background-color: var(--color-bg-white);
 }
 
+.advantage-card:hover .adv-card-desc,
 .advantage-card.active .adv-card-desc {
     opacity: 1;
     transform: translateY(0);
-    max-height: 220px;
-    margin-top: 0.5rem;
+    max-height: 200px;
+    margin-top: 0.75rem;
+}
+
+.advantage-card:hover .adv-card-hint,
+.advantage-card.active .adv-card-hint {
+    opacity: 0;
+    transform: translateY(8px);
+    max-height: 0;
+    margin: 0;
+    overflow: hidden;
 }
 
 /* === ACHIEVEMENTS SECTION (Tabuik Fringe Background Pattern) === */
