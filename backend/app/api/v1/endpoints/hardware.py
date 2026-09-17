@@ -228,6 +228,9 @@ async def get_last_tap(
     uid_clean = uid.strip().upper()
     uid_nospace = uid_clean.replace(" ", "")
 
+    if uid_clean in ["FF FF FF FF", "00 00 00 00", "FFFFFFFF", "00000000"]:
+        return {"uid": None, "is_new": False}
+
     # Cek apakah sudah ada guru aktif dengan UID ini di database
     existing = db.query(Guru).filter(
         ((func.upper(Guru.uid) == uid_clean) |
@@ -241,7 +244,7 @@ async def get_last_tap(
         "status": status,
         "nama": existing.nama if existing else nama,
         "is_registered": existing is not None,
-        "is_new": existing is None,
+        "is_new": existing is None and status == "UNREGISTERED",
         "timestamp": data.get("timestamp") or datetime.now().isoformat()
     }
 

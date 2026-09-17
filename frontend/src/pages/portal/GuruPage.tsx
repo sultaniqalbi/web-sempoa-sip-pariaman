@@ -13,6 +13,14 @@ import { PhotoModal } from '../../components/PhotoModal';
 import { PengajarIcon, TrashIcon, CheckIcon, PencilIcon } from '../../components/SvgIcons';
 import DateInput from '../../components/DateInput';
 
+const GLITCH_UIDS = new Set(['FF FF FF FF', '00 00 00 00', 'FFFFFFFF', '00000000']);
+const isGlitchUid = (uid?: string | null): boolean => {
+  if (!uid) return true;
+  const clean = uid.trim().toUpperCase();
+  const nospace = clean.replace(/\s+/g, '');
+  return GLITCH_UIDS.has(clean) || GLITCH_UIDS.has(nospace);
+};
+
 const AVAILABLE_PROGRAMS = ['Sempoa SIP', 'Fonem', 'Tahfidz', 'Bahasa Inggris', 'TK', 'Admin', 'Direktur', 'Kepala Sekolah'];
 
 const EXCLUSIVE_SINGLE_ROLES = ['Direktur', 'Admin', 'Kepala Sekolah'];
@@ -116,6 +124,7 @@ export const GuruPage: React.FC = () => {
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: number; nama: string } | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const lastProcessedTapRef = useRef<string>('');
+  const modalOpenedAtRef = useRef<number>(0);
   const [isUidLocked, setIsUidLocked] = useState<boolean>(false);
 
   const [jamMengajarMulai, setJamMengajarMulai] = useState('08:00');
@@ -169,62 +178,111 @@ export const GuruPage: React.FC = () => {
     return map;
   }, [guruList]);
 
-  // Cek tap kartu terakhir dari endpoint backend secara realtime
+  // Cek dan proses tap kartu RFID untuk form guru
+  const handleCardTapEvent = (
+    tappedUid: string,
+    waktu?: string,
+    status?: string,
+    timestamp?: string,
+    isNew?: boolean
+  ) => {
+    if (!isAddModalOpen || isUidLocked) return;
+
+    const cleanUid = tappedUid.trim().toUpperCase();
+    if (isGlitchUid(cleanUid)) {
+      return; // Abaikan glitch bus atau kartu blank dummy
+    }
+
+    // Pastikan tap terjadi setelah modal dibuka (toleransi 5 detik sebelum klik)
+    if (timestamp) {
+      const tapTime = new Date(timestamp).getTime();
+      if (!isNaN(tapTime) && tapTime < (modalOpenedAtRef.current - 5000)) {
+        return; // Abaikan tap stale/lama
+      }
+    }
+
+    const tapKey = `${cleanUid}_${waktu || timestamp || ''}`;
+    if (lastProcessedTapRef.current === tapKey) {
+      return;
+    }
+    lastProcessedTapRef.current = tapKey;
+
+    // Cek apakah UID sudah terdaftar pada guru lain
+    const cleanNospace = cleanUid.replace(/\s+/g, '');
+    const existingTeacher = guruList.find((g) => {
+      if (!g.uid || g.is_deleted) return false;
+      const gClean = g.uid.trim().toUpperCase();
+      const gNospace = gClean.replace(/\s+/g, '');
+      return gClean === cleanUid || gNospace === cleanNospace;
+    });
+
+    if (existingTeacher) {
+      showToast(
+        `Kartu RFID ${cleanUid} sudah terdaftar atas nama ${existingTeacher.nama}! Silakan gunakan kartu lain.`,
+        'error'
+      );
+      return;
+    }
+
+    // Kartu baru valid yang belum terdaftar -> auto-fill ke form
+    setFormData((prev) => ({ ...prev, uid: cleanUid }));
+    showToast(`Kartu RFID baru terdeteksi: ${cleanUid}`, 'success');
+  };
+
+  // Realtime card tap listener via WebSocket
+  useEffect(() => {
+    if (!isAddModalOpen || isUidLocked) return;
+    if (lastEvent?.event === 'CARD_TAP' && lastEvent.data?.uid) {
+      handleCardTapEvent(
+        String(lastEvent.data.uid),
+        lastEvent.data.waktu,
+        lastEvent.data.status,
+        lastEvent.data.timestamp,
+        lastEvent.data.status === 'UNREGISTERED'
+      );
+    }
+  }, [lastEvent, isAddModalOpen, isUidLocked, guruList]);
+
+  // Fallback Poller jika WebSocket terputus (hanya ambil tap kartu UNREGISTERED/baru)
   const checkLatestTap = async () => {
-    if (isUidLocked) return;
+    if (!isAddModalOpen || isUidLocked) return;
     try {
       const res = await apiClient.get('/last-tap');
-      if (res.data?.uid) {
-        const newUid = String(res.data.uid).trim().toUpperCase();
-        const tapKey = `${newUid}_${res.data.waktu || ''}`;
-        if (lastProcessedTapRef.current !== tapKey) {
-          lastProcessedTapRef.current = tapKey;
-          setFormData(prev => ({ ...prev, uid: newUid }));
-          showToast(`Kartu RFID terdeteksi Realtime: ${newUid}`, 'success');
-        }
+      if (res.data?.uid && (res.data?.is_new || res.data?.status === 'UNREGISTERED')) {
+        handleCardTapEvent(
+          String(res.data.uid),
+          res.data.waktu,
+          res.data.status,
+          res.data.timestamp,
+          res.data.is_new
+        );
       }
     } catch (e) {
       try {
         const res2 = await apiClient.get('/hardware/last-tap');
-        if (res2.data?.uid) {
-          const newUid2 = String(res2.data.uid).trim().toUpperCase();
-          const tapKey2 = `${newUid2}_${res2.data.waktu || ''}`;
-          if (lastProcessedTapRef.current !== tapKey2) {
-            lastProcessedTapRef.current = tapKey2;
-            setFormData(prev => ({ ...prev, uid: newUid2 }));
-            showToast(`Kartu RFID terdeteksi Realtime: ${newUid2}`, 'success');
-          }
+        if (res2.data?.uid && (res2.data?.is_new || res2.data?.status === 'UNREGISTERED')) {
+          handleCardTapEvent(
+            String(res2.data.uid),
+            res2.data.waktu,
+            res2.data.status,
+            res2.data.timestamp,
+            res2.data.is_new
+          );
         }
       } catch (err) {}
     }
   };
 
-  // Realtime card tap listener via WebSocket
-  useEffect(() => {
-    if (isUidLocked) return;
-    if (lastEvent?.event === 'CARD_TAP' && lastEvent.data?.uid) {
-      const tappedUid = String(lastEvent.data.uid).trim().toUpperCase();
-      const tapKey = `${tappedUid}_${lastEvent.data.waktu || ''}`;
-      
-      if (isAddModalOpen) {
-        lastProcessedTapRef.current = tapKey;
-        setFormData(prev => ({ ...prev, uid: tappedUid }));
-        showToast(`Kartu RFID terdeteksi Realtime: ${tappedUid}`, 'success');
-      }
-    }
-  }, [lastEvent, isAddModalOpen, isUidLocked]);
-
-  // Active Realtime Poller (1 detik) saat Modal Tambah / Edit Guru terbuka (failsafe jika WebSocket terputus)
+  // Active Realtime Poller (1.5 detik) saat Modal Tambah / Edit Guru terbuka (failsafe jika WebSocket terputus)
   useEffect(() => {
     if (!isAddModalOpen || isUidLocked) return;
 
-    checkLatestTap();
     const intervalId = setInterval(() => {
       checkLatestTap();
-    }, 1000);
+    }, 1500);
 
     return () => clearInterval(intervalId);
-  }, [isAddModalOpen, isUidLocked]);
+  }, [isAddModalOpen, isUidLocked, guruList]);
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -377,12 +435,13 @@ export const GuruPage: React.FC = () => {
 
   const openAddModal = () => {
     lastProcessedTapRef.current = '';
+    modalOpenedAtRef.current = Date.now();
     setEditingGuru(null);
     setIsUidLocked(false);
     setJamMengajarMulai('09:00');
     setJamMengajarSelesai('17:00');
     setFormData({
-      uid: '', // Default Kosong
+      uid: '', // WAJIB KOSONG DEFAULT!
       nama: '',
       nama_panggilan: '',
       umur: '',
@@ -401,11 +460,11 @@ export const GuruPage: React.FC = () => {
     setSelectedPhoto(null);
     setPhoneError(null);
     setIsAddModalOpen(true);
-    checkLatestTap();
   };
 
   const openEditModal = (guru: Guru) => {
     lastProcessedTapRef.current = guru.uid ? `${guru.uid}_initial` : '';
+    modalOpenedAtRef.current = Date.now();
     setEditingGuru(guru);
     setIsUidLocked(Boolean(guru.uid && guru.uid.trim()));
     const calculatedAge = calculateAge(guru.tanggal_lahir);
@@ -775,6 +834,10 @@ export const GuruPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => {
+                  if (!formData.uid && !isUidLocked) {
+                    showToast('UID masih kosong. Silakan tap kartu atau ketik UID terlebih dahulu.', 'error');
+                    return;
+                  }
                   const nextLock = !isUidLocked;
                   setIsUidLocked(nextLock);
                   showToast(
@@ -800,7 +863,9 @@ export const GuruPage: React.FC = () => {
             <p className="text-[10px] text-[#64748B] mt-1">
               {isUidLocked 
                 ? 'UID telah disimpan dan dikunci otomatis agar tidak tertimpa tap kartu lain. Klik icon pensil jika ingin mengganti.'
-                : 'UID otomatis terisi dari hasil tap kartu di alat RFID. Anda juga dapat mengetiknya secara manual.'}
+                : formData.uid
+                ? 'UID otomatis terisi dari hasil tap kartu di alat RFID. Anda juga dapat mengetiknya secara manual.'
+                : 'Silakan tap kartu baru di alat pembaca (ESP32) atau ketik kode UID secara manual.'}
             </p>
           </div>
 
