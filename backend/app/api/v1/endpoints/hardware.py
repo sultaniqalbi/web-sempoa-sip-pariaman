@@ -20,7 +20,7 @@ from app.core.hardware import (
 from app.core.rate_limit import hardware_limiter
 from app.models.guru import Guru
 from app.models.absensi_log import AbsensiLog, StatusAbsensi, ModeAbsensi
-from app.services.attendance_rules import check_is_guru_late
+from app.services.attendance_rules import check_is_guru_late, evaluate_guru_attendance_status
 
 router = APIRouter()
 
@@ -146,10 +146,18 @@ async def post_absensi(request: Request, db: Session = Depends(get_db)):
                 
             return PlainTextResponse(f"OK|{nama_guru}", status_code=200)
 
-        # Cek Keterlambatan sesuai aturan resmi
+        # Cek Keterlambatan sesuai aturan resmi (toleransi 3 jam)
         waktu_wib = waktu_dt.astimezone(WIB)
-        is_late = check_is_guru_late(guru, waktu_wib)
-        status_absen = StatusAbsensi.TERLAMBAT if is_late else StatusAbsensi.HADIR
+        status_str, is_denda = evaluate_guru_attendance_status(guru, waktu_wib)
+        if status_str == "TERLAMBAT_ABSENSI":
+            status_absen = getattr(StatusAbsensi, "TERLAMBAT_ABSENSI", StatusAbsensi.TERLAMBAT)
+            status_denda_val = "LUNAS"
+        elif status_str == "TERLAMBAT":
+            status_absen = StatusAbsensi.TERLAMBAT
+            status_denda_val = "BELUM_LUNAS"
+        else:
+            status_absen = StatusAbsensi.HADIR
+            status_denda_val = "LUNAS"
 
         # Catat Log Absensi Kehadiran Guru (Tap Masuk)
         mode = ModeAbsensi.OFFLINE if mode_str == "OFFLINE" else ModeAbsensi.ONLINE
@@ -158,7 +166,8 @@ async def post_absensi(request: Request, db: Session = Depends(get_db)):
             waktu=waktu_dt,
             waktu_keluar=None,
             mode=mode,
-            status=status_absen
+            status=status_absen,
+            status_denda=status_denda_val
         )
         db.add(new_log)
         db.commit()
@@ -171,10 +180,10 @@ async def post_absensi(request: Request, db: Session = Depends(get_db)):
             "role": "guru",
             "waktu": waktu_str,
             "waktu_keluar": None,
-            "status": "TERLAMBAT" if is_late else "HADIR"
+            "status": status_str
         })
 
-        if is_late:
+        if status_str == "TERLAMBAT":
             return PlainTextResponse(f"LATE|{nama_guru}", status_code=200)
         return PlainTextResponse(f"OK|{nama_guru}", status_code=200)
 

@@ -660,9 +660,12 @@ export const SharedAbsensiPage: React.FC = () => {
         let statusText = row.status;
         let style = 'bg-[#FEE2E2] text-[#DC2626] border-[#FCA5A5]';
         
-        if (row.status === 'HADIR' || (isDirektur && row.status === 'TERLAMBAT')) {
+        if (row.status === 'HADIR' || (isDirektur && (row.status === 'TERLAMBAT' || row.status === 'TERLAMBAT_ABSENSI'))) {
           statusText = isDirektur ? 'HADIR' : 'Hadir, Tepat Waktu';
           style = 'bg-[#DCFCE7] text-[#16A34A] border-[#86EFAC]';
+        } else if (row.status === 'TERLAMBAT_ABSENSI') {
+          statusText = 'Hadir, Terlambat Absensi';
+          style = 'bg-[#FEF08A] text-[#CA8A04] border-[#FDE047]';
         } else if (row.status === 'TERLAMBAT') {
           statusText = 'Hadir, Terlambat';
           style = 'bg-[#FEF08A] text-[#CA8A04] border-[#FDE047]';
@@ -684,7 +687,7 @@ export const SharedAbsensiPage: React.FC = () => {
         const isDirektur = (row.kategori_program || '').toLowerCase().includes('direktur') ||
                            (row.guru_nama || '').toLowerCase().includes('direktur') ||
                            (row.guru_nama || '').toLowerCase().includes('zulhemawati');
-        if (isDirektur) {
+        if (isDirektur || row.status === 'TERLAMBAT_ABSENSI') {
           return <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">Bebas Denda</span>;
         }
 
@@ -1465,6 +1468,7 @@ export const SharedAbsensiPage: React.FC = () => {
                 className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none"
               >
                 <option value="HADIR">HADIR (Tepat Waktu)</option>
+                <option value="TERLAMBAT_ABSENSI">HADIR (Terlambat Absensi - Bebas Denda)</option>
                 <option value="TERLAMBAT">TERLAMBAT</option>
                 <option value="IZIN">IZIN</option>
                 <option value="ALFA">ALFA</option>
@@ -1747,6 +1751,7 @@ export const SharedAbsensiPage: React.FC = () => {
                   className="w-full bg-[#F1F5F9] border border-[#CBD5E1] rounded-lg p-2.5 text-[#1E293B] font-bold focus:border-[#FF7043] focus:outline-none"
                 >
                   <option value="HADIR">HADIR</option>
+                  <option value="TERLAMBAT_ABSENSI">HADIR (Terlambat Absensi - Bebas Denda)</option>
                   <option value="IZIN">IZIN</option>
                   <option value="ALFA">ALFA</option>
                   <option value="TERLAMBAT">TERLAMBAT</option>

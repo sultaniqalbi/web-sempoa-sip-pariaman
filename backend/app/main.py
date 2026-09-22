@@ -167,6 +167,13 @@ def on_startup():
             except Exception as e_sql:
                 logger.debug(f"Auto-migration statement notice: {e_sql}")
 
+        # Ensure enum value 'TERLAMBAT_ABSENSI' exists in absensi_status_enum (PostgreSQL requires AUTOCOMMIT for ALTER TYPE)
+        try:
+            with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+                conn.execute(text("ALTER TYPE absensi_status_enum ADD VALUE IF NOT EXISTS 'TERLAMBAT_ABSENSI';"))
+        except Exception as e_enum:
+            logger.debug(f"Enum auto-migration notice: {e_enum}")
+
         logger.info("Auto-migration: Finished executing independent schema sync queries")
 
         # Auto-migration for bukti_transfer (ensure table exists on any DB engine)

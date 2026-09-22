@@ -12,6 +12,7 @@ class StatusAbsensi(str, enum.Enum):
     IZIN = "IZIN"
     ALFA = "ALFA"
     TERLAMBAT = "TERLAMBAT"
+    TERLAMBAT_ABSENSI = "TERLAMBAT_ABSENSI"
 
 class AbsensiLog(Base):
     __tablename__ = "absensi_log"

@@ -114,16 +114,17 @@ def get_guru_late_threshold(guru: Any, waktu_wib: datetime) -> Tuple[int, int]:
     return (8, 0)
 
 
-def check_is_guru_late(guru: Any, waktu_dt: datetime) -> bool:
+def evaluate_guru_attendance_status(guru: Any, waktu_dt: datetime) -> Tuple[str, bool]:
     """
-    Evaluasi apakah presensi guru terlambat.
-    Aturan Tegas:
-    - Datang <= batas waktu (misal <= 08:00:00 WIB) = Tepat Waktu (HADIR).
-    - Lewat 1 detik dari batas waktu (misal 08:00:01 ke atas) = TERLAMBAT.
-    - Direktur / Owner = Selalu bebas keterlambatan & denda.
+    Evaluasi presensi guru dengan aturan toleransi 3 jam.
+    Mengembalikan tuple (status_string, kena_denda_boolean):
+    - ('HADIR', False) -> Datang tepat waktu <= batas waktu (Rp. -)
+    - ('TERLAMBAT', True) -> Datang terlambat <= 3 jam lewat batas waktu (Denda Rp 1.000)
+    - ('TERLAMBAT_ABSENSI', False) -> Tap > 3 jam lewat batas waktu (Lupa tap pagi, hadir mengajar, BEBAS DENDA)
+    - Direktur / Owner -> Selalu ('HADIR', False) bebas denda
     """
     if not guru or is_owner_or_direktur(guru):
-        return False
+        return ("HADIR", False)
 
     w_wib = waktu_dt.astimezone(WIB) if waktu_dt.tzinfo else waktu_dt.replace(tzinfo=WIB)
 
@@ -131,13 +132,25 @@ def check_is_guru_late(guru: Any, waktu_dt: datetime) -> bool:
     if th < 8:
         th, tm = 8, 0
 
-    sec = getattr(w_wib, "second", 0)
-    # Lewat 1 detik dari batas waktu yang ditentukan langsung terhitung TERLAMBAT
-    if w_wib.hour > th:
-        return True
-    if w_wib.hour == th and w_wib.minute > tm:
-        return True
-    if w_wib.hour == th and w_wib.minute == tm and sec > 0:
-        return True
+    threshold_dt = w_wib.replace(hour=th, minute=tm, second=0, microsecond=0)
+    late_limit_3h = threshold_dt + timedelta(hours=3)
 
-    return False
+    # 1. Tepat Waktu (<= batas waktu)
+    if w_wib <= threshold_dt:
+        return ("HADIR", False)
+
+    # 2. Terlambat Biasa (lewat batas waktu s/d maksimal 3 jam) -> Kena Denda
+    if w_wib <= late_limit_3h:
+        return ("TERLAMBAT", True)
+
+    # 3. Terlambat Absensi (> 3 jam lewat batas waktu) -> Lupa Tap Masuk, Hadir Bekerja, BEBAS DENDA
+    return ("TERLAMBAT_ABSENSI", False)
+
+
+def check_is_guru_late(guru: Any, waktu_dt: datetime) -> bool:
+    """
+    Evaluasi apakah presensi guru terlambat yang dikenakan denda.
+    Untuk kasus lupa tap (> 3 jam dari batas waktu), statusnya TERLAMBAT_ABSENSI (tidak kena denda).
+    """
+    status, kena_denda = evaluate_guru_attendance_status(guru, waktu_dt)
+    return kena_denda

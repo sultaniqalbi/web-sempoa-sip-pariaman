@@ -25,7 +25,7 @@ from app.models.pembayaran_periode import PembayaranPeriode, StatusPembayaran
 from app.core.constants import get_program_spp_nominal
 from app.schemas.absensi import AbsensiCreate, AbsensiResponse
 from app.crud import absensi as crud_absensi
-from app.services.attendance_rules import check_is_guru_late, is_owner_or_direktur
+from app.services.attendance_rules import check_is_guru_late, is_owner_or_direktur, evaluate_guru_attendance_status
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -85,20 +85,32 @@ async def read_absensi_list(
 
     # Auto-reconcile: sinkronkan status log kehadiran guru sesuai aturan resmi keterlambatan:
     # 1. Guru datang <= 08:00 WIB (atau sesuai toleransi jadwal khusus) -> HADIR
-    # 2. Guru datang lewat toleransi keterlambatan -> TERLAMBAT
-    # 3. Direktur / Owner -> selalu HADIR (bebas keterlambatan & denda)
+    # 2. Guru datang lewat toleransi keterlambatan s/d 3 jam -> TERLAMBAT (Denda Rp 1.000)
+    # 3. Guru datang > 3 jam lewat batas waktu -> TERLAMBAT_ABSENSI (Lupa tap pagi, hadir mengajar, BEBAS DENDA)
+    # 4. Direktur / Owner -> selalu HADIR (bebas keterlambatan & denda)
     try:
         needs_commit = False
         for log_entry in logs:
-            if log_entry.status in [StatusAbsensi.HADIR, StatusAbsensi.TERLAMBAT]:
+            if log_entry.status in [StatusAbsensi.HADIR, StatusAbsensi.TERLAMBAT, StatusAbsensi.TERLAMBAT_ABSENSI]:
                 u_clean = log_entry.uid.strip().upper().replace(" ", "") if log_entry.uid else ""
                 matched_g = guru_map.get(u_clean)
                 if matched_g:
                     w_time = to_wib(log_entry.waktu)
-                    should_be_late = check_is_guru_late(matched_g, w_time)
-                    expected_status = StatusAbsensi.TERLAMBAT if should_be_late else StatusAbsensi.HADIR
+                    new_status_str, kena_denda = evaluate_guru_attendance_status(matched_g, w_time)
+                    if new_status_str == "TERLAMBAT_ABSENSI":
+                        expected_status = StatusAbsensi.TERLAMBAT_ABSENSI
+                    elif new_status_str == "TERLAMBAT":
+                        expected_status = StatusAbsensi.TERLAMBAT
+                    else:
+                        expected_status = StatusAbsensi.HADIR
+
                     if log_entry.status != expected_status:
                         log_entry.status = expected_status
+                        needs_commit = True
+
+                    # Pastikan jika statusnya TERLAMBAT_ABSENSI, status_denda otomatis LUNAS agar bebas denda
+                    if expected_status == StatusAbsensi.TERLAMBAT_ABSENSI and log_entry.status_denda != "LUNAS":
+                        log_entry.status_denda = "LUNAS"
                         needs_commit = True
 
         if needs_commit:
@@ -566,6 +578,9 @@ async def update_absensi_log(
         if hasattr(log, key):
             setattr(log, key, value)
 
+    if log.status == StatusAbsensi.TERLAMBAT_ABSENSI:
+        log.status_denda = "LUNAS"
+
     db.commit()
     db.refresh(log)
 
@@ -665,16 +680,21 @@ async def create_guru_manual_absensi(
 
     # Cek Keterlambatan Otomatis pada Input Manual
     final_status = req.status
-    if req.status in [StatusAbsensi.HADIR, StatusAbsensi.TERLAMBAT]:
-        is_late = check_is_guru_late(guru, waktu_target)
+    if req.status in [StatusAbsensi.HADIR, StatusAbsensi.TERLAMBAT, StatusAbsensi.TERLAMBAT_ABSENSI]:
+        status_eval, is_late = evaluate_guru_attendance_status(guru, waktu_target)
         if req.status == StatusAbsensi.TERLAMBAT:
-            is_late = True
-        final_status = StatusAbsensi.TERLAMBAT if is_late else StatusAbsensi.HADIR
+            final_status = StatusAbsensi.TERLAMBAT
+        elif req.status == StatusAbsensi.TERLAMBAT_ABSENSI:
+            final_status = StatusAbsensi.TERLAMBAT_ABSENSI
+        else:
+            final_status = getattr(StatusAbsensi, status_eval, StatusAbsensi.HADIR)
 
     existing_log = db.query(AbsensiLog).filter(
         AbsensiLog.uid == guru.uid,
         func.date(func.timezone('Asia/Jakarta', AbsensiLog.waktu)) == t_date
     ).first()
+
+    status_denda_val = "LUNAS" if final_status in [StatusAbsensi.HADIR, StatusAbsensi.TERLAMBAT_ABSENSI] else "BELUM_LUNAS"
 
     if existing_log:
         existing_log.status = final_status
@@ -682,12 +702,15 @@ async def create_guru_manual_absensi(
         existing_log.mode = mode_val
         existing_log.catatan = req.catatan or "Presensi manual admin"
         existing_log.sumber = "PORTAL_ADMIN"
+        if final_status == StatusAbsensi.TERLAMBAT_ABSENSI:
+            existing_log.status_denda = "LUNAS"
     else:
         new_log = AbsensiLog(
             uid=guru.uid,
             waktu=waktu_target,
             mode=mode_val,
             status=final_status,
+            status_denda=status_denda_val,
             catatan=req.catatan or "Presensi manual admin",
             sumber="PORTAL_ADMIN"
         )
