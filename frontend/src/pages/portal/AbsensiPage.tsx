@@ -687,7 +687,7 @@ export const SharedAbsensiPage: React.FC = () => {
         const isDirektur = (row.kategori_program || '').toLowerCase().includes('direktur') ||
                            (row.guru_nama || '').toLowerCase().includes('direktur') ||
                            (row.guru_nama || '').toLowerCase().includes('zulhemawati');
-        if (isDirektur || row.status === 'TERLAMBAT_ABSENSI') {
+        if (isDirektur) {
           return <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">Bebas Denda</span>;
         }
 
