@@ -18,6 +18,7 @@ from app.models.users import User, UserRole
 from app.models.siswa import Siswa, StatusSPP
 from app.models.buku_siswa import BukuSiswa
 from app.models.pembayaran_periode import PembayaranPeriode, StatusPembayaran
+from app.models.absensi_log import AbsensiLog
 from app.models.audit_log import AuditLog
 from app.services.audit_service import log_activity
 from app.services.attendance_rules import get_tk_month_weekdays
@@ -530,30 +531,39 @@ async def delete_siswa(
     if not db_siswa:
         raise HTTPException(status_code=404, detail="Data siswa tidak ditemukan")
 
-    db_siswa.is_deleted = True
-    # Cascade delete ortu account
+    # 1. Cascade delete ortu account
     try:
         db.query(User).filter(
             User.role == UserRole.ortu,
             (User.uid_terhubung == str(id)) | (User.uid_terhubung == db_siswa.uid)
         ).delete()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning(f"Gagal menghapus user ortu saat delete siswa: {e}")
+
+    # 2. Hapus log absensi terkait UID siswa
+    try:
+        if db_siswa.uid:
+            db.query(AbsensiLog).filter(AbsensiLog.uid == db_siswa.uid).delete()
+    except Exception as e:
+        logger.warning(f"Gagal menghapus absensi log saat delete siswa: {e}")
     
+    # 3. Catat ke audit log
     log_activity(
         db=db,
         action="PENGHAPUSAN",
         role=current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
         email=current_user.email,
         modul="Data Siswa",
-        deskripsi=f"Menghapus data siswa: {db_siswa.nama} ({db_siswa.kategori_program})",
+        deskripsi=f"Menghapus data siswa permanen: {db_siswa.nama} ({db_siswa.kategori_program})",
         status="SUCCESS",
         target_id=id,
         target_nama=db_siswa.nama
     )
 
+    # 4. Hapus data siswa secara permanen dari database (Hard Delete)
+    db.delete(db_siswa)
     db.commit()
-    return {"status": "success", "message": "Siswa dan akun ortu berhasil dihapus"}
+    return {"status": "success", "message": "Siswa, akun orang tua, dan seluruh data terkait berhasil dihapus permanen"}
 
 @router.post("/{id}/reset-password", response_model=ResetPasswordResponse)
 async def reset_siswa_password(
