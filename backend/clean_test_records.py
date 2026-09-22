@@ -1,6 +1,7 @@
 import sys
 from sqlalchemy import or_
 from app.core.database import SessionLocal
+from app.models.siswa import Siswa
 from app.models.catatan_pembelajaran import CatatanPembelajaran
 from app.models.evaluasi_siswa import EvaluasiSiswa
 from app.models.absensi_log import AbsensiLog
@@ -97,6 +98,25 @@ def clean_test_data():
                 db.delete(p)
         else:
             print("✅ Tidak ada pendaftaran baru uji coba yang perlu dihapus.")
+
+        # 5. Bersihkan data siswa dummy yang berstatus sudah dihapus (soft-deleted)
+        test_siswa = db.query(Siswa).filter(
+            Siswa.is_deleted == True,
+            or_(
+                Siswa.nama.ilike("%tes%"),
+                Siswa.nama.ilike("%test%"),
+                Siswa.nama.ilike("%dummy%"),
+                Siswa.nama.ilike("%coba%")
+            )
+        ).all()
+
+        if test_siswa:
+            print(f"\n🧹 Menghapus permanen {len(test_siswa)} Siswa Uji Coba (Soft-Deleted):")
+            for s in test_siswa:
+                print(f"   [PURGED SISWA] ID {s.id} | UID: {s.uid} | Nama: {s.nama}")
+                db.delete(s)
+        else:
+            print("✅ Tidak ada data siswa uji coba terhapus yang perlu dibersihkan.")
 
         # Commit semua perubahan
         db.commit()
