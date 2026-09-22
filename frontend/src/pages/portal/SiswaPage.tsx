@@ -319,6 +319,9 @@ export const SiswaPage: React.FC = () => {
     'Sempoa SIP': { sisa: '', target: 8 }
   });
   const [guruPerProgram, setGuruPerProgram] = useState<Record<string, number | undefined>>({});
+  const [bukuPerProgram, setBukuPerProgram] = useState<Record<string, { buku: string; nomor: string }>>({
+    'Sempoa SIP': { buku: 'Junior', nomor: '-' }
+  });
 
   // Form State
   const [formData, setFormData] = useState({
@@ -630,6 +633,9 @@ export const SiswaPage: React.FC = () => {
     setSelectedPhoto(null);
     setPhoneError(null);
     setGuruPerProgram({});
+    setBukuPerProgram({
+      'Sempoa SIP': { buku: 'Junior', nomor: '-' }
+    });
     setIsAddModalOpen(true);
   };
 
@@ -718,6 +724,42 @@ export const SiswaPage: React.FC = () => {
     }
     setGuruPerProgram(initialGuruPerProg);
 
+    // Parse buku_per_program for multi-book support
+    const initialBukuPerProg: Record<string, { buku: string; nomor: string }> = {};
+    if ((siswa as any).buku_per_program) {
+      try {
+        const bpp = JSON.parse((siswa as any).buku_per_program);
+        if (bpp && typeof bpp === 'object') {
+          Object.entries(bpp).forEach(([prog, bData]: [string, any]) => {
+            if (bData && typeof bData === 'object') {
+              initialBukuPerProg[prog] = {
+                buku: String(bData.buku || ''),
+                nomor: String(bData.nomor || '-')
+              };
+            }
+          });
+        }
+      } catch (e) {}
+    }
+    const studentBooks = (bukuList as any[]).filter((b: any) => b.id_siswa === siswa.id);
+    studentBooks.forEach((b: any) => {
+      if (b.kategori_program && !initialBukuPerProg[b.kategori_program]) {
+        initialBukuPerProg[b.kategori_program] = {
+          buku: b.level_anak || '',
+          nomor: b.nomor_buku || '-'
+        };
+      }
+    });
+    progs.forEach((p) => {
+      if (!initialBukuPerProg[p]) {
+        initialBukuPerProg[p] = {
+          buku: p === 'Sempoa SIP' ? (activeBuku?.level_anak || 'Junior') : (activeBuku?.level_anak || ''),
+          nomor: activeBuku?.nomor_buku || '-'
+        };
+      }
+    });
+    setBukuPerProgram(initialBukuPerProg);
+
     setIsAddModalOpen(true);
   };
 
@@ -798,6 +840,30 @@ export const SiswaPage: React.FC = () => {
       ? JSON.stringify(guruPerProgramClean)
       : null;
 
+    // Validate that each program has its book filled in
+    for (const p of selectedProgs) {
+      const bInfo = bukuPerProgram[p];
+      const bTitle = (bInfo?.buku || '').trim();
+      if (!bTitle) {
+        showToast(`Jenis / Judul buku untuk program "${p}" wajib diisi!`, 'error');
+        return;
+      }
+    }
+
+    // Build buku_per_program JSON from per-program book inputs
+    const bukuPerProgramClean: Record<string, { buku: string; nomor: string }> = {};
+    selectedProgs.forEach((p) => {
+      const bInfo = bukuPerProgram[p];
+      bukuPerProgramClean[p] = {
+        buku: (bInfo?.buku || '').trim() || (p === 'Sempoa SIP' ? 'Junior' : p),
+        nomor: (bInfo?.nomor || '').trim() || '-'
+      };
+    });
+    const bukuPerProgramJson = JSON.stringify(bukuPerProgramClean);
+    const firstProg = selectedProgs[0] || 'Sempoa SIP';
+    const primaryBuku = bukuPerProgramClean[firstProg]?.buku || 'Junior';
+    const primaryNomor = bukuPerProgramClean[firstProg]?.nomor || '-';
+
     // Derive id_guru from first guru in mapping (or null if unassigned)
     const firstGuruId = Object.values(guruPerProgramClean)[0] || null;
 
@@ -806,6 +872,9 @@ export const SiswaPage: React.FC = () => {
       hari_masuk: combinedHari || 'Senin, Selasa, Rabu, Kamis, Jumat',
       kuota_program: JSON.stringify(kuotaObj),
       guru_per_program: guruPerProgramJson,
+      buku_per_program: bukuPerProgramJson,
+      buku_saat_ini: primaryBuku,
+      nomor_buku: primaryNomor,
       id_guru: firstGuruId,
       tanggal_lahir: formData.tanggal_lahir || null,
       umur: ageVal || (formData.umur ? parseInt(formData.umur, 10) : null),
@@ -1274,6 +1343,18 @@ export const SiswaPage: React.FC = () => {
                       }
                       setProgramDays(updatedProgDays);
 
+                      // Update buku per program
+                      const updatedBukuPerProg = { ...bukuPerProgram };
+                      if (!isSelected && !updatedBukuPerProg[prog]) {
+                        updatedBukuPerProg[prog] = {
+                          buku: prog === 'Sempoa SIP' ? 'Junior' : '',
+                          nomor: '-'
+                        };
+                      } else if (isSelected) {
+                        delete updatedBukuPerProg[prog];
+                      }
+                      setBukuPerProgram(updatedBukuPerProg);
+
                       setFormData({
                         ...formData,
                         kategori_program: nextStr,
@@ -1708,58 +1789,167 @@ export const SiswaPage: React.FC = () => {
             );
           })()}
 
-          {/* Buku & Level Pembelajaran Siswa (Koneksi Otomatis ke Data Buku) */}
-          <div className="bg-gradient-to-r from-[#FFF8E1]/80 to-[#FFF3E0]/80 border border-[#FFE082] rounded-2xl p-3.5 sm:p-4 space-y-3 shadow-2xs">
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <div className="flex items-center gap-2">
-                <span className="p-1.5 rounded-xl bg-[#FF7043] text-white shadow-xs">
-                  <BookIcon size={16} />
-                </span>
-                <div>
-                  <h4 className="font-extrabold text-xs sm:text-sm text-[#E65100]">
-                    Buku & Level Pembelajaran Siswa
-                  </h4>
-                  <p className="text-[11px] text-[#8D6E63] font-medium mt-0.5">
-                    Terhubung langsung ke menu Data Buku
-                  </p>
+          {/* Buku & Level Pembelajaran Siswa (Dinamis Multi-Program, Koneksi Otomatis ke Data Buku) */}
+          {(() => {
+            const selectedProgs = formData.kategori_program.split(',').map((p) => p.trim()).filter(Boolean);
+
+            return (
+              <div className="bg-gradient-to-r from-[#FFF8E1]/80 to-[#FFF3E0]/80 border border-[#FFE082] rounded-2xl p-3.5 sm:p-4 space-y-3.5 shadow-2xs">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="p-1.5 rounded-xl bg-[#FF7043] text-white shadow-xs">
+                      <BookIcon size={16} />
+                    </span>
+                    <div>
+                      <h4 className="font-extrabold text-xs sm:text-sm text-[#E65100]">
+                        Buku & Level Pembelajaran Siswa {selectedProgs.length > 1 ? `(${selectedProgs.length} Program)` : ''}
+                      </h4>
+                      <p className="text-[11px] text-[#8D6E63] font-medium mt-0.5">
+                        Tercatat dan terhubung langsung ke menu Data Buku untuk setiap program
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] text-[#BF360C] font-extrabold bg-white/90 px-2.5 py-1 rounded-lg border border-[#FFD54F] shadow-2xs">
+                    Data Buku
+                  </span>
+                </div>
+
+                <div className="space-y-3 pt-1">
+                  {selectedProgs.map((prog, idx) => {
+                    const isSempoa = prog === 'Sempoa SIP';
+                    const progBukuData = bukuPerProgram[prog] || {
+                      buku: isSempoa ? 'Junior' : '',
+                      nomor: '-'
+                    };
+
+                    let placeholderText = `Ketik nama/judul buku ${prog}...`;
+                    if (prog.toLowerCase().includes('tk')) {
+                      placeholderText = 'Contoh: Buku Paket Tema TK A / Menulis & Berhitung';
+                    } else if (prog.toLowerCase().includes('tahfidz')) {
+                      placeholderText = "Contoh: Iqro Jilid 2 / Yanbu'a / Juz 30";
+                    } else if (prog.toLowerCase().includes('fonem')) {
+                      placeholderText = 'Contoh: Buku Fonem Baca 1 / Menulis';
+                    } else if (prog.toLowerCase().includes('inggris')) {
+                      placeholderText = 'Contoh: English for Kids Starter';
+                    }
+
+                    return (
+                      <div
+                        key={prog}
+                        className="p-3 bg-white/95 rounded-xl border border-[#FFE082] space-y-2.5 shadow-2xs"
+                      >
+                        <div className="flex items-center justify-between flex-wrap gap-1 border-b border-[#FFE082]/60 pb-1.5">
+                          <div className="flex items-center gap-2">
+                            <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold border shadow-2xs ${getProgramBadgeStyle(prog)}`}>
+                              {prog}
+                            </span>
+                            <span className="text-xs font-extrabold text-[#1E293B]">
+                              Buku Program #{idx + 1}
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-[#8D6E63] font-semibold">
+                            {isSempoa ? 'Kurikulum Resmi Sempoa SIP' : 'Input Manual Judul Buku'}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-0.5">
+                          {/* Jenis / Level Buku */}
+                          <div>
+                            <label className="block text-[#1E293B] font-bold mb-1 text-xs">
+                              {isSempoa ? 'Level Buku Sempoa SIP*' : `Jenis / Judul Buku ${prog}*`}
+                            </label>
+                            {isSempoa ? (
+                              <select
+                                required
+                                value={progBukuData.buku || 'Junior'}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setBukuPerProgram((prev) => ({
+                                    ...prev,
+                                    [prog]: {
+                                      buku: val,
+                                      nomor: prev[prog]?.nomor || '-'
+                                    }
+                                  }));
+                                  if (idx === 0) {
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      buku_saat_ini: val
+                                    }));
+                                  }
+                                }}
+                                className="w-full bg-[#F8FAFC] border border-[#CBD5E1] focus:border-[#FF7043] focus:ring-2 focus:ring-[#FF7043]/20 rounded-xl p-2.5 text-[#1E293B] font-bold text-xs focus:outline-none transition-all cursor-pointer shadow-2xs"
+                              >
+                                {(PROGRAM_LEVEL_PRESETS['Sempoa SIP']?.levels || []).map((lvl) => (
+                                  <option key={lvl} value={lvl}>{lvl}</option>
+                                ))}
+                              </select>
+                            ) : (
+                              <input
+                                type="text"
+                                required
+                                value={progBukuData.buku}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setBukuPerProgram((prev) => ({
+                                    ...prev,
+                                    [prog]: {
+                                      buku: val,
+                                      nomor: prev[prog]?.nomor || '-'
+                                    }
+                                  }));
+                                  if (idx === 0) {
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      buku_saat_ini: val
+                                    }));
+                                  }
+                                }}
+                                placeholder={placeholderText}
+                                className="w-full bg-white border border-[#CBD5E1] focus:border-[#FF7043] focus:ring-2 focus:ring-[#FF7043]/20 rounded-xl p-2.5 text-[#1E293B] font-bold text-xs focus:outline-none shadow-2xs"
+                              />
+                            )}
+                          </div>
+
+                          {/* Nomor / Kode Buku */}
+                          <div>
+                            <label className="block text-[#1E293B] font-bold mb-1 text-xs">
+                              Nomor / Kode Buku {prog}
+                            </label>
+                            <input
+                              type="text"
+                              value={progBukuData.nomor}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setBukuPerProgram((prev) => ({
+                                  ...prev,
+                                  [prog]: {
+                                    buku: prev[prog]?.buku || (isSempoa ? 'Junior' : ''),
+                                    nomor: val
+                                  }
+                                }));
+                                if (idx === 0) {
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    nomor_buku: val
+                                  }));
+                                }
+                              }}
+                              placeholder="Contoh: B-001 (atau isi - / 0 jika tanpa kode)"
+                              className="w-full bg-white border border-[#CBD5E1] focus:border-[#FF7043] focus:ring-2 focus:ring-[#FF7043]/20 rounded-xl p-2.5 text-[#1E293B] font-bold text-xs focus:outline-none shadow-2xs"
+                            />
+                            <p className="text-[10px] text-[#8D6E63] mt-1 font-medium italic">
+                              *Jika buku tidak memiliki nomor/kode seri, isi dengan <span className="font-bold text-[#BF360C]">-</span> atau <span className="font-bold text-[#BF360C]">0</span>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-              <span className="text-[10px] text-[#BF360C] font-extrabold bg-white/90 px-2.5 py-1 rounded-lg border border-[#FFD54F] shadow-2xs">
-                Data Buku
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-              <div>
-                <label className="block text-[#1E293B] font-bold mb-1 text-xs">
-                  Buku Saat Ini*
-                </label>
-                <select
-                  required
-                  value={formData.buku_saat_ini}
-                  onChange={(e) => setFormData({ ...formData, buku_saat_ini: e.target.value })}
-                  className="w-full bg-white border border-[#FFE082] focus:border-[#FF7043] focus:ring-2 focus:ring-[#FF7043]/20 rounded-xl p-2.5 text-[#1E293B] font-bold text-xs focus:outline-none transition-all cursor-pointer shadow-2xs"
-                >
-                  {(PROGRAM_LEVEL_PRESETS[formData.kategori_program.split(',')[0]?.trim() || 'Sempoa SIP']?.levels || PROGRAM_LEVEL_PRESETS['Sempoa SIP'].levels).map(lvl => (
-                    <option key={lvl} value={lvl}>{lvl}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[#1E293B] font-bold mb-1 text-xs">
-                  Nomor / Kode Buku
-                </label>
-                <input
-                  type="text"
-                  value={formData.nomor_buku}
-                  onChange={(e) => setFormData({ ...formData, nomor_buku: e.target.value })}
-                  placeholder="Input kode buku manual..."
-                  className="w-full bg-white border border-[#FFE082] focus:border-[#FF7043] focus:ring-2 focus:ring-[#FF7043]/20 rounded-xl p-2.5 text-[#1E293B] font-bold text-xs focus:outline-none shadow-2xs"
-                />
-              </div>
-            </div>
-          </div>
+            );
+          })()}
 
           {/* 6 & 7. Nama Orang Tua & No. WhatsApp */}
           <div className="border-t border-[#E2E8F0] pt-3 grid grid-cols-1 md:grid-cols-2 gap-3">

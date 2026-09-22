@@ -24,6 +24,7 @@ class Siswa(Base):
     sisa_pertemuan = Column(Integer, nullable=False, default=0)
     kuota_program = Column(Text, nullable=True)
     guru_per_program = Column(Text, nullable=True)  # JSON: {"Sempoa SIP": 5, "Fonem": 3}
+    buku_per_program = Column(Text, nullable=True)  # JSON: {"Sempoa SIP": {"buku": "Junior", "nomor": "B-001"}}
     status_spp = Column(SQLEnum(StatusSPP, name="spp_status_enum"), nullable=False, default=StatusSPP.AKTIF)
     nama_orang_tua = Column(String(100), nullable=True)
     whatsapp_orang_tua = Column(String(20), nullable=True)

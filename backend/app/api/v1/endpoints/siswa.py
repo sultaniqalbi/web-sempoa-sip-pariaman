@@ -263,6 +263,7 @@ async def create_new_siswa(
             sisa_pertemuan=effective_sisa,
             kuota_program=final_kuota_program,
             guru_per_program=siswa_in.guru_per_program,
+            buku_per_program=siswa_in.buku_per_program,
             status_spp=StatusSPP.AKTIF,
             nama_orang_tua=siswa_in.nama_orang_tua,
             whatsapp_orang_tua=normalized_wa,
@@ -286,19 +287,62 @@ async def create_new_siswa(
             due_date=None
         )
         db.add(pembayaran_awal)
-        # Auto-create initial book in buku_siswa
-        default_buku_level = "Kelompok Bermain (KB)" if is_tk else "Junior"
-        buku_level = siswa_in.buku_saat_ini or default_buku_level
-        buku_program = siswa_in.kategori_program.split(",")[0].strip() if siswa_in.kategori_program else "Sempoa SIP"
-        new_buku = BukuSiswa(
-            id_siswa=new_siswa.id,
-            kategori_program=buku_program,
-            level_anak=buku_level,
-            nomor_buku=siswa_in.nomor_buku or "",
-            status_buku="SEDANG_DIPELAJARI",
-            tanggal_mulai=siswa_in.tanggal_mulai_buku or date.today()
-        )
-        db.add(new_buku)
+
+        # Auto-create initial book(s) in buku_siswa for each program
+        parsed_buku_map = {}
+        if siswa_in.buku_per_program:
+            try:
+                bpp = json.loads(siswa_in.buku_per_program)
+                if isinstance(bpp, dict):
+                    parsed_buku_map = bpp
+            except Exception:
+                pass
+
+        selected_progs = [p.strip() for p in (siswa_in.kategori_program or "Sempoa SIP").split(",") if p.strip()]
+        if not selected_progs:
+            selected_progs = ["Sempoa SIP"]
+
+        created_buku_progs = set()
+        if parsed_buku_map:
+            for prog, book_info in parsed_buku_map.items():
+                if isinstance(book_info, dict):
+                    b_title = str(book_info.get("buku") or "").strip()
+                    b_no = str(book_info.get("nomor") or "-").strip()
+                else:
+                    b_title = str(book_info or "").strip()
+                    b_no = "-"
+
+                if not b_title:
+                    b_title = "Junior" if "sempoa" in prog.lower() else ("Kelompok Bermain (KB)" if "tk" in prog.lower() else prog)
+                if not b_no:
+                    b_no = "-"
+
+                new_buku = BukuSiswa(
+                    id_siswa=new_siswa.id,
+                    kategori_program=prog,
+                    level_anak=b_title,
+                    nomor_buku=b_no,
+                    status_buku="SEDANG_DIPELAJARI",
+                    tanggal_mulai=siswa_in.tanggal_mulai_buku or date.today()
+                )
+                db.add(new_buku)
+                created_buku_progs.add(prog)
+
+        # Fallback for any selected program not in parsed_buku_map (e.g. single program or legacy request)
+        for prog in selected_progs:
+            if prog not in created_buku_progs:
+                default_buku_level = "Kelompok Bermain (KB)" if "tk" in prog.lower() else "Junior"
+                buku_level = siswa_in.buku_saat_ini or default_buku_level
+                new_buku = BukuSiswa(
+                    id_siswa=new_siswa.id,
+                    kategori_program=prog,
+                    level_anak=buku_level,
+                    nomor_buku=siswa_in.nomor_buku or "-",
+                    status_buku="SEDANG_DIPELAJARI",
+                    tanggal_mulai=siswa_in.tanggal_mulai_buku or date.today()
+                )
+                db.add(new_buku)
+                created_buku_progs.add(prog)
 
         # Auto-provision parent account for all programs (including TK)
         user_ortu = User(
@@ -386,7 +430,46 @@ async def update_existing_siswa(
             pass
 
     # Sync buku_siswa record if provided
-    if buku_saat_ini is not None:
+    buku_per_program = update_dict.get("buku_per_program")
+    if buku_per_program:
+        try:
+            bpp = json.loads(buku_per_program)
+            if isinstance(bpp, dict):
+                for prog, book_info in bpp.items():
+                    if isinstance(book_info, dict):
+                        b_title = str(book_info.get("buku") or "").strip()
+                        b_no = str(book_info.get("nomor") or "-").strip()
+                    else:
+                        b_title = str(book_info or "").strip()
+                        b_no = "-"
+
+                    if not b_title:
+                        continue
+
+                    active_buku = db.query(BukuSiswa).filter(
+                        BukuSiswa.id_siswa == id,
+                        BukuSiswa.kategori_program == prog,
+                        BukuSiswa.status_buku == "SEDANG_DIPELAJARI"
+                    ).order_by(BukuSiswa.id.desc()).first()
+
+                    if active_buku:
+                        active_buku.level_anak = b_title
+                        active_buku.nomor_buku = b_no
+                        if tanggal_mulai_buku is not None:
+                            active_buku.tanggal_mulai = tanggal_mulai_buku
+                    else:
+                        new_b = BukuSiswa(
+                            id_siswa=id,
+                            kategori_program=prog,
+                            level_anak=b_title,
+                            nomor_buku=b_no,
+                            status_buku="SEDANG_DIPELAJARI",
+                            tanggal_mulai=tanggal_mulai_buku or date.today()
+                        )
+                        db.add(new_b)
+        except Exception:
+            pass
+    elif buku_saat_ini is not None:
         active_buku = db.query(BukuSiswa).filter(
             BukuSiswa.id_siswa == id,
             BukuSiswa.status_buku == "SEDANG_DIPELAJARI"
@@ -404,7 +487,7 @@ async def update_existing_siswa(
                 id_siswa=id,
                 kategori_program=buku_program,
                 level_anak=buku_saat_ini,
-                nomor_buku=nomor_buku or "",
+                nomor_buku=nomor_buku or "-",
                 status_buku="SEDANG_DIPELAJARI",
                 tanggal_mulai=tanggal_mulai_buku or date.today()
             )
