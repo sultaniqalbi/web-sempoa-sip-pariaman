@@ -13,17 +13,17 @@ class Settings(BaseSettings):
     
     # FastAPI
     fastapi_env: str = "development"
-    secret_key: str = "sempoa_production_super_secure_jwt_secret_key_pariaman_2026_master_seed"
+    secret_key: str = "change_me_in_env_file"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 1440
     refresh_token_expire_days: int = 30
     
     # ESP32 Hardware
-    esp32_api_key: str = "SempoaPariaman_ESP32_SecureKey_2026!"
+    esp32_api_key: str = "change_me_in_env_file"
 
     # Web Push Notification (VAPID)
-    vapid_private_key: str = "QC1OR72dfVR2oO6g-7QSbrN6LDhhsUoTI-f9iak5nJ0"
-    vapid_public_key: str = "BGJUHOUHSyggjLnHydi66CxoEE5jML4tiHpvmK6-crhU-kCN3X_AN8-ej4MBX8ygFEu5TOKebAcf-gbeEi30MTA"
+    vapid_private_key: str = "change_me_in_env_file"
+    vapid_public_key: str = "change_me_in_env_file"
     vapid_subject: str = "mailto:admin@sempoasippariaman.com"
 
     # Redis (For token blacklist & persistent rate limiting)
@@ -40,36 +40,35 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000",
         "https://sempoasippariaman.com",
         "https://www.sempoasippariaman.com",
-        "http://202.155.157.22",
-        "https://202.155.157.22",
+
     ]
     
     @field_validator("secret_key", mode="before")
     @classmethod
     def validate_secret_key(cls, v):
         if not v or len(str(v).strip()) < 16:
-            return "sempoa_production_super_secure_jwt_secret_key_pariaman_2026_master_seed"
+            return "change_me_in_env_file"
         return str(v).strip()
 
     @field_validator("esp32_api_key", mode="before")
     @classmethod
     def validate_esp32_api_key(cls, v):
         if not v or not str(v).strip():
-            return "SempoaPariaman_ESP32_SecureKey_2026!"
+            return "change_me_in_env_file"
         return str(v).strip()
 
     @field_validator("vapid_public_key", mode="before")
     @classmethod
     def validate_vapid_public_key(cls, v):
         if not v or not str(v).strip():
-            return "BGJUHOUHSyggjLnHydi66CxoEE5jML4tiHpvmK6-crhU-kCN3X_AN8-ej4MBX8ygFEu5TOKebAcf-gbeEi30MTA"
+            return "change_me_in_env_file"
         return str(v).strip()
 
     @field_validator("vapid_private_key", mode="before")
     @classmethod
     def validate_vapid_private_key(cls, v):
         if not v or not str(v).strip():
-            return "QC1OR72dfVR2oO6g-7QSbrN6LDhhsUoTI-f9iak5nJ0"
+            return "change_me_in_env_file"
         return str(v).strip()
 
     @field_validator("allowed_origins", mode="before")

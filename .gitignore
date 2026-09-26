@@ -57,3 +57,18 @@ backend/app/uploads/*
 backend/backups/*
 !backend/backups/.gitkeep
 
+# Internal docs, audit reports & sensitive planning
+AUDIT_REPORT.md
+FINDINGS.json
+FIX_PLAN.md
+OPTIMIZATION.md
+AGENTS.md
+GEMINI.md
+README.md
+.agents/
+md/
+docs/
+last_tap.json
+crop_logo.py
+push_github.bat
+

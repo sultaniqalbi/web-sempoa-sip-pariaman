@@ -54,7 +54,7 @@ FASTAPI_ENV=production
 SECRET_KEY=${JWT_SEC}
 ALLOWED_ORIGINS=["https://sempoasippariaman.com"]
 
-ESP32_API_KEY=SempoaPariaman_ESP32_SecureKey_2026!
+ESP32_API_KEY=$(openssl rand -hex 16)
 EOF
 
 echo "Production configurations written."
@@ -103,6 +103,6 @@ certbot --nginx -d sempoasippariaman.com -d www.sempoasippariaman.com --non-inte
 
 echo "=== 9. Endpoints Verification ==="
 sleep 5
-curl -H "X-API-Key: SempoaPariaman_ESP32_SecureKey_2026!" http://localhost:8000/api/ping
+curl -H "X-API-Key: $ESP32_API_KEY" http://localhost:8000/api/ping
 
 echo "=== PRODUCTION DEPLOYMENT COMPLETED SUCCESS ==="

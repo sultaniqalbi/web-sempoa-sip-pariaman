@@ -21,7 +21,7 @@ def run_tests():
 
     cleanup_test_data()
 
-    api_key = "SempoaPariaman_ESP32_SecureKey_2026!"
+    api_key = os.environ.get("ESP32_API_KEY", "test_key_for_dev")
 
     # 1. Test Valid Tap (First scan of the day)
     print("\n1. Testing valid tap (First scan of the day)...")

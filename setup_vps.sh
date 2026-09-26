@@ -55,6 +55,7 @@ if [ ! -f ".env" ]; then
     echo "📝 Generating production .env file..."
     RANDOM_SECRET=$(openssl rand -hex 32)
     RANDOM_DB_PASS=$(openssl rand -hex 16)
+    RANDOM_ESP32_KEY=$(openssl rand -hex 16)
     
     cat <<EOF > .env
 POSTGRES_USER=sempoa_prod
@@ -65,8 +66,8 @@ POSTGRES_PORT=5432
 
 FASTAPI_ENV=production
 SECRET_KEY=${RANDOM_SECRET}
-ALLOWED_ORIGINS=https://${DOMAIN},https://${WWW_DOMAIN},http://202.155.157.22,https://202.155.157.22
-ESP32_API_KEY=SempoaPariaman_ESP32_SecureKey_2026!
+ALLOWED_ORIGINS=https://${DOMAIN},https://${WWW_DOMAIN}
+ESP32_API_KEY=${RANDOM_ESP32_KEY}
 EOF
     echo "✅ Production .env created with secure random keys."
 fi
