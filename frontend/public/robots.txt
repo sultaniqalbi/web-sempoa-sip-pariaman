@@ -8,3 +8,4 @@ Disallow: /ortu/
 Disallow: /api/
 
 Sitemap: https://sempoasippariaman.com/sitemap.xml
+Agentmap: https://sempoasippariaman.com/.well-known/ai-catalog.json

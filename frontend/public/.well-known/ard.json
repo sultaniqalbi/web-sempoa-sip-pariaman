@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "specVersion": "1.0",
+  "host": {
+    "displayName": "Sempoa SIP TC Pariaman",
+    "identifier": "urn:air:sempoasippariaman.com",
+    "documentationUrl": "https://sempoasippariaman.com/llms.txt",
+    "logoUrl": "https://sempoasippariaman.com/assets/logo/logo-sempoa-sip.png"
+  },
+  "entries": [
+    {
+      "identifier": "urn:air:sempoasippariaman.com:knowledge",
+      "displayName": "Sempoa SIP TC Pariaman Knowledge Base",
+      "type": "text/markdown",
+      "description": "Lembaga bimbingan belajar pelatihan otak anak usia 4-12 tahun di Kota Pariaman dengan metode sempoa mental aritmatika, informasi pendaftaran, kurikulum, dan kontak resmi.",
+      "artifactUrl": "https://sempoasippariaman.com/llms.txt",
+      "tags": [
+        "education",
+        "sempoa",
+        "abacus",
+        "mental-arithmetic",
+        "pariaman",
+        "brain-training"
+      ]
+    },
+    {
+      "identifier": "urn:air:sempoasippariaman.com:programs",
+      "displayName": "Sempoa SIP TC Pariaman Program Catalog",
+      "type": "text/html",
+      "description": "Katalog program belajar pelatihan otak Sempoa SIP (Junior, Foundation, Intermediate, Advance, Graduate), Fonem (Baca Cepat), Tahfidz Anak, dan English Course.",
+      "artifactUrl": "https://sempoasippariaman.com/programs",
+      "tags": [
+        "courses",
+        "programs",
+        "education",
+        "children-learning"
+      ]
+    },
+    {
+      "identifier": "urn:air:sempoasippariaman.com:registration",
+      "displayName": "Sempoa SIP TC Pariaman Online Registration",
+      "type": "text/html",
+      "description": "Layanan pendaftaran siswa baru dan konsultasi uji coba kelas gratis (Free Trial Class) Sempoa SIP Pariaman.",
+      "artifactUrl": "https://sempoasippariaman.com/register",
+      "tags": [
+        "registration",
+        "enrollment",
+        "free-trial"
+      ]
+    }
+  ]
+}
