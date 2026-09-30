@@ -165,6 +165,7 @@ async def create_new_guru(
         user_guru = User(
             email=email_candidate,
             password=hashed_password,
+            plain_password=plain_password,
             role=UserRole.guru,
             nama=guru_in.nama,
             uid_terhubung=str(new_guru.id)
@@ -404,6 +405,7 @@ async def reset_guru_password(
         user_guru = User(
             email=email_candidate,
             password=hashed_pwd,
+            plain_password=new_pwd,
             role=UserRole.guru,
             nama=db_guru.nama,
             uid_terhubung=str(db_guru.id)
@@ -411,6 +413,7 @@ async def reset_guru_password(
         db.add(user_guru)
     else:
         user_guru.password = hashed_pwd
+        user_guru.plain_password = new_pwd
         user_guru.uid_terhubung = str(db_guru.id)
         if not user_guru.nama:
             user_guru.nama = db_guru.nama
@@ -455,14 +458,30 @@ async def push_whatsapp_guru(
     ).first()
     guru_email = user_guru.email if user_guru else f"guru_{guru.id}@sempoasippariaman.com"
 
-    # Generate a fresh secure temporary password upon WhatsApp dispatch
-    if user_guru:
-        new_pwd = generate_random_password(10)
-        user_guru.password = get_password_hash(new_pwd)
+    if not user_guru:
+        initial_pwd = generate_random_password(10)
+        user_guru = User(
+            email=guru_email,
+            password=get_password_hash(initial_pwd),
+            plain_password=initial_pwd,
+            role=UserRole.guru,
+            nama=guru.nama,
+            uid_terhubung=str(guru.id)
+        )
+        db.add(user_guru)
         db.commit()
-        guru_sandi = new_pwd
+        guru_sandi = initial_pwd
     else:
-        guru_sandi = "sempoa123"
+        # Gunakan sandi tersimpan, jangan ganti sandi di database
+        if user_guru.plain_password:
+            guru_sandi = user_guru.plain_password
+        else:
+            # Akun lama yang belum punya plain_password: buat sekali & simpan permanen
+            new_pwd = generate_random_password(10)
+            user_guru.password = get_password_hash(new_pwd)
+            user_guru.plain_password = new_pwd
+            db.commit()
+            guru_sandi = new_pwd
 
     message_template = f"""Halo {guru.nama},
 

@@ -3,7 +3,7 @@ import json
 from datetime import datetime, timedelta, date, timezone
 
 WIB = timezone(timedelta(hours=7))
-from app.core.security import get_password_hash
+from app.core.security import get_password_hash, generate_random_password
 from app.models.siswa import StatusSPP
 from pathlib import Path
 from typing import Optional
@@ -500,9 +500,11 @@ async def seed_dummy_data(
 
                 existing_u = db.query(User).filter(User.email == g_info["email"]).first()
                 if not existing_u:
+                    init_g_pwd = generate_random_password(10)
                     user_guru = User(
                         email=g_info["email"],
-                        password=get_password_hash("guru12345"),
+                        password=get_password_hash(init_g_pwd),
+                        plain_password=init_g_pwd,
                         role=UserRole.guru,
                         nama=g_info["nama"],
                         uid_terhubung=str(guru.id)
@@ -669,9 +671,11 @@ async def seed_dummy_data(
 
                 existing_u = db.query(User).filter(User.email == s_info["email"]).first()
                 if not existing_u:
+                    init_o_pwd = generate_random_password(10)
                     user_ortu = User(
                         email=s_info["email"],
-                        password=get_password_hash("ortu12345"),
+                        password=get_password_hash(init_o_pwd),
+                        plain_password=init_o_pwd,
                         role=UserRole.ortu,
                         nama=s_info["nama_orang_tua"],
                         uid_terhubung=str(siswa.id)

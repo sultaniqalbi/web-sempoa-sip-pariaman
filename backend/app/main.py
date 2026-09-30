@@ -73,6 +73,7 @@ def on_startup():
             "ALTER TABLE siswa ADD COLUMN IF NOT EXISTS guru_per_program TEXT;",
             "ALTER TABLE siswa ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS uid_terhubung VARCHAR(50);",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS plain_password VARCHAR(100);",
             "ALTER TABLE jadwal ADD COLUMN IF NOT EXISTS guru_ids VARCHAR(255);",
             "ALTER TABLE jadwal ADD COLUMN IF NOT EXISTS siswa_ids VARCHAR(500);",
             "ALTER TABLE jadwal ADD COLUMN IF NOT EXISTS mode_kelas VARCHAR(20) DEFAULT 'OFFLINE';",
@@ -460,9 +461,12 @@ def on_startup():
                         suf += 1
                         cand_email = f"{clean_prefix}{suf}@sempoasippariaman.com"
 
+                    from app.core.security import generate_random_password, get_password_hash
+                    tk_pwd = generate_random_password(10)
                     ortu_u = User(
                         email=cand_email,
-                        password=get_password_hash("sempoa123"),
+                        password=get_password_hash(tk_pwd),
+                        plain_password=tk_pwd,
                         role=UserRole.ortu,
                         nama=s_tk.nama_orang_tua or f"Ortu {s_tk.nama}",
                         uid_terhubung=str(s_tk.id)

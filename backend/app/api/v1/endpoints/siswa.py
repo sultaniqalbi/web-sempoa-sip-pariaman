@@ -350,6 +350,7 @@ async def create_new_siswa(
         user_ortu = User(
             email=email_candidate,
             password=hashed_password,
+            plain_password=plain_password,
             role=UserRole.ortu,
             nama=siswa_in.nama_orang_tua or f"Ortu {siswa_in.nama}",
             uid_terhubung=str(new_siswa.id)
@@ -584,6 +585,7 @@ async def reset_siswa_password(
 
     new_pwd = generate_random_password(10)
     user_ortu.password = get_password_hash(new_pwd)
+    user_ortu.plain_password = new_pwd
 
     log_activity(
         db=db,
@@ -625,14 +627,30 @@ async def push_whatsapp_siswa(
     user_ortu = db.query(User).filter(User.role == UserRole.ortu, User.uid_terhubung == str(id)).first()
     ortu_email = user_ortu.email if user_ortu else f"ortu_{siswa.id}@sempoasippariaman.com"
 
-    # Generate a fresh secure temporary password upon WhatsApp dispatch
-    if user_ortu:
-        new_pwd = generate_random_password(10)
-        user_ortu.password = get_password_hash(new_pwd)
+    if not user_ortu:
+        initial_pwd = generate_random_password(10)
+        user_ortu = User(
+            email=ortu_email,
+            password=get_password_hash(initial_pwd),
+            plain_password=initial_pwd,
+            role=UserRole.ortu,
+            nama=siswa.nama_orang_tua or f"Ortu {siswa.nama}",
+            uid_terhubung=str(siswa.id)
+        )
+        db.add(user_ortu)
         db.commit()
-        ortu_sandi = new_pwd
+        ortu_sandi = initial_pwd
     else:
-        ortu_sandi = "sempoa123"
+        # Gunakan sandi tersimpan, jangan ganti sandi di database
+        if user_ortu.plain_password:
+            ortu_sandi = user_ortu.plain_password
+        else:
+            # Akun lama yang belum punya plain_password: buat sekali & simpan permanen
+            new_pwd = generate_random_password(10)
+            user_ortu.password = get_password_hash(new_pwd)
+            user_ortu.plain_password = new_pwd
+            db.commit()
+            ortu_sandi = new_pwd
 
     message_template = f"""Halo {siswa.nama_orang_tua or 'Orang Tua'},
 
