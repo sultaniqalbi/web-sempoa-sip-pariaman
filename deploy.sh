@@ -29,7 +29,8 @@ fi
 
 echo ""
 echo "[2/5] Mengambil kode terbaru dari GitHub..."
-git pull origin master
+git fetch origin master
+git reset --hard origin/master
 
 echo ""
 echo "[3/5] Build Frontend & Backend (Container Baru)..."
