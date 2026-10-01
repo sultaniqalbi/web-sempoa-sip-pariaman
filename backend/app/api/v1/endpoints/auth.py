@@ -60,8 +60,23 @@ async def login(
         (func.lower(User.email) == f"{clean_email}@sempoasippariaman.com")
     ).first()
 
-    # 3. Verify password
-    if not user or not verify_password(login_data.password, user.password):
+    # 3. Verify password (resilient against accidental copy-paste whitespace & self-healing)
+    is_valid_pwd = False
+    if user:
+        is_valid_pwd = verify_password(login_data.password, user.password)
+        if not is_valid_pwd and login_data.password != login_data.password.strip():
+            is_valid_pwd = verify_password(login_data.password.strip(), user.password)
+        if not is_valid_pwd and getattr(user, 'plain_password', None):
+            if user.plain_password == login_data.password.strip():
+                is_valid_pwd = True
+                from app.core.security import get_password_hash
+                user.password = get_password_hash(user.plain_password)
+                try:
+                    db.commit()
+                except Exception:
+                    db.rollback()
+
+    if not user or not is_valid_pwd:
         # Record failure for rate limiting
         login_limiter.record_failure(client_ip, clean_email)
         # Record audit log failure
