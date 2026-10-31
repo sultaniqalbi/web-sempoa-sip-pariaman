@@ -59,6 +59,7 @@ backend/backups/*
 
 # Internal docs, audit reports & sensitive planning
 *.md
+!README.md
 AUDIT_REPORT.md
 FINDINGS.json
 FIX_PLAN.md
