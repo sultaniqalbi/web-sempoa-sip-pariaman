@@ -58,6 +58,7 @@ backend/backups/*
 !backend/backups/.gitkeep
 
 # Internal docs, audit reports & sensitive planning
+*.md
 AUDIT_REPORT.md
 FINDINGS.json
 FIX_PLAN.md
@@ -65,9 +66,28 @@ OPTIMIZATION.md
 AGENTS.md
 GEMINI.md
 .agents/
+.agent/
+.gsd/
+adapters/
 md/
 docs/
 last_tap.json
 crop_logo.py
 push_github.bat
+model_capabilities.yaml
+VERSION
 
+# AI & Repository Search Scripts
+scripts/search_repo.*
+scripts/setup_search.*
+scripts/validate-*
+
+# Internal Test & Data Wipe Scripts (Protected from GitHub)
+backend/scripts/wipe_production_data.py
+backend/clean_test_records.py
+backend/audit_test_data.py
+backend/seed_dummy.py
+backend/scripts/test_auth.py
+backend/app/tests/test_auth_script.py
+backend/scripts/test_hardware.py
+backend/app/tests/test_hardware_script.py

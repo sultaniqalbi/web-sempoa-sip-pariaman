@@ -38,7 +38,7 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - ALLOWED_ORIGINS=https://sempoasippariaman.com,https://www.sempoasippariaman.com
-      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY:-BGJUHOUHSyggjLnHydi66CxoEE5jML4tiHpvmK6-crhU-kCN3X_AN8-ej4MBX8ygFEu5TOKebAcf-gbeEi30MTA}
+      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}
       - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
       - VAPID_SUBJECT=${VAPID_SUBJECT:-mailto:admin@sempoasippariaman.com}
       - GOOGLE_WEBHOOK_URL=${GOOGLE_WEBHOOK_URL}
